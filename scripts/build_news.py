@@ -12,23 +12,34 @@ import xml.etree.ElementTree as ET
 
 FEEDS = [
     ("ESPN", "https://www.espn.com/espn/rss/nfl/news"),
+    ("ESPN", "https://www.espn.com/espn/rss/news"),
+    ("ESPN Fantasy", "https://www.espn.com/espn/rss/fantasy/news"),
     ("CBS Sports", "https://www.cbssports.com/rss/headlines/nfl/"),
+    ("CBS Fantasy", "https://www.cbssports.com/rss/headlines/fantasy/football/"),
     ("Yahoo Sports", "https://sports.yahoo.com/nfl/rss/"),
     ("ProFootballTalk", "https://profootballtalk.nbcsports.com/feed/"),
     ("RotoWire", "https://www.rotowire.com/rss/news.php?sport=NFL"),
-    ("NFL.com", "https://www.nfl.com/rss/rsslanding?searchString=home"),
-    ("USA Today", "https://rssfeeds.usatoday.com/UsatodaycomNfl-TopStories"),
     ("SB Nation", "https://www.sbnation.com/rss/nfl/index.xml"),
-    ("The Ringer", "https://www.theringer.com/rss/nfl/index.xml"),
     ("Sporting News", "https://www.sportingnews.com/us/rss/nfl"),
-    ("FantasyPros", "https://www.fantasypros.com/nfl/rss/news.php"),
+    ("FantasyPros", "https://www.fantasypros.com/feed/"),
+    ("FantasyPros", "https://www.fantasypros.com/nfl/feed/"),
+    ("The Ringer", "https://www.theringer.com/rss/index.xml"),
+    ("The Ringer", "https://www.theringer.com/nfl/rss"),
+    ("Sports Illustrated", "https://www.si.com/nfl/.rss/full/"),
+    ("Fox Sports", "https://api.foxsports.com/v2/content/optimized-rss?partnerKey=MB0Wehpmuj2lUhuRhQaafhBjAJqaPU244mlTDK1i&size=30&tags=fs/nfl"),
+    ("Bleacher Report", "https://bleacherreport.com/articles/feed?tag_id=16"),
+    ("RotoBaller", "https://www.rotoballer.com/category/nfl/feed"),
+    ("PFF", "https://www.pff.com/feed"),
+    ("NBC Sports", "https://www.nbcsports.com/nfl.rss"),
     ("Google News: NFL injuries", "https://news.google.com/rss/search?q=NFL+injury+when:2d&hl=en-US&gl=US&ceid=US:en"),
     ("Google News: NFL transactions", "https://news.google.com/rss/search?q=NFL+(signs+OR+traded+OR+released+OR+waived)+when:2d&hl=en-US&gl=US&ceid=US:en"),
     ("Google News: NFL depth chart", "https://news.google.com/rss/search?q=NFL+(starter+OR+%22depth+chart%22+OR+benched)+when:2d&hl=en-US&gl=US&ceid=US:en"),
+    ("Google News: ESPN NFL", "https://news.google.com/rss/search?q=site:espn.com+NFL+when:2d&hl=en-US&gl=US&ceid=US:en"),
+    ("Google News: NFL.com", "https://news.google.com/rss/search?q=site:nfl.com+when:2d&hl=en-US&gl=US&ceid=US:en"),
 ]
 KEEP_HOURS = 96
 MAX_ITEMS = 500
-UA = "Mozilla/5.0 (compatible; HashmarkNewsBot/1.0; +https://github.com/jsdixon2/Hashmark)"
+UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15 HashmarkNews/1.0"
 
 KINDS = [
     ("injury", r"injur|questionable|doubtful|ruled out|\bout for\b|\bout (?:vs|against|sunday|monday|thursday|this week)|torn|\bacl\b|achilles|hamstring|ankle|knee|concussion|\bir\b|injured reserve|carted|\bmri\b|surgery|did not practice|\bdnp\b|limited practice"),
@@ -125,9 +136,9 @@ def main():
                     "k": classify(full), "brk": bool(BREAKING.search(title)),
                 })
                 n += 1
-            status.append({"name": name, "ok": True, "items": n})
+            status.append({"name": name, "url": url, "ok": True, "items": n})
         except Exception as e:
-            status.append({"name": name, "ok": False, "err": str(e)[:120]})
+            status.append({"name": name, "url": url, "ok": False, "err": str(e)[:120]})
     items.sort(key=lambda x: -x["ts"])
     os.makedirs("data", exist_ok=True)
     with open("data/news.json", "w", encoding="utf-8") as f:
@@ -135,7 +146,7 @@ def main():
     ok = sum(1 for s in status if s["ok"])
     print(f"{len(items)} items from {ok}/{len(FEEDS)} feeds")
     for s in status:
-        print(("  ok  " if s["ok"] else "  ERR ") + s["name"] + (f" ({s.get('items')})" if s["ok"] else f": {s['err']}"))
+        print(("  ok  " if s["ok"] else "  ERR ") + s["name"] + " <" + s["url"] + ">" + (f" ({s.get('items')})" if s["ok"] else f": {s['err']}"))
 
 
 if __name__ == "__main__":
