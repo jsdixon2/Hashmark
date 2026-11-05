@@ -395,6 +395,9 @@ html.noscroll,html.noscroll body{overflow:hidden;overscroll-behavior:none}
 .trt{flex:1;min-width:0;overflow-wrap:anywhere}.tri .row .pill{white-space:nowrap;flex:none}.tri .row .sub{min-width:0}
 .pr.me{background:var(--panel2);border-radius:12px}
 .glinkb{background:none;border:0;color:var(--ink);text-decoration:underline;font:inherit;padding:0}
+
+/* v16 */
+.lbx.rip{background:var(--panel2)}.ripm{font:800 clamp(28px,9vw,38px)/1 var(--fd);letter-spacing:.04em;margin:10px 0 4px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -653,11 +656,11 @@ async function loadLeague(l,week){
   const [rosters,users,mu]=await Promise.all([sj(`${API}/league/${l.league_id}/rosters`),sj(`${API}/league/${l.league_id}/users`),sj(`${API}/league/${l.league_id}/matchups/${week}`).catch(()=>[])]);
   const ps=(l.settings&&l.settings.playoff_week_start)||15;const fw=[];for(let w=week+1;w<ps&&fw.length<10;w++)fw.push(w);
   const fut=await Promise.all(fw.map(w=>sj(`${API}/league/${l.league_id}/matchups/${w}`).catch(()=>[])));const tp=await sj(`${API}/league/${l.league_id}/traded_picks`).catch(()=>[]);
-  const teams=rosters.map(r=>{const us=users.find(x=>x.user_id===r.owner_id);const s=r.settings||{};return {id:r.roster_id,name:(us&&us.metadata&&us.metadata.team_name)||(us&&us.display_name)||("Team "+r.roster_id),owner:us?us.display_name:"",mine:r.owner_id===LIVE.u.user_id,players:(r.players||[]).filter(Boolean),w:s.wins||0,l:s.losses||0,t:s.ties||0,pf:(s.fpts||0)+(s.fpts_decimal||0)/100,wp:s.waiver_position,fu:s.waiver_budget_used||0,div:s.division||0};});
+  const teams=rosters.map(r=>{const us=users.find(x=>x.user_id===r.owner_id);const s=r.settings||{};return {id:r.roster_id,name:(us&&us.metadata&&us.metadata.team_name)||(us&&us.display_name)||("Team "+r.roster_id),owner:us?us.display_name:"",mine:r.owner_id===LIVE.u.user_id,players:(r.players||[]).filter(Boolean),w:s.wins||0,l:s.losses||0,t:s.ties||0,pf:(s.fpts||0)+(s.fpts_decimal||0)/100,wp:s.waiver_position,fu:s.waiver_budget_used||0,div:s.division||0,ck:Object.keys(s).filter(k=>/chop|elim|guillotin/i.test(k)&&s[k]).map(k=>k+":"+s[k]).join(",")};});
   const idx=id=>teams.findIndex(t=>t.id===id);
   const pairs=arr=>{const g={};for(const m of arr||[]){if(m.matchup_id==null)continue;(g[m.matchup_id]=g[m.matchup_id]||[]).push(m);}return Object.values(g).filter(x=>x.length===2);};
   const slots=(l.roster_positions||[]).filter(s=>ELIG[s]);const allSlots=(l.roster_positions||[]).filter(s=>!["BN","IR","TAXI"].includes(s));const sc=l.scoring_settings||{};
-  return {tp:tp||[],rounds:(l.settings&&l.settings.draft_rounds)||4,divs:(l.settings&&l.settings.divisions)||0,dmeta:l.metadata||{},lset:l.settings||{},rpos:l.roster_positions||[],id:l.league_id,name:l.name,size:l.total_rosters,slots,allSlots,type:(l.settings&&l.settings.type)||0,qb:slots.includes("SUPER_FLEX")||slots.filter(s=>s==="QB").length>1?"sf":"1qb",scoring:sc,scoringLabel:sc.rec===1?"PPR":sc.rec===.5?"Half PPR":"Standard",ps,pteams:(l.settings&&l.settings.playoff_teams)||6,teams,
+  return {gl:/chop|guillotine/i.test(l.name||"")||Object.keys(l.settings||{}).some(k=>/chop|guillotin/i.test(k)&&(l.settings||{})[k])||((mu||[]).length>2&&(mu||[]).every(m=>m.matchup_id==null)),glMu:(mu||[]).filter(m=>(m.starters||[]).some(x=>x&&x!=="0")||m.points).map(m=>({rid:m.roster_id,pts:m.points||0})),tp:tp||[],rounds:(l.settings&&l.settings.draft_rounds)||4,divs:(l.settings&&l.settings.divisions)||0,dmeta:l.metadata||{},lset:l.settings||{},rpos:l.roster_positions||[],id:l.league_id,name:l.name,size:l.total_rosters,slots,allSlots,type:(l.settings&&l.settings.type)||0,qb:slots.includes("SUPER_FLEX")||slots.filter(s=>s==="QB").length>1?"sf":"1qb",scoring:sc,scoringLabel:sc.rec===1?"PPR":sc.rec===.5?"Half PPR":"Standard",ps,pteams:(l.settings&&l.settings.playoff_teams)||6,teams,
     matchups:pairs(mu).map(p=>p.map(m=>({i:idx(m.roster_id),pts:m.points||0,starters:m.starters||[],pp:m.players_points||{}}))),future:fut.map(a=>pairs(a).map(p=>[idx(p[0].roster_id),idx(p[1].roster_id)]).filter(x=>x[0]>=0&&x[1]>=0)).filter(x=>x.length),remWeeks:fw.length};}
 function rebuildLive(L){const sc=L.scoring;const meta=LIVE.players;const ids=new Set();
   for(const lg of S.leagues)for(const t of lg.teams)for(const id of t.players)ids.add(id);
@@ -2005,7 +2008,27 @@ const _hb15=homeBoxes;homeBoxes=function(){return `<div class="lbx2">${S.leagues
    <div class="lpj ell">Proj ${f1(d.ap)}–${f1(d.bp)} · ${PCT(d.wp)}% win</div><div class="pbar"><i style="width:${PCT(d.wp)}%"></i></div>`:`<div class="lop">No matchup this week</div>`}
    <button class="lbr" data-golg="${esc(L.id)}" data-go="team-${ti}">Roster ${CHEV}</button></div>`;}).join("")}</div>`;};
 const _ds15=dockSync;dockSync=function(){_ds15();const r=route();document.querySelectorAll(".dock button").forEach(b=>{if(r==="stats")b.classList.toggle("on",b.dataset.r==="stats");});};
-const _mh15=menuHtml;menuHtml=function(){return _mh15().replace('<button class="mlink','<button class="mlink'+(route()==="stats"?" on":"")+'" data-go="stats" data-dclose="1">'+ic("edge").replace(ICO.edge,'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>')+'<span>My stats</span></button><button class="mlink');};
+const _mh15=menuHtml;menuHtml=function(){return _mh15().replace(/(<button class="mlink[^"]*" data-go="home"[\s\S]*?<\/button>)/,'$1<button class="mlink'+(route()==="stats"?" on":"")+'" data-go="stats" data-dclose="1">'+ic("edge").replace(ICO.edge,'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>')+'<span>My stats</span></button>');};
+
+/* ===== v16: chopped / guillotine leagues ===== */
+function chopCheck(){for(const L of S.leagues){if(!L.gl){L.rip=false;continue;}const me=L.teams.find(t=>t.mine);
+  const alive=(L.glMu||[]).map(x=>x.rid);L.rip=!me||!me.players.length||!!me.ck||(alive.length>0&&!alive.includes(me.id));
+  L.alive=L.teams.filter(t=>t.players.length&&(!alive.length||alive.includes(t.id))).length;}}
+const _cs16=connectSleeper;connectSleeper=async function(u){const r=await _cs16(u);chopCheck();return r;};
+const _ls16=leagueSummary;leagueSummary=function(L){if(L.rip)return {rip:1,name:L.name,team:"",rec:"",size:L.size,type:L.type,qb:L.qb,ok:0,rev:0,urg:0};
+  const v=_ls16(L);if(L.gl&&!v.ok){const mu=(L.glMu||[]).slice().sort((a,b)=>b.pts-a.pts),me=L.teams.find(t=>t.mine);const k=me?mu.findIndex(x=>x.rid===me.id):-1;if(k>=0)Object.assign(v,{glRank:k+1,glN:mu.length,glPts:mu[k].pts,glCut:mu[mu.length-1].pts});}return v;};
+const _ld16=leagueDigest;leagueDigest=function(L){return L.rip?{mv:[],tr:[]}:_ld16(L);};
+const _my16=myIds;myIds=function(){const s=new Set();for(const lg of S.leagues){if(lg.rip)continue;const t=lg.teams[mineIdx(lg)];if(t)t.players.forEach(id=>s.add(id));}return s;};
+const _ml16=myLeaguesOf;myLeaguesOf=function(id){return _ml16(id).filter(L=>!L.rip);};
+const RIPL=["Chopped. Thanks for playing.","Taken to the guillotine.","Your roster is in the free agent pool now.","Gone, not forgotten."];
+homeBoxes=(function(prev){return function(){let h=prev();S.leagues.forEach((L,li)=>{if(!L.rip&&!L.gl)return;const d=leagueSummary(L);
+  const re=new RegExp(`<div class="lbx sm" data-golg="${L.id.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}"[\\s\\S]*?</button></div>`);
+  const body=L.rip?`<div class="lbx sm rip" data-golg="${esc(L.id)}" data-go="league" role="link" tabindex="0"><div class="eyebrow ell">${esc(L.name)}</div><div class="lbs ell">Guillotine · ${L.alive||"?"} still alive</div><div class="ripm">R.I.P.</div><div class="lpj">${RIPL[li%RIPL.length]}</div><button class="lbr" data-golg="${esc(L.id)}" data-go="league">Standings ${CHEV}</button></div>`
+   :d.glRank?`<div class="lbx sm" data-golg="${esc(L.id)}" data-go="team-${mineIdx(L)}" role="link" tabindex="0"><div class="eyebrow ell">${esc(L.name)}</div><div class="lbs ell">Guillotine · ${L.alive} alive</div><div class="lsc num"><b>${f1(d.glPts)}</b></div><div class="lop ell">${ordn(d.glRank)} of ${d.glN} this week</div><div class="lpj ell">${d.glRank===d.glN?"On the chopping block":"Lowest score is "+f1(d.glCut)}</div><button class="lbr" data-golg="${esc(L.id)}" data-go="team-${mineIdx(L)}">Roster ${CHEV}</button></div>`:null;
+  if(body)h=h.replace(re,body);});return h;};})(homeBoxes);
+const _mh16=menuHtml;menuHtml=function(){let h=_mh16();for(const L of S.leagues)if(L.rip){h=h.replace(new RegExp(`(<b class="mn ell">${esc(L.name).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}</b><span class="tag">)[^<]*(</span></div><div class="msub ell">)[^<]*`),`$1R.I.P.$2Chopped · guillotine league`);h=h.replace(new RegExp(`(<button class="chip" data-golg="${L.id.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}" data-go="(?:team-\\d+|matchup-\\d+|trade|waivers)" data-dclose="1">[^<]*</button>)`,"g"),"");}return h;};
+vHome=(function(prev){return function(){let h=prev();if(route()!=="home")return h;const act=S.leagues.filter(L=>!L.rip).length,dead=S.leagues.length-act;
+  return h.replace(/<span>(\d+) teams?<\/span>/,`<span>${act} team${act===1?"":"s"}${dead?` · ${dead} chopped`:""}</span>`);};})(vHome);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
