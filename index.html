@@ -356,6 +356,17 @@ html.noscroll,html.noscroll body{overflow:hidden;overscroll-behavior:none}
 .lbl{display:flex;gap:6px;flex-wrap:wrap}
 .attn{box-shadow:0 0 0 1.5px var(--ink)}
 @media (max-width:360px){.mnav{grid-template-columns:1fr}}
+
+/* v13 */
+.lbx2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.lbx.sm{padding:11px 12px;display:flex;flex-direction:column;gap:2px}
+.lbx.sm .lbs{margin:0;font-size:12px}
+.lsc{display:flex;align-items:baseline;gap:5px;font:600 15px var(--fd);margin-top:6px;color:var(--muted);white-space:nowrap}.lsc b{font:800 clamp(20px,6vw,26px)/1 var(--fd);color:var(--ink)}.lsc span{font-weight:400}
+.lop{font:600 12.5px var(--fb);color:var(--ink);margin-top:2px}
+.lpj{font:500 11.5px var(--fb);color:var(--muted)}
+.lbx.sm .pbar{margin-top:5px}.lbx.sm .lbr{align-self:flex-start;margin-top:8px;padding:4px 9px 4px 11px;font-size:12px}
+@media (min-width:760px){.lbx2{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}}
+.lgt[data-go]{cursor:pointer}
 </style>
 </head>
 <body>
@@ -1102,7 +1113,7 @@ function withLeague(L,fn){if(L===S.L||S.mode!=="live")return fn();const prev=S.L
 function slateCount(W){let played=0,yet=0,out=0;const pp=W.ls&&W.ls.pp;for(const r of W.rows){const p=r.p;if(!p){out++;continue;}const g=gameOf(p);if((g&&g.bye)||(p.inj&&OUTRX.test(p.inj))){out++;continue;}if(pp?(pp[p.id]!=null&&pp[p.id]!==0):(g&&g.final))played++;else yet++;}return {played,yet,out};}
 function leagueSummary(L){const key=S.week+"|"+S.mode+"|"+JSON.stringify((L.matchups||[]).map(p=>p.map(x=>[x.i,x.pts])));if(L._sum&&L._sum.key===key)return L._sum.v;
   const v=withLeague(L,()=>{const ti=mineIdx(L),me=L.teams[ti],M=myMatchup(L),o=oddsFor(L)[ti];const r={size:L.size,type:L.type,qb:L.qb,name:L.name,rec:me.w+"-"+me.l+(me.t?"-"+me.t:""),po:o.po,team:me.name};
-    if(M){const al=alertsFor(M.A).filter(a=>a.lvl!=="info"),lv=x=>x.live!=null&&x.live>0;Object.assign(r,{ok:1,ap:M.A.proj,bp:M.B.proj,cnt:slateCount(M.A),a:M.A.t.name,b:M.B.t.name,as:lv(M.A)?M.A.live:M.A.proj,bs:lv(M.B)?M.B.live:M.B.proj,live:lv(M.A)||lv(M.B),wp:M.wpA,urg:al.filter(a=>a.lvl==="bad").length,rev:al.length});}return r;});
+    if(M){const al=alertsFor(M.A).filter(a=>a.lvl!=="info"),lv=x=>x.live!=null&&x.live>0;Object.assign(r,{ok:1,ap:M.A.proj,bp:M.B.proj,cnt:slateCount(M.A),a:M.A.t.name,b:M.B.t.name,bi:L.teams.indexOf(M.B.t),as:lv(M.A)?M.A.live:M.A.proj,bs:lv(M.B)?M.B.live:M.B.proj,live:lv(M.A)||lv(M.B),wp:M.wpA,urg:al.filter(a=>a.lvl==="bad").length,rev:al.length});}return r;});
   L._sum={key,v};return v;}
 function leagueCards(){return `<div class="lgrid">${S.leagues.map((L,li)=>{const d=leagueSummary(L),on=L===S.L;
   const body=d.ok?`<div class="lgs"><div><div class="lgn">${f1(d.as)}</div><div class="sub tn">${esc(d.a)}</div></div><div class="vs">vs</div><div style="text-align:right"><div class="lgn">${f1(d.bs)}</div><div class="sub tn" style="margin-left:auto">${esc(d.b)}</div></div></div><div class="pbar"><i style="width:${PCT(d.wp)}%"></i></div><div class="row sp sub"><span class="num">${PCT(d.wp)}% win chance</span><span>${d.urg?d.urg+" urgent":d.rev?d.rev+" to review":"Lineup set"}</span></div>`:`<p class="sub mt">No Week ${S.week} matchup.</p>`;
@@ -1599,6 +1610,40 @@ const _r12=render;render=function(){_r12();const r=route();NAVL.length=NAV.lengt
   if(S._homeRet&&r==="home"){S._homeRet=false;requestAnimationFrame(()=>window.scrollTo(0,HOMEY));}};
 const _gb12=goBack;goBack=function(){if($("#sheet").hidden&&$("#pal").hidden&&NAV.length>1){const lg=NAVL[NAV.length-2];if(lg&&S.L&&lg!==S.L.id&&S.leagues.some(l=>l.id===lg))selectLeague(lg);}return _gb12();};
 document.addEventListener("click",e=>{if(e.target.closest("#homeBtn")){e.stopPropagation();S._homeRet=true;go("home");}},true);
+
+/* ===== v13: no repeats, compact league boxes ===== */
+function mergedMoves(){const out=new Map();
+  for(const m of allMoves()){const k=m.go.startsWith("player-")?m.go:"a|"+m.t;let e=out.get(k);
+    if(!e){e=Object.assign({},m,{ks:[m.k],ls:[{L:m.L,go:m.go}]});out.set(k,e);}
+    else{if(!e.ks.includes(m.k))e.ks.push(m.k);if(!e.ls.some(x=>x.L===m.L))e.ls.push({L:m.L,go:m.go});e.pr=Math.max(e.pr,m.pr);}}
+  return [...out.values()].sort((a,b)=>b.pr-a.pr);}
+function mRow(m,noTag){const tags=noTag||!multiL()?"":`<div class="lgts">${m.ls.map(x=>`<span class="lgt" data-golg="${esc(x.L.id)}" data-go="${x.go}" role="link">${esc(lgShort(x.L))}</span>`).join("")}</div>`;
+  return `<button class="act" data-golg="${esc(m.ls[0].L.id)}" data-go="${m.ls[0].go}"><span class="pill${m.k==="Urgent"?" hot":""}">${esc(m.ks.slice(0,2).join(" · "))}</span><span style="min-width:0"><div class="t">${esc(m.t)}</div><div class="s">${esc(m.s)}</div>${tags}</span>${CHEV}</button>`;}
+const _mrg=allTrends;
+function homeBoxes(){return `<div class="lbx2">${S.leagues.map((L,li)=>{const ti=mineIdx(L),t=L.teams[ti],st=standing(L,ti),d=leagueSummary(L);
+  const os=d.ok&&d.bi>=0?standing(L,d.bi).r:null;
+  return `<div class="lbx sm" data-golg="${esc(L.id)}" data-go="matchup-${li}" role="link" tabindex="0">
+   <div class="eyebrow ell">${esc(L.name)}</div>
+   <div class="lbs ell">${t.w}-${t.l}${t.t?"-"+t.t:""} · ${ordn(st.r)}${st.dv?` · ${ordn(st.dv.r)} div`:""}</div>
+   ${d.ok?`<div class="lsc num"><b>${f1(d.as)}</b><span>–</span>${f1(d.bs)}</div>
+   <div class="lop ell">vs ${esc(d.b)}${os?` · ${ordn(os)}`:""}</div>
+   <div class="lpj ell">${d.live?`Proj ${f1(d.ap)}–${f1(d.bp)} · `:"Projected · "}${PCT(d.wp)}% win</div><div class="pbar"><i style="width:${PCT(d.wp)}%"></i></div>`:`<div class="lop">No matchup this week</div>`}
+   <button class="lbr" data-golg="${esc(L.id)}" data-go="team-${ti}">Roster ${CHEV}</button></div>`;}).join("")}</div>`;}
+vHome=(function(prev){return function(){const r=route();if(r==="moves"||r==="trends"||r==="news"||r.startsWith("nfl-")||!S.leagues.length||!S.L){if(r==="moves")return vMoves();return prev();}
+  try{const live=S.mode==="live",ms=mergedMoves(),urg=ms.filter(m=>m.pr>=80),rest=ms.filter(m=>m.pr<80).slice(0,5);
+    const shown=new Set(rest.concat(urg.slice(0,3)).filter(m=>m.go.startsWith("player-")).map(m=>m.go.slice(7)));
+    const tr=allTrends().filter(x=>!shown.has(String(x.id))).slice(0,6);const n=S.leagues.length;
+    return `<div class="topline"><div class="eyebrow">Week ${S.week} · ${live?n+" league"+(n>1?"s":""):"Demo league"}</div><h1>Home</h1></div>${live?"":`<p class="sub" style="margin:-4px 2px 12px">Real Week ${S.week} data in a demo league.</p>`}
+    ${homeBoxes()}
+    ${urg.length?`<section class="pan mt attn"><div class="row sp"><h2>Needs attention</h2><span class="tag">${urg.length}</span></div>${urg.slice(0,3).map(m=>mRow(m)).join("")}</section>`:""}
+    ${updatesBox()}
+    <section class="pan mt"><div class="row sp"><h2>Recommended moves</h2></div>${rest.map(m=>mRow(m)).join("")||`<p class="sub">Nothing pressing.</p>`}${ms.length>rest.length+Math.min(3,urg.length)?`<button class="btn ghost mt seemore" data-go="moves">All ${ms.length} moves</button>`:""}</section>
+    <section class="pan mt"><div class="row sp"><h2>Trend spotter</h2><span class="tag">Breakout odds</span></div>${tr.map(trendRow).join("")||`<p class="sub">No new candidates.</p>`}<button class="btn ghost mt seemore" data-go="trends">All trends</button></section>`;}
+  catch(e){console.error(e);return prev();}};})(vHome);
+vMoves=function(){const ms=mergedMoves();
+  return `<div class="topline"><div class="eyebrow">Week ${S.week}</div><h1>Recommended moves</h1></div><p class="sub" style="margin:-4px 2px 12px">Ranked by impact. Each is calculated with that league’s scoring and roster${multiL()?"; tags show which leagues it applies to. Tap a tag to open it there":""}.</p><section class="pan">${ms.map(m=>mRow(m)).join("")||`<p class="sub">Nothing pressing.</p>`}</section>`;};
+/* updates box: drop the count tag that repeats the list length; dedupe news by player */
+const _fd13=feed;feed=function(sc){const xs=_fd13(sc),seen=new Set();return xs.filter(it=>{if(it.src==="Sleeper"){const k="s"+(it._p||[])[0];if(seen.has(k))return false;seen.add(k);}const k2=(it.t||"").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,60);if(seen.has(k2))return false;seen.add(k2);return true;});};
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
