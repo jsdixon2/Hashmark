@@ -335,6 +335,14 @@ html.noscroll,html.noscroll body{overflow:hidden;overscroll-behavior:none}
 .tprof .lnk{display:block;width:100%;text-align:left;margin-top:4px}
 .tpg{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sw{font:600 14px var(--fd);margin-top:4px;display:flex;gap:6px;align-items:center}
 .pks{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}.pk{font:600 12px var(--fd);background:var(--panel2);border-radius:8px;padding:2px 7px}.pk.r1{background:var(--ink);color:var(--bg)}
+
+/* v11 */
+.rkb{display:flex;flex-direction:column;gap:7px}
+.rkr{display:grid;grid-template-columns:minmax(0,8.5em) minmax(0,1fr) 3.2em;gap:10px;align-items:center;font:500 13.5px var(--fb)}
+.rkr>span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rkr b{text-align:right;font:600 13.5px var(--fd)}
+.rkr .bar{height:8px;border-radius:99px;background:var(--panel2);overflow:hidden}.rkr .bar i{display:block;height:100%;border-radius:99px;background:var(--muted)}
+.rkr .bar i.hi{background:var(--ink)}.rkr .bar i.lo{background:var(--line)}
+.rkv{margin:-4px 0 2px calc(8.5em + 10px);font-size:12px}
 </style>
 </head>
 <body>
@@ -790,7 +798,7 @@ function vTeam(i){const L=S.L;const t=L&&L.teams[i];if(!t)return `<div class="em
   const grp=["QB","RB","WR","TE"].map(pp=>[pp,t.players.map(id=>PL[id]).filter(p=>p&&p.pos===pp).sort((a,b)=>b.val-a.val)]);
   const ros=t.players.map(id=>PL[id]).filter(Boolean);const ar=ros.reduce((s,p)=>s+p.risk,0)/Math.max(1,ros.length);
   return `<div class="row sp" style="flex-wrap:wrap"><div><h1>${esc(t.name)}</h1><div class="sub">${esc(t.owner)}${S.mode==="live"?`, ${t.w}-${t.l}${t.t?"-"+t.t:""}`:""}</div></div>${t.mine?"":`<button class="btn" data-tradewith="${i}">Trade with this team</button>`}</div>
-  <div class="kpis mt"><div><b>${f1(lu.pts)}</b><span>Weekly lineup strength</span></div><div><b>${f1(t.pf)}</b><span>Points for</span></div><div><b>${f0(ros.reduce((s,p)=>s+p.val,0))}</b><span>Roster value</span></div><div><b>${tierOf(ar)[1]}</b><span>Roster risk profile</span></div></div>
+  <div class="kpis mt"><div><b>${f1(lu.pts)}</b><span>Weekly lineup strength</span></div><div><b>${f1(t.pf)}</b><span>Points for</span></div><div><b>${f0(ros.reduce((s,p)=>s+p.val,0))}</b><span>Roster value</span></div><div><b>${teamRisk(L,i).label}</b><span>Roster risk profile</span></div></div>${teamRiskPanel(L,i)}
   <section class="grid2 mt">
     <div class="pan"><div class="row sp"><h2>Strength vs league</h2><span class="sub">starter pts/week</span></div>${nd.map(x=>`<div class="dv"><b>${x.pos}</b><div class="l">${x.d<0?`<i style="width:${Math.abs(x.d)/mx*100}%"></i>`:""}</div><div class="r">${x.d>0?`<i style="width:${x.d/mx*100}%"></i>`:""}</div><span class="num ${x.d<0?"bad":"good"}">${x.d>0?"+":""}${f1(x.d)}</span></div>`).join("")}<p class="sub mt">Biggest need: <b>${tr.need}</b>. Deepest spot to deal from: <b>${tr.surplus}</b>.</p></div>
     <div class="pan"><h2>Trade targets: ${tr.need}</h2><p class="sub">${tr.need}s on other rosters, benched players first, each paired with a similar-value ${tr.surplus} from this roster. ⇄ loads it in Trade Lab.</p>${tr.targets.map(x=>`<div class="tok">${pos(x.p.pos)}<div><button class="lnk" data-go="player-${x.p.id}"><b>${esc(x.p.name)}</b></button><div class="sub">${esc(x.team.name)}${x.benched?", on their bench":""}${x.give?`; offer ${esc(x.give.name)}`:""}</div></div><span class="num">${f0(x.p.val)}</span><button class="add" data-preset="${x.give?x.give.id:""}|${x.p.id}|${L.teams.indexOf(x.team)}|${i}" aria-label="Load this trade">⇄</button></div>`).join("")||`<div class="empty">No clean targets found.</div>`}</div></section>
@@ -824,7 +832,7 @@ function vPlayer(id){return vPlayer0(id)+nvPanel(id);}function vPlayer0(id){cons
     <div><b>${f0(p.val)}</b><span>${S.fmt.type==="dynasty"?"Dynasty":"Redraft"} value, ${S.fmt.qb==="sf"?"SF":"1QB"}</span></div><div><b>${f1(p.ros)}</b><span>Rest-of-season pts/wk</span></div><div><b>${p.broke?"Arrived":pc(p.brk)}</b><span>${p.broke?"Already a top-3 finisher":"Breakout odds"}</span></div><div><b>${p.risk}</b><span>Risk, 0 safe to 100 wild</span></div></div>
   ${p.pts==null&&S.mode!=="live"?`<p class="sub">Season totals for ${esc(p.name)} sit outside this snapshot’s top-50 leaders pull; his value leans on Sleeper’s Week ${S.week} projection until Sleeper is linked.</p>`:""}
   <section class="grid2 mt">
-    <div class="pan"><div class="row sp"><h2>Frisky–safe meter</h2><span class="tag ${p.risk<40?"good":p.risk<67?"warn":"bad"}">${p.tier[1]}</span></div><div class="row mt" style="gap:16px;flex-wrap:wrap">${gauge(p.risk)}<div style="flex:1;min-width:160px"><p style="margin:0">${p.tier[2]}.</p><p class="sub">Built from age against the ${p.pos} decline curve, games missed${p.inj?", the current injury tag":""}${p.cv!=null?`, and week-to-week swing (${pc(p.cv)} of his average)`:""}.</p></div></div></div>
+    ${riskPanel(p)}
     <div class="pan"><h2>Value breakdown</h2>
       <div class="lrow mt"><span>Points over a replacement ${p.pos}, rest of ${S.season}</span><span class="num">${f1(p.par)}</span></div>
       <div class="lrow"><span>Future seasons, age-curved${S.fmt.type==="dynasty"?"":" (off in redraft)"}</span><span class="num">${f1(p.fut)}</span></div>
@@ -1409,6 +1417,106 @@ function teamProfile(L,ti,label){const t=L.teams[ti];if(!t)return `<div class="p
   ${pk?`<div class="mk mt">Draft capital</div>${capText(pk)}${pk.own.some(p=>p.from)?`<div class="sub">* acquired from another team</div>`:""}`:""}</div>`;}
 function tradeProfiles(){const L=S.L,T=S.trade;if(!L||!L.teams.length)return "";return `<section class="tprofs mt">${teamProfile(L,T.ta,"Your side")}${teamProfile(L,T.tb,"Their side")}</section><p class="sub" style="margin:6px 2px 0">Strengths and weaknesses are weekly starter points above or below the league average at each position.</p>`;}
 const _vT10=vTrade;vTrade=function(){const h=_vT10(),k='</div>',i=h.indexOf(k);return i>=0?h.slice(0,i+k.length)+tradeProfiles()+h.slice(i+k.length):tradeProfiles()+h;};
+
+/* ===== v11: multi-factor risk engine ===== */
+const RK_W={vol:.22,floor:.17,health:.2,role:.16,age:.1,td:.09,trend:.06};
+const RK_N={vol:"Weekly swing",floor:"Dud weeks",health:"Health",role:"Role security",age:"Age curve",td:"TD reliance",trend:"Usage trend"};
+const pctl=(arr,v)=>{if(!arr.length)return 50;let lo=0,eq=0;for(const x of arr){if(x<v)lo++;else if(x===v)eq++;}return Math.round(100*(lo+eq/2)/arr.length);};
+function rawRisk(p,tgMax){const R=repl(p.pos),lg=(p.log||[]).filter(x=>x.pts!=null),n=lg.length,a=p.age||26,o={},f={};
+  const m=n?lg.reduce((s,x)=>s+x.pts,0)/n:null;
+  // weekly swing: coefficient of variation, shrunk toward the position prior when sample is small
+  const prior={QB:.38,RB:.5,WR:.55,TE:.6}[p.pos]||.5;let cv=prior;
+  if(n>=3&&m>0){const sd=Math.sqrt(lg.reduce((s,x)=>s+(x.pts-m)**2,0)/n);cv=(sd/Math.max(2,m)*n+prior*3)/(n+3);}
+  o.vol=cv;f.cv=cv;
+  // floor: share of games under 60% of a replacement starter
+  const dud=n?lg.filter(x=>x.pts<.6*R).length/n:.3,boom=n?lg.filter(x=>x.pts>1.6*R).length/n:.1;
+  o.floor=(dud*n+.3*2)/(n+2);f.dud=dud;f.boom=boom;
+  // health
+  let h=({QB:.08,RB:.2,WR:.13,TE:.14}[p.pos]||.14)+(p.pos==="RB"&&a>=27?(a-26)*.04:0);
+  if(p.inj){h+=/\bir\b|\bout\b|pup|sus/i.test(p.inj)?.75:/doubt/i.test(p.inj)?.5:/quest/i.test(p.inj)?.3:.15;}
+  if(tgMax&&p.g!=null&&p.team!=="FA"){const miss=Math.max(0,tgMax-p.g);h+=Math.min(.45,miss/tgMax*.9);f.miss=miss;}
+  if(p.news&&p.news.out)h+=.4;o.health=h;
+  // role security: snap share, depth chart, news
+  const sn=lg.map(x=>x.snap).filter(x=>x!=null),r3=sn.slice(-3);const snap=r3.length?r3.reduce((s,x)=>s+x,0)/r3.length:null;f.snap=snap;
+  let ro=p.pos==="QB"?.1:.3;if(snap!=null)ro=p.pos==="QB"?(snap<85?.6:.08):Math.max(0,(80-snap)/80);
+  if(p.dc&&p.dc>1&&p.pos!=="QB")ro+=p.dc===2?.2:.4;if(p.dc&&p.dc>1&&p.pos==="QB")ro+=.6;
+  if(p.news&&p.news.m<.95)ro+=.25;if(p._up)ro-=.15;if(p.team==="FA")ro+=.6;o.role=Math.max(0,ro);
+  // age vs positional cliff
+  const cl=AGE_CLIFF[p.pos]||29;o.age=a>=cl?1+(a-cl)*.35:a>=cl-2?(a-(cl-2))/2*.8:0;f.cl=cl;
+  // touchdown reliance: share of fantasy points from TDs (6 pts each, 4 for passing)
+  let tdp=null;if(n>=3&&m>0){const td=lg.reduce((s,x)=>{const r=x.raw||{};const t6=(r.rec_td||0)+(r.rush_td||0);const t4=r.pass_td||0;return s+(x.raw?t6*6+t4*4:(x.td||0)*(p.pos==="QB"?4:6));},0);tdp=Math.min(1,td/(m*n));}
+  f.tdp=tdp;o.td=tdp==null?.3:Math.max(0,tdp-(p.pos==="QB"?.3:.2));
+  // trend: last three games vs earlier games (points and snaps)
+  let tr=0;if(n>=5){const l3=lg.slice(-3),e=lg.slice(0,-3);const pl=l3.reduce((s,x)=>s+x.pts,0)/3,pe=e.reduce((s,x)=>s+x.pts,0)/e.length;tr=(pe-pl)/Math.max(4,pe);
+    const s3=l3.map(x=>x.snap).filter(x=>x!=null),se=e.map(x=>x.snap).filter(x=>x!=null);if(s3.length&&se.length)tr+=((se.reduce((s,x)=>s+x,0)/se.length)-(s3.reduce((s,x)=>s+x,0)/s3.length))/100;}
+  f.trend=-tr;f.tr=tr;o.trend=tr;p._rf=f;return o;}
+function riskEngine(){const ps=Object.values(PL).filter(p=>POSI.hasOwnProperty(p.pos));
+  const tg={};for(const p of ps)if(p.g!=null&&p.team!=="FA")tg[p.team]=Math.max(tg[p.team]||0,p.g);
+  const raw=new Map();for(const p of ps)raw.set(p,rawRisk(p,tg[p.team]||(S.mode==="live"?null:TG[p.team])));
+  const pool=ps.filter(p=>(p.ros||0)>=5);const dist={};for(const pos of Object.keys(POSI)){const pp=pool.filter(p=>p.pos===pos);dist[pos]={};for(const k of Object.keys(RK_W))dist[pos][k]=pp.map(p=>raw.get(p)[k]).sort((a,b)=>a-b);}
+  const dyn=S.fmt.type==="dynasty",W=Object.assign({},RK_W,dyn?{age:.18,trend:.04}:{});const ws=Object.values(W).reduce((s,x)=>s+x,0);
+  const comp=[];for(const p of ps){const r=raw.get(p),c={};for(const k of Object.keys(W))c[k]=pctl(dist[p.pos][k],r[k]);
+    if(p.inj&&/\bir\b|\bout\b|pup|sus/i.test(p.inj))c.health=Math.max(c.health,95);if(r.age===0)c.age=Math.min(c.age,20);
+    p.rc=c;p._comp=Object.keys(W).reduce((s,k)=>s+c[k]*W[k],0)/ws;comp.push(p._comp);}
+  const cd={};for(const pos of Object.keys(POSI))cd[pos]=pool.filter(p=>p.pos===pos).map(p=>p._comp).sort((a,b)=>a-b);
+  for(const p of ps){p.risk=clamp(Math.max(2,Math.min(98,pctl(cd[p.pos],p._comp))),2,98);p.tier=archetype(p);}}
+function archetype(p){const c=p.rc,f=p._rf||{},n=(p.log||[]).length,R=repl(p.pos);
+  const out=p.inj&&/\bir\b|\bout\b|pup|sus/i.test(p.inj);const pct=x=>Math.round(100*x)+"%";
+  if(out)return [p.risk,"On the shelf",`Listed ${p.inj}; nothing until he’s cleared`];
+  if(p.team==="FA")return [p.risk,"Unsigned","No NFL team right now"];
+  const L=[];
+  if(c.health>=85)L.push([c.health,"Injury watch",f.miss?`Missed ${f.miss} of his team’s games${p.inj?", now "+p.inj:""}`:`${p.inj?p.inj+", ":""}one of the higher injury risks at ${p.pos}`]);
+  if(c.role>=85)L.push([c.role,"Role in flux",f.snap!=null?`On the field for ${Math.round(f.snap)}% of snaps lately${p.dc>1?", listed "+ordn(p.dc)+" on the depth chart":""}`:"Depth chart and usage aren’t locked in"]);
+  if(c.age>=85)L.push([c.age,"Age cliff",`${p.age} is ${p.age>=f.cl?"past":"near"} the ${p.pos} decline age of ${f.cl}`]);
+  if(c.td>=88&&f.tdp!=null)L.push([c.td,"Touchdown-dependent",`${pct(f.tdp)} of his points come from touchdowns, which rarely hold`]);
+  if(c.trend>=88&&n>=5&&f.tr>=.15)L.push([c.trend,"Fading usage","Points and snaps over the last 3 games are well below his earlier pace"]);
+  if(c.trend<=8&&n>=5&&f.tr<=-.2&&(p.age||30)<=26)L.push([100-c.trend,"Ascending","Usage and production rising over the last 3 games"]);
+  if(L.length)return [p.risk,...L.sort((a,b)=>b[0]-a[0])[0].slice(1)];
+  const hv=c.vol>=66,lv=c.vol<=33,bo=f.boom||0,du=f.dud||0;
+  if(hv&&bo>=.3)return [p.risk,"Boom or bust",`${pct(bo)} of weeks are blowups and ${pct(du)} are duds`];
+  if(hv)return [p.risk,"Erratic",`Swings ${pct(f.cv)} of his average week to week without the blowup weeks to show for it`];
+  if(lv&&bo>=.3&&du<=.15)return [p.risk,"Locked-in stud",`High floor and ${pct(bo)} blowup weeks`];
+  if(lv&&du<=.2)return [p.risk,"Steady floor",`Only ${pct(du)} dud weeks; rarely wrecks a lineup`];
+  if(lv&&(p.ros||0)<R)return [p.risk,"Low-ceiling filler","Consistent, but consistently below a starter’s line"];
+  if(c.floor>=70)return [p.risk,"Shaky floor",`${pct(du)} of weeks finish under a usable line`];
+  const sec=[["health",70,"Health flag",`Above-average injury risk for a ${p.pos}${p.inj?" ("+p.inj+")":""}`],["role",70,"Role question","Snap share or depth-chart spot isn’t fully secure"],["age",70,"Nearing the cliff",`${p.age} with the ${p.pos} decline age at ${f.cl}`],["td",75,"TD-leaning","More of his scoring comes from touchdowns than most"]].filter(x=>c[x[0]]>=x[1]).sort((a,b)=>c[b[0]]-c[a[0]]);
+  if(sec.length)return [p.risk,sec[0][2],sec[0][3]];
+  if(p.g!=null&&p.g<3)return [p.risk,"Small sample","Too few games to judge his week-to-week range"];
+  if(n<3){if(p.risk<=25)return [p.risk,"Low risk","Healthy, secure role and on the right side of the age curve"];if(p.risk>=70)return [p.risk,"Elevated risk","Several smaller risks add up"];}
+  return [p.risk,"Normal variance","No single risk stands out"];}
+const _ca11=computeAll;computeAll=function(){const r=_ca11.apply(this,arguments);try{riskEngine();}catch(e){console.error(e);}return r;};
+function riskPanel(p){const c=p.rc||{},t=p.tier;const ks=Object.keys(RK_N).filter(k=>c[k]!=null);
+  return `<div class="pan"><div class="row sp"><h2>Risk profile</h2><span class="tag ${p.risk<40?"good":p.risk<67?"warn":"bad"}">${esc(t[1])}</span></div><div class="row mt" style="gap:16px;flex-wrap:wrap;align-items:center">${gauge(p.risk)}<div style="flex:1;min-width:160px"><p style="margin:0">${esc(t[2])}.</p><p class="sub">Overall risk ${p.risk} of 100, ranked against every fantasy-relevant ${p.pos}.</p></div></div>
+  <div class="rkb mt">${ks.map(k=>`<div class="rkr"><span>${RK_N[k]}</span><span class="bar"><i class="${c[k]>=75?"hi":c[k]<=25?"lo":""}" style="width:${Math.max(3,c[k])}%"></i></span><b class="num">${c[k]}</b></div>`).join("")}</div><p class="sub mt">Each bar is a percentile among ${p.pos}s: higher means riskier than most on that factor.</p></div>`;}
+function teamRiskAll(L){const key=L.id+"|"+S.week+"|"+Object.keys(PL).length+"|"+(NW.built||0);if(L._tr&&L._tr.k===key)return L._tr.v;
+  const rows=L.teams.map((t,ti)=>{const lu=lineup(t.players,L.slots).out,st=lu.map(x=>x.p).filter(Boolean),base=lu.reduce((s,x)=>s+(x.p?x.p.ros:0),0);
+    const av=k=>st.length?st.reduce((s,p)=>s+((p.rc||{})[k]??50),0)/st.length:50;
+    const top=st.slice().sort((a,b)=>b.ros-a.ros).slice(0,4);let drop=0;for(const p of top){const lu2=lineup(t.players.filter(id=>id!==p.id),L.slots).out;drop+=base-lu2.reduce((s,x)=>s+(x.p?x.p.ros:0),0);}
+    drop=top.length?drop/top.length:0;const sr=st.map(p=>p.ros).sort((a,b)=>b-a);const conc=base>0?(sr[0]+(sr[1]||0))/base:0;
+    const boom=st.length?st.reduce((s,p)=>s+((p._rf||{}).boom||0),0)/st.length:0;
+    const all=t.players.map(id=>PL[id]).filter(Boolean),vt=all.reduce((s,p)=>s+(p.val||0),0)||1;const old=all.reduce((s,p)=>s+((p.rc||{}).age>=70?(p.val||0):0),0)/vt;
+    const young=all.reduce((s,p)=>s+((p.age||30)<=24?(p.val||0):0),0)/vt;
+    return {ti,m:{vol:av("vol"),inj:av("health"),cush:drop,conc,age:old,ceil:boom,young,role:av("role")},risk:st.length?st.reduce((s,p)=>s+p.risk,0)/st.length:50};});
+  const dims=["vol","inj","cush","conc","age","ceil","young","role"];const rk={};
+  for(const d of dims){const v=rows.map(r=>r.m[d]).sort((a,b)=>a-b);for(const r of rows){(r.p=r.p||{})[d]=v.length>1?Math.round(100*v.indexOf(r.m[d])/(v.length-1)):50;}}
+  const dyn=S.fmt.type==="dynasty",N=L.teams.length;
+  const LBL={inj:["Banged up","Starters carry the most injury risk in the league"],cush:["Top-heavy","Losing one of the top starters would hurt more than almost anyone else"],conc:["Star-dependent","Two players carry an outsized share of the lineup"],age:["Aging core","The most value tied up in players at or past their age cliff"],
+    ceil:["Boom-or-bust lineup","Starters post more blowup weeks than anyone, with the swings to match"],vol:["Volatile lineup","Starters swing week to week more than the rest of the league"],young:["Youth movement","The most value in players 24 and under"],role:["Shaky roles","Starters with the least secure snap shares and depth spots"]};
+  for(const r of rows){const c=[];for(const d of ["inj","age","cush","conc","ceil","vol","role"]){c.push([r.p[d],d]);}if(dyn)c.push([r.p.young,"young"]);
+    const calm=(100-r.p.vol+100-r.p.inj+100-r.p.cush)/3;
+    c.sort((a,b)=>b[0]-a[0]);const [sc,d]=c[0];
+    if(sc>=80&&!(d==="age"&&!dyn&&sc<90)){r.label=LBL[d][0];r.why=LBL[d][1];}
+    else if(calm>=68){r.label=r.p.cush<=25?"Fortress":"Steady build";r.why=r.p.cush<=25?"Low volatility, healthy starters and the depth to absorb an injury":"Low volatility and healthy starters";}
+    else if(r.p.cush<=20){r.label="Deep bench";r.why="Bench depth covers injuries better than almost anyone";}
+    else{r.label="Balanced build";r.why="No risk stands out against the rest of the league";}}
+  L._tr={k:key,v:rows};return rows;}
+function teamRisk(L,ti){try{return teamRiskAll(L)[ti]||{label:"Balanced build",why:""};}catch(e){console.error(e);return {label:"Balanced build",why:""};}}
+function teamRiskPanel(L,ti){let r;try{r=teamRiskAll(L)[ti];}catch(e){return "";}if(!r)return "";const N=L.teams.length;
+  const D=[["inj","Injury exposure","Average health risk of your starters"],["vol","Weekly volatility","How much your starters swing"],["cush","Injury cushion","Points lost if a top-4 starter goes down",1],["conc","Star dependence","Share of lineup points from your top two"],["age","Age exposure","Value in players at or past their age cliff"],["role","Role risk","Starters with insecure snaps or depth spots"],["ceil","Ceiling","Blowup-week rate of your starters",2]];
+  const rnk=d=>{const v=teamRiskAll(L).map(x=>x.m[d]).sort((a,b)=>b-a);return v.indexOf(r.m[d])+1;};
+  return `<section class="pan mt"><div class="row sp"><h2>Risk profile</h2><span class="tag">${esc(r.label)}</span></div><p class="sub">${esc(r.why)}. Ranked against the other ${N-1} teams in ${esc(L.name)}.</p><div class="rkb mt">${D.map(([d,n,h,inv])=>{const v=r.p[d],k=rnk(d);const cls=inv===2?(v>=75?"lo":v<=25?"hi":""):(v>=75?"hi":v<=25?"lo":"");
+    const val=d==="cush"?f1(r.m.cush)+" pts":d==="conc"||d==="age"?PCT(r.m[d])+"%":d==="ceil"?PCT(r.m.ceil)+"% weeks":"";
+    return `<div class="rkr" title="${esc(h)}"><span>${n}</span><span class="bar"><i class="${cls}" style="width:${Math.max(3,v)}%"></i></span><b class="num">${ordn(k)}</b></div>${val?`<div class="rkv sub">${val}</div>`:""}`;}).join("")}</div><p class="sub mt">Rank 1st means the most of that factor in the league.</p></section>`;}
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
