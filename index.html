@@ -1360,7 +1360,7 @@ function trendSpot(L){const mine=new Map();for(const lg of S.leagues){const t=lg
   const top=c.sort((a,b)=>b.p.brk-a.p.brk).slice(0,6);if(!top.length)return "";
   return `<section class="pan mt"><div class="row sp"><h2>Trend spotter</h2><span class="tag">Breakout odds</span></div><p class="sub">Your players, waiver adds and buy-low targets most likely to break out.</p>${top.map(({p,tag})=>`<button class="tsr" data-go="player-${p.id}">${pos(p.pos)}<span class="tsn"><b class="ell">${esc(p.name)}</b><span class="sub ell">${esc(tag)}${p._up?" · role rising in news":""}</span></span><span class="tsb"><span class="bar"><i style="width:${Math.min(100,PCT(p.brk)/.75)}%"></i></span><b class="num">${PCT(p.brk)}%</b></span></button>`).join("")}</section>`;}
 function updatesBox(){const xs=feed("mine");const n=xs.length;
-  return `<section class="pan mt"><div class="row sp"><h2>Player updates</h2>${n?`<span class="tag">${n}</span>`:""}</div>${xs.slice(0,4).map(it=>nItem(it,0)).join("")||`<p class="sub">No updates for your players yet.</p>`}<button class="btn ghost mt seemore" data-go="news">See more</button></section>`;}
+  return `<section class="pan mt"><div class="row sp"><h2>Player updates</h2></div>${xs.slice(0,4).map(it=>nItem(it,0)).join("")||`<p class="sub">No updates for your players yet.</p>`}<button class="btn ghost mt seemore" data-go="news">See more</button></section>`;}
 const _vH9=vHome;
 vHome=function(){const r=route();if(r==="news")return vNews();if(r.startsWith("nfl-"))return _vH9();const L=S.L;if(!L||!L.teams||!L.teams.length)return _vH9();
   try{const live=S.mode==="live";let mv=actionsPanel(L);mv=mv.replace(/<h2>Next best moves<\/h2><span class="tag">Ranked by impact<\/span>/,`<h2>Recommended moves</h2><span class="tag ell" style="max-width:50%">${esc(L.name)}</span>`);
@@ -1567,7 +1567,7 @@ function allMoves(){const out=[];S.leagues.forEach(L=>leagueDigest(L).mv.forEach
 function allTrends(){const by=new Map();for(const L of S.leagues)for(const x of leagueDigest(L).tr){const k=x.id;let e=by.get(k);if(!e){e=Object.assign({},x,{tags:[]});by.set(k,e);}if(!e.tags.some(t=>t.tag===x.tag&&t.L===L))e.tags.push({tag:x.tag,L});}
   return [...by.values()].sort((a,b)=>b.brk-a.brk);}
 function moveRow(m,noTag){return `<button class="act" data-golg="${esc(m.L.id)}" data-go="${m.go}"><span class="pill${m.k==="Urgent"?" hot":""}">${esc(m.k)}</span><span style="min-width:0"><div class="t">${esc(m.t)}</div><div class="s">${esc(m.s)}</div>${noTag?"":lgTag(m.L)}</span>${CHEV}</button>`;}
-function trendRow(x){const tg=x.tags.map(t=>t.tag+(multiL()?" · "+lgShort(t.L):""));const uniq=[...new Set(tg)];
+function trendRow(x){const g={};x.tags.forEach(t=>{(g[t.tag]=g[t.tag]||[]).push(t.L);});const uniq=Object.entries(g).map(([k,ls])=>!multiL()?k:ls.length===S.leagues.length?k+" · all leagues":k+" · "+ls.map(lgShort).join(", "));
   return `<button class="tsr" data-go="player-${x.id}">${pos(x.pos)}<span class="tsn"><b class="ell">${esc(x.name)}</b><span class="sub ell">${esc(uniq.slice(0,2).join(", "))}${uniq.length>2?` +${uniq.length-2}`:""}${x.up?" · role rising in news":""}</span></span><span class="tsb"><span class="bar"><i style="width:${Math.min(100,PCT(x.brk)/.75)}%"></i></span><b class="num">${PCT(x.brk)}%</b></span></button>`;}
 const _nI12=nItem;nItem=function(it,full){let h=_nI12(it,full);if(!multiL())return h;const ls=[...new Set((it._p||[]).flatMap(id=>myLeaguesOf(id)))];if(!ls.length)return h;
   const tags=`<div class="lgts">${ls.slice(0,3).map(lgTag).join("")}${ls.length>3?`<span class="lgt">+${ls.length-3}</span>`:""}</div>`;const i=h.lastIndexOf("</div>");return h.slice(0,i)+tags+h.slice(i);};
@@ -1583,7 +1583,7 @@ vHome=function(){const r=route();if(r==="moves")return vMoves();if(r==="trends")
     const n=S.leagues.length;
     return `<div class="topline"><div class="eyebrow">Week ${S.week} · ${live?n+" league"+(n>1?"s":""):"Demo league"}</div><h1>Home</h1></div>${live?"":`<p class="sub" style="margin:-4px 2px 12px">Real Week ${S.week} data in a demo league.</p>`}
     ${homeBoxes()}
-    ${urg.length?`<section class="pan mt attn"><div class="row sp"><h2>Needs attention</h2><span class="tag">${urg.length}</span></div>${urg.slice(0,3).map(m=>moveRow(m)).join("")}</section>`:""}
+    ${urg.length?`<section class="pan mt attn"><div class="row sp"><h2>Needs attention</h2></div>${urg.slice(0,3).map(m=>moveRow(m)).join("")}</section>`:""}
     ${updatesBox()}
     <section class="pan mt"><div class="row sp"><h2>Recommended moves</h2>${multiL()?`<span class="tag">All leagues</span>`:""}</div>${ms.filter(m=>m.pr<80).slice(0,5).map(m=>moveRow(m)).join("")||`<p class="sub">Nothing pressing.</p>`}<button class="btn ghost mt seemore" data-go="moves">See all moves</button></section>
     <section class="pan mt"><div class="row sp"><h2>Trend spotter</h2><span class="tag">Breakout odds</span></div>${tr.slice(0,6).map(trendRow).join("")||`<p class="sub">No candidates right now.</p>`}<button class="btn ghost mt seemore" data-go="trends">See all trends</button></section>`;}
@@ -1635,7 +1635,7 @@ vHome=(function(prev){return function(){const r=route();if(r==="moves"||r==="tre
     const tr=allTrends().filter(x=>!shown.has(String(x.id))).slice(0,6);const n=S.leagues.length;
     return `<div class="topline"><div class="eyebrow">Week ${S.week} · ${live?n+" league"+(n>1?"s":""):"Demo league"}</div><h1>Home</h1></div>${live?"":`<p class="sub" style="margin:-4px 2px 12px">Real Week ${S.week} data in a demo league.</p>`}
     ${homeBoxes()}
-    ${urg.length?`<section class="pan mt attn"><div class="row sp"><h2>Needs attention</h2><span class="tag">${urg.length}</span></div>${urg.slice(0,3).map(m=>mRow(m)).join("")}</section>`:""}
+    ${urg.length?`<section class="pan mt attn"><div class="row sp"><h2>Needs attention</h2></div>${urg.slice(0,3).map(m=>mRow(m)).join("")}</section>`:""}
     ${updatesBox()}
     <section class="pan mt"><div class="row sp"><h2>Recommended moves</h2></div>${rest.map(m=>mRow(m)).join("")||`<p class="sub">Nothing pressing.</p>`}${ms.length>rest.length+Math.min(3,urg.length)?`<button class="btn ghost mt seemore" data-go="moves">All ${ms.length} moves</button>`:""}</section>
     <section class="pan mt"><div class="row sp"><h2>Trend spotter</h2><span class="tag">Breakout odds</span></div>${tr.map(trendRow).join("")||`<p class="sub">No new candidates.</p>`}<button class="btn ghost mt seemore" data-go="trends">All trends</button></section>`;}
