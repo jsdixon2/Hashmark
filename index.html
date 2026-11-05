@@ -343,6 +343,19 @@ html.noscroll,html.noscroll body{overflow:hidden;overscroll-behavior:none}
 .rkr .bar{height:8px;border-radius:99px;background:var(--panel2);overflow:hidden}.rkr .bar i{display:block;height:100%;border-radius:99px;background:var(--muted)}
 .rkr .bar i.hi{background:var(--ink)}.rkr .bar i.lo{background:var(--line)}
 .rkv{margin:-4px 0 2px calc(8.5em + 10px);font-size:12px}
+
+/* v12 */
+.homeB{flex:none;width:40px;height:40px;display:grid;place-items:center;border:0;background:var(--panel);border-radius:14px;color:var(--ink);padding:0}.homeB svg{width:20px;height:20px}.homeB[hidden]{display:none}
+.mnav{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mlink{display:flex;align-items:center;gap:10px;background:var(--panel);border:0;border-radius:14px;padding:11px 12px;color:var(--ink);font:600 13.5px var(--fd);text-align:left;min-width:0}
+.mlink span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mlink svg{flex:none;width:18px;height:18px;color:var(--muted)}.mlink.on{box-shadow:0 0 0 1.5px var(--muted)}
+.mlg{background:var(--panel);border-radius:18px;padding:12px 14px}.mlg.on{box-shadow:0 0 0 1.5px var(--muted)}
+.mch{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.mch .chip{font-size:12.5px;padding:5px 10px}
+.lgt{display:inline-block;max-width:100%;margin-top:5px;font:600 11px var(--fb);letter-spacing:.02em;background:var(--panel2);color:var(--muted);border-radius:7px;padding:2px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:top}
+.lgts{display:flex;flex-wrap:wrap;gap:4px}.lgts .lgt{margin-top:6px}
+.lbl{display:flex;gap:6px;flex-wrap:wrap}
+.attn{box-shadow:0 0 0 1.5px var(--ink)}
+@media (max-width:360px){.mnav{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -351,6 +364,7 @@ html.noscroll,html.noscroll body{overflow:hidden;overscroll-behavior:none}
   <button class="back" id="backBtn" aria-label="Back" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
   <div class="ttl" id="ttl"></div>
   <button class="jump" id="jumpBtn" aria-label="Jump to a player, team or screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg><span class="long">Jump</span><kbd>/</kbd></button>
+  <button class="homeB" id="homeBtn" aria-label="Home" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9h-6v-6H9v6H3z"/></svg></button>
   <button class="mode" id="modeBtn" data-go="connect"><b></b><span id="modeTxt">Snapshot</span></button>
 </header>
 <main id="view"></main>
@@ -1204,7 +1218,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeSheet();closeP
   const tag=document.activeElement?document.activeElement.tagName:"";
   if(e.key==="/"&&!/INPUT|TEXTAREA|SELECT/.test(tag)){e.preventDefault();openPal();return;}
   if(e.key==="Enter"&&document.activeElement&&document.activeElement.matches("[role=link]")){e.preventDefault();document.activeElement.click();}});
-$("#sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet();});$("#sheetX").addEventListener("click",closeSheet);$("#palX").addEventListener("click",closePal);$("#backBtn").addEventListener("click",goBack);
+$("#sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet();});$("#sheetX").addEventListener("click",closeSheet);$("#palX").addEventListener("click",closePal);$("#backBtn").addEventListener("click",()=>goBack());
 async function refreshLive(){if(S.mode!=="live"||!S.L)return;try{const mu=await sj(`${API}/league/${S.L.id}/matchups/${S.week}`);const g={};for(const m of mu){if(m.matchup_id==null)continue;(g[m.matchup_id]=g[m.matchup_id]||[]).push(m);}
   S.L.matchups=Object.values(g).filter(x=>x.length===2).map(p=>p.map(m=>({i:S.L.teams.findIndex(t=>t.id===m.roster_id),pts:m.points||0,starters:m.starters||[],pp:m.players_points||{}})));for(const l of S.leagues)l._odds=null;toast("Scores refreshed");render();}catch(err){toast("Couldn’t refresh: "+err.message);}}
 
@@ -1383,7 +1397,7 @@ const _vW10=vWeek;vWeek=function(){let h=_vW10();if(S.mode==="live"&&slateIsCurr
 const _LB10=LABEL;LABEL=function(r){if(r==="week")return "Week "+(S.mode==="live"?S.week:8)+" slate";return _LB10(r);};
 
 /* league + team switcher */
-const NOCTX=/^(home|news|legal|connect|week|nfl-)/;
+const NOCTX=/^(home|news|moves|trends|legal|connect|week|nfl-)/;
 function ctxBar(r){if(!S.L||NOCTX.test(r))return "";const multi=S.leagues.length>1,isT=r.startsWith("team-");if(!multi&&!isT)return "";
   const ti=isT?+r.slice(5):null,t=isT?S.L.teams[ti]:null;
   return `<div class="ctx">${multi?`<button class="ctxb" data-ctx="league" aria-label="Switch league"><span class="ctxl">League</span><span class="ctxv ell">${esc(S.L.name)}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>`:""}${t?`<button class="ctxb" data-ctx="team" aria-label="Switch team"><span class="ctxl">Team</span><span class="ctxv ell">${esc(t.name)}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>`:""}</div>`;}
@@ -1517,6 +1531,74 @@ function teamRiskPanel(L,ti){let r;try{r=teamRiskAll(L)[ti];}catch(e){return "";
   return `<section class="pan mt"><div class="row sp"><h2>Risk profile</h2><span class="tag">${esc(r.label)}</span></div><p class="sub">${esc(r.why)}. Ranked against the other ${N-1} teams in ${esc(L.name)}.</p><div class="rkb mt">${D.map(([d,n,h,inv])=>{const v=r.p[d],k=rnk(d);const cls=inv===2?(v>=75?"lo":v<=25?"hi":""):(v>=75?"hi":v<=25?"lo":"");
     const val=d==="cush"?f1(r.m.cush)+" pts":d==="conc"||d==="age"?PCT(r.m[d])+"%":d==="ceil"?PCT(r.m.ceil)+"% weeks":"";
     return `<div class="rkr" title="${esc(h)}"><span>${n}</span><span class="bar"><i class="${cls}" style="width:${Math.max(3,v)}%"></i></span><b class="num">${ordn(k)}</b></div>${val?`<div class="rkv sub">${val}</div>`:""}`;}).join("")}</div><p class="sub mt">Rank 1st means the most of that factor in the league.</p></section>`;}
+
+/* ===== v12: app-wide navigation, general Home ===== */
+const ICO={home:'<path d="M3 11l9-7 9 7v9h-6v-6H9v6H3z"/>',news:'<path d="M4 5h13v14H6a2 2 0 01-2-2zM17 8h3v9a2 2 0 01-2 2M8 9h5M8 13h5"/>',trend:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',trade:'<path d="M7 7h12l-3-3M17 17H5l3 3"/>',moves:'<path d="M5 12l4 4L19 6"/>',waiv:'<path d="M12 5v14M5 12h14"/>',edge:'<path d="M12 3l2.6 5.6L20 9.3l-4 4 1 5.7-5-2.8-5 2.8 1-5.7-4-4 5.4-.7z"/>',week:'<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>',prep:'<path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h3"/>',devy:'<path d="M12 3l9 5-9 5-9-5zM7 10.5V16c3 2 7 2 10 0v-5.5"/>',pl:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',lg:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',legal:'<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/>'};
+const ic=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICO[k]}</svg>`;
+const multiL=()=>S.leagues.length>1;
+const lgShort=L=>{const n=L.name||"League";return n.length>18?n.slice(0,17)+"…":n;};
+const lgTag=L=>multiL()?`<span class="lgt" title="${esc(L.name)}">${esc(lgShort(L))}</span>`:"";
+function myLeaguesOf(id){return S.leagues.filter(L=>{const t=L.teams[mineIdx(L)];return t&&t.players.includes(id);});}
+function leagueDigest(L){const key=S.week+"|"+(NW.built||0)+"|"+(S.upd||0)+"|"+Object.keys(PL).length+"|"+(L.teams||[]).map(t=>t.players.length).join(",");if(L._dg&&L._dg.k===key)return L._dg.v;
+  let v={mv:[],tr:[]};
+  try{v=withLeague(L,()=>{const me=L.teams[mineIdx(L)],mv=[],tr=[],P=p=>({id:p.id,name:p.name,pos:p.pos,brk:p.brk,broke:p.broke,team:p.team,up:p._up});
+    try{const M=myMatchup(L);if(M)alertsFor(M.A).filter(a=>a.lvl==="bad"||a.lvl==="warn").slice(0,3).forEach(a=>mv.push({pr:a.lvl==="bad"?100:80,k:a.lvl==="bad"?"Urgent":"Start/sit",t:a.msg,s:a.fix,go:"matchup-"+S.leagues.indexOf(L)}));}catch(e){}
+    try{const fa=freeAgents();const nd=needs(L,me).sort((a,b)=>a.d-b.d).slice(0,2);for(const n of nd){const p=fa.filter(q=>q.pos===n.pos).sort((a,b)=>rosN(b)-rosN(a))[0];if(p&&!mv.some(m=>m.id===p.id))mv.push({pr:60,id:p.id,k:"Free agent",t:"Add "+p.name,s:`${n.pos} is your thinnest spot here. Outlook ${f1(rosN(p)/(L.remWeeks||10))} pts a week in this league’s scoring.`,go:"player-"+p.id});}
+      fa.filter(p=>rosPPG(p)>=4&&p.brk!=null&&!p.broke).sort((a,b)=>b.brk-a.brk).slice(0,4).forEach(p=>tr.push(Object.assign(P(p),{tag:"Waivers"})));}catch(e){}
+    try{const G=tradeSignals(L);G.sells.slice(0,2).forEach((x,i)=>mv.push({pr:55-i*6,k:"Sell high",t:x.p.name,s:x.why[0]||"",go:"player-"+x.p.id}));G.buys.slice(0,2).forEach((x,i)=>mv.push({pr:50-i*6,k:x.g.z<=-.6?"Buy low":x.g.ret.pct>=3?"Buy before return":"Trade target",t:x.p.name,s:x.why[0]||"",go:"player-"+x.p.id}));
+      G.pre.slice(0,2).forEach((x,i)=>mv.push({pr:45-i*6,k:"Pre-breakout",t:x.p.name,s:x.why[0]||"",go:"player-"+x.p.id}));
+      [...G.pre,...G.buys].forEach(x=>tr.push(Object.assign(P(x.p),{tag:"Buy low"})));}catch(e){}
+    me.players.map(id=>PL[id]).filter(p=>p&&p.brk!=null&&!p.broke&&p.team!=="FA").forEach(p=>tr.push(Object.assign(P(p),{tag:"Yours"})));
+    const seen=new Set(),mv2=mv.filter(m=>{const k=m.go.startsWith("player-")?m.go:m.k+m.t;if(seen.has(k))return false;seen.add(k);return true;});
+    return {mv:mv2,tr};});}catch(e){console.error(e);}
+  L._dg={k:key,v};return v;}
+function allMoves(){const out=[];S.leagues.forEach(L=>leagueDigest(L).mv.forEach(m=>out.push(Object.assign({L},m))));return out.sort((a,b)=>b.pr-a.pr);}
+function allTrends(){const by=new Map();for(const L of S.leagues)for(const x of leagueDigest(L).tr){const k=x.id;let e=by.get(k);if(!e){e=Object.assign({},x,{tags:[]});by.set(k,e);}if(!e.tags.some(t=>t.tag===x.tag&&t.L===L))e.tags.push({tag:x.tag,L});}
+  return [...by.values()].sort((a,b)=>b.brk-a.brk);}
+function moveRow(m,noTag){return `<button class="act" data-golg="${esc(m.L.id)}" data-go="${m.go}"><span class="pill${m.k==="Urgent"?" hot":""}">${esc(m.k)}</span><span style="min-width:0"><div class="t">${esc(m.t)}</div><div class="s">${esc(m.s)}</div>${noTag?"":lgTag(m.L)}</span>${CHEV}</button>`;}
+function trendRow(x){const tg=x.tags.map(t=>t.tag+(multiL()?" · "+lgShort(t.L):""));const uniq=[...new Set(tg)];
+  return `<button class="tsr" data-go="player-${x.id}">${pos(x.pos)}<span class="tsn"><b class="ell">${esc(x.name)}</b><span class="sub ell">${esc(uniq.slice(0,2).join(", "))}${uniq.length>2?` +${uniq.length-2}`:""}${x.up?" · role rising in news":""}</span></span><span class="tsb"><span class="bar"><i style="width:${Math.min(100,PCT(x.brk)/.75)}%"></i></span><b class="num">${PCT(x.brk)}%</b></span></button>`;}
+const _nI12=nItem;nItem=function(it,full){let h=_nI12(it,full);if(!multiL())return h;const ls=[...new Set((it._p||[]).flatMap(id=>myLeaguesOf(id)))];if(!ls.length)return h;
+  const tags=`<div class="lgts">${ls.slice(0,3).map(lgTag).join("")}${ls.length>3?`<span class="lgt">+${ls.length-3}</span>`:""}</div>`;const i=h.lastIndexOf("</div>");return h.slice(0,i)+tags+h.slice(i);};
+function homeBoxes(){return `<div class="lbxs">${S.leagues.map((L,li)=>{const ti=mineIdx(L),t=L.teams[ti],st=standing(L,ti);
+  return `<div class="lbx" data-golg="${esc(L.id)}" data-go="league" role="link" tabindex="0"><div class="mtop"><span class="eyebrow ell">${esc(L.name)}</span><span class="tag">${esc(TYPELBL(L))}</span></div><div class="lbt ell">${esc(t.name)}</div><div class="lbs">${t.w}-${t.l}${t.t?"-"+t.t:""} · ${ordn(st.r)} of ${L.size}${st.dv?` · ${ordn(st.dv.r)} ${esc(st.dv.n)}`:""}</div><div class="lbl"><button class="lbr" data-golg="${esc(L.id)}" data-go="team-${ti}">Roster ${CHEV}</button><button class="lbr" data-golg="${esc(L.id)}" data-go="matchup-${li}">Matchup ${CHEV}</button></div></div>`;}).join("")}</div>`;}
+function vMoves(){const ms=allMoves();const by=S.leagues.map(L=>[L,ms.filter(m=>m.L===L)]);
+  return `<div class="topline"><div class="eyebrow">Week ${S.week}</div><h1>Recommended moves</h1></div><p class="sub" style="margin:-4px 2px 12px">Every move is calculated with that league’s scoring, roster slots and your team’s needs there.</p>${by.map(([L,xs])=>`<section class="pan mt"><div class="row sp"><h2 class="ell">${esc(L.name)}</h2><span class="tag">${esc(TYPELBL(L))}</span></div>${xs.map(m=>moveRow(m,1)).join("")||`<p class="sub">Nothing pressing.</p>`}</section>`).join("")}`;}
+function vTrends(){const xs=allTrends().slice(0,40);
+  return `<div class="topline"><div class="eyebrow">Week ${S.week}</div><h1>Trend spotter</h1></div><p class="sub" style="margin:-4px 2px 12px">Breakout odds for your players, waiver adds and buy-low targets${multiL()?" across all your leagues. Tags show the league where each one applies":""}.</p><section class="pan">${xs.map(trendRow).join("")||`<p class="sub">No candidates right now.</p>`}</section>`;}
+const _vH12=vHome;
+vHome=function(){const r=route();if(r==="moves")return vMoves();if(r==="trends")return vTrends();if(r==="news"||r.startsWith("nfl-"))return _vH12();if(!S.leagues.length||!S.L)return _vH12();
+  try{const live=S.mode==="live",ms=allMoves(),tr=allTrends(),urg=ms.filter(m=>m.pr>=80);
+    const n=S.leagues.length;
+    return `<div class="topline"><div class="eyebrow">Week ${S.week} · ${live?n+" league"+(n>1?"s":""):"Demo league"}</div><h1>Home</h1></div>${live?"":`<p class="sub" style="margin:-4px 2px 12px">Real Week ${S.week} data in a demo league.</p>`}
+    ${homeBoxes()}
+    ${urg.length?`<section class="pan mt attn"><div class="row sp"><h2>Needs attention</h2><span class="tag">${urg.length}</span></div>${urg.slice(0,3).map(m=>moveRow(m)).join("")}</section>`:""}
+    ${updatesBox()}
+    <section class="pan mt"><div class="row sp"><h2>Recommended moves</h2>${multiL()?`<span class="tag">All leagues</span>`:""}</div>${ms.filter(m=>m.pr<80).slice(0,5).map(m=>moveRow(m)).join("")||`<p class="sub">Nothing pressing.</p>`}<button class="btn ghost mt seemore" data-go="moves">See all moves</button></section>
+    <section class="pan mt"><div class="row sp"><h2>Trend spotter</h2><span class="tag">Breakout odds</span></div>${tr.slice(0,6).map(trendRow).join("")||`<p class="sub">No candidates right now.</p>`}<button class="btn ghost mt seemore" data-go="trends">See all trends</button></section>`;}
+  catch(e){console.error(e);return _vH12();}};
+const _LB12=LABEL;LABEL=function(r){return r==="moves"?"Recommended moves":r==="trends"?"Trend spotter":_LB12(r);};
+/* league-aware links: data-golg switches league before navigating */
+document.addEventListener("click",e=>{const g=e.target.closest("[data-golg]");if(!g)return;const id=g.dataset.golg;if(S.L&&S.L.id!==id&&S.leagues.some(l=>l.id===id)){selectLeague(id);}},true);
+/* app menu */
+menuHtml=function(){const live=S.mode==="live",dyn=S.leagues.some(L=>L.type===2);
+  const A=[["home","Home","home"],["news","Updates","news"],["moves","Moves","moves"],["trends","Trends","trend"],["trade","Trade Lab","trade"],["waivers","Waiver wire","waiv"],["edges","Matchup edges","edge"],["week","Week "+S.week+" slate","week"],["players","All players","pl"],["prep","Draft prep","prep"]].concat(dyn?[["devy","Devy board","devy"]]:[]);
+  const cur=route();
+  const lgs=S.leagues.map((L,li)=>{const t=L.teams[mineIdx(L)],on=L===S.L;const ch=[["team-"+mineIdx(L),"Roster"],["matchup-"+li,"Matchup"],["league","Standings"],["trade","Trade Lab"],["waivers","Waivers"],["tx","Transactions"],["rules","Rules"]];
+    return `<div class="mlg${on?" on":""}"><div class="mtop"><b class="mn ell">${esc(L.name)}</b><span class="tag">${esc(TYPELBL(L))}</span></div><div class="msub ell">${esc(t?t.name:"")}${t?" · "+t.w+"-"+t.l:""}</div><div class="mch">${ch.map(([r,n])=>`<button class="chip" data-golg="${esc(L.id)}" data-go="${r}" data-dclose="1">${n}</button>`).join("")}</div></div>`;}).join("");
+  return `<div class="dhead"><div class="wm" style="font-size:24px">Hashmark</div><button class="back" id="drawerX" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <nav class="mnav">${A.map(([r,n,k])=>`<button class="mlink${cur===r?" on":""}" data-go="${r}" data-dclose="1">${ic(k)}<span>${n}</span></button>`).join("")}</nav>
+  <div class="eyebrow" style="margin:18px 4px 8px">${live?"Your leagues":"Demo league"}</div><div class="dlist">${lgs}</div>
+  <div class="dfoot">${live?`<button class="chip" id="dOut">Sign out</button>`:`<button class="chip" id="dIn">Link Sleeper</button>`}<button class="chip" data-go="legal" data-dclose="1">Legal and data</button></div>`;};
+document.addEventListener("click",e=>{if(e.target.closest("[data-dclose]"))closeDrawer();},true);
+/* home + back on every page; back restores the league you were in */
+const NAVL=[];let HOMEY=0;
+window.addEventListener("scroll",()=>{if(route()==="home")HOMEY=window.scrollY;},{passive:true});
+const _r12=render;render=function(){_r12();const r=route();NAVL.length=NAV.length;if(S.L)NAVL[NAV.length-1]=S.L.id;
+  const hb=$("#homeBtn");if(hb)hb.hidden=r==="home";const bb=$("#backBtn");if(bb)bb.hidden=r==="home";
+  if(S._homeRet&&r==="home"){S._homeRet=false;requestAnimationFrame(()=>window.scrollTo(0,HOMEY));}};
+const _gb12=goBack;goBack=function(){if($("#sheet").hidden&&$("#pal").hidden&&NAV.length>1){const lg=NAVL[NAV.length-2];if(lg&&S.L&&lg!==S.L.id&&S.leagues.some(l=>l.id===lg))selectLeague(lg);}return _gb12();};
+document.addEventListener("click",e=>{if(e.target.closest("#homeBtn")){e.stopPropagation();S._homeRet=true;go("home");}},true);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
