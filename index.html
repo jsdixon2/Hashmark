@@ -371,6 +371,30 @@ html.noscroll,html.noscroll body{overflow:hidden;overscroll-behavior:none}
 /* v14: one wordmark everywhere, matching the sign-in page */
 .wm,.brand .wm,.dhead .wm{font-family:"Exo 2",system-ui,sans-serif!important;font-weight:400!important;letter-spacing:-.03em!important}
 .brand{font-weight:400!important}
+
+/* v15 */
+.dock{grid-template-columns:repeat(6,1fr)!important}.dock button{font-size:10.5px!important;white-space:nowrap}
+.hsub{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:4px;font:600 13px var(--fb);color:var(--muted)}.hsub span+span::before{content:"·";margin-right:14px;margin-left:-8px;color:var(--line)}.hsub .wv{color:var(--ink)}
+.lsc{color:var(--ink)!important}.lsc b{font:800 clamp(24px,7.4vw,32px)/1 var(--fd)!important}.lsc b.op{color:var(--muted)}
+.lpj{font-size:11px!important}
+.hxseg{overflow-x:auto;flex-wrap:nowrap}.hxseg button{white-space:nowrap}
+.hxhero .hxlab{font:800 clamp(26px,8vw,40px)/1.05 var(--fd);letter-spacing:-.02em;margin-top:6px}
+.hxk{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,130px),1fr));gap:12px 14px;margin-top:10px}
+.hxk>div{min-width:0}.hxk b{display:block;font:800 24px/1.1 var(--fd)}.hxk span{display:block;font:600 11px var(--fb);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:3px}.hxk em{display:block;font:500 12px/1.3 var(--fb);font-style:normal;color:var(--muted);margin-top:2px}
+.chart{width:100%;height:auto;display:block;margin-top:8px;overflow:visible}.chart .cg{stroke:var(--line);stroke-width:1}.chart .cg.dash{stroke-dasharray:4 4}.chart .ct{fill:var(--muted);font:500 9.5px var(--fb)}.chart .rt{fill:var(--ink);font:700 11px var(--fd)}
+.chart .cl0{stroke:var(--ink);stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}.chart .cl1{stroke:var(--muted);stroke-width:1.6;stroke-dasharray:5 4}.chart .cd0{fill:var(--ink)}.chart .cd1{fill:var(--muted)}
+.chart .cb{fill:var(--muted);opacity:.55}.chart .cb.hi{fill:var(--ink);opacity:1}.chart .rg{fill:none;stroke:var(--line)}.chart .rp{fill:color-mix(in srgb,var(--ink) 18%,transparent);stroke:var(--ink);stroke-width:2}
+.chart .sd{fill:var(--muted);opacity:.6}.chart .sd.hi{fill:var(--ink);opacity:1}
+.radar{max-width:340px;margin:0 auto}
+.leg{display:flex;gap:14px;font:500 11.5px var(--fb);color:var(--muted);margin-top:4px}.leg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle;background:var(--ink)}.leg i.lg1{background:var(--muted)}
+.tblw{overflow-x:auto;margin-top:8px}.tbl{width:100%;border-collapse:collapse;font:500 13px var(--fb)}.tbl th{font:600 10.5px var(--fb);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 6px}.tbl td{padding:8px 6px;border-top:1px solid var(--line);white-space:nowrap}
+.trl{display:flex;flex-direction:column;gap:8px}.tri{background:var(--panel2);border-radius:14px;padding:10px 12px}.trg{display:flex;align-items:center;gap:8px;margin-top:6px;font:500 13px/1.35 var(--fb)}
+.grd{flex:none;display:inline-grid;place-items:center;min-width:2.1em;height:1.9em;padding:0 5px;border-radius:9px;font:800 14px var(--fd);background:var(--panel);color:var(--ink)}
+.grd.gA{background:var(--ink);color:var(--bg)}.grd.gB{background:color-mix(in srgb,var(--ink) 55%,var(--panel));color:var(--bg)}.grd.gC{background:var(--panel)}.grd.gF{background:var(--panel);color:var(--muted);text-decoration:line-through}
+.tgr{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:6px}.tgx{display:inline-flex;align-items:center;gap:5px;font:600 12px var(--fb);max-width:100%}.tgx .grd{height:1.7em;font-size:12.5px}
+.trt{flex:1;min-width:0;overflow-wrap:anywhere}.tri .row .pill{white-space:nowrap;flex:none}.tri .row .sub{min-width:0}
+.pr.me{background:var(--panel2);border-radius:12px}
+.glinkb{background:none;border:0;color:var(--ink);text-decoration:underline;font:inherit;padding:0}
 </style>
 </head>
 <body>
@@ -385,7 +409,7 @@ html.noscroll,html.noscroll body{overflow:hidden;overscroll-behavior:none}
 <main id="view"></main>
 <div class="drawer" id="drawer" hidden><div class="scrim" id="drawerScrim"></div><aside class="dpanel" role="dialog" aria-modal="true" aria-label="Your leagues"><div id="drawerB"></div></aside></div>
 <div class="gate" id="gate" role="dialog" aria-modal="true" aria-label="Sign in"></div>
-<nav class="dock" aria-label="Main"><button data-go="home" data-r="home" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9h-6v-6H9v6H3z"/></svg>Home</button><button data-go="myteam" data-r="myteam" aria-label="Roster"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a4 4 0 100 8 4 4 0 000-8zM4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Roster</button><button data-go="mymatch" data-r="mymatch" aria-label="Matchup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h7M4 12h16M13 17h7M4 17h4"/></svg>Matchup</button><button data-go="players" data-r="market" aria-label="Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Market<span class="badge" id="tbadge" hidden>0</span></button><button data-go="league" data-r="league" aria-label="League"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>League</button></nav>
+<nav class="dock" aria-label="Main"><button data-go="home" data-r="home" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9h-6v-6H9v6H3z"/></svg>Home</button><button data-go="myteam" data-r="myteam" aria-label="Roster"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a4 4 0 100 8 4 4 0 000-8zM4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Roster</button><button data-go="mymatch" data-r="mymatch" aria-label="Matchup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h7M4 12h16M13 17h7M4 17h4"/></svg>Matchup</button><button data-go="players" data-r="market" aria-label="Market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Market<span class="badge" id="tbadge" hidden>0</span></button><button data-go="league" data-r="league" aria-label="League"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>League</button><button data-go="stats" data-r="stats" aria-label="My stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4L4.2 8.7l5.4-.8z"/></svg>My stats</button></nav>
 <div class="sheet" id="sheet" hidden><div class="card" role="dialog" aria-modal="true" aria-labelledby="sheetT"><div class="row"><button class="back" id="sheetX" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 id="sheetT"></h2></div><div id="sheetB" class="mt"></div></div></div>
 <div class="pal" id="pal" hidden><div class="card" role="dialog" aria-modal="true" aria-label="Jump"><div class="row" style="gap:0;padding-left:8px"><button class="back" id="palX" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><input id="palIn" placeholder="Player, NFL team, league team or screen" autocomplete="off"></div><div class="res" id="palRes"></div></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
@@ -613,7 +637,7 @@ function score(s,sc){let t=0;for(const k in sc){const v=s[k];if(typeof v==="numb
 async function connectSleeper(username){const say=m=>{const st=$("#cstat");if(st)st.textContent=m;};
   const nfl=S.nfl;const season=String(nfl.league_season||nfl.season);const week=Math.max(1,Math.min(18,+(nfl.display_week||nfl.week||1)));
   say("Finding "+username+" on Sleeper…");
-  const u=await sj(`${API}/user/${encodeURIComponent(username)}`);if(!u||!u.user_id)throw new Error(`No Sleeper account named “${username}”.`);
+  const u=await sj(`${API}/user/${encodeURIComponent(username)}`);if(!u||!u.user_id)throw new Error(`No Sleeper account named “${username}”.`);S.uid=u.user_id;
   const lgs=await sj(`${API}/user/${u.user_id}/leagues/nfl/${season}`);if(!lgs||!lgs.length)throw new Error(`${username} has no ${season} NFL leagues on Sleeper.`);
   say("Loading Sleeper’s player database (a few MB, once)…");const players=await cachedPlayers();
   say("Loading weekly stats for weeks 1–"+week+"…");const wks=[...Array(week).keys()].map(i=>i+1);
@@ -1117,7 +1141,7 @@ function withLeague(L,fn){if(L===S.L||S.mode!=="live")return fn();const prev=S.L
 function slateCount(W){let played=0,yet=0,out=0;const pp=W.ls&&W.ls.pp;for(const r of W.rows){const p=r.p;if(!p){out++;continue;}const g=gameOf(p);if((g&&g.bye)||(p.inj&&OUTRX.test(p.inj))){out++;continue;}if(pp?(pp[p.id]!=null&&pp[p.id]!==0):(g&&g.final))played++;else yet++;}return {played,yet,out};}
 function leagueSummary(L){const key=S.week+"|"+S.mode+"|"+JSON.stringify((L.matchups||[]).map(p=>p.map(x=>[x.i,x.pts])));if(L._sum&&L._sum.key===key)return L._sum.v;
   const v=withLeague(L,()=>{const ti=mineIdx(L),me=L.teams[ti],M=myMatchup(L),o=oddsFor(L)[ti];const r={size:L.size,type:L.type,qb:L.qb,name:L.name,rec:me.w+"-"+me.l+(me.t?"-"+me.t:""),po:o.po,team:me.name};
-    if(M){const al=alertsFor(M.A).filter(a=>a.lvl!=="info"),lv=x=>x.live!=null&&x.live>0;Object.assign(r,{ok:1,ap:M.A.proj,bp:M.B.proj,cnt:slateCount(M.A),a:M.A.t.name,b:M.B.t.name,bi:L.teams.indexOf(M.B.t),as:lv(M.A)?M.A.live:M.A.proj,bs:lv(M.B)?M.B.live:M.B.proj,live:lv(M.A)||lv(M.B),wp:M.wpA,urg:al.filter(a=>a.lvl==="bad").length,rev:al.length});}return r;});
+    if(M){const al=alertsFor(M.A).filter(a=>a.lvl!=="info"),lv=x=>x.live!=null&&x.live>0;Object.assign(r,{ok:1,ap:M.A.proj,bp:M.B.proj,cnt:slateCount(M.A),a:M.A.t.name,b:M.B.t.name,bi:L.teams.indexOf(M.B.t),la:M.A.live||0,lb:M.B.live||0,as:lv(M.A)?M.A.live:M.A.proj,bs:lv(M.B)?M.B.live:M.B.proj,live:lv(M.A)||lv(M.B),wp:M.wpA,urg:al.filter(a=>a.lvl==="bad").length,rev:al.length});}return r;});
   L._sum={key,v};return v;}
 function leagueCards(){return `<div class="lgrid">${S.leagues.map((L,li)=>{const d=leagueSummary(L),on=L===S.L;
   const body=d.ok?`<div class="lgs"><div><div class="lgn">${f1(d.as)}</div><div class="sub tn">${esc(d.a)}</div></div><div class="vs">vs</div><div style="text-align:right"><div class="lgn">${f1(d.bs)}</div><div class="sub tn" style="margin-left:auto">${esc(d.b)}</div></div></div><div class="pbar"><i style="width:${PCT(d.wp)}%"></i></div><div class="row sp sub"><span class="num">${PCT(d.wp)}% win chance</span><span>${d.urg?d.urg+" urgent":d.rev?d.rev+" to review":"Lineup set"}</span></div>`:`<p class="sub mt">No Week ${S.week} matchup.</p>`;
@@ -1412,7 +1436,7 @@ const _vW10=vWeek;vWeek=function(){let h=_vW10();if(S.mode==="live"&&slateIsCurr
 const _LB10=LABEL;LABEL=function(r){if(r==="week")return "Week "+(S.mode==="live"?S.week:8)+" slate";return _LB10(r);};
 
 /* league + team switcher */
-const NOCTX=/^(home|news|moves|trends|legal|connect|week|nfl-)/;
+const NOCTX=/^(home|news|moves|trends|stats|legal|connect|week|nfl-)/;
 function ctxBar(r){if(!S.L||NOCTX.test(r))return "";const multi=S.leagues.length>1,isT=r.startsWith("team-");if(!multi&&!isT)return "";
   const ti=isT?+r.slice(5):null,t=isT?S.L.teams[ti]:null;
   return `<div class="ctx">${multi?`<button class="ctxb" data-ctx="league" aria-label="Switch league"><span class="ctxl">League</span><span class="ctxv ell">${esc(S.L.name)}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>`:""}${t?`<button class="ctxb" data-ctx="team" aria-label="Switch team"><span class="ctxl">Team</span><span class="ctxv ell">${esc(t.name)}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>`:""}</div>`;}
@@ -1648,6 +1672,340 @@ vMoves=function(){const ms=mergedMoves();
   return `<div class="topline"><div class="eyebrow">Week ${S.week}</div><h1>Recommended moves</h1></div><p class="sub" style="margin:-4px 2px 12px">Ranked by impact. Each is calculated with that league’s scoring and roster${multiL()?"; tags show which leagues it applies to. Tap a tag to open it there":""}.</p><section class="pan">${ms.map(m=>mRow(m)).join("")||`<p class="sub">Nothing pressing.</p>`}</section>`;};
 /* updates box: drop the count tag that repeats the list length; dedupe news by player */
 const _fd13=feed;feed=function(sc){const xs=_fd13(sc),seen=new Set();return xs.filter(it=>{if(it.src==="Sleeper"){const k="s"+(it._p||[])[0];if(seen.has(k))return false;seen.add(k);}const k2=(it.t||"").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,60);if(seen.has(k2))return false;seen.add(k2);return true;});};
+/* ===== v15: My Stats — manager analytics engine ===== */
+const HX={st:"idle",done:0,tot:0,data:null,err:null,v:3};
+const DEMOPL={};
+const hxPos=id=>(DEMOPL[id]&&DEMOPL[id].pos)||(LIVE&&LIVE.players&&LIVE.players[id]&&LIVE.players[id].position)||(PL[id]&&PL[id].pos)||null;
+const hxName=id=>{const m=LIVE&&LIVE.players&&LIVE.players[id];if(m)return m.full_name||((m.first_name||"")+" "+(m.last_name||"")).trim()||(m.team?m.team+" D/ST":id);return DEMOPL[id]?DEMOPL[id].name:PL[id]?PL[id].name:(isNaN(+id)?id+" D/ST":"Player "+id);};
+const phi=z=>{const t=1/(1+.2316419*Math.abs(z)),d=.3989423*Math.exp(-z*z/2),p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p;};
+const avgx=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
+const sdv=a=>{if(a.length<2)return 0;const m=avgx(a);return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1));};
+async function poolRun(tasks,n){const out=new Array(tasks.length);let i=0;await Promise.all([...Array(Math.min(n,tasks.length))].map(async()=>{while(i<tasks.length){const k=i++;try{out[k]=await tasks[k]();}catch(e){out[k]=null;}HX.done++;hxProg();}}));return out;}
+function hxProg(){const el=document.getElementById("hxbar");if(el)el.style.width=(HX.tot?Math.min(100,100*HX.done/HX.tot):5)+"%";const tx=document.getElementById("hxtxt");if(tx)tx.textContent=`Reading your Sleeper history… ${HX.done} of ${HX.tot||"?"} requests`;}
+async function idbGet(k){try{const d=await idb();return await new Promise(r=>{const q=d.transaction("k").objectStore("k").get(k);q.onsuccess=()=>r(q.result);q.onerror=()=>r(null);});}catch(e){return null;}}
+async function idbPut(k,v){try{const d=await idb();d.transaction("k","readwrite").objectStore("k").put(v,k);}catch(e){}}
+
+/* ---------- data access (live = Sleeper; demo = generated history) ---------- */
+async function hxGet(path){if(S.mode==="live")return sj(API+path);return demoHx(path);}
+async function hxLoad(force){if(HX.st==="loading")return;if(HX.st==="ready"&&!force&&HX.key===hxKey())return;HX.st="loading";HX.done=0;HX.tot=0;HX.err=null;rerenderStats();
+  try{const uid=S.mode==="live"?S.uid:"demo-me";if(!uid)throw new Error("Sign in with your Sleeper username to build your profile.");
+    const cur=+S.season,yrs=[];for(let y=Math.max(2017,cur-9);y<=cur;y++)yrs.push(y);HX.tot=yrs.length;
+    const lists=await poolRun(yrs.map(y=>()=>hxGet(`/user/${uid}/leagues/nfl/${y}`)),4);
+    const lgs=[];lists.forEach(a=>(a||[]).forEach(l=>{if(l&&l.status!=="pre_draft"&&(l.sport||"nfl")==="nfl")lgs.push(l);}));
+    HX.tot+=lgs.length;const seasons=await poolRun(lgs.map(l=>()=>loadLeagueSeason(l)),3);
+    HX.data=analyze(uid,seasons.filter(Boolean));HX.key=hxKey();HX.st="ready";}
+  catch(e){console.error(e);HX.err=e.message||"Couldn’t read your history.";HX.st="error";}
+  rerenderStats();}
+const hxKey=()=>S.mode+"|"+(S.uid||"demo")+"|"+S.season+"|"+S.week;
+function rerenderStats(){const r=route();if(r==="stats"||r==="tx")render();}
+async function loadLeagueSeason(l){const season=+l.season,cur=+S.season,past=season<cur,ck="hx"+HX.v+":"+l.league_id;
+  if(past){const c=await idbGet(ck);if(c)return c;}
+  const st=l.settings||{},pws=st.playoff_week_start||15,last=past?Math.min(18,Math.max(pws+2,(st.last_scored_leg||17))):Math.max(1,S.week);
+  const wk=[...Array(last).keys()].map(i=>i+1);HX.tot+=wk.length*2+5;
+  const [rosters,users,bracket,drafts]=await Promise.all([hxGet(`/league/${l.league_id}/rosters`),hxGet(`/league/${l.league_id}/users`),hxGet(`/league/${l.league_id}/winners_bracket`).catch(()=>[]),hxGet(`/league/${l.league_id}/drafts`).catch(()=>[])]);HX.done+=4;hxProg();
+  const mus=await poolRun(wk.map(w=>()=>hxGet(`/league/${l.league_id}/matchups/${w}`)),6);
+  const txs=await poolRun(wk.map(w=>()=>hxGet(`/league/${l.league_id}/transactions/${w}`)),6);
+  const dr=(drafts||[]).filter(d=>d.status==="complete");const picks=[];
+  for(const d of dr){const p=await hxGet(`/draft/${d.draft_id}/picks`).catch(()=>[]);HX.done++;picks.push({type:d.type,season:+d.season,s2r:d.slot_to_roster_id||{},rounds:(d.settings||{}).rounds,picks:(p||[]).map(x=>({pid:x.player_id,rid:x.roster_id,round:x.round,slot:x.draft_slot,no:x.pick_no,kp:!!x.is_keeper}))});}
+  const LS={id:l.league_id,prev:l.previous_league_id||null,name:l.name,season,type:st.type||0,size:l.total_rosters||rosters.length,pws,rpos:l.roster_positions||[],
+    users:(users||[]).map(u=>({uid:u.user_id,name:u.display_name,team:(u.metadata&&u.metadata.team_name)||u.display_name})),
+    rosters:(rosters||[]).map(r=>({rid:r.roster_id,uid:r.owner_id,co:r.co_owners||[]})),
+    weeks:(mus||[]).map(a=>(a||[]).map(m=>({rid:m.roster_id,mid:m.matchup_id,pts:+m.points||0,st:(m.starters||[]).filter(x=>x&&x!=="0"),pp:m.players_points||{}}))),
+    tx:[].concat(...(txs||[]).map((a,i)=>(a||[]).filter(t=>t.status==="complete").map(t=>({id:t.transaction_id,type:t.type,wk:t.leg||i+1,ts:t.status_updated||t.created,rids:t.roster_ids||[],adds:t.adds||{},drops:t.drops||{},dp:(t.draft_picks||[]).map(p=>({season:+p.season,round:p.round,orig:p.roster_id,from:p.previous_owner_id,to:p.owner_id})),fb:(t.waiver_budget||[]).map(b=>({from:b.sender,to:b.receiver,amt:b.amount})),bid:t.settings&&t.settings.waiver_bid!=null?t.settings.waiver_bid:null})))),
+    bracket:(bracket||[]).map(b=>({r:b.r,w:b.w,l:b.l,t1:b.t1,t2:b.t2,p:b.p})),drafts:picks,complete:l.status==="complete"};
+  if(past&&LS.complete)idbPut(ck,LS);return LS;}
+
+/* ---------- lineup math ---------- */
+function slotsOf(rpos){const order={QB:0,RB:0,WR:0,TE:0,K:0,DEF:0,WRRB_FLEX:1,REC_FLEX:1,FLEX:2,SUPER_FLEX:3};return rpos.filter(s=>!["BN","IR","TAXI"].includes(s)).sort((a,b)=>(order[a]??0)-(order[b]??0));}
+const ELIG2=Object.assign({K:["K"],DEF:["DEF"],IDP_FLEX:["DL","LB","DB"],DL:["DL"],LB:["LB"],DB:["DB"]},ELIG);
+function optimal(ids,pp,slots){const pool=ids.map(id=>({id,pos:hxPos(id),v:+pp[id]||0})).filter(x=>x.pos).sort((a,b)=>b.v-a.v),used=new Set();let tot=0;
+  for(const s of slots){const el=ELIG2[s]||[s];const p=pool.find(x=>!used.has(x.id)&&el.includes(x.pos));if(p){used.add(p.id);tot+=p.v;}}return tot;}
+
+/* ---------- analysis ---------- */
+function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
+  const byId=new Map(LSs.map(x=>[x.id,x]));
+  for(const x of LSs){let r=x,g=0;while(r.prev&&byId.has(r.prev)&&g++<20)r=byId.get(r.prev);x.chain=r.id;}
+  const chainName={};for(const x of LSs)chainName[x.chain]=x.name;
+  // weekly player points per chain+season
+  for(const x of LSs){x.PP={};x.weeks.forEach((wk,i)=>wk.forEach(m=>{for(const [pid,v] of Object.entries(m.pp)){(x.PP[pid]=x.PP[pid]||{})[i+1]=+v||0;}}));}
+  const M={};// manager stats keyed by uid
+  const mgr=u=>M[u]=M[u]||{uid:u,names:new Set(),seasons:[],g:0,w:0,l:0,t:0,pf:0,pa:0,scores:[],ap:0,apg:0,opt:0,act:0,bench:0,dog:[0,0],hdog:[0,0],fav:[0,0],close:[0,0],bounce:[0,0],wp:[],h2h:{},tx:0,faab:0,adds:[],trades:[],drafts:[],titles:0,runner:0,po:0,finishes:[],pickBad:0,weeksN:0,wbuck:[[0,0],[0,0],[0,0],[0,0],[0,0]],bestWeek:null,worstWeek:null,bigWin:null,badLoss:null,benchWorst:null};
+  for(const x of LSs){const slots=slotsOf(x.rpos),rid2u={},uname={};x.rosters.forEach(r=>rid2u[r.rid]=r.uid||("rid"+r.rid));x.users.forEach(u=>uname[u.uid]=u.name);
+    const reg=x.weeks.slice(0,x.pws-1),hist={};
+    reg.forEach((wk,wi)=>{const w=wi+1,byM={};wk.forEach(m=>{if(m.mid!=null)(byM[m.mid]=byM[m.mid]||[]).push(m);});const all=wk.map(m=>m.pts).filter(v=>v>0);if(!all.length)return;
+      for(const pair of Object.values(byM)){if(pair.length!==2)continue;const [a,b]=pair;if(a.pts===0&&b.pts===0)continue;
+        for(const [me,op] of [[a,b],[b,a]]){const u=rid2u[me.rid],o=rid2u[op.rid],S2=mgr(u);S2.names.add(uname[u]||"");
+          const ha=hist[me.rid]||[],hb=hist[op.rid]||[],la=avgx(all),ls=sdv(all)||25;
+          const ma=ha.length>=2?(avgx(ha)*ha.length+la*2)/(ha.length+2):la,mb=hb.length>=2?(avgx(hb)*hb.length+la*2)/(hb.length+2):la,sa=ha.length>=3?Math.max(12,sdv(ha)):ls,sb=hb.length>=3?Math.max(12,sdv(hb)):ls;
+          const p=phi((ma-mb)/Math.sqrt(sa*sa+sb*sb)),won=me.pts>op.pts,tie=me.pts===op.pts;
+          S2.g++;won?S2.w++:tie?S2.t++:S2.l++;S2.pf+=me.pts;S2.pa+=op.pts;S2.scores.push({v:me.pts,s:x.season,w,lg:x.chain,p,won,op:o,opp:op.pts});
+          S2.ap+=all.filter(v=>v<me.pts).length/Math.max(1,all.length-1);S2.wp.push(p);
+          const bk=Math.min(4,Math.floor(p*5));S2.wbuck[bk][0]++;if(won)S2.wbuck[bk][1]++;
+          if(p<.4){S2.dog[0]++;if(won)S2.dog[1]++;}if(p<.3){S2.hdog[0]++;if(won)S2.hdog[1]++;}if(p>.7){S2.fav[0]++;if(!won&&!tie)S2.fav[1]++;}
+          if(Math.abs(me.pts-op.pts)<7){S2.close[0]++;if(won)S2.close[1]++;}
+          const prevG=S2.scores.length>1?S2.scores[S2.scores.length-2]:null;if(prevG&&prevG.s===x.season&&prevG.w===w-1&&!prevG.won){S2.bounce[0]++;if(won)S2.bounce[1]++;}
+          const h=S2.h2h[o]=S2.h2h[o]||{w:0,l:0,pf:0,pa:0,g:0};h.g++;won?h.w++:tie?0:h.l++;h.pf+=me.pts;h.pa+=op.pts;
+          const ids=Object.keys(me.pp).length?Object.keys(me.pp):me.st;const opt=optimal(ids,me.pp,slots)||me.pts;S2.opt+=Math.max(opt,me.pts);S2.act+=me.pts;S2.bench+=Math.max(0,opt-me.pts);S2.weeksN++;
+          if(won&&opt>me.pts&&false)0;
+          if(!won&&!tie&&opt>op.pts){S2.pickBad++;}
+          const bw=Object.keys(me.pp).filter(id=>!me.st.includes(id)).map(id=>({id,v:+me.pp[id]||0})).sort((a,b)=>b.v-a.v)[0];
+          if(bw&&!won&&bw.v>0&&(!S2.benchWorst||bw.v>S2.benchWorst.v))S2.benchWorst={v:bw.v,id:bw.id,s:x.season,w,lg:x.name};
+          const sc={v:me.pts,s:x.season,w,lg:x.name,op:uname[o]||"",m:me.pts-op.pts};
+          if(!S2.bestWeek||me.pts>S2.bestWeek.v)S2.bestWeek=sc;if(!S2.worstWeek||me.pts<S2.worstWeek.v)S2.worstWeek=sc;
+          if(won&&(!S2.bigWin||sc.m>S2.bigWin.m))S2.bigWin=sc;if(!won&&!tie&&(!S2.badLoss||sc.m<S2.badLoss.m))S2.badLoss=sc;}}
+      wk.forEach(m=>{(hist[m.rid]=hist[m.rid]||[]).push(m.pts);});});
+    // season summary + finish
+    const tbl=x.rosters.map(r=>{const u=rid2u[r.rid],ss=(M[u]?M[u].scores:[]).filter(g=>g.s===x.season&&g.lg===x.chain);return {rid:r.rid,u,w:ss.filter(g=>g.won).length,pf:ss.reduce((s,g)=>s+g.v,0),pa:ss.reduce((s,g)=>s+g.opp,0),g:ss.length,l:ss.filter(g=>!g.won&&g.v!==g.opp).length};}).sort((a,b)=>b.w-a.w||b.pf-a.pf);
+    const champ=(x.bracket.find(b=>b.p===1)||{}).w,ru=(x.bracket.find(b=>b.p===1)||{}).l,poR=new Set(x.bracket.flatMap(b=>[b.t1,b.t2]).filter(v=>typeof v==="number"));
+    tbl.forEach((t,i)=>{const S2=mgr(t.u);S2.finishes.push(i+1);const won=x.complete&&champ===t.rid,rn=x.complete&&ru===t.rid;if(won)S2.titles++;if(rn)S2.runner++;if(poR.has(t.rid))S2.po++;
+      S2.seasons.push({s:x.season,lg:x.name,chain:x.chain,type:x.type,size:x.size,w:t.w,l:t.l,pf:t.pf,pa:t.pa,g:t.g,rank:i+1,champ:won,ru:rn,po:poR.has(t.rid),live:!x.complete});});
+    x.rid2u=rid2u;x.uname=uname;}
+  // draft-pick realization lookup per chain
+  const pickOf=(chain,season,round,orig)=>{for(const x of LSs){if(x.chain!==chain)continue;for(const d of x.drafts){if(d.season!==season)continue;const slot=Object.keys(d.s2r).find(k=>+d.s2r[k]===orig);if(slot==null)continue;const pk=d.picks.find(p=>p.round===round&&+p.slot===+slot);if(pk)return pk;}}return null;};
+  // production of a player from week w of season s onward inside a chain, in that league's scoring
+  const prodAfter=(chain,pid,s,w,limitW)=>{let pts=0,g=0;for(const x of LSs){if(x.chain!==chain||x.season<s)continue;const pp=x.PP[pid];if(!pp)continue;for(const [wk,v] of Object.entries(pp)){const k=+wk;if(x.season===s&&k<w)continue;if(limitW&&(x.season!==s||k>=w+limitW))continue;if(k>=x.pws&&x.season!==s)continue;pts+=v;if(v>0)g++;}}return {pts,g};};
+  const ppgBefore=(x,pid,w)=>{const pp=x.PP[pid]||{};const v=Object.entries(pp).filter(([k,v])=>+k<w&&v>0).map(([,v])=>v);return v.length?avgx(v):0;};
+  const futVal=(pid,type,seasonOfTrade)=>{const p=PL[pid]||DEMOPL[pid];if(!p)return 0;const ppg=Math.max(0,PL[pid]&&typeof rosPPG==="function"?rosPPG(p):(p.ros||0));const remain=Math.max(0,17-(S.week||1));
+    let v=+S.season===seasonOfTrade||type===2?ppg*remain*.9:0;if(type===2){const cl=(AGE_CLIFF[p.pos]||29)-(p.age||27);const yrs=Math.max(0,Math.min(3,cl+1));for(let k=1;k<=yrs;k++)v+=ppg*14*Math.pow(.62,k);}return v;};
+  const PICKEV={1:150,2:70,3:32,4:14,5:6};
+  // trades
+  const TR=[];for(const x of LSs){for(const t of x.tx.filter(t=>t.type==="trade")){const sides=t.rids.map(rid=>{const u=x.rid2u[rid];
+      const recP=Object.entries(t.adds).filter(([,r])=>r===rid).map(([p])=>p),gaveP=Object.entries(t.adds).filter(([,r])=>r!==rid&&t.rids.includes(r)).map(([p])=>p).filter(p=>t.drops[p]===rid||t.drops[p]==null);
+      const recK=t.dp.filter(p=>p.to===rid),gaveK=t.dp.filter(p=>p.from===rid);
+      const fb=t.fb.reduce((s,b)=>s+(b.to===rid?b.amt:b.from===rid?-b.amt:0),0);
+      return {rid,u,recP,gaveP,recK,gaveK,fb};});
+    const valP=(pid,lim)=>{const pr=prodAfter(x.chain,pid,x.season,t.wk,lim);return lim?pr.pts:pr.pts+futVal(pid,x.type,x.season);};
+    const valK=k=>{const pk=pickOf(x.chain,k.season,k.round,k.orig);if(pk&&pk.pid){const sx=LSs.find(y=>y.chain===x.chain&&y.season===k.season);const pr=prodAfter(x.chain,pk.pid,k.season,1);return {v:pr.pts+futVal(pk.pid,x.type,k.season),pk,real:true};}
+      const yrs=Math.max(0,k.season-+S.season);return {v:(PICKEV[k.round]||4)*Math.pow(.85,yrs),real:false};};
+    const pre=x.weeks.slice(0,t.wk-1);
+    for(const sd of sides){const op=sides.filter(o=>o!==sd);
+      const inST=sd.recP.reduce((s,p)=>s+valP(p,4),0),outST=sd.gaveP.reduce((s,p)=>s+valP(p,4),0);
+      const kin=sd.recK.map(valK),kout=sd.gaveK.map(valK);
+      const inRZ=sd.recP.reduce((s,p)=>s+valP(p),0)+kin.reduce((s,k)=>s+k.v,0)+Math.max(0,sd.fb)*.6,outRZ=sd.gaveP.reduce((s,p)=>s+valP(p),0)+kout.reduce((s,k)=>s+k.v,0)+Math.max(0,-sd.fb)*.6;
+      const kST=sd.recK.reduce((s,k)=>s+(PICKEV[k.round]||4)*.35,0)-sd.gaveK.reduce((s,k)=>s+(PICKEV[k.round]||4)*.35,0);
+      const sh=(a,b)=>a+b<=0?.5:a/(a+b);
+      const st=sh(inST+Math.max(0,kST),outST+Math.max(0,-kST)),rz=sh(inRZ,outRZ);
+      // value drift: cumulative net production by week since trade (this season)
+      const drift=[];let cum=0;for(let w=t.wk;w<=x.weeks.length;w++){for(const p of sd.recP)cum+=(x.PP[p]||{})[w]||0;for(const p of sd.gaveP)cum-=(x.PP[p]||{})[w]||0;drift.push(+cum.toFixed(1));}
+      TR.push({id:t.id,lg:x.name,chain:x.chain,season:x.season,wk:t.wk,ts:t.ts,u:sd.u,partner:op.map(o=>x.uname[o.u]||"").join(", "),rec:sd.recP.map(hxName),gave:sd.gaveP.map(hxName),recK:sd.recK.map((k,i)=>({...k,real:kin[i]})),gaveK:sd.gaveK.map((k,i)=>({...k,real:kout[i]})),fb:sd.fb,st,rz,net:inRZ-outRZ,stNet:inST-outST,drift,type:x.type});
+      mgr(sd.u).trades.push(TR[TR.length-1]);}}}
+  // waivers
+  for(const x of LSs){for(const t of x.tx.filter(t=>t.type==="waiver"||t.type==="free_agent")){for(const [pid,rid] of Object.entries(t.adds)){const u=x.rid2u[rid];if(!u)continue;const S2=mgr(u);
+      const before=ppgBefore(x,pid,t.wk);let after=[],started=0,stW=0;for(let w=t.wk;w<=x.weeks.length;w++){const v=(x.PP[pid]||{})[w];if(v!=null&&v>0)after.push(v);const me=(x.weeks[w-1]||[]).find(m=>m.rid===rid);if(me&&me.st.includes(pid)){started+=+me.pp[pid]||0;stW++;}}
+      const aft=avgx(after),brk=aft>=8&&aft>before*1.35&&after.length>=3;
+      const score=started+(brk?25:0)+(stW>=3?10:0)-(t.bid?Math.max(0,t.bid-started/3)*.2:0);
+      S2.adds.push({pid,name:hxName(pid),pos:hxPos(pid),s:x.season,wk:t.wk,lg:x.name,before:+before.toFixed(1),after:+aft.toFixed(1),started:+started.toFixed(1),stW,brk,bid:t.bid,score});
+      if(t.bid)S2.faab+=t.bid;S2.tx++;}}
+    for(const t of x.tx.filter(t=>t.type==="trade"))for(const rid of t.rids){const u=x.rid2u[rid];if(u)mgr(u).tx++;}}
+  // drafts: value over expected at slot
+  for(const x of LSs){for(const d of x.drafts){if(d.season!==x.season)continue;const vals=d.picks.filter(p=>!p.kp&&p.pid).map(p=>({...p,v:prodAfter(x.chain,p.pid,d.season,1).pts}));if(vals.length<6)continue;
+      vals.sort((a,b)=>a.no-b.no);vals.forEach((p,i)=>{const nb=vals.slice(Math.max(0,i-6),i+7).map(q=>q.v);p.exp=avgx(nb);});
+      vals.forEach(p=>{const u=x.rid2u[p.rid];if(!u)return;mgr(u).drafts.push({name:hxName(p.pid),pid:p.pid,pos:hxPos(p.pid),no:p.no,round:p.round,s:d.season,lg:x.name,v:+p.v.toFixed(1),exp:+p.exp.toFixed(1),voe:p.v-p.exp,type:d.type});});}}
+  // per-manager derived metrics
+  for(const m of Object.values(M)){const g=Math.max(1,m.g),sc=m.scores.map(x=>x.v);
+    const lgAvg=avgx(m.scores.map(x=>x.opp));
+    m.d={g:m.g,wpct:(m.w+m.t/2)/g,ppg:m.pf/g,papg:m.pa/g,opt:m.opt>0?m.act/m.opt:0,benchPg:m.bench/Math.max(1,m.weeksN),allPlay:m.ap/g,luck:(m.w+m.t/2-m.ap)/g,exW:m.wp.reduce((s,x)=>s+x,0),cv:sc.length>2?sdv(sc)/avgx(sc):0,
+      clutch:m.dog[0]?m.dog[1]/m.dog[0]:null,comeback:m.bounce[0]?m.bounce[1]/m.bounce[0]:null,upset:m.hdog[0]?m.hdog[1]/m.hdog[0]:null,choke:m.fav[0]?m.fav[1]/m.fav[0]:null,close:m.close[0]?m.close[1]/m.close[0]:null,
+      vsExp:(m.w-m.wp.reduce((s,x)=>s+x,0))/g,
+      trN:m.trades.length,trWin:m.trades.length?m.trades.filter(t=>t.rz>.52).length/m.trades.length:null,trAvg:m.trades.length?avgx(m.trades.map(t=>t.rz)):null,trNet:m.trades.reduce((s,t)=>s+t.net,0),
+      wine:m.trades.filter(t=>t.st<.46&&t.rz>.56).length,milk:m.trades.filter(t=>t.st>.56&&t.rz<.44).length,
+      adN:m.adds.length,adHit:m.adds.length?m.adds.filter(a=>a.stW>=3).length/m.adds.length:null,adBrk:m.adds.filter(a=>a.brk).length,adPts:m.adds.reduce((s,a)=>s+a.started,0),adScore:m.adds.length?avgx(m.adds.map(a=>a.score)):null,
+      drN:m.drafts.length,drVoe:m.drafts.length?avgx(m.drafts.map(x=>x.voe)):null,txPerS:m.tx/Math.max(1,m.seasons.length),seasons:m.seasons.length};
+    const d=m.d;d.wnd=d.trN?Math.round(100*Math.min(1,Math.max(0,(d.trAvg-.3)/.4))*.7+Math.min(30,d.trN*2.5+d.wine*4)):null;}
+  // percentiles among all managers seen (min 8 games)
+  const pool=Object.values(M).filter(m=>m.g>=8);
+  const SK=[["lineup","Lineups",m=>m.d.opt],["waivers","Waivers",m=>m.d.adScore],["trading","Trading",m=>m.d.trN?m.d.trAvg:null],["drafting","Drafting",m=>m.d.drVoe],["clutch","Clutch",m=>m.d.clutch==null?null:(m.d.clutch*m.dog[0]+.35*4)/(m.dog[0]+4)],["scoring","Scoring",m=>m.d.ppg-avgx(m.scores.map(x=>x.opp))+m.d.ppg*0],["consistency","Consistency",m=>m.d.cv?-m.d.cv:null],["luck","Luck",m=>m.d.luck]];
+  for(const [k,,f] of SK){const vals=pool.map(f).filter(v=>v!=null).sort((a,b)=>a-b);for(const m of Object.values(M)){const v=f(m);m.sk=m.sk||{};m.sk[k]=v==null||vals.length<2?null:Math.round(100*(vals.filter(x=>x<v).length+vals.filter(x=>x===v).length/2)/vals.length);}}
+  for(const m of Object.values(M)){const n=[...m.names].filter(Boolean);m.name=n[n.length-1]||"Manager";m.act=m.d.txPerS;}
+  const actV=pool.map(m=>m.act).sort((a,b)=>a-b);for(const m of Object.values(M))m.sk.activity=actV.length>1?Math.round(100*actV.filter(x=>x<m.act).length/actV.length):50;
+  // labels: unique per current-league group where possible
+  const me=M[uid];const curChains=new Set(LSs.filter(x=>x.season===+S.season).map(x=>x.chain));
+  const rivalsU=new Set();LSs.filter(x=>curChains.has(x.chain)&&x.season===+S.season).forEach(x=>x.rosters.forEach(r=>rivalsU.add(r.uid)));
+  assignLabels([...rivalsU].map(u=>M[u]).filter(Boolean),M);if(me&&!me.label)assignLabels([me],M);
+  return {uid,me,M,LS:LSs,TR,SK,chainName,curChains:[...curChains]};}
+
+/* ---------- manager labels ---------- */
+const LBLS={
+ lineup_hi:["Lineup Surgeon","The Optimizer","Set It and Nail It","Start/Sit Sommelier","Never Benches a Banger"],
+ lineup_lo:["Bench Hoarder","Points Left on the Pine","Started the Guy on Bye","Lineup Roulette","Forgot to Set It Again"],
+ waivers_hi:["Waiver Wire Vulture","Dumpster Diver Supreme","FAAB Whisperer","Practice Squad Prophet","Free Agent Fortune Teller"],
+ waivers_lo:["Allergic to Waivers","Bid $99 on a Backup","Late to Every Breakout","Picks Up Last Week’s Hero"],
+ trading_hi:["Wheel’n’Dealer","Trade Shark","Fleece Merchant","Used-Car Salesman","Front Office Mastermind"],
+ trading_lo:["Trade Charity Case","League Donor","Fleece Victim","Sold at the Bottom","Bought the Top"],
+ drafting_hi:["Draft Day Savant","War Room GM","Late-Round Alchemist","Sleeper Cell Commander","Mock Draft Champion"],
+ drafting_lo:["Draft Day Disaster","Reached for a Kicker","Round 1 Bust Collector","Drafted Off Last Year’s Stats"],
+ clutch_hi:["Two-Minute Drill","Monday Night Magician","Ice in the Veins","Hail Mary Specialist","Walk-Off Winner"],
+ clutch_lo:["Choke Artist","Fourth-Quarter Fumbler","Prevent Defense Victim","Blew a 28–3 Lead","Kneel-Down Fumbler"],
+ scoring_hi:["Point Machine","Air Raid Offense","Run It Up Merchant","Scoreboard Operator","Weekly High Score Hog"],
+ scoring_lo:["Three Yards and a Cloud of Dust","Punt Formation","Victory Formation Enjoyer","Low-Scoring Affair"],
+ consistency_hi:["The Metronome","Steady Eddie","Clockwork Orange","Floor General"],
+ consistency_lo:["Boom-or-Bust Merchant","Chaos Coordinator","Feast or Famine","Coin-Flip Cowboy"],
+ luck_hi:["Horseshoe Enthusiast","Schedule Merchant","Rabbit’s Foot Collector","Fumbled Into Wins"],
+ luck_lo:["Cursed by the Schedule","Points-Against Magnet","Snakebitten","Second-Highest Score, Again"],
+ activity_hi:["Transaction Addict","Refreshes Waivers at 3 AM","Waiver Wire Day Trader","Roster Churn Machine"],
+ activity_lo:["Ghost Owner","Auto-Draft Andy","Set-and-Forget Sam","Witness Protection GM"],
+ wine:["Patience Is a Virtue","Aged Like Fine Wine","Long Game Larry"],
+ champ:["Ring Collector","Banner Raiser","Dynasty Builder"],
+ runner:["Always the Bridesmaid","Silver Medal Specialist"]};
+function traitsOf(m){const t=[];for(const [k,v] of Object.entries(m.sk||{})){if(v==null)continue;t.push([Math.abs(v-50),k+(v>=50?"_hi":"_lo")]);}
+  if(m.titles>=2)t.push([60,"champ"]);if(m.runner>=2&&!m.titles)t.push([48,"runner"]);if(m.d.wine>=2)t.push([47,"wine"]);
+  return t.filter(x=>x[0]>=8).sort((a,b)=>b[0]-a[0]).map(x=>x[1]).concat(["consistency_hi"]);}
+function assignLabels(ms,M){const used=new Set(Object.values(M).map(m=>m.label).filter(Boolean));
+  const seed=s=>{let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))|0;return Math.abs(h);};
+  ms.sort((a,b)=>(b.g||0)-(a.g||0));
+  for(const m of ms){if(m.label)continue;const tr=traitsOf(m);let pick=null;
+    for(const t of tr){const pool=LBLS[t]||[];const st=seed(m.uid)%Math.max(1,pool.length);for(let i=0;i<pool.length;i++){const c=pool[(st+i)%pool.length];if(!used.has(c)){pick=c;break;}}if(pick)break;}
+    m.label=pick||"Just Happy to Be Here";used.add(m.label);
+    m.badges=tr.slice(0,4).map(t=>(LBLS[t]||[])[0]).filter(x=>x&&x!==m.label).slice(0,3);}}
+
+/* ---------- charts ---------- */
+const CH={w:340,h:160};
+function chLine(series,labels,opt={}){const W=opt.w||CH.w,H=opt.h||CH.h,pad=[28,10,20,30],all=series.flatMap(s=>s.v).filter(v=>v!=null);if(all.length<2)return "";
+  const mn=opt.min??Math.min(...all),mx=opt.max??Math.max(...all),r=mx-mn||1,n=labels.length,X=i=>pad[3]+i*(W-pad[1]-pad[3])/Math.max(1,n-1),Y=v=>pad[0]+(1-(v-mn)/r)*(H-pad[0]-pad[2]);
+  const grid=[0,.5,1].map(f=>{const v=mn+r*f;return `<line x1="${pad[3]}" x2="${W-pad[1]}" y1="${Y(v)}" y2="${Y(v)}" class="cg"/><text x="${pad[3]-4}" y="${Y(v)+3}" class="ct" text-anchor="end">${opt.fmt?opt.fmt(v):Math.round(v)}</text>`;}).join("");
+  const lines=series.map((s,si)=>{const pts=s.v.map((v,i)=>v==null?null:[X(i),Y(v)]).filter(Boolean);return `<polyline points="${pts.map(p=>p.join(",")).join(" ")}" class="cl${si}" fill="none"/>${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="${si?2:3}" class="cd${si}"/>`).join("")}`;}).join("");
+  const lab=labels.map((l,i)=>n<=10||i%Math.ceil(n/8)===0?`<text x="${X(i)}" y="${H-4}" class="ct" text-anchor="middle">${esc(l)}</text>`:"").join("");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">${grid}${lines}${lab}</svg>${series.length>1?`<div class="leg">${series.map((s,i)=>`<span><i class="lg${i}"></i>${esc(s.n)}</span>`).join("")}</div>`:""}`;}
+function chBars(vals,labels,opt={}){const W=opt.w||CH.w,H=opt.h||CH.h,pad=[16,6,20,6],n=vals.length;if(!n)return "";const mx=opt.max??Math.max(...vals.map(v=>Math.abs(v)),1),mn=opt.min??Math.min(0,...vals);const r=mx-mn||1;
+  const bw=(W-pad[1]-pad[3])/n,Y=v=>pad[0]+(1-(v-mn)/r)*(H-pad[0]-pad[2]);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img"><line x1="${pad[3]}" x2="${W-pad[1]}" y1="${Y(0)}" y2="${Y(0)}" class="cg"/>${vals.map((v,i)=>{const y0=Y(0),y=Y(v);return `<rect x="${pad[3]+i*bw+bw*.15}" y="${Math.min(y,y0)}" width="${bw*.7}" height="${Math.max(1,Math.abs(y-y0))}" rx="${Math.min(6,bw*.2)}" class="${(opt.cls&&opt.cls(v,i))||"cb"}"/>${opt.top?`<text x="${pad[3]+i*bw+bw/2}" y="${Math.min(y,y0)-3}" class="ct" text-anchor="middle">${opt.top(v,i)}</text>`:""}`;}).join("")}${labels.map((l,i)=>n<=14||i%Math.ceil(n/10)===0?`<text x="${pad[3]+i*bw+bw/2}" y="${H-5}" class="ct" text-anchor="middle">${esc(l)}</text>`:"").join("")}</svg>`;}
+function chRadar(items){const W=300,H=250,cx=150,cy=128,R=92,n=items.length;const P=(i,f)=>{const a=-Math.PI/2+i*2*Math.PI/n;return [cx+Math.cos(a)*R*f,cy+Math.sin(a)*R*f];};
+  const rings=[.25,.5,.75,1].map(f=>`<polygon points="${items.map((_,i)=>P(i,f).join(",")).join(" ")}" class="rg"/>`).join("");
+  const poly=`<polygon points="${items.map((x,i)=>P(i,Math.max(.04,(x.v??50)/100)).join(",")).join(" ")}" class="rp"/>`;
+  const lb=items.map((x,i)=>{const [X,Y]=P(i,1.2);return `<text x="${X}" y="${Y}" class="rt" text-anchor="${X<cx-5?"end":X>cx+5?"start":"middle"}">${esc(x.n)}</text><text x="${X}" y="${Y+13}" class="ct" text-anchor="${X<cx-5?"end":X>cx+5?"start":"middle"}">${x.v==null?"–":x.v}</text>`;}).join("");
+  return `<svg class="chart radar" viewBox="0 0 ${W} ${H}" role="img">${rings}${items.map((_,i)=>`<line x1="${cx}" y1="${cy}" x2="${P(i,1)[0]}" y2="${P(i,1)[1]}" class="rg"/>`).join("")}${poly}${lb}</svg>`;}
+function chScatter(pts,opt={}){const W=CH.w,H=196,pad=[18,10,26,32];if(!pts.length)return "";const mx=Math.max(10,...pts.flatMap(p=>[p.x,p.y]))*1.05,X=v=>pad[3]+v/mx*(W-pad[1]-pad[3]),Y=v=>pad[0]+(1-v/mx)*(H-pad[0]-pad[2]);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img"><line x1="${X(0)}" y1="${Y(0)}" x2="${X(mx)}" y2="${Y(mx)}" class="cg dash"/>${[0,mx/2,mx].map(v=>`<text x="${pad[3]-4}" y="${Y(v)+3}" class="ct" text-anchor="end">${Math.round(v)}</text><text x="${X(v)}" y="${H-12}" class="ct" text-anchor="middle">${Math.round(v)}</text>`).join("")}<text x="${W/2}" y="${H-1}" class="ct" text-anchor="middle">${esc(opt.xl||"")}</text><text x="${pad[3]+6}" y="${pad[0]-2}" class="ct">${esc(opt.yl||"")} ↑</text>${pts.map(p=>`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="${p.r||4}" class="${p.c||"sd"}"><title>${esc(p.t||"")}</title></circle>`).join("")}</svg>`;}
+function chHist(vals,bins=12){if(vals.length<3)return "";const mn=Math.floor(Math.min(...vals)/10)*10,mx=Math.ceil(Math.max(...vals)/10)*10,bw=(mx-mn)/bins||10,c=Array(bins).fill(0);vals.forEach(v=>c[Math.min(bins-1,Math.floor((v-mn)/bw))]++);
+  return chBars(c,c.map((_,i)=>i%2?"":String(Math.round(mn+i*bw))),{h:130,cls:(v,i)=>"cb"});}
+
+/* ---------- page ---------- */
+const GR=sh=>sh>=.7?"A+":sh>=.64?"A":sh>=.59?"A−":sh>=.555?"B+":sh>=.52?"B":sh>=.48?"C":sh>=.445?"C−":sh>=.41?"D":"F";
+const grCls=g=>/^A/.test(g)?"gA":/^B/.test(g)?"gB":/^C/.test(g)?"gC":"gF";
+const pcx=x=>x==null?"–":Math.round(100*x)+"%";
+function statsScope(){return S.hxScope||"all";}
+function scoped(m){const sc=statsScope();if(sc==="all")return m;const D=HX.data;
+  // build a scoped manager view by filtering seasons/trades/adds/drafts/scores
+  const f=x=>(x.chain||x.lg)===sc||x.lg===D.chainName[sc];return Object.assign({},m,{seasons:m.seasons.filter(s=>s.chain===sc),scores:m.scores.filter(s=>s.lg===sc),trades:m.trades.filter(t=>t.chain===sc),adds:m.adds.filter(a=>a.lg===D.chainName[sc]),drafts:m.drafts.filter(d=>d.lg===D.chainName[sc])});}
+function vStats(){const D=HX.data;
+  if(HX.st!=="ready"||!D){if(HX.st==="idle")setTimeout(()=>hxLoad(),0);
+    return `<div class="topline"><div class="eyebrow">Manager analytics</div><h1>My stats</h1></div>${HX.st==="error"?`<section class="pan"><p>${esc(HX.err)}</p><button class="btn mt" data-hx="retry">Try again</button></section>`:`<section class="pan"><p id="hxtxt" class="sub">Reading your Sleeper history…</p><div class="pbar mt"><i id="hxbar" style="width:5%"></i></div><p class="sub mt">Every season of every league you’ve played on Sleeper: matchups, lineups, trades, waivers and drafts. Past seasons are saved on this device after the first load.</p></section>`}`;}
+  const m0=D.me;if(!m0||!m0.g)return `<div class="topline"><h1>My stats</h1></div><section class="pan"><p class="sub">No completed games found on Sleeper yet.</p></section>`;
+  const m=scoped(m0),sc=statsScope(),chains=[...new Set(m0.seasons.map(s=>s.chain))];
+  const g=m.scores.length||1,W=m.scores.filter(x=>x.won).length,Lr=m.scores.filter(x=>!x.won&&x.v!==x.opp).length,pf=m.scores.reduce((s,x)=>s+x.v,0),pa=m.scores.reduce((s,x)=>s+x.opp,0);
+  const titles=m.seasons.filter(s=>s.champ).length,po=m.seasons.filter(s=>s.po).length,done=m.seasons.filter(s=>!s.live).length;
+  const ex=m.scores.reduce((s,x)=>s+x.p,0),dog=m.scores.filter(x=>x.p<.4),hd=m.scores.filter(x=>x.p<.3),fav=m.scores.filter(x=>x.p>.7),close=m.scores.filter(x=>Math.abs(x.v-x.opp)<7);
+  const rate=(a,f)=>a.length?a.filter(f).length/a.length:null;
+  const k=m0.sk,skills=[["Lineups",k.lineup],["Waivers",k.waivers],["Trading",k.trading],["Drafting",k.drafting],["Clutch",k.clutch],["Scoring",k.scoring]].map(([n,v])=>({n,v}));
+  const seasons=m.seasons.slice().sort((a,b)=>a.s-b.s||a.lg.localeCompare(b.lg));
+  const yrs=[...new Set(seasons.map(s=>s.s))];const ppgY=yrs.map(y=>{const ss=seasons.filter(s=>s.s===y);const gg=ss.reduce((s,x)=>s+x.g,0);return gg?ss.reduce((s,x)=>s+x.pf,0)/gg:null;}),papgY=yrs.map(y=>{const ss=seasons.filter(s=>s.s===y);const gg=ss.reduce((s,x)=>s+x.g,0);return gg?ss.reduce((s,x)=>s+x.pa,0)/gg:null;});
+  const wpY=yrs.map(y=>{const ss=seasons.filter(s=>s.s===y);const gg=ss.reduce((s,x)=>s+x.g,0);return gg?ss.reduce((s,x)=>s+x.w,0)/gg:0;});
+  const tr=m.trades.slice().sort((a,b)=>(b.ts||0)-(a.ts||0)),ad=m.adds.slice().sort((a,b)=>b.score-a.score),dr=m.drafts.slice().sort((a,b)=>b.voe-a.voe);
+  const h2h=Object.entries(m0.h2h).map(([u,h])=>({u,n:(D.M[u]&&D.M[u].name)||"Opponent",...h})).filter(h=>h.g>=2).sort((a,b)=>b.g-a.g);
+  const nem=h2h.slice().sort((a,b)=>(a.w-a.l)-(b.w-b.l)||b.g-a.g)[0],vic=h2h.slice().sort((a,b)=>(b.w-b.l)-(a.w-a.l)||b.g-a.g)[0];
+  const effS=seasons.map(s=>{const xs=m0.scores.filter(x=>x.s===s.s&&x.lg===s.chain);return xs.length;});
+  const luck=(W-m.scores.reduce((s,x)=>s+x.p,0));
+  const bucket=[0,1,2,3,4].map(i=>{const xs=m.scores.filter(x=>Math.min(4,Math.floor(x.p*5))===i);return {n:xs.length,r:xs.length?xs.filter(x=>x.won).length/xs.length:null,e:xs.length?avgx(xs.map(x=>x.p)):null};});
+  const wnd=m0.d.wnd,stG=tr.length?GR(avgx(tr.map(t=>t.st))):"–",rzG=tr.length?GR(avgx(tr.map(t=>t.rz))):"–";
+  const hit=rate(m.adds,a=>a.stW>=3),brk=m.adds.filter(a=>a.brk);
+  const lgRows=Object.values(D.M).filter(x=>x.g>=8&&D.LS.some(L=>D.curChains.includes(L.chain)&&L.season===+S.season&&L.rosters.some(r=>r.uid===x.uid)));
+  const KP=(v,l,s)=>`<div><b class="num">${v}</b><span>${l}</span>${s?`<em>${s}</em>`:""}</div>`;
+  return `<div class="topline"><div class="eyebrow">Manager analytics · ${m0.seasons.length} league-season${m0.seasons.length===1?"":"s"}</div><h1>My stats</h1></div>
+  ${chains.length>1?`<div class="seg hxseg"><button data-hxs="all" class="${sc==="all"?"on":""}">All leagues</button>${chains.map(c=>`<button data-hxs="${esc(c)}" class="${sc===c?"on":""}">${esc(D.chainName[c])}</button>`).join("")}</div>`:""}
+  <section class="pan hxhero mt"><div class="eyebrow">Manager profile</div><div class="hxlab">${esc(m0.label)}</div>${m0.badges&&m0.badges.length?`<div class="chips mt">${m0.badges.map(b=>`<span class="pill">${esc(b)}</span>`).join("")}</div>`:""}
+   <div class="hxk mt">${KP(`${W}-${Lr}`,"Record",pcx(W/g)+" wins")}${KP(f1(pf/g),"Points per game",`${f1(pa/g)} against`)}${KP(titles,"Titles",`${po} playoff trips · ${done} seasons`)}${KP(pcx(m0.d.opt),"Lineup efficiency",`${f1(m0.d.benchPg)} pts/wk left on bench`)}</div></section>
+  <section class="grid2 mt"><div class="pan"><div class="row sp"><h2>Skill profile</h2><span class="tag">vs ${Object.values(D.M).filter(x=>x.g>=8).length} managers</span></div>${chRadar(skills)}<p class="sub">Percentiles against every manager you’ve shared a Sleeper league with.</p></div>
+   <div class="pan"><h2>Skill ranks</h2><div class="rkb mt">${[["Lineups","lineup"],["Waivers","waivers"],["Trading","trading"],["Drafting","drafting"],["Clutch","clutch"],["Scoring","scoring"],["Consistency","consistency"],["Luck","luck"],["Activity","activity"]].map(([n,kk])=>`<div class="rkr"><span>${n}</span><span class="bar"><i class="${(k[kk]??50)>=75?"hi":(k[kk]??50)<=25?"lo":""}" style="width:${Math.max(3,k[kk]??0)}%"></i></span><b class="num">${k[kk]??"–"}</b></div>`).join("")}</div><p class="sub mt">100 is the best in your Sleeper circle. Luck and activity aren’t skills, but they explain a lot.</p></div></section>
+  <section class="pan mt"><div class="row sp"><h2>Career arc</h2><span class="tag">${yrs[0]}–${yrs[yrs.length-1]}</span></div>${yrs.length>1?chLine([{n:"Points for / game",v:ppgY},{n:"Points against / game",v:papgY}],yrs.map(String)):`<p class="sub">One season so far. The arc fills in as seasons are added.</p>`}
+   ${chBars(wpY.map(x=>Math.round(x*100)),yrs.map(String),{h:110,max:100,min:0,top:v=>v+"%",cls:v=>v>=50?"cb hi":"cb"})}<p class="sub">Bars: regular-season win rate by year.</p></section>
+  <section class="pan mt"><h2>Season by season</h2><div class="tblw"><table class="tbl"><thead><tr><th>Year</th><th>League</th><th>W-L</th><th>PF</th><th>PA</th><th>Finish</th></tr></thead><tbody>${seasons.slice().reverse().map(s=>`<tr><td>${s.s}</td><td class="ell" style="max-width:9em">${esc(s.lg)}</td><td class="num">${s.w}-${s.l}</td><td class="num">${Math.round(s.pf)}</td><td class="num">${Math.round(s.pa)}</td><td>${s.champ?"<b>🏆 Champion</b>":s.ru?"Runner-up":s.live?ordn(s.rank)+" (now)":ordn(s.rank)+(s.po?" · playoffs":"")}</td></tr>`).join("")}</tbody></table></div></section>
+  <section class="pan mt"><div class="row sp"><h2>Clutch and comebacks</h2><span class="tag">${m.scores.length} games</span></div>
+   <div class="hxk">${KP(pcx(rate(dog,x=>x.won)),"Clutch",`won ${dog.filter(x=>x.won).length} of ${dog.length} as an underdog`)}${KP(pcx(rate(hd,x=>x.won)),"Upset rate",`under 30% to win`)}${KP(pcx(m0.d.comeback),"Comeback rate","won the week after a loss")}${KP(pcx(rate(fav,x=>!x.won&&x.v!==x.opp)),"Choke rate","lost as a 70%+ favorite")}${KP(pcx(rate(close,x=>x.won)),"Close games",`${close.filter(x=>x.won).length}-${close.filter(x=>!x.won).length} within 7 pts`)}${KP((luck>=0?"+":"")+f1(luck),"Wins vs expected",luck>=0?"luckier than your scores":"unluckier than your scores")}</div>
+   ${chBars(bucket.map(b=>b.r==null?0:Math.round(b.r*100)),["0–20%","20–40%","40–60%","60–80%","80–100%"],{h:130,max:100,min:0,top:(v,i)=>bucket[i].n?v+"%":"",cls:(v,i)=>bucket[i].r!=null&&bucket[i].e!=null&&bucket[i].r>bucket[i].e?"cb hi":"cb"})}
+   <p class="sub">Actual win rate by pregame win chance. Dark bars beat the odds. Clutch means winning when the model gave you under 40%; pregame odds come from both teams’ scoring to that point in the season.</p></section>
+  <section class="pan mt"><div class="row sp"><h2>Wheel’n’Deal</h2><span class="tag">${wnd==null?"No trades":wnd+" / 100"}</span></div>
+   ${tr.length?`<div class="hxk">${KP(tr.length,"Trades")}${KP(stG,"Day-one grade","first 4 weeks")}${KP(rzG,"Realized grade","to date, repriced weekly")}${KP(m0.d.wine,"Aged like wine","lost early, won late")}</div>
+   <div class="trl mt">${tr.slice(0,12).map(t=>{const a=GR(t.st),b=GR(t.rz),tag=t.st<.46&&t.rz>.56?"Aged like wine":t.st>.56&&t.rz<.44?"Spoiled milk":t.rz>=.7?"Fleece":t.rz<.36?"Got fleeced":"";
+     return `<div class="tri"><div class="row sp"><span class="sub ell">${t.season} · ${esc(t.lg)} · with ${esc(t.partner)}</span>${tag?`<span class="pill">${tag}</span>`:""}</div><div class="trg"><span class="grd ${grCls(a)}">${a}</span><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span class="grd ${grCls(b)}">${b}</span><span class="trt"><b>Got</b> ${esc(t.rec.concat(t.recK.map(k=>k.real&&k.real.pk&&k.real.real?`${k.season} R${k.round} (${hxName(k.real.pk.pid)})`:`${k.season} R${k.round}`)).join(", ")||"nothing")}${t.fb>0?` +$${t.fb}`:""}<br><span class="sub"><b>Gave</b> ${esc(t.gave.concat(t.gaveK.map(k=>k.real&&k.real.pk&&k.real.real?`${k.season} R${k.round} (${hxName(k.real.pk.pid)})`:`${k.season} R${k.round}`)).join(", ")||"nothing")}${t.fb<0?` +$${-t.fb}`:""}</span></span>${spark(t.drift.length>1?t.drift:[0,0],70,26)}</div></div>`;}).join("")}</div>
+   <p class="sub mt">Day-one grade uses the first four weeks after the deal. Realized grade adds everything since, in this league’s scoring, plus today’s projection for players still producing; picks are priced by round until they’re made, then by the player drafted. Sparkline: net points gained since the trade.</p>`:`<p class="sub">No trades on record. The Trade Lab can fix that.</p>`}</section>
+  <section class="pan mt"><div class="row sp"><h2>Waiver wire report</h2><span class="tag">${m.adds.length} adds</span></div>
+   ${m.adds.length?`<div class="hxk">${KP(pcx(hit),"Hit rate","started 3+ weeks")}${KP(brk.length,"Pre-breakout finds","added before they popped")}${KP(Math.round(m.adds.reduce((s,a)=>s+a.started,0)),"Points started","from pickups")}${KP(m0.d.adN&&m0.faab?"$"+m0.faab:"–","FAAB spent",m0.faab?f1(m.adds.reduce((s,a)=>s+a.started,0)/Math.max(1,m0.faab))+" pts per $":"")}</div>
+   ${chScatter(m.adds.filter(a=>a.before||a.after).slice(0,120).map(a=>({x:a.before,y:a.after,r:a.stW>=3?5:3,c:a.brk?"sd hi":"sd",t:`${a.name}: ${a.before} → ${a.after} ppg`})),{xl:"PPG before you added him",yl:"PPG after"})}
+   <p class="sub">Above the diagonal means he got better after you grabbed him. Big dots became starters for you.</p>
+   <div class="list mt">${ad.slice(0,5).map(a=>`<div class="pr"><span class="tag">${a.brk?"Breakout":"Hit"}</span><div style="min-width:0"><div class="nm ell">${esc(a.name)}</div><div class="meta">${a.s} wk ${a.wk} · ${esc(a.lg)} · ${a.before} → ${a.after} ppg${a.bid?` · $${a.bid}`:""}</div></div><span class="num">${Math.round(a.started)}</span></div>`).join("")}</div>`:`<p class="sub">No pickups yet.</p>`}</section>
+  <section class="grid2 mt"><div class="pan"><div class="row sp"><h2>Draft room</h2><span class="tag">${m.drafts.length} picks</span></div>${m.drafts.length?`<div class="hxk">${KP((m0.d.drVoe>=0?"+":"")+f1(m0.d.drVoe),"Pts over slot","per pick")}</div>
+    <div class="list mt">${dr.slice(0,3).map(d=>`<div class="pr"><span class="tag good">Steal</span><div style="min-width:0"><div class="nm ell">${esc(d.name)}</div><div class="meta">${d.s} · pick ${d.no} · +${Math.round(d.voe)} vs slot</div></div></div>`).join("")}${dr.slice(-2).reverse().map(d=>`<div class="pr"><span class="tag bad">Reach</span><div style="min-width:0"><div class="nm ell">${esc(d.name)}</div><div class="meta">${d.s} · pick ${d.no} · ${Math.round(d.voe)} vs slot</div></div></div>`).join("")}</div>`:`<p class="sub">No completed drafts found.</p>`}</div>
+   <div class="pan"><h2>Lineup IQ</h2><div class="hxk">${KP(pcx(m0.d.opt),"Optimal lineup","points started vs best possible")}${KP(f1(m0.d.benchPg),"Bench pts / week","left unused")}${KP(m0.pickBad,"Losses you could’ve won","with your best lineup")}</div>${m0.benchWorst?`<p class="sub mt">Worst benching: ${esc(hxName(m0.benchWorst.id))}, ${f1(m0.benchWorst.v)} pts on your bench in a loss (${m0.benchWorst.s} wk ${m0.benchWorst.w}).</p>`:""}</div></section>
+  <section class="pan mt"><div class="row sp"><h2>Scoring fingerprint</h2><span class="tag">CV ${pcx(m0.d.cv)}</span></div>${chHist(m.scores.map(x=>x.v))}<p class="sub">Every regular-season score you’ve posted. Narrow means consistent; a long right tail means blowups.</p>
+   <div class="hxk mt">${m0.bestWeek?KP(f1(m0.bestWeek.v),"Best week",`${m0.bestWeek.s} wk ${m0.bestWeek.w}`):""}${m0.worstWeek?KP(f1(m0.worstWeek.v),"Worst week",`${m0.worstWeek.s} wk ${m0.worstWeek.w}`):""}${m0.bigWin?KP("+"+f1(m0.bigWin.m),"Biggest win",`vs ${esc(m0.bigWin.op)}`):""}${m0.badLoss?KP(f1(m0.badLoss.m),"Worst loss",`vs ${esc(m0.badLoss.op)}`):""}${KP(pcx(m0.d.allPlay),"All-play win rate","if you played everyone, every week")}</div></section>
+  ${h2h.length?`<section class="pan mt"><div class="row sp"><h2>Rivalries</h2>${nem?`<span class="tag">Nemesis: ${esc(nem.n)}</span>`:""}</div><div class="list">${h2h.slice(0,8).map(h=>`<div class="pr"><span class="tag ${h.w>h.l?"good":h.w<h.l?"bad":""}">${h.w}-${h.l}</span><div style="min-width:0"><div class="nm ell">${esc(h.n)}${D.M[h.u]&&D.M[h.u].label?` <span class="sub">· ${esc(D.M[h.u].label)}</span>`:""}</div><div class="meta">${h.g} games · ${f1(h.pf/h.g)}–${f1(h.pa/h.g)} avg</div></div></div>`).join("")}</div>${vic&&vic!==nem?`<p class="sub mt">Favorite victim: ${esc(vic.n)} (${vic.w}-${vic.l}).</p>`:""}</section>`:""}
+  ${lgRows.length>2?`<section class="pan mt"><div class="row sp"><h2>League leaderboard</h2><span class="tag">Profiles</span></div><div class="list">${lgRows.sort((a,b)=>b.d.wpct-a.d.wpct).map(x=>`<div class="pr${x===m0?" me":""}"><span class="tag">${pcx(x.d.wpct)}</span><div style="min-width:0"><div class="nm ell">${esc(x.name)}${x===m0?" (you)":""}</div><div class="meta ell">${esc(x.label||"")} · ${x.titles?x.titles+" 🏆 · ":""}${f1(x.d.ppg)} ppg · ${x.d.trN} trades</div></div></div>`).join("")}</div><p class="sub mt">Each manager’s label comes from the stat where they stand out most, with no two alike in your leagues.</p></section>`:""}
+  <p class="sub mt">Built from Sleeper’s public league history. Past seasons are cached on this device. <button class="glinkb" data-hx="retry">Rebuild</button></p>`;}
+document.addEventListener("click",e=>{const s=e.target.closest("[data-hxs]");if(s){S.hxScope=s.dataset.hxs;render();return;}const r=e.target.closest("[data-hx]");if(r){HX.st="idle";hxLoad(true);}},true);
+const _LB15=LABEL;LABEL=function(r){return r==="stats"?"My stats":_LB15(r);};
+
+/* trade grades on the transactions page */
+function tradeGrades(id){const D=HX.data;if(!D)return "";const xs=D.TR.filter(t=>t.id===id);if(!xs.length)return "";
+  return `<div class="tgr">${xs.map(t=>{const a=GR(t.st),b=GR(t.rz);return `<span class="tgx"><span class="sub ell">${esc((D.M[t.u]&&D.M[t.u].name)||"")}</span><span class="grd ${grCls(a)}" title="Day-one grade">${a}</span>→<span class="grd ${grCls(b)}" title="Realized grade">${b}</span></span>`;}).join("")}</div>`;}
+const _vTx15=vTx;vTx=function(){let h=_vTx15();const L=S.L;if(!L||!L.tx)return h;if(HX.st==="idle")setTimeout(()=>hxLoad(),0);
+  let i=0;const trades=L.tx.slice(0,80);
+  h=h.replace(/<div class="pr"><span class="tag">([^<]*)<\/span><div>([\s\S]*?)<\/div><\/div><span class="meta">([^<]*)<\/span><\/div>/g,(all,ty,inner,d)=>{const t=trades[i++];if(!t||t.type!=="trade")return all;const g=tradeGrades(t.transaction_id);return g?all.replace(/<\/div><\/div><span class="meta">/,`</div>${g}</div><span class="meta">`):all;});
+  return h.replace("</p>",` ${HX.st==="ready"?"Trades show a day-one grade and a realized grade that keeps updating.":HX.st==="loading"?"Grading trades…":""}</p>`);};
+
+/* ---------- demo history generator (only used without a linked account) ---------- */
+let DEMOH=null;
+function demoHx(path){if(!DEMOH)DEMOH=buildDemoH();const m=path.match(/^\/user\/[^/]+\/leagues\/nfl\/(\d+)/);if(m)return Promise.resolve(DEMOH.byYear[+m[1]]||[]);
+  const q=path.match(/^\/league\/([^/]+)\/(\w+)(?:\/(\d+))?/);if(q){const L=DEMOH.L[q[1]];if(!L)return Promise.resolve([]);const k=q[2];
+    if(k==="rosters")return Promise.resolve(L.rosters);if(k==="users")return Promise.resolve(L.users);if(k==="winners_bracket")return Promise.resolve(L.bracket);if(k==="drafts")return Promise.resolve(L.drafts);
+    if(k==="matchups")return Promise.resolve(L.mu[+q[3]-1]||[]);if(k==="transactions")return Promise.resolve(L.tx[+q[3]-1]||[]);}
+  const d=path.match(/^\/draft\/([^/]+)\/picks/);if(d)return Promise.resolve(DEMOH.picks[d[1]]||[]);return Promise.resolve([]);}
+function buildDemoH(){let sd=7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;},gs=()=>{let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+  const FN=["Marcus","Tyler","Jalen","Darius","Cody","Andre","Trey","Malik","Devin","Logan","Isaiah","Brandon","Corey","Xavier","Jordan","Elijah","Quentin","Rashad","Nolan","Terrell","Caleb","Dante","Grant","Myles"],LN=["Hollins","Brooks","Whitaker","Pryor","Gaines","Okafor","Merritt","Sutton","Vance","Calloway","Dorsey","Lockett","Rankin","Strickland","Boone","Fairley","Kincaid","Mosley","Pruitt","Talbert","Wynn","Ashford","Beasley","Crowder"];
+  const real=Object.values(PL).filter(p=>["QB","RB","WR","TE"].includes(p.pos)&&(p.ros||0)>0);const pool=real.map(p=>({id:p.id,pos:p.pos,ros:p.ros||6}));
+  const POSD=["QB","RB","RB","RB","WR","WR","WR","WR","TE","TE"];for(let i=0;pool.length<260;i++){const pos=POSD[i%POSD.length],id="dx"+i;const ros=Math.max(1.5,(pos==="QB"?17:pos==="TE"?8:11)*Math.pow(rnd(),.9)+rnd()*3);DEMOPL[id]={name:FN[i%FN.length]+" "+LN[(i*7+3)%LN.length],pos,ros};pool.push({id,pos,ros});}
+  pool.sort((a,b)=>b.ros-a.ros);const INFO=id=>PL[id]||DEMOPL[id];
+  const N=10,skill=[.65,.2,0,-.1,.35,-.3,.1,-.2,.25,-.45],uids=["demo-me",...[...Array(N-1).keys()].map(i=>"u"+i)];
+  const names=["You","Gridiron Greg","Taco Tuesday","Nacua Matata","Bijan Mustard","CeeDee-Rom","Kittle Me This","Burrow’s Lane","Mixon It Up","Jet Lagged"];
+  const out={byYear:{},L:{},picks:{}};let prev=null;const base={};
+  for(const yr of [2023,2024,2025,2026]){const id="demo"+yr,cur=yr===+S.season,wks=cur?Math.max(1,S.week):17;
+    pool.forEach(p=>base[p.id]=Math.max(2,(p.ros||6)*(0.7+rnd()*.6)));const sh=pool.slice().sort((a,b)=>base[b.id]-base[a.id]+gs()*4),ro=uids.map(()=>[]);sh.slice(0,N*14).forEach((p,i)=>{const r=Math.floor(i/N)%2?N-1-i%N:i%N;ro[r].push(p.id);});
+    const traj={};pool.forEach(p=>traj[p.id]=gs()*.012);
+    const L={rosters:uids.map((u,i)=>({roster_id:i+1,owner_id:u,players:ro[i],settings:{}})),users:uids.map((u,i)=>({user_id:u,display_name:i?names[i]:"you",metadata:{team_name:names[i]}})),mu:[],tx:[],bracket:[],drafts:[]};
+    const dpk=[];sh.slice(0,N*14).forEach((p,i)=>{const r=Math.floor(i/N)%2?N-1-i%N:i%N;dpk.push({player_id:p.id,roster_id:r+1,round:Math.floor(i/N)+1,draft_slot:r+1,pick_no:i+1,is_keeper:false});});
+    out.picks["d"+yr]=dpk;L.drafts=[{draft_id:"d"+yr,status:"complete",season:String(yr),type:"snake",slot_to_roster_id:Object.fromEntries(uids.map((u,i)=>[i+1,i+1])),settings:{rounds:15}}];
+    const sched=[];for(let w=1;w<=wks;w++){const ord=[...Array(N).keys()];const rot=ord.slice(1);for(let k=0;k<(w-1)%(N-1);k++)rot.push(rot.shift());const a=[0,...rot];const pairs=[];for(let i=0;i<N/2;i++)pairs.push([a[i],a[N-1-i]]);sched.push(pairs);}
+    for(let w=1;w<=wks;w++){const pts={};pool.forEach(p=>{base[p.id]*=1+traj[p.id];pts[p.id]=Math.max(0,+(base[p.id]+gs()*base[p.id]*.45).toFixed(1));});
+      // waivers: someone adds a free agent each week
+      const owned=new Set(ro.flat());const fa=pool.filter(p=>!owned.has(p.id));const txw=[];
+      for(let t=0;t<2;t++){const r=Math.floor(rnd()*N),add=fa[Math.floor(rnd()*Math.min(30,fa.length))];if(!add||ro[r].length<6)continue;const drop=ro[r].slice().sort((a,b)=>base[a]-base[b])[0];ro[r]=ro[r].filter(x=>x!==drop).concat(add.id);owned.add(add.id);txw.push({transaction_id:`t${yr}${w}${t}`,type:"waiver",status:"complete",leg:w,roster_ids:[r+1],adds:{[add.id]:r+1},drops:{[drop]:r+1},settings:{waiver_bid:Math.floor(rnd()*20)},created:Date.UTC(yr,8,7*w)});}
+      if(w%3===2||rnd()<.15){const a=Math.floor(rnd()*N);let b=Math.floor(rnd()*N);if(b===a)b=(a+1)%N;if(a!==0&&b!==0&&rnd()<.5)b=0;const pa=ro[a][Math.floor(rnd()*6)],pb=ro[b][Math.floor(rnd()*6)];if(pa&&pb){ro[a]=ro[a].filter(x=>x!==pa).concat(pb);ro[b]=ro[b].filter(x=>x!==pb).concat(pa);
+        const dp=rnd()<.5?[{season:String(yr+1),round:1+Math.floor(rnd()*3),roster_id:a+1,previous_owner_id:a+1,owner_id:b+1}]:[];txw.push({transaction_id:`tr${yr}${w}`,type:"trade",status:"complete",leg:w,roster_ids:[a+1,b+1],adds:{[pa]:b+1,[pb]:a+1},drops:{[pa]:a+1,[pb]:b+1},draft_picks:dp,waiver_budget:[],created:Date.UTC(yr,8,7*w)});}}
+      L.tx.push(txw);
+      const mu=[];sched[w-1].forEach(([a,b],mi)=>{for(const r of [a,b]){const pl=ro[r],srt=pl.slice().sort((x,y)=>base[y]-base[x]),need={QB:1,RB:2,WR:3,TE:1},st=[];let flex=1;
+          for(const id of srt){const p=INFO(id);if(!p)continue;if(need[p.pos]>0&&rnd()>.08-skill[r]*.06){need[p.pos]--;st.push(id);}else if(flex&&p.pos!=="QB"&&rnd()>.1){flex--;st.push(id);}if(st.length>=8)break;}
+          const pp={};pl.forEach(id=>pp[id]=pts[id]||0);const tot=st.reduce((s,id)=>s+pp[id],0)*(1+skill[r]*.05);mu.push({roster_id:r+1,matchup_id:mi+1,points:+tot.toFixed(2),starters:st,players_points:pp});}});
+      L.mu.push(mu);}
+    if(!cur){const tbl=L.rosters.map((r,i)=>{let w=0;L.mu.slice(0,14).forEach(mu=>{const me=mu.find(m=>m.roster_id===r.roster_id),op=mu.find(m=>m.matchup_id===me.matchup_id&&m!==me);if(me.points>op.points)w++;});return {rid:i+1,w};}).sort((a,b)=>b.w-a.w);
+      const top=tbl.slice(0,4).map(t=>t.rid),sc=rid=>L.mu[15]?L.mu[15].find(m=>m.roster_id===rid).points:0;const f1w=sc(top[0])>sc(top[3])?top[0]:top[3],f2w=sc(top[1])>sc(top[2])?top[1]:top[2];const fin=(L.mu[16]||[]),champ=(fin.find(m=>m.roster_id===f1w)||{points:0}).points>=(fin.find(m=>m.roster_id===f2w)||{points:0}).points?f1w:f2w;
+      L.bracket=[{r:1,m:1,t1:top[0],t2:top[3],w:f1w,l:f1w===top[0]?top[3]:top[0]},{r:1,m:2,t1:top[1],t2:top[2],w:f2w,l:f2w===top[1]?top[2]:top[1]},{r:2,m:3,t1:f1w,t2:f2w,w:champ,l:champ===f1w?f2w:f1w,p:1}];}
+    out.L[id]=L;out.byYear[yr]=[{league_id:id,previous_league_id:prev,name:"Demo Dynasty",season:String(yr),status:cur?"in_season":"complete",total_rosters:N,roster_positions:["QB","RB","RB","WR","WR","WR","TE","FLEX","BN","BN","BN","BN","BN","BN","BN"],settings:{type:2,playoff_week_start:15,last_scored_leg:17}}];prev=id;}
+  return out;}
+
+/* home header + boxes (v15) */
+vHome=(function(prev){return function(){const r=route();if(r==="stats")return vStats();let h=prev();if(r!=="home")return h;
+  const n=S.leagues.length,warn=S.leagues.reduce((s,L)=>{try{return s+(leagueSummary(L).rev||0);}catch(e){return s;}},0);
+  h=h.replace(/<div class="topline"><div class="eyebrow">[^<]*<\/div><h1>Home<\/h1><\/div>/,`<div class="topline"><h1>My Teams</h1><div class="hsub"><span>Week ${S.week}</span><span>${n} team${n===1?"":"s"}</span><span class="${warn?"wv":""}">${warn} roster warning${warn===1?"":"s"}</span></div></div>`);
+  return h;};})(vHome);
+const _hb15=homeBoxes;homeBoxes=function(){return `<div class="lbx2">${S.leagues.map((L,li)=>{const ti=mineIdx(L),t=L.teams[ti],st=standing(L,ti),d=leagueSummary(L);const os=d.ok&&d.bi>=0?standing(L,d.bi).r:null;
+  return `<div class="lbx sm" data-golg="${esc(L.id)}" data-go="matchup-${li}" role="link" tabindex="0">
+   <div class="eyebrow ell">${esc(L.name)}</div>
+   <div class="lbs ell">${t.w}-${t.l}${t.t?"-"+t.t:""} · ${ordn(st.r)}${st.dv?` · ${ordn(st.dv.r)} div`:""}</div>
+   ${d.ok?`<div class="lsc num"><b>${f1(d.la)}</b><span>–</span><b class="op">${f1(d.lb)}</b></div>
+   <div class="lop ell">vs ${esc(d.b)}${os?` · ${ordn(os)}`:""}</div>
+   <div class="lpj ell">Proj ${f1(d.ap)}–${f1(d.bp)} · ${PCT(d.wp)}% win</div><div class="pbar"><i style="width:${PCT(d.wp)}%"></i></div>`:`<div class="lop">No matchup this week</div>`}
+   <button class="lbr" data-golg="${esc(L.id)}" data-go="team-${ti}">Roster ${CHEV}</button></div>`;}).join("")}</div>`;};
+const _ds15=dockSync;dockSync=function(){_ds15();const r=route();document.querySelectorAll(".dock button").forEach(b=>{if(r==="stats")b.classList.toggle("on",b.dataset.r==="stats");});};
+const _mh15=menuHtml;menuHtml=function(){return _mh15().replace('<button class="mlink','<button class="mlink'+(route()==="stats"?" on":"")+'" data-go="stats" data-dclose="1">'+ic("edge").replace(ICO.edge,'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>')+'<span>My stats</span></button><button class="mlink');};
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
