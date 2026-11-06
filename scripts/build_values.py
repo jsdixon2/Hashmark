@@ -116,6 +116,7 @@ def main():
 
     # Dynasty Dealer (dynasty, and redraft PPR in 1QB/SF)
     for key, url in (("dd", "https://www.dynastydealer.com/api/player-values"),
+                     ("dd_1q", "https://www.dynastydealer.com/api/player-values?sf=false"),
                      ("dd_rd_sf", "https://www.dynastydealer.com/api/player-values?format=redraft&scoring=ppr&sf=true"),
                      ("dd_rd_1q", "https://www.dynastydealer.com/api/player-values?format=redraft&scoring=ppr")):
         j = jget(url); n = 0
@@ -151,6 +152,8 @@ def main():
                 sid = find(d, "sleeper_id", "sleeperId", "player_id"); val = f(find(d, "value", "dynasty_value", "sf_value"))
                 if sid and val:
                     put(sid, key, val); n += 1
+        if not n:
+            print("  RosterAudit response sample:", json.dumps(j)[:400] if j is not None else None)
         note("RosterAudit " + key, n)
     # DynastyProcess values
     n = 0
@@ -183,6 +186,8 @@ def main():
                 sid = n2s.get((norm(nm), ps))
                 if sid:
                     put(sid, key, adp); n += 1
+        if n < 20:
+            print("  FFC response sample:", json.dumps(j)[:400] if j is not None else None)
         note("FFC " + key, n)
     # injury history: weeks listed Out/IR on official reports, last 3 seasons
     inj = defaultdict(lambda: [0, 0, 0])
