@@ -842,6 +842,14 @@ html{scroll-padding-top:calc(var(--chh,62px) + 12px)}
 .ssrg .pt.w{background:var(--tl-g)!important}
 .rtag.good{border-color:color-mix(in srgb,var(--tl-g) 60%,transparent)!important}.rtag.bad{border-color:color-mix(in srgb,var(--tl-r) 60%,transparent)!important}
 .cb.mid{fill:var(--tl-y)!important;opacity:.9!important}.cb.n{fill:var(--muted)!important;opacity:.6!important}
+.skc{padding:12px 0;border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)}.skc:first-of-type{border-top:0}
+.skh{display:flex;gap:12px;align-items:center}.skh .grd{font-size:17px;height:auto;min-width:46px;padding:7px 0;border-radius:12px}.skh b{font:750 16px var(--fd)}
+.skc .why{margin-top:8px}
+.skbw{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-top:10px}
+.skbw>div{border-radius:12px;padding:9px 11px;font-size:13px;line-height:1.4;background:var(--panel2)}
+.skbw>.sk-good{border-left:3px solid var(--tl-g)}.skbw>.sk-bad{border-left:3px solid var(--tl-r)}
+.skbw .eyebrow{display:block;font-size:10px;margin-bottom:2px}
+.pan:has(>.radar),.pan:has(.rkb) h2{cursor:pointer}
 </style>
 </head>
 <body>
@@ -2197,7 +2205,7 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
           if(Math.abs(me.pts-op.pts)<7){S2.close[0]++;if(won)S2.close[1]++;}
           const prevG=S2.scores.length>1?S2.scores[S2.scores.length-2]:null;if(prevG&&prevG.s===x.season&&prevG.w===w-1&&!prevG.won){S2.bounce[0]++;if(won)S2.bounce[1]++;}
           const h=S2.h2h[o]=S2.h2h[o]||{w:0,l:0,pf:0,pa:0,g:0};h.g++;won?h.w++:tie?0:h.l++;h.pf+=me.pts;h.pa+=op.pts;
-          const ids=Object.keys(me.pp).length?Object.keys(me.pp):me.st;const opt=optimal(ids,me.pp,slots)||me.pts;S2.opt+=Math.max(opt,me.pts);S2.act+=me.pts;S2.bench+=Math.max(0,opt-me.pts);S2.weeksN++;
+          const ids=Object.keys(me.pp).length?Object.keys(me.pp):me.st;const opt=optimal(ids,me.pp,slots)||me.pts;S2.opt+=Math.max(opt,me.pts);S2.act+=me.pts;S2.bench+=Math.max(0,opt-me.pts);S2.weeksN++;{const _sc=S2.scores[S2.scores.length-1];_sc.bn=Math.max(0,opt-me.pts);_sc.ow=opt>op.pts;_sc.top=all.every(v=>v<=me.pts);_sc.low=all.every(v=>v>=me.pts);}
           if(won&&opt>me.pts&&false)0;
           if(!won&&!tie&&opt>op.pts){S2.pickBad++;}
           const bw=Object.keys(me.pp).filter(id=>!me.st.includes(id)).map(id=>({id,v:+me.pp[id]||0})).sort((a,b)=>b.v-a.v)[0];
@@ -3676,6 +3684,75 @@ function tlPaint(root){if(!root)return;root.querySelectorAll(TLF).forEach(i=>{co
 decorate=(function(prev){return function(root){prev(root);try{tlPaint(root);}catch(e){}};})(decorate);
 openSheet=(function(prev){return function(t,html){const r=prev(t,html);try{tlPaint(document.getElementById("sheetB"));}catch(e){}return r;};})(openSheet);
 gauge=(function(prev){return function(r){return prev(r).replace('<stop offset="0" stop-color="var(--acc)"/><stop offset=".55" stop-color="var(--muted)"/><stop offset="1" stop-color="var(--bad)"/>','<stop offset="0" stop-color="var(--tl-g)"/><stop offset=".5" stop-color="var(--tl-y)"/><stop offset="1" stop-color="var(--tl-r)"/>');};})(gauge);
+
+/* ===== v34: skill profile breakdown — grades, the data behind them, best/worst moves, playoffs, wild games ===== */
+const SKG=v=>v==null?"–":v>=90?"A+":v>=80?"A":v>=70?"B+":v>=55?"B":v>=45?"C+":v>=35?"C":v>=20?"D":"F";
+function skillCtx(){const G=HX.data;if(!G)return null;const sc=statsScope();if(sc==="all")return {m:G.me,M:G.M,G,lbl:"all your leagues"};const P=hxPer(sc);if(!P||!P.me||!P.me.g)return {m:G.me,M:G.M,G,lbl:"all your leagues"};return {m:P.me,M:P.M,G,lbl:G.chainName[sc]};}
+function skillDetail(focus){const C=skillCtx();if(!C)return;const {m,M,G}=C,d=m.d,k=m.sk||{},pool=Object.values(M).filter(x=>x.g>=8),cn=c=>G.chainName[c]||"";
+  const avg=f=>{const xs=pool.map(f).filter(v=>v!=null&&isFinite(v));return xs.length?xs.reduce((a,b)=>a+b,0)/xs.length:null;};
+  const on=u=>(M[u]&&M[u].name)||(G.M[u]&&G.M[u].name)||"opponent";const wk=x=>`Wk ${x.w} ${x.s}${C.lbl==="all your leagues"?" · "+esc(cn(x.lg)):""}`;
+  const S=m.scores.slice().sort((a,b)=>a.s-b.s||a.w-b.w),sc2=m.scores.map(x=>x.v),mean=sc2.length?sc2.reduce((a,b)=>a+b,0)/sc2.length:0,sd=sc2.length>2?Math.sqrt(sc2.reduce((t,v)=>t+(v-mean)**2,0)/sc2.length):0;
+  const by=(xs,f,dir=1)=>xs.slice().sort((a,b)=>dir*(f(b)-f(a)))[0];
+  const tradeTxt=t=>`Got ${[...(t.rec||[]),...(t.recK||[]).map(x=>`${x.season} R${x.round}`)].join(", ")||"nothing"} for ${[...(t.gave||[]),...(t.gaveK||[]).map(x=>`${x.season} R${x.round}`)].join(", ")||"nothing"}`;
+  const card=(key,name,why,bw)=>{const v=k[key],g=SKG(v);return `<div class="skc" id="sk-${key}"><div class="skh"><span class="grd ${/^A/.test(g)?"gA":/^B|C\+/.test(g)?"gB":g==="–"?"":"gC"}">${g}</span><div style="min-width:0"><b>${name}</b><div class="sub" style="margin:0">${v==null?"Not enough data yet":`${v}th percentile of ${pool.length} managers`}</div></div></div>
+    <ul class="why">${why.filter(Boolean).map(x=>`<li>${x}</li>`).join("")}</ul>${bw.filter(Boolean).length?`<div class="skbw">${bw.filter(Boolean).map(([t,c,x])=>`<div class="sk-${c}"><span class="eyebrow">${t}</span><div>${x}</div></div>`).join("")}</div>`:""}</div>`;};
+  const cards=[];
+  { // lineups
+    const lostOpt=S.filter(x=>!x.won&&x.ow&&x.v!==x.opp),worst=by(S.filter(x=>x.bn!=null),x=>x.bn),perfect=S.filter(x=>x.bn!=null&&x.bn<.5).length,a=avg(x=>x.d.opt);
+    cards.push(card("lineup","Lineups",[`You scored <b>${pcx(d.opt)}</b> of your best possible lineup${a!=null?` (circle average ${pcx(a)})`:""}, leaving <b>${f1(d.benchPg)}</b> points a week on the bench over ${d.g} games.`,
+      `${perfect} perfect lineup${perfect===1?"":"s"}: weeks you started the best possible group.`,lostOpt.length?`<b>${lostOpt.length}</b> loss${lostOpt.length===1?"":"es"} your best lineup would have won.`:"No losses your best lineup would have flipped."],
+      [worst&&worst.bn>=1?["Worst lineup week","bad",`${wk(worst)}: ${f1(worst.bn)} points left on the bench${!worst.won&&worst.ow?`, and a loss to ${esc(on(worst.op))} by ${f1(worst.opp-worst.v)}`:""}`]:null]));}
+  { // waivers
+    const A=m.adds||[],hit=A.filter(x=>x.stW>=3),best=by(A,x=>x.started),worst=by(A.filter(x=>x.stW===0),x=>x.bid||0),a=avg(x=>x.d.adHit);
+    cards.push(card("waivers","Waivers",[A.length?`<b>${A.length}</b> pickups; <b>${pcx(hit.length/A.length)}</b> became starters for 3+ weeks${a!=null?` (circle average ${pcx(a)})`:""}.`:"No waiver or free-agent pickups found.",
+      A.length?`<b>${f0(Math.round(A.reduce((s,x)=>s+x.started,0)))}</b> points started from pickups; ${A.filter(x=>x.brk).length} broke out after you added them.`:null,m.faab?`${f0(m.faab)} FAAB spent.`:null],
+      [best&&best.started>0?["Best pickup","good",`${esc(best.name)} (${best.s}): started ${best.stW} weeks, ${f1(best.started)} points${best.brk?", broke out":""}`]:null,
+       worst&&worst.bid?["Worst pickup","bad",`${esc(worst.name)} (${worst.s}): $${worst.bid} and never started`]:null]));}
+  { // trading
+    const T=m.trades||[],best=by(T,x=>x.rz),worst=by(T,x=>x.rz,-1),a=avg(x=>x.d.trAvg);
+    cards.push(card("trading","Trading",[T.length?`<b>${T.length}</b> trade${T.length===1?"":"s"}; average realized grade <b>${GR(d.trAvg)}</b>${a!=null?` (circle average ${GR(a)})`:""}; won ${pcx(d.trWin)} of them.`:"No trades yet.",
+      T.length?`Net ${d.trNet>=0?"+":""}${f0(Math.round(d.trNet))} points from trades in your leagues’ scoring.`:null,d.wine||d.milk?`${d.wine} aged like wine (lost early, won later); ${d.milk} spoiled (won early, lost later).`:null],
+      [best&&T.length?["Best trade","good",`${best.season} · ${esc(tradeTxt(best))} with ${esc(best.partner)} · grade <b>${GR(best.rz)}</b>`]:null,
+       worst&&T.length>1?["Worst trade","bad",`${worst.season} · ${esc(tradeTxt(worst))} with ${esc(worst.partner)} · grade <b>${GR(worst.rz)}</b>`]:null]));}
+  { // drafting
+    const D=m.drafts||[],best=by(D,x=>x.voe),worst=by(D,x=>x.voe,-1),a=avg(x=>x.d.drVoe);
+    cards.push(card("drafting","Drafting",[D.length?`<b>${D.length}</b> picks scored; <b>${d.drVoe>=0?"+":""}${f1(d.drVoe)}</b> points per pick over what that draft slot usually returns${a!=null?` (circle average ${a>=0?"+":""}${f1(a)})`:""}.`:"No completed drafts found.",
+      D.length?`${D.filter(x=>x.voe>0).length} of your picks beat their slot.`:null],
+      [best&&D.length?["Best pick","good",`${esc(best.name)}, round ${best.round} (${best.s}): ${f0(Math.round(best.v))} points, +${f0(Math.round(best.voe))} over the slot`]:null,
+       worst&&D.length>1?["Biggest bust","bad",`${esc(worst.name)}, round ${worst.round} (${worst.s}): ${f0(Math.round(worst.v))} points, ${f0(Math.round(worst.voe))} vs the slot`]:null]));}
+  { // clutch
+    const dog=S.filter(x=>x.p<.4),up=by(S.filter(x=>x.won),x=>x.p,-1),ch=by(S.filter(x=>!x.won&&x.v!==x.opp),x=>x.p),cl=S.filter(x=>Math.abs(x.v-x.opp)<7);
+    cards.push(card("clutch","Clutch",[dog.length?`Won <b>${dog.filter(x=>x.won).length} of ${dog.length}</b> games as an underdog (under 40% pregame).`:"Never an underdog yet.",
+      cl.length?`${cl.filter(x=>x.won).length}-${cl.filter(x=>!x.won).length} in games decided by under 7 points.`:null,d.comeback!=null?`Won ${pcx(d.comeback)} of the weeks after a loss.`:null],
+      [up&&up.p<.5?["Biggest upset","good",`${wk(up)}: won ${f1(up.v)}–${f1(up.opp)} vs ${esc(on(up.op))} with a ${Math.round(up.p*100)}% pregame chance`]:null,
+       ch&&ch.p>.5?["Biggest collapse","bad",`${wk(ch)}: lost ${f1(ch.v)}–${f1(ch.opp)} to ${esc(on(ch.op))} at ${Math.round(ch.p*100)}% to win`]:null]));}
+  { // scoring
+    const hi=by(S,x=>x.v),lo=by(S,x=>x.v,-1),tops=S.filter(x=>x.top).length,lows=S.filter(x=>x.low).length,oppAvg=S.length?S.reduce((t,x)=>t+x.opp,0)/S.length:0;
+    cards.push(card("scoring","Scoring",[`<b>${f1(d.ppg)}</b> points a game against a league average around ${f1(oppAvg)}.`,`Highest score of the week <b>${tops}</b> time${tops===1?"":"s"}; lowest ${lows} time${lows===1?"":"s"}.`],
+      [hi?["Best week","good",`${wk(hi)}: ${f1(hi.v)} points vs ${esc(on(hi.op))}`]:null,lo?["Worst week","bad",`${wk(lo)}: ${f1(lo.v)} points vs ${esc(on(lo.op))}`]:null]));}
+  { // consistency
+    const boom=S.filter(x=>x.v>mean+sd).length,bust=S.filter(x=>x.v<mean-sd).length;
+    cards.push(card("consistency","Consistency",[`Two-thirds of your weeks land within <b>±${f1(sd)}</b> points of your ${f1(mean)} average.`,`${boom} boom week${boom===1?"":"s"} and ${bust} bust week${bust===1?"":"s"} (one swing above or below average).`],[]));}
+  { // luck
+    const exp=d.allPlay*d.g,mpl=by(S.filter(x=>!x.won&&x.v!==x.opp),x=>x.v),fpw=by(S.filter(x=>x.won),x=>x.v,-1);
+    cards.push(card("luck","Luck",[`<b>${m.w}</b> actual wins vs <b>${f1(exp)}</b> if you played every team every week: ${m.w-exp>=0?"+":""}${f1(m.w-exp)} wins of schedule luck.`,`Opponents scored ${f1(d.papg)} a game against you.`],
+      [fpw?["Luckiest win","good",`${wk(fpw)}: won with just ${f1(fpw.v)} vs ${esc(on(fpw.op))}`]:null,mpl?["Unluckiest loss","bad",`${wk(mpl)}: lost with ${f1(mpl.v)} to ${esc(on(mpl.op))}`]:null]));}
+  { cards.push(card("activity","Activity",[`<b>${f1(d.txPerS)}</b> transactions a season (${m.tx} total).`,"Activity isn’t a skill on its own; it shows how hands-on you are."],[]));}
+  // playoffs
+  const ss=m.seasons.filter(s=>!s.gl),done=ss.filter(s=>!s.live),po=done.filter(s=>s.po),ti=done.filter(s=>s.champ),ru=done.filter(s=>s.ru),bestF=done.filter(s=>s.rank).sort((a,b)=>a.rank-b.rank)[0];
+  const playoffs=`<section class="pan mt"><h2>Playoffs</h2><div class="hxk mt"><div><b class="num">${po.length}/${done.length}</b><span>Playoff trips</span><em>${done.length?pcx(po.length/done.length):"–"} of finished seasons</em></div><div><b class="num">${ti.length}</b><span>Titles</span><em>${ti.map(s=>s.s).join(", ")||"none yet"}</em></div><div><b class="num">${ru.length}</b><span>Runner-up</span></div><div><b class="num">${bestF?ordn(bestF.rank):"–"}</b><span>Best finish</span><em>${bestF?`${bestF.s} · ${esc(bestF.lg)}`:""}</em></div></div></section>`;
+  // wild games
+  let st=0,bw=0,bl=0,cur=0,lastLg=null;for(const x of S){if(x.lg!==lastLg){cur=0;lastLg=x.lg;}if(x.won){cur=cur>0?cur+1:1;}else if(x.v!==x.opp){cur=cur<0?cur-1:-1;}bw=Math.max(bw,cur);bl=Math.min(bl,cur);}
+  const blow=by(S.filter(x=>x.won),x=>x.v-x.opp),crush=by(S.filter(x=>!x.won),x=>x.opp-x.v),close=by(S,x=>-Math.abs(x.v-x.opp));
+  const wild=[blow?`<li><b>Biggest win:</b> ${wk(blow)}, ${f1(blow.v)}–${f1(blow.opp)} over ${esc(on(blow.op))} (by ${f1(blow.v-blow.opp)})</li>`:"",crush?`<li><b>Worst loss:</b> ${wk(crush)}, ${f1(crush.v)}–${f1(crush.opp)} to ${esc(on(crush.op))}</li>`:"",close?`<li><b>Closest game:</b> ${wk(close)}, ${f1(close.v)}–${f1(close.opp)} vs ${esc(on(close.op))} (${close.won?"won":"lost"} by ${f1(Math.abs(close.v-close.opp))})</li>`:"",bw>=3?`<li><b>Longest win streak:</b> ${bw} straight</li>`:"",bl<=-3?`<li><b>Longest losing streak:</b> ${-bl} straight</li>`:""].join("");
+  const summ=`<p class="sub">Built from <b>${d.g}</b> games, <b>${(m.trades||[]).length}</b> trades, <b>${(m.adds||[]).length}</b> pickups and <b>${(m.drafts||[]).length}</b> draft picks across ${ss.length} season${ss.length===1?"":"s"} in ${esc(C.lbl)}. Grades are your percentile against the ${pool.length} managers you’ve shared those leagues with: A+ is the top 10%, C+ is the middle, F is the bottom 20%. Green grades are strengths, yellow is average, red needs work.</p>`;
+  const radar=chRadar([["Lineups","lineup"],["Waivers","waivers"],["Trading","trading"],["Drafting","drafting"],["Clutch","clutch"],["Scoring","scoring"]].map(([n,kk])=>({n,v:k[kk]})));
+  openPS({t:"Skill profile",html:`<section class="pan"><div class="eyebrow">${esc(m.label||"")}</div>${radar}${summ}</section><section class="pan mt"><h2>Grades and why</h2>${cards.join("")}</section>${playoffs}${wild?`<section class="pan mt"><h2>Wildest games</h2><ul class="why mt">${wild}</ul></section>`:""}`});
+  if(focus)setTimeout(()=>{const el=document.getElementById("sk-"+focus);if(el)$("#psb").scrollTop=el.offsetTop-70;},60);}
+window.addEventListener("click",e=>{if(route()!=="stats"||!HX.data)return;const pan=e.target.closest(".pan");if(!pan||pan.closest("#psheet"))return;const h=(pan.querySelector("h2")||{}).textContent||"";
+  if(h==="Skill profile"){e.preventDefault();e.stopPropagation();skillDetail();return;}
+  if(h==="Skill ranks"){const row=e.target.closest(".rkr");const map={Lineups:"lineup",Waivers:"waivers",Trading:"trading",Drafting:"drafting",Clutch:"clutch",Scoring:"scoring",Consistency:"consistency",Luck:"luck",Activity:"activity"};e.preventDefault();e.stopPropagation();skillDetail(row?map[(row.querySelector("span")||{}).textContent]:null);}},true);
+vStats=(function(prev){return function(){return prev().replace(/(<h2>Skill profile<\/h2>[\s\S]*?Percentiles against[^<]*)(<\/p>)/,"$1 Tap for grades, reasons and your best and worst moves.$2");};})(vStats);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
