@@ -144,7 +144,7 @@ def main():
         j = jget("https://rosteraudit.com/wp-json/ra/v1/rankings/values?" + q, hdr); n = 0
         if isinstance(j, dict):
             for k2, v2 in (j.get("values") or j.get("data") or j).items() if isinstance(j.get("values") or j.get("data") or j, dict) else []:
-                val = f(v2 if not isinstance(v2, dict) else find(v2, "value", "dynasty_value"))
+                val = f(v2 if not isinstance(v2, dict) else find(v2, "sf" if key == "ra_sf" else "1qb", "value", "dynasty_value"))
                 if val and str(k2).isdigit():
                     put(k2, key, val); n += 1
         if not n:
