@@ -777,6 +777,12 @@ svg.chev{width:16px!important;height:16px!important;flex:none;color:var(--muted)
 .trow{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid color-mix(in srgb,var(--line) 50%,transparent)}.trow:last-child{border-bottom:0}
 .tce{box-shadow:inset 3px 0 0 var(--tc)!important;padding-left:9px!important;border-radius:4px}
 @media (min-width:900px){.jt{width:118px;height:118px}.jt b{font-size:58px}.phm h1{font-size:32px!important}.phb{height:64px}.phr{margin-top:-46px}.phm{padding-top:54px}}
+/* dock sits just above the home indicator instead of a full safe-area height up */
+:root{--dockb:max(10px,calc(env(safe-area-inset-bottom,0px) - 12px))}
+.dock{bottom:var(--dockb)!important}
+main{padding-bottom:calc(96px + var(--dockb))!important}
+.toast{bottom:calc(var(--dockb) + 80px)!important}
+@media (min-width:1100px){main{padding-bottom:56px!important}.toast{bottom:28px!important}}
 </style>
 </head>
 <body>
