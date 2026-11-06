@@ -938,6 +938,11 @@ html.kbopen .dock{opacity:0;pointer-events:none;transform:translateY(120%)!impor
 .pgtitle h1{margin:2px 0 0!important}
 h2.pgsub{font:750 22px/1.15 var(--fd)!important;margin:0 0 4px}
 @media (min-width:1100px){#hubslot .hubh{display:flex!important;justify-content:flex-end;min-height:0;padding:10px max(32px,calc((100vw - var(--sw) - 1180px)/2)) 10px!important}#hubslot .hubh .lgbar{width:min(440px,100%)}#hubslot .hubh:not(:has(.lgbar)){display:none!important}}
+/* short pages fill the whole screen so iOS anchors the dock to the screen bottom */
+html{min-height:100%;background:var(--bg)}
+body{min-height:100vh;min-height:100lvh}
+main{box-sizing:border-box;min-height:100vh;min-height:100lvh;min-height:max(100lvh,var(--fullh,0px))}
+@supports (-webkit-touch-callout:none){body{min-height:-webkit-fill-available}}
 </style>
 </head>
 <body>
@@ -4081,6 +4086,9 @@ const _hsU39=window.hsumUpdate;window.hsumUpdate=function(){_hsU39&&_hsU39();con
 
 /* desktop sidebar always reflects the current sections and tabs */
 (function(){const g=document.querySelector(".side .sgs");if(!g)return;g.innerHTML=Object.entries(HUBS).map(([k,h])=>`<div class="sg"><button class="sh" data-hub="${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${DOCKI[k]}</svg><span>${h.n}</span><kbd>${Object.keys(HUBS).indexOf(k)+1}</kbd></button><div class="st">${h.tabs.map(([r,t])=>`<button data-go="${r}" data-stab="${r}">${t}</button>`).join("")}</div></div>`).join("");})();
+
+/* iOS home-screen app: size short pages to the physical screen */
+(function(){const set=()=>{const sa=window.navigator.standalone||matchMedia("(display-mode: standalone)").matches;const h=Math.max(window.innerHeight,document.documentElement.clientHeight,sa?screen.height:0);document.documentElement.style.setProperty("--fullh",h+"px");};set();window.addEventListener("resize",set);window.addEventListener("orientationchange",()=>setTimeout(set,250));})();
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
