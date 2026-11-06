@@ -918,6 +918,7 @@ html{scroll-padding-top:calc(var(--chh,62px) + 12px)}
 #palRes button{display:flex!important;align-items:center;gap:10px;width:100%;text-align:left}
 .palt{display:flex;flex-direction:column;min-width:0;flex:1}.palt b{font-weight:650}.palt .sub{margin:0;font-size:12px}
 .palic{flex:none;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--panel2);color:var(--acc)}.palic svg{width:18px;height:18px}
+.urseg{margin:6px 0 2px!important}
 </style>
 </head>
 <body>
@@ -3325,9 +3326,12 @@ function vGMTrends(){const L=S.L;if(!L)return "";let tr=[];try{tr=leagueDigest(L
   const own=id=>{if(mine.has(id))return "Yours";const t=L.teams.find(t=>t.players.includes(id));return t?t.name:"Free agent";};
   const br=[...by.values()].filter(x=>PL[x.id]).sort((a,b)=>b.brk-a.brk).map(x=>{const p=PL[x.id];return `<button class="tsr" data-go="player-${p.id}">${pos(p.pos)}<span class="tsn"><b class="ell">${esc(p.name)} ${tag(p.id)}</b><span class="sub ell">${esc(own(p.id))}${x.up?" · role rising in news":""}</span></span><span class="tsb"><span class="bar"><i style="width:${Math.min(100,PCT(p.brk)/.75)}%"></i></span><b class="num">${PCT(p.brk)}%</b></span></button>`;});
   const rost=new Set(L.teams.flatMap(t=>t.players));const us=Object.values(PL).filter(p=>p.adv&&p.pos!=="QB"&&(rost.has(p.id)||rosPPG(p)>=4)).map(p=>{const a=p.adv;const dt=a.ts3!=null&&a.ts!=null?a.ts3-a.ts:0,ds=a.snap3!=null&&a.snap!=null?(a.snap3-a.snap)/100:0;return {p,a,s:Math.max(dt*2,ds)};}).filter(x=>x.s>=.08).sort((a,b)=>b.s-a.s);
+  const urS=S.urS||"buy",grp=x=>{const id=x.p.id;if(buys.has(id))return 0;const o=ownerLbl(x.p).k;return o==="avail"?1:o==="mine"?2:3;};
+  if(urS==="buy")us.sort((a,b)=>grp(a)-grp(b)||b.s-a.s);else if(urS==="avail"){us.splice(0,us.length,...us.filter(x=>ownerLbl(x.p).k==="avail"));}else if(urS==="mine"){us.splice(0,us.length,...us.filter(x=>ownerLbl(x.p).k==="mine"));}
+  const urSeg=`<div class="seg sm urseg">${[["buy","Buy first"],["jump","Biggest jump"],["avail","Available"],["mine","Yours"]].map(([k,n])=>`<button data-urs="${k}" class="${urS===k?"on":""}">${n}</button>`).join("")}</div>`;
   const ur=us.map(({p,a})=>{const tgt=a.ts3!=null&&a.ts!=null&&a.ts3-a.ts>=.04;return `<button class="tsr" data-go="player-${p.id}">${pos(p.pos)}<span class="tsn"><b class="ell">${esc(p.name)} ${tag(p.id)}</b><span class="sub ell">${esc(own(p.id))}</span></span><span class="urv"><b class="num">${tgt?`${Math.round(a.ts*100)}→${Math.round(a.ts3*100)}%`:`${Math.round(a.snap)}→${Math.round(a.snap3)}%`}</b><span class="sub">${tgt?"target share":"snap share"}</span></span></button>`;});
   return `<section class="pan"><div class="row sp"><h2>Breakout odds</h2><span class="tag">Higher is better ${info("brk")}</span></div>${lst(br,5,"No candidates right now.")}</section>
-  <section class="pan mt"><div class="row sp"><h2>Usage risers</h2><span class="tag">Last 3 games vs season</span></div>${lst(ur,5,"No meaningful usage changes.")}</section>
+  <section class="pan mt"><div class="row sp"><h2>Usage risers</h2><span class="tag">Last 3 games vs season</span></div>${urSeg}${lst(ur,5,urS==="avail"?"No free agents with rising usage.":urS==="mine"?"None of your players have rising usage.":"No meaningful usage changes.")}</section>
   <p class="sub mt"><span class="tt buy">Buy</span> only appears on other teams’ players and <span class="tt sell">Sell</span> only on yours. Details live in Trade Lab.</p>`;}
 
 /* route table additions */
@@ -3847,7 +3851,7 @@ vWaivers=(function(prev){return function(){const t=S.plT||"wire";
   const ctl=`<div class="pgctl"><div class="plrow"><div class="seg sm"><button data-plt="wire" class="${t==="wire"?"on":""}">Waiver wire</button><button data-plt="all" class="${t==="all"?"on":""}">All players</button></div>${t==="all"?`<div class="field"><input id="pq" value="${esc(S.pq||"")}" placeholder="Search name or team (DET)" aria-label="Search players" autocomplete="off"></div>`:""}</div>
    ${t==="all"?`<div class="seg sm">${[["all","Everyone"],["avail","Available"],["mine","Yours"],["other","Other teams"]].map(([k,n])=>`<button data-plown="${k}" class="${(S.plOwn||"all")===k?"on":""}">${n}</button>`).join("")}<i class="sgap"></i>${["ALL","QB","RB","WR","TE"].map(x=>`<button data-ptab="${x}" class="${S.ptab===x?"on":""}">${x==="ALL"?"All":x}</button>`).join("")}<i class="sgap"></i>${[["val","Value"],["pts","Points"],["ppg","Per game"],["brk","Breakout"],["risk","Safest"],["age","Youngest"]].map(([k,v])=>`<button data-psort="${k}" class="${(S.psort||"val")===k?"on":""}">${v}</button>`).join("")}</div>`:""}</div>`;
   return ctl+(t==="all"?allPlayers():prev());};})(vWaivers);
-document.addEventListener("click",e=>{const a=e.target.closest("[data-plt]");if(a){S.plT=a.dataset.plt;render();window.scrollTo(0,0);return;}const o=e.target.closest("[data-plown]");if(o){S.plOwn=o.dataset.plown;render();return;}
+document.addEventListener("click",e=>{const u=e.target.closest("[data-urs]");if(u){S.urS=u.dataset.urs;render();return;}const a=e.target.closest("[data-plt]");if(a){S.plT=a.dataset.plt;render();window.scrollTo(0,0);return;}const o=e.target.closest("[data-plown]");if(o){S.plOwn=o.dataset.plown;render();return;}
   const g=e.target.closest('[data-go="players"]');if(g){S.plT="all";if(g.dataset.q)S.pq=g.dataset.q;}const w=e.target.closest('[data-go="waivers"]');if(w&&!w.closest(".htabs,.side"))S.plT="wire";},true);
 LABEL=(function(prev){return function(r){return r==="waivers"?"Players":prev(r);};})(LABEL);
 /* Scout landing: three tiles */
