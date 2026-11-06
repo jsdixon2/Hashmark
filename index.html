@@ -924,6 +924,7 @@ html{scroll-padding-top:calc(var(--chh,62px) + 12px)}
 .pill.wr-up{background:color-mix(in srgb,var(--tl-g) 18%,transparent)!important;color:var(--tl-g)!important}.pill.wr-down{background:color-mix(in srgb,var(--tl-y) 18%,transparent)!important;color:var(--tl-y)!important}.pill.wr-cash{background:var(--panel2)!important;color:var(--muted)!important}
 .wrth1{font-size:14.5px}.wrth1 b{font:800 15px var(--fd)}.wrlink{font-weight:700;cursor:pointer;border-bottom:1px dotted var(--muted)}
 .wrt .sub{margin:2px 0 0;font-size:12.5px}.wrnum{font:650 12.5px var(--fb);margin-top:3px;font-variant-numeric:tabular-nums}
+.meta .trend{color:var(--tl-g);font-weight:650}
 </style>
 </head>
 <body>
@@ -1493,7 +1494,7 @@ function vWaivers(){const L=S.L,me=myTeam();if(S.mode==="live"&&!S.trend){S.tren
   return `<h1>Waiver wire</h1><p class="sub">${fa.length} unrostered players in ${esc(L?L.name:"this league")}. Sleeper runs the claims; tap through to place them there.</p>
   <section class="pan mt"><h2>Free agent guide</h2><div class="list mt">${need?g("Biggest need: "+need,top,"Best available "+need):""}${g("Stash",stash,"Young, rising")}${drop.map(p=>g("Drop candidate",p,"Lowest value")).join("")}</div></section>
   <div class="seg mt">${[["best","Best available"],["trend","Trending"],["need","My need"]].map(([k,v])=>`<button data-wtab="${k}" class="${tab===k?"on":""}">${v}</button>`).join("")}</div>
-  <div class="pan mt list">${list.slice(0,40).map(p=>prow(p,T[p.id]?"+"+T[p.id]+" adds":f0(rosN(p)),"ROS, neutral")).join("")||`<div class="empty">${tab==="trend"?"Trending adds load in live mode.":"No free agents found."}</div>`}</div>
+  <div class="pan mt list">${list.slice(0,40).map(p=>{const wk=Math.max(1,(S.L&&S.L.remWeeks)||10),ppw=rosN(p)/wk,ad=T[p.id];let r=tab==="trend"?prow(p,ad?"+"+f0(ad):"–","adds, 24h"):prow(p,f1(ppw),"pts/wk projected");if(tab!=="trend"&&ad)r=r.replace(/(<div class="meta">)/,`$1<span class="trend">▲ ${f0(ad)} adds in 24h</span> · `);const ro=neutral(p);if(ro&&ro.role)r=r.replace(/(<div class="meta">)/,`$1<span class="warn">${esc(ro.role)}</span> · `);return r;}).join("")||`<div class="empty">${tab==="trend"?"Trending adds load in live mode.":"No free agents found."}</div>`}</div>
   ${L&&L.id&&!L.demo?`<p class="mt"><a class="btn ghost" href="https://sleeper.com/leagues/${esc(L.id)}" target="_blank" rel="noopener">Open league in Sleeper</a></p>`:""}${LEGAL}`;}
 function vPrep(){const t=S.fmt.type||"",mode=S.pmode||"win",me=myTeam(),own=new Set(me?me.players:[]);
   const sc=p=>mode==="win"?rosN(p):p.val*(1+p.brk)*(p.age<=24?1.15:p.age>=29?.8:1);
