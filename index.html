@@ -398,6 +398,15 @@ html.noscroll,html.noscroll body{overflow:hidden;overscroll-behavior:none}
 
 /* v16 */
 .lbx.rip{background:var(--panel2)}.ripm{font:800 clamp(28px,9vw,38px)/1 var(--fd);letter-spacing:.04em;margin:10px 0 4px;color:var(--muted)}
+
+/* v17: glass chips for every top scroller (league scopes, segments, sub-nav) */
+.seg,.hxseg{display:flex!important;flex-wrap:nowrap;gap:8px;background:none!important;border:0!important;border-radius:0!important;overflow-x:auto;overflow-y:visible;scrollbar-width:none;padding:4px 2px 10px!important;margin:0 -2px;-webkit-overflow-scrolling:touch}
+.seg::-webkit-scrollbar,.subnav::-webkit-scrollbar{display:none}
+.seg button,.subnav button{flex:none;white-space:nowrap;padding:8px 15px!important;border-radius:99px!important;font:600 13px var(--fb)!important;color:var(--ink)!important;
+  background:color-mix(in srgb,var(--panel) 55%,transparent)!important;border:1px solid color-mix(in srgb,var(--ink) 10%,transparent)!important;
+  box-shadow:inset 0 1px 0 color-mix(in srgb,#fff 35%,transparent),0 2px 10px rgba(0,0,0,.08)!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%)}
+.seg button.on,.subnav button.on{background:color-mix(in srgb,var(--ink) 88%,transparent)!important;color:var(--bg)!important;border-color:transparent!important;box-shadow:0 4px 14px rgba(0,0,0,.18)!important}
+.subnav{gap:8px!important;padding:4px 2px 10px!important;margin:0 -2px 4px!important}
 </style>
 </head>
 <body>
@@ -866,7 +875,7 @@ function vPlayers(devy){
   const key={val:p=>-p.val,pts:p=>-(p.pts??-1),ppg:p=>-(p.ppg??-1),age:p=>p.age??99,risk:p=>p.risk,brk:p=>-p.brk}[S.psort];ps.sort((a,b)=>key(a)-key(b));
   const ex=p=>S.psort==="val"?null:S.psort==="pts"?f1(p.pts):S.psort==="ppg"?f1(p.ppg):S.psort==="brk"?(p.broke?"Arrived":pc(p.brk)):S.psort==="risk"?p.risk:p.age;
   const lb={pts:"season pts",ppg:"per game",brk:"breakout",risk:"risk",age:"age"}[S.psort];
-  return `<div class="row sp"><h1>Players</h1><div class="row"><button class="btn ghost" data-go="waivers">Waivers</button><button class="btn ghost" data-go="prep">Draft prep</button><button class="btn ghost" data-go="devy">Devy</button></div></div>
+  return `<h1>Players</h1>
   <div class="field mt"><input id="pq" value="${esc(S.pq)}" placeholder="Search by name or team code, e.g. DET" aria-label="Search players"></div>
   <div class="row sp mt" style="flex-wrap:wrap"><div class="seg">${["ALL","QB","RB","WR","TE"].map(x=>`<button data-ptab="${x}" class="${S.ptab===x?"on":""}">${x==="ALL"?"All":x}</button>`).join("")}</div>
   <div class="seg">${[["val","Value"],["pts","Points"],["ppg","Per game"],["brk","Breakout"],["risk","Safest"],["age","Youngest"]].map(([k,v])=>`<button data-psort="${k}" class="${S.psort===k?"on":""}">${v}</button>`).join("")}</div></div>
@@ -1696,7 +1705,8 @@ async function hxLoad(force){if(HX.st==="loading")return;if(HX.st==="ready"&&!fo
     const lists=await poolRun(yrs.map(y=>()=>hxGet(`/user/${uid}/leagues/nfl/${y}`)),4);
     const lgs=[];lists.forEach(a=>(a||[]).forEach(l=>{if(l&&l.status!=="pre_draft"&&(l.sport||"nfl")==="nfl")lgs.push(l);}));
     HX.tot+=lgs.length;const seasons=await poolRun(lgs.map(l=>()=>loadLeagueSeason(l)),3);
-    HX.data=analyze(uid,seasons.filter(Boolean));HX.key=hxKey();HX.st="ready";}
+    const played=x=>x&&(x.weeks||[]).some(wk=>(wk||[]).some(m=>m.pts>0));HX.skipped=seasons.filter(x=>x&&!played(x)).length;
+    HX.data=analyze(uid,seasons.filter(played));HX.key=hxKey();HX.st="ready";}
   catch(e){console.error(e);HX.err=e.message||"Couldn’t read your history.";HX.st="error";}
   rerenderStats();}
 const hxKey=()=>S.mode+"|"+(S.uid||"demo")+"|"+S.season+"|"+S.week;
@@ -1958,7 +1968,7 @@ function vStats(){const D=HX.data;
    <div class="hxk mt">${m0.bestWeek?KP(f1(m0.bestWeek.v),"Best week",`${m0.bestWeek.s} wk ${m0.bestWeek.w}`):""}${m0.worstWeek?KP(f1(m0.worstWeek.v),"Worst week",`${m0.worstWeek.s} wk ${m0.worstWeek.w}`):""}${m0.bigWin?KP("+"+f1(m0.bigWin.m),"Biggest win",`vs ${esc(m0.bigWin.op)}`):""}${m0.badLoss?KP(f1(m0.badLoss.m),"Worst loss",`vs ${esc(m0.badLoss.op)}`):""}${KP(pcx(m0.d.allPlay),"All-play win rate","if you played everyone, every week")}</div></section>
   ${h2h.length?`<section class="pan mt"><div class="row sp"><h2>Rivalries</h2>${nem?`<span class="tag">Nemesis: ${esc(nem.n)}</span>`:""}</div><div class="list">${h2h.slice(0,8).map(h=>`<div class="pr"><span class="tag ${h.w>h.l?"good":h.w<h.l?"bad":""}">${h.w}-${h.l}</span><div style="min-width:0"><div class="nm ell">${esc(h.n)}${D.M[h.u]&&D.M[h.u].label?` <span class="sub">· ${esc(D.M[h.u].label)}</span>`:""}</div><div class="meta">${h.g} games · ${f1(h.pf/h.g)}–${f1(h.pa/h.g)} avg</div></div></div>`).join("")}</div>${vic&&vic!==nem?`<p class="sub mt">Favorite victim: ${esc(vic.n)} (${vic.w}-${vic.l}).</p>`:""}</section>`:""}
   ${lgRows.length>2?`<section class="pan mt"><div class="row sp"><h2>League leaderboard</h2><span class="tag">Profiles</span></div><div class="list">${lgRows.sort((a,b)=>b.d.wpct-a.d.wpct).map(x=>`<div class="pr${x===m0?" me":""}"><span class="tag">${pcx(x.d.wpct)}</span><div style="min-width:0"><div class="nm ell">${esc(x.name)}${x===m0?" (you)":""}</div><div class="meta ell">${esc(x.label||"")} · ${x.titles?x.titles+" 🏆 · ":""}${f1(x.d.ppg)} ppg · ${x.d.trN} trades</div></div></div>`).join("")}</div><p class="sub mt">Each manager’s label comes from the stat where they stand out most, with no two alike in your leagues.</p></section>`:""}
-  <p class="sub mt">Built from Sleeper’s public league history. Past seasons are cached on this device. <button class="glinkb" data-hx="retry">Rebuild</button></p>`;}
+  <p class="sub mt">${HX.skipped?`${HX.skipped} league${HX.skipped===1?"":"s"} that never started or has no scores ${HX.skipped===1?"is":"are"} left out. `:""}Built from Sleeper’s public league history. Past seasons are cached on this device. <button class="glinkb" data-hx="retry">Rebuild</button></p>`;}
 document.addEventListener("click",e=>{const s=e.target.closest("[data-hxs]");if(s){S.hxScope=s.dataset.hxs;render();return;}const r=e.target.closest("[data-hx]");if(r){HX.st="idle";hxLoad(true);}},true);
 const _LB15=LABEL;LABEL=function(r){return r==="stats"?"My stats":_LB15(r);};
 
