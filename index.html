@@ -734,6 +734,11 @@ main{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
 .hxpin{position:sticky;top:var(--hh);z-index:16;margin:0 -16px 4px!important;padding:8px 16px 10px!important;background:color-mix(in srgb,var(--bg) 84%,transparent)!important;backdrop-filter:saturate(1.4) blur(16px);-webkit-backdrop-filter:saturate(1.4) blur(16px);border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)!important}
 .hxover{margin-top:6px;font:500 13px var(--fb);color:var(--muted)}.lnk2{all:unset;cursor:pointer;font-weight:700;color:var(--ink);border-bottom:1px dotted var(--muted)}
 @media (min-width:1100px){.hxpin{margin:0 calc(-1*max(32px,calc((100vw - var(--sw) - 1180px)/2))) 6px!important;padding:10px max(32px,calc((100vw - var(--sw) - 1180px)/2)) 12px!important}}
+/* no sideways page drift; icons always sized */
+html,body{overflow-x:clip}main{overflow-x:clip;max-width:100vw}
+svg.chev{width:16px!important;height:16px!important;flex:none;color:var(--muted)}
+.tsr>svg,.act>svg,.nflr>svg,.swr>svg,.prow>svg,.lrow>svg{width:16px;height:16px;flex:none}
+.urv{margin-left:auto;flex:none;display:flex;flex-direction:column;align-items:flex-end;padding-left:8px}.urv b{font:800 15px var(--fd);color:var(--acc)}.urv .sub{margin:0;font-size:10.5px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -1369,7 +1374,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden)pollQuiet(
 /* ===== v5: command center ===== */
 const cl2=(x,a,b)=>Math.max(a,Math.min(b,x)),PCT=x=>Math.round(x*100);
 const mineIdx=L=>Math.max(0,L.teams.findIndex(t=>t.mine));
-const CHEV=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>`;
+const CHEV=`<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>`;
 function ring(p,sub){const r=52,c=2*Math.PI*r,d=(c*cl2(p,0,1)).toFixed(1);return `<svg class="ring" viewBox="0 0 132 132" width="132" height="132" role="img" aria-label="${PCT(p)} percent win probability"><circle cx="66" cy="66" r="${r}" fill="none" stroke="var(--panel2)" stroke-width="12"/><circle class="arc" cx="66" cy="66" r="${r}" fill="none" stroke="var(--ink)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${d} ${c.toFixed(1)}" transform="rotate(-90 66 66)"/><text class="rt" x="66" y="76" text-anchor="middle" data-cu="${PCT(p)}" data-sfx="%">${PCT(p)}%</text></svg><div class="rv">${esc(sub)}</div>`;}
 function hbar(lab,v,max,right,me){return `<div class="hb${me?" me":""}"><span class="hl">${esc(lab)}</span><div class="ht"><i style="width:${(cl2(v/max,0,1)*100).toFixed(1)}%"></i></div><span class="hv num">${right}</span></div>`;}
 function spark(vals,w=96,h=28){if(!vals||vals.length<2)return "";const mn=Math.min(...vals),mx=Math.max(...vals),r=mx-mn||1,X=i=>2+i*(w-4)/(vals.length-1),Y=v=>h-3-(v-mn)/r*(h-6);return `<svg class="spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${vals.map((v,i)=>X(i).toFixed(1)+","+Y(v).toFixed(1)).join(" ")}" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${X(vals.length-1).toFixed(1)}" cy="${Y(vals[vals.length-1]).toFixed(1)}" r="2.6" fill="var(--ink)"/></svg>`;}
@@ -2857,7 +2862,6 @@ document.addEventListener("click",e=>{const t=e.target.closest("[data-ptab]");if
     if(pull&&dy>110&&Math.abs(dx)<60){toast("Refreshing…");try{refreshLive();}catch(_){}try{loadNews();}catch(_){}x0=null;return;}
     if(Date.now()-t0>600||Math.abs(dy)>50)return x0=null;
     if(edge&&dx>70){goBack();return x0=null;}
-    if(Math.abs(dx)>70){const r=route(),hk=hubOf(r);if(!hk)return x0=null;const tabs=HUBS[hk].tabs.map(x=>x[0]),i=tabs.indexOf(tabOf(r));const j=i+(dx<0?1:-1);if(i<0){if(dx<0)go(tabs[0]);}else if(j>=0&&j<tabs.length)go(tabs[j]);}
     x0=null;},{passive:true});
   let lp=null;const bb=$("#backBtn");bb.addEventListener("pointerdown",()=>{lp=setTimeout(()=>{lp="done";const items=NAV.slice(0,-1).reverse().slice(0,10);openSheet("Recent",`<div class="swl">${items.map((r,i)=>`<button class="swr" data-navback="${i+1}"><span class="swt"><b>${esc(LABEL(r))}</b><span class="sub">${esc(HUBS[hubOf(r)]?HUBS[hubOf(r)].n:"")}</span></span>${CHEV}</button>`).join("")}</div>`);},520);});
   bb.addEventListener("pointerup",()=>{if(lp&&lp!=="done")clearTimeout(lp);});bb.addEventListener("click",e=>{if(lp==="done"){e.stopImmediatePropagation();lp=null;}},true);
@@ -3145,7 +3149,7 @@ function vGMTrends(){const L=S.L;if(!L)return "";let tr=[];try{tr=leagueDigest(L
   const own=id=>{if(mine.has(id))return "Yours";const t=L.teams.find(t=>t.players.includes(id));return t?t.name:"Free agent";};
   const br=[...by.values()].filter(x=>PL[x.id]).sort((a,b)=>b.brk-a.brk).map(x=>{const p=PL[x.id];return `<button class="tsr" data-go="player-${p.id}">${pos(p.pos)}<span class="tsn"><b class="ell">${esc(p.name)} ${tag(p.id)}</b><span class="sub ell">${esc(own(p.id))}${x.up?" · role rising in news":""}</span></span><span class="tsb"><span class="bar"><i style="width:${Math.min(100,PCT(p.brk)/.75)}%"></i></span><b class="num">${PCT(p.brk)}%</b></span></button>`;});
   const rost=new Set(L.teams.flatMap(t=>t.players));const us=Object.values(PL).filter(p=>p.adv&&p.pos!=="QB"&&(rost.has(p.id)||rosPPG(p)>=4)).map(p=>{const a=p.adv;const dt=a.ts3!=null&&a.ts!=null?a.ts3-a.ts:0,ds=a.snap3!=null&&a.snap!=null?(a.snap3-a.snap)/100:0;return {p,a,s:Math.max(dt*2,ds)};}).filter(x=>x.s>=.08).sort((a,b)=>b.s-a.s);
-  const ur=us.map(({p,a})=>`<button class="tsr" data-go="player-${p.id}">${pos(p.pos)}<span class="tsn"><b class="ell">${esc(p.name)} ${tag(p.id)}</b><span class="sub ell">${esc(own(p.id))} · ${a.ts3!=null&&a.ts!=null&&a.ts3-a.ts>=.04?`targets ${pc(a.ts)} → ${pc(a.ts3)}`:`snaps ${Math.round(a.snap)}% → ${Math.round(a.snap3)}%`}</span></span>${CHEV}</button>`);
+  const ur=us.map(({p,a})=>{const tgt=a.ts3!=null&&a.ts!=null&&a.ts3-a.ts>=.04;return `<button class="tsr" data-go="player-${p.id}">${pos(p.pos)}<span class="tsn"><b class="ell">${esc(p.name)} ${tag(p.id)}</b><span class="sub ell">${esc(own(p.id))}</span></span><span class="urv"><b class="num">${tgt?`${Math.round(a.ts*100)}→${Math.round(a.ts3*100)}%`:`${Math.round(a.snap)}→${Math.round(a.snap3)}%`}</b><span class="sub">${tgt?"target share":"snap share"}</span></span></button>`;});
   return `<section class="pan"><div class="row sp"><h2>Breakout odds</h2><span class="tag">Higher is better ${info("brk")}</span></div>${lst(br,5,"No candidates right now.")}</section>
   <section class="pan mt"><div class="row sp"><h2>Usage risers</h2><span class="tag">Last 3 games vs season</span></div>${lst(ur,5,"No meaningful usage changes.")}</section>
   <p class="sub mt"><span class="tt buy">Buy</span> only appears on other teams’ players and <span class="tt sell">Sell</span> only on yours. Details live in Trade Lab.</p>`;}
