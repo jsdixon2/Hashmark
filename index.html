@@ -943,6 +943,19 @@ html{min-height:100%;background:var(--bg)}
 body{min-height:100vh;min-height:100lvh}
 main{box-sizing:border-box;min-height:100vh;min-height:100lvh;min-height:max(100lvh,var(--fullh,0px))}
 @supports (-webkit-touch-callout:none){body{min-height:-webkit-fill-available}}
+/* NFL teams */
+.nfr{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid color-mix(in srgb,var(--line) 45%,transparent)}
+.nfn{flex:none;width:22px;text-align:right;font:800 14px var(--fd);color:var(--muted)}
+.nfm{flex:1;min-width:0;display:flex;flex-direction:column}.nfm b{font-weight:650;font-size:14px}.nfm .sub{margin:0;font-size:12px;display:flex;align-items:center;gap:4px}.nfm .sub svg{flex:none;color:var(--acc)}
+.nfb{flex:0 0 22%;height:7px}.nfv{flex:none;min-width:3.4em;text-align:right;font:750 13.5px var(--fd)}
+.nfc .seg{margin:6px 0 2px!important}
+.nfdiv{margin-top:12px}.nfth,.nfsr{display:grid;grid-template-columns:minmax(0,1fr) 44px 38px 44px 34px;gap:6px;align-items:center}
+.nfth{font:650 10px var(--fb);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 2px 4px}.nfth span{text-align:right}
+.nfsr{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:grid;grid-template-columns:auto minmax(0,1fr) 58px 36px 52px 30px;white-space:nowrap;gap:6px;align-items:center;padding:6px 2px;border-bottom:1px solid color-mix(in srgb,var(--line) 40%,transparent);font-size:13.5px}
+.nfth{grid-template-columns:auto minmax(0,1fr) 58px 36px 52px 30px}.nfth span:first-child{grid-column:1/3}
+.nfsr .num{text-align:right;font-size:13px}.nfsr .good::before,.nfsr .bad::before{content:none!important}.nfsr.lead{font-weight:700}
+.nfx{margin-top:10px}.nfx summary{cursor:pointer;font:650 13.5px var(--fb);color:var(--acc);padding:8px 0;list-style:none}.nfx summary::-webkit-details-marker{display:none}.nfx summary::after{content:" ▾"}.nfx[open] summary::after{content:" ▴"}
+@media (min-width:1100px){#view:has(#nf-pr){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;align-items:start}#view:has(#nf-pr)>:not(.nfc){grid-column:1/-1}#view:has(#nf-pr) .nfc{margin-top:16px!important}}
 </style>
 </head>
 <body>
@@ -4089,6 +4102,55 @@ const _hsU39=window.hsumUpdate;window.hsumUpdate=function(){_hsU39&&_hsU39();con
 
 /* iOS home-screen app: size short pages to the physical screen */
 (function(){const set=()=>{const sa=window.navigator.standalone||matchMedia("(display-mode: standalone)").matches;const h=Math.max(window.innerHeight,document.documentElement.clientHeight,sa?screen.height:0);document.documentElement.style.setProperty("--fullh",h+"px");};set();window.addEventListener("resize",set);window.addEventListener("orientationchange",()=>setTimeout(set,250));})();
+
+/* ===== v40: NFL teams — standings, power rankings with trends, offense, defense, form, schedule; each an expandable team list ===== */
+const DIVS={"AFC East":["BUF","MIA","NE","NYJ"],"AFC North":["BAL","CIN","CLE","PIT"],"AFC South":["HOU","IND","JAX","TEN"],"AFC West":["DEN","KC","LV","LAC"],"NFC East":["DAL","NYG","PHI","WAS"],"NFC North":["CHI","DET","GB","MIN"],"NFC South":["ATL","CAR","NO","TB"],"NFC West":["ARI","LAR","SF","SEA"]};
+const DIVOF={};for(const [d,ts] of Object.entries(DIVS))ts.forEach(t=>DIVOF[t]=d);
+let SCHALL=null,SCHST="idle";
+async function loadSchAll(){if(SCHST!=="idle")return;SCHST="loading";try{const r=await fetch("data/sched.json?t="+Math.floor(Date.now()/9e5),{cache:"no-store"});const j=await r.json();SCHALL=(j.games||[]).map(g=>Object.assign({},g,{a:g.a==="LA"?"LAR":g.a,h:g.h==="LA"?"LAR":g.h}));SCHST="ready";}catch(e){SCHST="error";}if(route()==="nfl")render();}
+function nflTable(upTo){const G=(typeof NFLS!=="undefined"&&NFLS&&NFLS.length?NFLS:SCHALL)||[];const T={};const mk=t=>T[t]=T[t]||{t,w:0,l:0,tie:0,pf:0,pa:0,dw:0,dl:0,cw:0,cl:0,hw:0,hl:0,aw:0,al:0,m:[],res:[],opp:[]};
+  Object.keys(DIVOF).forEach(mk);
+  for(const g of G){if(!g.final||g.as==null||g.hs==null)continue;if(upTo&&g.wk>upTo)continue;const A=mk(g.a),H=mk(g.h);
+    for(const [X,me,op,home,o] of [[A,g.as,g.hs,0,g.h],[H,g.hs,g.as,1,g.a]]){X.pf+=me;X.pa+=op;X.m.push([g.wk,me-op]);X.opp.push(o);const r=me>op?"W":me<op?"L":"T";X.res.push(r);
+      if(r==="W"){X.w++;home?X.hw++:X.aw++;}else if(r==="L"){X.l++;home?X.hl++:X.al++;}else X.tie++;
+      if(DIVOF[o]===DIVOF[X.t]){r==="W"?X.dw++:r==="L"&&X.dl++;}if(DIVOF[o]&&DIVOF[o].slice(0,3)===DIVOF[X.t].slice(0,3)){r==="W"?X.cw++:r==="L"&&X.cl++;}}}
+  for(const X of Object.values(T)){X.g=X.w+X.l+X.tie;X.pct=X.g?(X.w+X.tie/2)/X.g:0;X.diff=X.pf-X.pa;X.dpg=X.g?X.diff/X.g:0;X.ppg=X.g?X.pf/X.g:0;X.papg=X.g?X.pa/X.g:0;
+    let s=0,c=X.res[X.res.length-1];for(let i=X.res.length-1;i>=0&&X.res[i]===c;i--)s++;X.strk=c?c+s:"–";const l3=X.m.slice(-3);X.l3=l3.length?l3.reduce((a,b)=>a+b[1],0)/l3.length:0;}
+  // power: point differential, efficiency and recent form
+  const A=ADV.teams||{},xs=Object.values(T),z=(f)=>{const v=xs.map(f).filter(x=>x!=null&&isFinite(x)),m=v.reduce((a,b)=>a+b,0)/Math.max(1,v.length),sd=Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/Math.max(1,v.length))||1;return x=>{const y=f(x);return y==null||!isFinite(y)?0:(y-m)/sd;};};
+  const zd=z(x=>x.dpg),ze=z(x=>{const q=A[x.t]||(x.t==="LAR"?A.LA:null);return q?q.epa:null;}),zf=z(x=>x.l3),zw=z(x=>x.pct);
+  xs.forEach(x=>x.pw=.4*zd(x)+.25*ze(x)+.2*zf(x)+.15*zw(x));xs.sort((a,b)=>b.pw-a.pw).forEach((x,i)=>x.pr=i+1);return T;}
+const tbRow=(t,i,right,sub,bar)=>`<button class="nfr" data-go="nfl-${t}">${i!=null?`<span class="nfn num">${i}</span>`:""}${tbadge(t)}<span class="nfm"><b class="ell">${esc((TCITY[t]||"")+" "+((TEAMS[t]||[])[0]||t))}</b>${sub?`<span class="sub ell">${sub}</span>`:""}</span>${bar!=null?`<span class="bar nfb"><i style="width:${Math.max(3,Math.min(100,bar)).toFixed(0)}%"></i></span>`:""}<span class="nfv num">${right}</span></button>`;
+const rec=x=>`${x.w}-${x.l}${x.tie?"-"+x.tie:""}`;
+const sgn=(v,d=1)=>(v>=0?"+":"")+v.toFixed(d);
+function nflCard(id,title,tag,chips,body,note){return `<section class="pan mt nfc" id="nf-${id}"><div class="row sp"><h2>${title}</h2>${tag?`<span class="tag">${tag}</span>`:""}</div>${chips||""}${body}${note?`<p class="sub mt">${note}</p>`:""}</section>`;}
+vNflIndex=function(){if(!SCHALL&&SCHST==="idle"&&!(typeof NFLS!=="undefined"&&NFLS&&NFLS.length))setTimeout(loadSchAll,20);
+  const T=nflTable(),xs=Object.values(T),played=xs.some(x=>x.g);const A=Object.assign({},ADV.teams||{});if(A.LA&&!A.LAR)A.LAR=A.LA;const maxWk=Math.max(0,...xs.flatMap(x=>x.m.map(m=>m[0])));
+  if(!played&&SCHST!=="ready"&&SCHST!=="error"&&!(typeof NFLS!=="undefined"&&NFLS))return `<section class="pan"><p class="sub">Loading the NFL season…</p></section>`;
+  const T3=maxWk>4?nflTable(maxWk-3):null;
+  // 1. power rankings
+  const pr=xs.slice().sort((a,b)=>a.pr-b.pr).map(x=>{const prev=T3?T3[x.t].pr:null,mv=prev?prev-x.pr:0;return tbRow(x.t,x.pr,`${mv>0?`<span class="good">${mv}</span>`:mv<0?`<span class="bad">${-mv}</span>`:`<span class="sub">–</span>`}`,`${rec(x)} · ${sgn(x.dpg)} per game · ${spark(x.m.map(m=>m[1]),60,16)}`,null);});
+  // 2. standings
+  const conf=S.nfConf||"AFC";const divH=Object.entries(DIVS).filter(([d])=>d.startsWith(conf)).map(([d,ts])=>{const r=ts.map(t=>T[t]).sort((a,b)=>b.pct-a.pct||b.dw-a.dw||b.diff-a.diff);
+    return `<div class="nfdiv"><div class="eyebrow">${d}</div><div class="nfth"><span></span><span>W-L</span><span>Div</span><span>Diff</span><span>Strk</span></div>${r.map((x,i)=>`<button class="nfsr${i===0?" lead":""}" data-go="nfl-${x.t}">${tbadge(x.t,"sm")}<span class="ell">${esc((TEAMS[x.t]||[])[0]||x.t)}</span><span class="num">${rec(x)}</span><span class="num">${x.dw}-${x.dl}</span><span class="num ${x.diff>0?"good":x.diff<0?"bad":""}">${sgn(x.diff,0)}</span><span class="num">${x.strk}</span></button>`).join("")}</div>`;}).join("");
+  const leaders=Object.entries(DIVS).filter(([d])=>d.startsWith(conf)).map(([d,ts])=>{const x=ts.map(t=>T[t]).sort((a,b)=>b.pct-a.pct||b.dw-a.dw||b.diff-a.diff)[0];return tbRow(x.t,null,rec(x),`${d} leader · div ${x.dw}-${x.dl}`);});
+  // 3. offense / 4. defense
+  const OM={epa:["EPA per play",x=>A[x.t]&&A[x.t].epa,v=>sgn(v,2),1],pts:["Points per game",x=>x.ppg,v=>v.toFixed(1),1],succ:["Success rate",x=>A[x.t]&&A[x.t].succ,v=>Math.round(v*100)+"%",1],pace:["Plays per game",x=>A[x.t]&&A[x.t].ppg,v=>v.toFixed(1),1],proe:["Pass rate vs expected",x=>A[x.t]&&A[x.t].proe,v=>sgn(v,1)+"%",1],rz:["Red-zone plays per game",x=>A[x.t]&&A[x.t].rzpg,v=>v.toFixed(1),1]};
+  const DM={pa:["Points allowed",x=>x.papg,v=>v.toFixed(1),-1],QB:["Softest vs QB",x=>A[x.t]&&A[x.t].dvp&&A[x.t].dvp.QB,v=>sgn(v,1),1],RB:["Softest vs RB",x=>A[x.t]&&A[x.t].dvp&&A[x.t].dvp.RB,v=>sgn(v,1),1],WR:["Softest vs WR",x=>A[x.t]&&A[x.t].dvp&&A[x.t].dvp.WR,v=>sgn(v,1),1],TE:["Softest vs TE",x=>A[x.t]&&A[x.t].dvp&&A[x.t].dvp.TE,v=>sgn(v,1),1]};
+  const metric=(M,key,attr)=>{const [n,f,fmt,dir]=M[key];const v=xs.filter(x=>f(x)!=null&&isFinite(f(x)));const lo=Math.min(...v.map(f)),hi=Math.max(...v.map(f));return {n,rows:v.sort((a,b)=>dir*(f(b)-f(a))).map((x,i)=>tbRow(x.t,i+1,fmt(f(x)),rec(x),hi>lo?(dir>0?(f(x)-lo):(hi-f(x)))/(hi-lo)*100:50)),chips:`<div class="seg sm">${Object.entries(M).map(([k,[nn]])=>`<button data-${attr}="${k}" class="${k===key?"on":""}">${nn}</button>`).join("")}</div>`};};
+  const om=metric(OM,S.nfOff&&OM[S.nfOff]?S.nfOff:"epa","nfoff"),dm=metric(DM,S.nfDef&&DM[S.nfDef]?S.nfDef:"pa","nfdef");
+  // 5. form
+  const form=xs.filter(x=>x.g>=4).map(x=>({x,d:x.l3-x.dpg})).sort((a,b)=>b.d-a.d);const fr=f=>tbRow(f.x.t,null,`<span class="${f.d>0?"good":"bad"}">${sgn(f.d)}</span>`,`last 3: ${sgn(f.x.l3)} a game · season ${sgn(f.x.dpg)} · ${f.x.res.slice(-5).join("")}`,null);
+  // 6. schedule
+  const G=(typeof NFLS!=="undefined"&&NFLS&&NFLS.length?NFLS:SCHALL)||[];const sos=xs.map(x=>{const rem=G.filter(g=>!g.final&&(g.a===x.t||g.h===x.t)).map(g=>g.a===x.t?g.h:g.a);const op=rem.map(o=>T[o]).filter(Boolean);return {x,n:rem.length,v:op.length?op.reduce((s,o)=>s+o.pct,0)/op.length:null,next:rem.slice(0,3)};}).filter(s=>s.v!=null).sort((a,b)=>a.v-b.v);
+  const sr=s=>tbRow(s.x.t,null,Math.round(s.v*100)+"%",`${s.n} games left · next: ${s.next.join(", ")}`,(1-s.v)*100);
+  return `${nflCard("pr","Power rankings",maxWk?`Thru week ${maxWk}`:"",null,lst(pr,5,"No games yet."),"Blends point differential (40%), offensive EPA per play (25%), the last 3 games (20%) and record (15%). Arrows show movement over the last 3 weeks; the line traces each game’s margin.")}
+  ${nflCard("st","Standings",conf,`<div class="seg sm">${["AFC","NFC"].map(c=>`<button data-nfconf="${c}" class="${c===conf?"on":""}">${c}</button>`).join("")}</div>`,`<div class="eyebrow mt">${conf} division leaders</div>${leaders.join("")}<details class="nfx"><summary>Full ${conf} standings</summary>${divH}</details>`,"Ties broken by division record, then point differential. Strk is the current streak.")}
+  ${nflCard("of","Offense",om.n,om.chips,lst(om.rows,5,"No data yet."),"Season to date. EPA per play is expected points added; success rate is plays that keep the offense on schedule. Longer bars are better.")}
+  ${nflCard("df","Defense",dm.n,dm.chips,lst(dm.rows,5,"No data yet."),"“Softest” is fantasy points allowed to the position compared with the league average; higher is a better matchup for your players.")}
+  ${nflCard("fm","Hot and cold",`Last 3 games`,null,`<div class="eyebrow mt">Hottest</div>${lst(form.slice(0,8).map(fr),5,"")}<div class="eyebrow mt">Coldest</div>${lst(form.slice(-8).reverse().map(fr),5,"")}`,"Average margin over the last 3 games compared with the season average, plus the last five results.")}
+  ${nflCard("sc","Remaining schedule",`Easiest first`,null,lst(sos.map(sr),5,"Schedule not loaded."),"Average win percentage of remaining opponents. Lower is easier; longer bars are easier schedules.")}`;};
+document.addEventListener("click",e=>{let b;if((b=e.target.closest("[data-nfconf]"))){S.nfConf=b.dataset.nfconf;render();return;}if((b=e.target.closest("[data-nfoff]"))){S.nfOff=b.dataset.nfoff;render();return;}if((b=e.target.closest("[data-nfdef]"))){S.nfDef=b.dataset.nfdef;render();return;}},true);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
