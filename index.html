@@ -466,6 +466,7 @@ body{padding-top:0!important}
 .glg{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line);font:500 14px var(--fb)}.glg:last-child{border-bottom:0}.glg .tag{flex:none}
 .tag.warn{color:#E8B04A}.tag.bad{color:#FF7A8A}
 .pr.dead{opacity:.5}
+.rkw .rkr{grid-template-columns:minmax(0,11em) minmax(0,1fr) 4.4em}
 </style>
 </head>
 <body>
@@ -2218,12 +2219,71 @@ function vGuillotine(L){const {al,dead}=glRows(L),me=L.teams.find(t=>t.mine);con
 vLeague=(function(prev){return function(){const L=S.L;return L&&L.gl?vGuillotine(L):prev();};})(vLeague);
 vMatchup=(function(prev){return function(li){const L=S.leagues[li];return L&&L.gl?vGuillotine(L):prev(li);};})(vMatchup);
 const _rl20=refreshLive;refreshLive=async function(){if(S.mode==="live"&&S.L&&S.L.gl){try{const mu=await sj(`${API}/league/${S.L.id}/matchups/${S.week}`);S.L.glMu=(mu||[]).filter(m=>(m.starters||[]).some(x=>x&&x!=="0")||m.points).map(m=>({rid:m.roster_id,pts:m.points||0,st:m.starters||[],pp:m.players_points||{}}));S.L._sum=null;chopCheck();render();}catch(e){}return;}return _rl20();};
+/* ===== v21: advanced metrics (nflverse, ffopportunity, NGS, PFR, FTN, QBR, official reports) ===== */
+let ADV={p:{},teams:{},asof:null,season:null};
+async function loadAdv(){try{const r=await fetch("data/adv.json?t="+Math.floor(Date.now()/36e5),{cache:"no-store"});if(!r.ok)return;const j=await r.json();if(!j||!j.p)return;ADV=j;ADVP=null;
+  computeAll();for(const l of S.leagues){l._sum=null;l._ctx=null;l._dg=null;l._tr=null;}render();}catch(e){}}
+const advOf=p=>p&&ADV.p[p.id]||null;
+function xfpOf(a){if(!a||a.xfp==null)return null;return a.xfp3!=null&&a.g>=5?a.xfp*.65+a.xfp3*.35:a.xfp;}
+const _nt21=neutral;neutral=function(p){const n=_nt21(p),a=advOf(p),x=xfpOf(a);if(!x||a.g<3)return n;const w=Math.min(.6,a.g/12);
+  if(!n)return {ppg:x,raw:a.fp,G:a.g,sd:null,o:null,adv:1};return Object.assign({},n,{ppg:n.ppg*(1-w)+x*w,adv:1});};
+const _rp21=rosPPG;rosPPG=function(p){const v=_rp21(p),a=advOf(p),x=xfpOf(a);if(!x||a.g<4||!a.fp||a.fp<2||!(v>0))return v;
+  const sc=Math.max(.6,Math.min(1.6,(p.ppg||a.fp)/a.fp)),t=x*sc;return v*(1+Math.max(-.2,Math.min(.2,(t-v)/Math.max(4,v)))*.35);};
+const PRAC={"Did Not Participate In Practice":"DNP","Limited Participation in Practice":"LIMITED","Full Participation in Practice":"FULL"};
+const _ca21=computeAll;computeAll=function(){
+  for(const p of Object.values(PL)){const a=advOf(p);p.adv=a||null;if(!a)continue;
+    if(a.inj&&a.injw>=(S.week||1)-1){if(!p.prac&&a.inj[1])p.prac=PRAC[a.inj[1]]||a.inj[1];if(!p.inj&&a.inj[0]&&a.injw>=(S.week||1)){p.inj=a.inj[0];p.injN=1;}}
+    if(p.dc==null&&a.dc)p.dc=a.dc;}
+  const r=_ca21.apply(this,arguments);
+  for(const p of Object.values(PL)){const a=p.adv;if(!a||p.brk==null||(p.age||30)>26)continue;let k=1;
+    if(a.xfp!=null&&a.fp!=null&&a.g>=3)k+=Math.max(-.3,Math.min(.3,(a.xfp-a.fp)/Math.max(5,a.xfp)))*.6;
+    if(a.ts3!=null&&a.ts!=null)k+=Math.max(-.15,Math.min(.15,(a.ts3-a.ts)*2));
+    if(a.sep>=3.2)k+=.05;if(a.yacoe>=1)k+=.05;if(a.ryoe>=.5)k+=.05;if(a.snap3!=null&&a.snap!=null&&a.snap3-a.snap>=12)k+=.08;
+    p.brk=Math.max(0,Math.min(.75,p.brk*k));p._advK=k;}
+  return r;};
+const _su21=sustain;sustain=function(p){let s=_su21(p);const a=advOf(p);if(!a||a.g<3)return s;
+  if(a.fpoe!=null&&a.xfp)s-=Math.max(-.35,Math.min(.35,a.fpoe/Math.max(5,a.xfp)))*.7;
+  if(a.td!=null&&a.xtd!=null)s-=Math.max(0,(a.td-a.xtd)/a.g-.3)*.4;
+  if(a.ts3!=null&&p.pos!=="QB")s+=a.ts3>=.24?.1:a.ts3<.12?-.08:0;if(a.rzshare>=.25)s+=.05;if(a.snap3!=null&&p.pos!=="QB")s+=a.snap3>=75?.06:a.snap3<50?-.08:0;
+  return Math.max(0,Math.min(1,s));};
+const _sw21=sustainWhy;sustainWhy=function(p){const a=advOf(p);if(!a||a.xfp==null)return _sw21(p);const x=[`${f1(a.fp)} PPR a game on ${f1(a.xfp)} expected`];if(a.td!=null&&a.xtd!=null)x.push(`${a.td} TDs on ${f1(a.xtd)} expected`);if(a.snap3!=null)x.push(`${Math.round(a.snap3)}% snaps lately`);if(a.ts3!=null&&p.pos!=="QB")x.push(`${Math.round(a.ts3*100)}% target share`);return x.join(", ");};
+/* trade reasons from opportunity data */
+tradeSignals=(function(prev){return function(L){const G=prev(L);
+  for(const b of G.buys){const a=advOf(b.p);if(!a||a.g<3||a.xfp==null)continue;if(a.fpoe<=-2){b.s+=.25;b.why.splice(1,0,`Scoring ${f1(-a.fpoe)} a game below his expected points (${f1(a.xfp)}); the opportunity is there`);}
+    else if(a.ts3!=null&&a.ts!=null&&a.ts3-a.ts>=.05&&b.p.pos!=="QB")b.why.splice(1,0,`Target share up to ${Math.round(a.ts3*100)}% over the last 3 games`);
+    else if(a.snap3!=null&&a.snap!=null&&a.snap3-a.snap>=10)b.why.splice(1,0,`Snap share up to ${Math.round(a.snap3)}% lately`);}
+  for(const s of G.sells){const a=advOf(s.p);if(!a||a.g<3||a.xfp==null)continue;if(a.fpoe>=2.5){s.s+=.2;s.why.splice(0,0,`Running ${f1(a.fpoe)} a game above his expected points${a.td>a.xtd+1.5?`, with ${a.td} TDs on ${f1(a.xtd)} expected`:""}`);}}
+  G.buys.sort((a,b)=>b.s-a.s);G.sells.sort((a,b)=>b.s-a.s);return G;};})(tradeSignals);
+/* player page panel */
+let ADVP=null;
+function advPct(pos,k,v){if(v==null)return null;ADVP=ADVP||{};const key=pos+k;if(!ADVP[key]){const arr=[];for(const [id,a] of Object.entries(ADV.p)){const ps=a.pos||(PL[id]&&PL[id].pos);if(ps!==pos||a.g<3||a[k]==null)continue;arr.push(a[k]);}ADVP[key]=arr.sort((x,y)=>x-y);}
+  const A=ADVP[key];if(A.length<8)return null;let lo=0;for(const x of A)if(x<v)lo++;return Math.round(100*lo/A.length);}
+const ADVM={WR:[["ts","Target share",x=>pc(x)],["as","Air-yards share",x=>pc(x)],["wopr","WOPR",x=>f1(x*100)/100],["adot","Avg depth of target",x=>f1(x)+" yd"],["sep","Separation",x=>f1(x)+" yd"],["yacoe","YAC over expected",x=>f1(x)],["catch","Catchable targets",x=>pc(x)],["read1","First-read targets",x=>pc(x)],["cont","Contested targets",x=>pc(x),1],["rzshare","Red-zone share",x=>pc(x)],["snap","Snap share",x=>Math.round(x)+"%"],["epat","EPA per target",x=>f1(x*100)/100]],
+  RB:[["snap","Snap share",x=>Math.round(x)+"%"],["rzshare","Red-zone share",x=>pc(x)],["gl","Goal-line touches",x=>x],["ts","Target share",x=>pc(x)],["ryoe","Rush yds over expected / att",x=>f1(x)],["yaco","Yards after contact / att",x=>f1(x)],["bt","Broken tackles",x=>x],["box8","8+ in the box",x=>Math.round(x)+"%",1],["epac","EPA per carry",x=>f1(x*100)/100]],
+  QB:[["epad","EPA per dropback",x=>f1(x*100)/100],["cpoe","Completion % over exp",x=>f1(x)],["qbr","ESPN QBR",x=>f1(x)],["aggr","Aggressiveness",x=>Math.round(x)+"%"],["ttt","Time to throw",x=>f1(x*100)/100+"s"],["bad","Bad-throw rate",x=>f1(x*100)+"%",1],["prs","Pressured rate",x=>f1(x*100)+"%",1],["rzshare","Red-zone share",x=>pc(x)]]};
+ADVM.TE=ADVM.WR;
+function advPanel(id){const p=PL[id],a=advOf(p);if(!p||!a)return "";const M=ADVM[p.pos]||[];const x=xfpOf(a);
+  const tag=a.fpoe==null?"":a.fpoe>=2?"Running hot":a.fpoe<=-2?"Due to rise":"Earning it";
+  const rows=M.filter(([k])=>a[k]!=null).map(([k,n,fmt,inv])=>{const pc0=advPct(p.pos,k,a[k]);const v=pc0==null?null:inv?100-pc0:pc0;
+    return `<div class="rkr"><span>${n}</span><span class="bar"><i class="${v!=null&&v>=75?"hi":v!=null&&v<=25?"lo":""}" style="width:${Math.max(3,v??0)}%"></i></span><b class="num">${fmt(a[k])}</b></div>`;}).join("");
+  const W=a.w||[],labels=W.map(w=>"W"+w[0]);
+  const chart=W.length>=2&&W.some(w=>w[2]!=null)?chLine([{n:"Actual PPR",v:W.map(w=>w[1])},{n:"Expected",v:W.map(w=>w[2])}],labels,{h:150}):"";
+  const snaps=W.some(w=>w[3]!=null)?chBars(W.map(w=>w[3]||0),labels,{h:90,max:100,min:0,cls:v=>v>=70?"cb hi":"cb"}):"";
+  const pv=a.prev?`<p class="sub">Last season: ${f1(a.prev.fp)} PPR a game on ${a.prev.xfp!=null?f1(a.prev.xfp):"–"} expected${a.prev.ts?`, ${pc(a.prev.ts)} target share`:""}.</p>`:"";
+  const rep=a.inj&&(a.inj[0]||a.inj[1])?`<p class="sub">Week ${a.injw} report: ${esc([a.inj[0]?a.inj[0].toUpperCase():"",a.inj[1]?(PRAC[a.inj[1]]||a.inj[1])+" in practice":"",a.inj[2]].filter(Boolean).join(" · "))}${a.dc?` · ${ordn(a.dc)} on the depth chart`:""}</p>`:a.dc?`<p class="sub">${ordn(a.dc)} on the depth chart.</p>`:"";
+  return `<section class="pan mt"><div class="row sp"><h2>Advanced metrics</h2>${tag?`<span class="tag">${tag}</span>`:""}</div>
+   <div class="hxk">${a.xfp!=null?`<div><b class="num">${f1(a.fp)}</b><span>PPR per game</span></div><div><b class="num">${f1(a.xfp)}</b><span>Expected per game</span><em>from his opportunities</em></div><div><b class="num">${a.fpoe>=0?"+":""}${f1(a.fpoe)}</b><span>Over expected</span></div>`:""}${a.td!=null&&a.xtd!=null?`<div><b class="num">${a.td} / ${f1(a.xtd)}</b><span>TDs vs expected</span></div>`:""}</div>
+   ${chart}${chart?`<p class="sub">Actual vs expected fantasy points each week. Expected points price every target and carry by where it happened.</p>`:""}
+   ${snaps?`<div class="eyebrow mt">Snap share by week</div>${snaps}`:""}
+   ${rows?`<div class="rkb rkw mt">${rows}</div><p class="sub mt">Bars are percentiles among ${p.pos}s with 3+ games; longer is better.</p>`:""}${pv}${rep}
+   <p class="sub">Sources: nflverse (player stats, play-by-play, Next Gen Stats, PFR advanced stats, snap counts, ESPN QBR, injury reports, depth charts), ffopportunity expected points, FTN charting (CC-BY-SA 4.0). Updated ${esc((ADV.asof||"").slice(0,10))}.</p></section>`;}
+vPlayer=(function(prev){return function(id){const h=prev(id),panel=advPanel(id);if(!panel)return h;const i=h.indexOf('<section class="pan mt"><div class="row sp"><h2>News</h2>');return i>=0?h.slice(0,i)+panel+h.slice(i):h+panel;};})(vPlayer);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
 window.addEventListener("hashchange",render);
-boot();render();fitHeader();NW.at=Date.now();loadNews();
+boot();render();fitHeader();NW.at=Date.now();loadNews();loadAdv();
 gateShow(LS.get("hm_user")?"restore":"form");
 probeLive().then(ok=>{S.canLive=ok;if(!ok){gateShow("form");return;}const u=LS.get("hm_user");if(u&&S.mode!=="live")connectSleeper(u).then(()=>{gateHide();go("home");render();}).catch(()=>gateShow("form"));else gateShow("form");});
 </script>
