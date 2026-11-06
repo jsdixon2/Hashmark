@@ -4028,6 +4028,17 @@ drawPal=function(){let last=null;$("#palRes").innerHTML=palItems.map((x,i)=>{con
 palGo=function(x){if(!x)return;closePal();if(x.lg&&(!S.L||S.L.id!==x.lg))selectLeague(x.lg);if(x.set)Object.assign(S,x.set);if(x.r==="league"&&x.set&&x.set.lgT==="standings")S.lgT=null;if(route()===x.r)render();else go(x.r);};
 $("#palIn").setAttribute("placeholder","Search players, teams, cities, schools or pages");
 
+/* ===== v38: projections account for the chance a player actually plays (depth chart, recent appearances) ===== */
+function roleAvail(p){if(!p)return 1;const a=p.adv||{},dc=+(p.dc||a.dc||0);let r=1,why=null;
+  if(p.pos==="QB"&&dc>=2){r=dc===2?.12:.04;why=dc===2?"backup QB":"third-string QB";}
+  else if(dc>=4&&p.pos!=="QB"){r=.5;why="deep on the depth chart";}
+  const cw=S.week||1,played=new Set([...(p.log||[]).filter(x=>x.pts!=null).map(x=>+x.wk),...(a.w||[]).map(x=>+x[0])]);
+  if(played.size&&cw>2){const rec=[1,2,3,4].map(k=>cw-k).filter(w=>w>=1);const n=rec.filter(w=>played.has(w)).length;const inj=p.inj&&ABS.test(p.inj);
+    if(!inj&&rec.length>=3){if(n===0){r*=.25;why=why||`hasn’t played in ${rec.length} weeks`;}else if(n===1&&rec.length>=3){r*=.6;why=why||`played 1 of the last ${rec.length} games`;}}}
+  return {r,why};}
+neutral=(function(prev){return function(p){const n=prev(p);if(!n)return n;const A=roleAvail(p);return A.r<1?Object.assign({},n,{ppg:n.ppg*A.r,role:A.why}):n;};})(neutral);
+rosPPG=(function(prev){return function(p){const v=prev(p);const A=roleAvail(p);return A.r<1?v*A.r:v;};})(rosPPG);
+
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
