@@ -2256,6 +2256,8 @@ function optimal(ids,pp,slots){const pool=ids.map(id=>({id,pos:hxPos(id),v:+pp[i
 
 /* ---------- analysis ---------- */
 function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
+  {const cs=+S.season,cw=S.week||1,gs=(typeof NFLS!=="undefined"&&NFLS)?NFLS.filter(g=>g.wk===cw):[],wkDone=gs.length>0&&gs.every(g=>g.final);
+   for(const x of LSs){if(x.season!==cs)continue;const keep=wkDone?cw:cw-1;if(x.weeks.length>keep)x.weeks=x.weeks.slice(0,Math.max(0,keep));}}
   const byId=new Map(LSs.map(x=>[x.id,x]));
   for(const x of LSs){let r=x,g=0;while(r.prev&&byId.has(r.prev)&&g++<20)r=byId.get(r.prev);x.chain=r.id;}
   const chainName={};for(const x of LSs)chainName[x.chain]=x.name;
