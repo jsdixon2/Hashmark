@@ -696,6 +696,37 @@ main{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
 @media (min-width:1500px){.lmore:has(>.scard){grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 @media (max-width:600px){.tw .c-pf{display:none}.tw .sbar{width:40px!important}.tw .c-tm b{display:inline-block;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}.tw td,.tw th{padding-left:6px!important;padding-right:6px!important}.lgseg{margin-bottom:4px}}
+/* v29 landings */
+.tiles.big{gap:12px}
+.rtile{box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:3px;min-width:0;padding:14px 14px 12px;border-radius:var(--r);background:var(--panel);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);box-shadow:0 1px 2px rgba(0,0,0,.1);transition:transform .12s ease,box-shadow .15s,border-color .15s}
+.rtile:active{transform:scale(.98)}
+.rtile .tn{display:flex;align-items:center;gap:7px;font:650 12px var(--fb);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rtile .tn svg{width:16px;height:16px;color:var(--acc)}.rtile .tn .tch{margin-left:auto;color:var(--muted);width:15px;height:15px}
+.rtile .tb{font:800 22px/1.15 var(--fd);letter-spacing:-.02em;margin-top:8px}
+.rtile .tsb{font:500 12.5px/1.35 var(--fb);color:var(--muted)}
+.tbd{margin-top:10px;padding-top:9px;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent);display:flex;flex-direction:column;gap:2px}
+.mcap{font:650 10px var(--fb);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.mrow{display:flex;align-items:center;gap:7px;min-height:24px;font:550 12.5px var(--fb);border-radius:8px;padding:1px 4px;margin:0 -4px}
+.mrow[data-go]:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.mrow .ml{flex:1;min-width:0;display:flex;align-items:center;gap:5px}
+.mrow .ml .pos,.mrow .ml>span:first-child{flex:none}
+.mrow .mb{flex:0 0 34%;height:6px;border-radius:3px;background:var(--panel2);overflow:hidden}
+.mrow .mb i{display:block;height:100%;border-radius:3px;background:var(--accg)}.mrow .mb i.lo{background:var(--muted)}
+.mrow .mv{flex:none;font-size:12px;text-align:right;min-width:2.6em;color:var(--ink)}.mrow .mv.good{color:var(--acc)}.mrow .mv.bad{color:var(--bad)}
+.mrow .ell2,.nrow .ml{display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;line-height:1.3;font-weight:500}
+.nrow{padding:3px 0}
+.pill.sm{font-size:10px;padding:2px 7px}
+.tb3{display:inline-block;min-width:30px;text-align:center;padding:2px 0;border-radius:6px;color:#fff;font:800 10.5px var(--fd)}
+.lgall{margin-left:auto;flex:none;font:650 10px var(--fb);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:3px 9px;border:1px solid var(--line);border-radius:99px}.hpath{display:flex}
+.secth{display:flex;align-items:baseline;justify-content:space-between;margin:18px 2px 10px}.secth h2{margin:0}
+.hold{display:flex;flex-direction:column;gap:4px}
+.hrow{display:flex;align-items:center;gap:9px;cursor:pointer;padding:4px 4px;border-radius:10px}
+.hrow:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}
+.hn{flex:0 0 38%;font-weight:600;font-size:13.5px}.hvb{flex:1;height:8px;border-radius:4px;background:var(--panel2);overflow:hidden}.hvb i{display:block;height:100%;background:var(--accg);border-radius:4px}
+.hrow b{flex:none;min-width:4.2em;text-align:right;font-size:13px}
+@media (max-width:520px){.mrow .mv.lgv,.mrow .pill.soft,.mrow .ml .pos{display:none}.mrow .mb{flex-basis:22%!important}.rtile{padding:12px 11px 10px}.rtile .tb{font-size:19px}.mrow{font-size:11.5px;min-height:22px}.mrow .mb{flex-basis:28%}.mrow .mv{font-size:11px}.tbd .mrow:nth-of-type(n+5){display:none}.hn{flex-basis:44%}}
+@media (hover:hover){.rtile:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.18);border-color:color-mix(in srgb,var(--acc) 35%,var(--line))}}
+@media (min-width:1100px){.hubh .lgall{margin-left:16px}.tiles.big{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.rtile{min-height:270px;padding:18px 18px 14px}.rtile .tb{font-size:26px}.mrow{font-size:13px;min-height:27px}.lgall{margin-top:0}}
 </style>
 </head>
 <body>
@@ -2643,7 +2674,7 @@ function hubHeader(r){const hk=hubOf(r);if(!hk)return "";const H=HUBS[hk],t=tabO
   const path=[`<button data-go="${H.land}">${H.n}</button>`];if(tabN&&r!==H.land&&!(hk==="home"&&t==="home"))path.push(`<button data-go="${t}">${tabN}</button>`);if(SUBN[r])path.push(`<span>${SUBN[r]}</span>`);
   return `<div class="hubh"><div class="hpath">${path.join('<i>›</i>')}</div><div class="htabs" role="tablist">${H.tabs.map(([k,n])=>`<button role="tab" data-go="${k}" class="${t===k?"on":""}">${n}</button>`).join("")}</div>${H.lg?leagueBar():""}</div>`;}
 /* ---------- tiles ---------- */
-const tile=(go,name,big,sub,ico)=>`<button class="tile" data-go="${go}"><div class="tn">${ico?ic(ico):""}<span>${esc(name)}</span></div><div class="tb ell">${big}</div><div class="tsb">${sub}</div></button>`;
+const tile=(go,name,big,sub,ico)=>`<button class="tile" data-go="${go}" data-nolink><div class="tn">${ico?ic(ico):""}<span>${esc(name)}</span></div><div class="tb ell">${big}</div><div class="tsb">${sub}</div></button>`;
 function vTeamLand(){const L=S.L;if(!L)return `<div class="empty">No league loaded.</div>`;const mi=mineIdx(L),t=L.teams[mi],st=standing(L,mi),d=leagueSummary(L);let al=[];try{const M=myMatchup(L);if(M)al=alertsFor(M.A).filter(a=>a.lvl!=="info");}catch(e){}
   const tu=teamFeed().length;let po="";try{po=pc((oddsFor(L)[mi]||{}).po);}catch(e){}
   return `<div class="tiles">${tile("league","League",L.gl?(L.rip?"R.I.P.":`${L.alive} alive`):`${ordn(st.r)} of ${L.size}`,L.gl?"Guillotine standings":`${recOf(t)}${po&&po!=="–"?" · "+po+" playoff odds":""}`,"lg")}
@@ -2739,7 +2770,7 @@ function shellPost(){const r=route(),v=$("#view"),hk=hubOf(r);if(!v)return;
   $("#backBtn").hidden=NAV.length<=1||r===(HUBS[hk]||{}).land&&!["team","gm","scout"].includes(r);
   document.querySelectorAll(".dock [data-hub]").forEach(b=>b.classList.toggle("on",b.dataset.hub===hk));
   decorate(v);}
-function decorate(root){const live=liveSet();root.querySelectorAll('[data-go^="player-"]').forEach(el=>{const id=el.dataset.go.slice(7);if(el.closest(".livestrip,.pay,.why"))return;if(live.has(id)&&!el.querySelector(".livep")){const v=live.get(id);const s=document.createElement("span");s.className="livep";s.textContent=v!=null?`LIVE ${f1(v)}`:"LIVE";(el.querySelector(".nm,b,.name")||el).appendChild(s);}});
+function decorate(root){const live=liveSet();root.querySelectorAll('[data-go^="player-"]').forEach(el=>{const id=el.dataset.go.slice(7);if(el.closest(".livestrip,.pay,.why,.rtile,.tile,.hold"))return;if(live.has(id)&&!el.querySelector(".livep")){const v=live.get(id);const s=document.createElement("span");s.className="livep";s.textContent=v!=null?`LIVE ${f1(v)}`:"LIVE";(el.querySelector(".nm,b,.name")||el).appendChild(s);}});
   root.querySelectorAll(".chart,.tblw").forEach(el=>{if(el.closest("#psheet .exp"))return;el.classList.add("expandable");});}
 
 /* ---------- dock: 4 hubs ---------- */
@@ -3216,6 +3247,87 @@ tradeSignals=(function(prev){return function(L){if(L&&L.rip)return {ts:{st:"bala
 function choppedNote(){const L=S.L;return `<section class="pan"><div class="ripm" style="margin-top:0">R.I.P.</div><p class="sub">You were chopped from ${esc(L.name)}, so there are no moves to make here. Switch leagues above, or follow the chopping block in Team › League.</p><div class="row" style="gap:8px"><button class="btn ghost sm" data-ctx="league">Switch league</button><button class="btn ghost sm" data-go="league">Chopping block</button></div></section>`;}
 const GMR=new Set(["gm","moves","trade","waivers","trends"]);
 render=(function(prev){return function(){prev();const r=route();if(!S.L||!S.L.rip||!(GMR.has(r)||r.startsWith("trade-")))return;const v=$("#view"),hh=v.querySelector(".hubh");v.innerHTML=(hh?hh.outerHTML:"")+choppedNote();};})(render);
+
+/* ===== v29: Overview master hub; Team / GM / Scout landings with live summaries and mini charts ===== */
+const TCH='<svg class="tch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+const mrow=(label,val,pct,o={})=>`<div class="mrow"${o.go?` data-go="${o.go}"${o.lg?` data-golg="${esc(o.lg)}"`:""} role="link"`:""}><span class="ml ell">${label}</span>${pct!=null?`<span class="mb"><i class="${o.cls||""}" style="width:${Math.max(2,Math.min(100,pct)).toFixed(0)}%"></i></span>`:""}<b class="mv num${o.vc?" "+o.vc:""}">${val}</b></div>`;
+const rtile=(go,ico,name,big,sub,body)=>`<div class="rtile" data-go="${go}" role="link" tabindex="0" data-nolink><div class="tn">${ic(ico)}<span>${name}</span>${TCH}</div><div class="tb ell">${big}</div><div class="tsb">${sub}</div><div class="tbd">${body||""}</div></div>`;
+const liveLgs=()=>S.leagues.filter(L=>!L.rip);
+const lgS=L=>{const n=L.name||"League";return n.length>14?n.slice(0,13)+"…":n;};
+function sums(){return liveLgs().map(L=>{let d={};try{d=leagueSummary(L);}catch(e){}return {L,d};});}
+function movesBy(kind){let ms=[];try{ms=allMoves();}catch(e){}return ms.filter(m=>kind.test(m.k));}
+/* ---------- Home › Overview: one compact tile per section ---------- */
+vOverview=function(){const live=S.mode==="live",SM=sums(),dead=S.leagues.length-SM.length,ok=SM.filter(x=>x.d.ok),wins=ok.filter(x=>x.d.wp>=.5).length;
+  const fixes=SM.reduce((s,x)=>s+(x.d.rev||0),0),urg=SM.reduce((s,x)=>s+(x.d.urg||0),0);let mv=[];try{mv=mergedMoves();}catch(e){}
+  const tr=movesBy(/Sell high|Buy|Trade target/),wv=movesBy(/Free agent/),news=NW.items.length?feed("mine"):[],L0=liveSet(),G=typeof GAMES!=="undefined"?GAMES:[];
+  const mine=new Set();SM.forEach(({L})=>{const t=L.teams[mineIdx(L)];if(t)t.players.forEach(id=>mine.add(id));});
+  const myLive=[...mine].filter(id=>L0.has(id)).map(id=>({p:PL[id],v:L0.get(id)})).filter(x=>x.p).sort((a,b)=>(b.v||0)-(a.v||0));
+  let pros=null;if(CFB){pros=Object.values(CFB.p).filter(p=>!p.drafted&&p.proj&&p.dclass===+S.season+1).sort((a,b)=>a.proj.pick-b.proj.pick)[0];}else if(CFBst==="idle")setTimeout(loadCfb,50);
+  const T={
+   matchup:tile("matchup","Matchups",ok.length?`${wins} of ${ok.length}`:"–",ok.length?`projected wins this week${ok.some(x=>x.d.live)?" · games live":""}`:"No matchups this week","week"),
+   roster:tile("roster","Lineups",fixes?`${fixes} to fix`:"All set",fixes?`${urg?urg+" urgent · ":""}across ${SM.filter(x=>x.d.rev).length} team${SM.filter(x=>x.d.rev).length===1?"":"s"}`:"Every lineup is optimal","ros"),
+   moves:tile("moves","Moves",String(mv.length),mv[0]?esc(mv[0].t):"Nothing pressing","moves"),
+   trade:tile("trade","Trade Lab",tr[0]?esc(tr[0].t):"–",tr[0]?`${esc(tr[0].k)}${multiL()?" · "+esc(lgS(tr[0].L)):""}`:"No trade ideas right now","trade"),
+   waivers:tile("waivers","Waivers",wv[0]?esc(wv[0].t.replace(/^Add /,"")):"–",wv[0]?`Best add${multiL()?" in "+esc(lgS(wv[0].L)):""}`:"Wire is thin","waiv"),
+   news:tile("news","Updates",String(news.length),news[0]?esc(news[0].t):"No news on your players","news"),
+   gameday:tile("gameday","Gameday",L0.size?"LIVE":`${G.length} games`,L0.size?`${myLive.length} of your players in play`:"Lines, weather and edges","week"),
+   scout:tile("scout","Scout",pros?esc(pros.n):"Prospects",pros?`#1 projected pick in the ${+S.season+1} class`:"College and NFL scouting","devy")};
+  const d=new Date().getDay(),gd=L0.size||d===0||d===1||d===4,ww=d===2||d===3;
+  const order=gd?["gameday","matchup","roster","news","moves","waivers","trade","scout"]:ww?["waivers","moves","roster","matchup","trade","news","gameday","scout"]:["matchup","roster","moves","news","gameday","waivers","trade","scout"];
+  return `<div class="topline"><h1>Overview</h1><div class="hsub"><span>Week ${S.week}</span><span>${SM.length} team${SM.length===1?"":"s"}${dead?` · ${dead} chopped`:""}</span>${live?"":"<span>Demo league</span>"}</div></div>
+  ${myLive.length?`<div class="livestrip"><span class="lv">LIVE</span>${myLive.slice(0,12).map(x=>`<button class="lvp" data-go="player-${x.p.id}">${esc(x.p.name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/,"").split(" ").slice(-1)[0])} <b class="num">${x.v!=null?f1(x.v):"–"}</b></button>`).join("")}</div>`:""}
+  <div class="tiles">${order.map(k=>T[k]).join("")}</div>`;};
+/* ---------- Team landing: all leagues ---------- */
+vTeamLand=function(){const SM=sums(),rip=S.leagues.filter(L=>L.rip);if(!S.leagues.length)return `<div class="empty">No league loaded.</div>`;
+  const best=SM.map(x=>({x,st:standing(x.L,mineIdx(x.L))})).sort((a,b)=>a.st.r-b.st.r)[0];
+  const lgRows=SM.map(({L,d})=>mrow(esc(lgS(L)),L.gl?"alive":PCT(d.po)+"%",L.gl?100:PCT(d.po),{go:"league",lg:L.id,cls:d.po<.25?"lo":""})).concat(rip.map(L=>mrow(esc(lgS(L)),"R.I.P.",null,{go:"league",lg:L.id,vc:"bad"}))).join("");
+  const ok=SM.filter(x=>x.d.ok),wins=ok.filter(x=>x.d.wp>=.5).length;
+  const muRows=ok.map(({L,d})=>{const c=d.cnt||{played:0,yet:0,out:0},n=Math.max(1,c.played+c.yet);return mrow(esc(lgS(L)),`${c.played}/${n}`,c.played/n*100,{go:"matchup-"+S.leagues.indexOf(L),lg:L.id});}).join("");
+  const fx=SM.filter(x=>x.d.rev),fixes=fx.reduce((s,x)=>s+x.d.rev,0);
+  const roRows=SM.map(({L,d})=>mrow(esc(lgS(L)),d.rev?`${d.rev} fix${d.rev===1?"":"es"}`:"Set",null,{go:"roster",lg:L.id,vc:d.urg?"bad":d.rev?"":"good"})).join("");
+  const news=NW.items.length?feed("mine"):[];
+  const nwRows=news.slice(0,3).map(it=>`<div class="mrow nrow"><span class="ml ell2">${esc(it.t)}</span></div>`).join("");
+  return `<div class="tiles big">
+   ${rtile("league","lg","League",best?(best.x.L.gl?"Alive":`${ordn(best.st.r)} of ${best.x.L.size}`):"–",best?`Best standing · ${esc(lgS(best.x.L))}`:"",`<div class="mcap">Playoff odds</div>${lgRows}`)}
+   ${rtile("matchup","week","Matchup",ok.length?`${wins} of ${ok.length}`:"–","projected wins this week",ok.length?`<div class="mcap">Players played</div>${muRows}`:"")}
+   ${rtile("roster","ros","Roster",fixes?`${fixes} to fix`:"All set",fixes?"lineup changes waiting":"every lineup is optimal",roRows)}
+   ${rtile("tupd","news","Updates",String(news.length),"stories on your players",nwRows)}</div>
+  <div class="secth"><h2>My teams</h2><span class="sub">${S.leagues.length} league${S.leagues.length===1?"":"s"}</span></div>${homeBoxes()}`;};
+/* ---------- GM landing: all leagues ---------- */
+vGMLand=function(){const SM=sums();if(!S.leagues.length)return `<div class="empty">No league loaded.</div>`;let mv=[];try{mv=mergedMoves();}catch(e){}
+  const tag=m=>multiL()&&m.ls?` <span class="lgt">${esc(lgS(m.ls[0].L))}</span>`:"";
+  const mvRows=mv.slice(0,3).map(m=>`<div class="mrow" data-go="${m.ls[0].go}" data-golg="${esc(m.ls[0].L.id)}" role="link"><span class="pill sm${m.pr>=80?" hot":" soft"}">${esc(m.ks[0])}</span><span class="ml ell">${esc(m.t)}</span></div>`).join("");
+  const sells=movesBy(/Sell high/),buys=movesBy(/Buy|Trade target/);
+  const trRows=[...sells.slice(0,2).map(m=>mrow(`<span class="tt sell">Sell</span> ${esc(m.t)}`,multiL()?esc(lgS(m.L)):"",null,{go:"trade-sell",lg:m.L.id,vc:"lgv"})),...buys.slice(0,2).map(m=>mrow(`<span class="tt buy">Buy</span> ${esc(m.t)}`,multiL()?esc(lgS(m.L)):"",null,{go:"trade-buy",lg:m.L.id,vc:"lgv"}))].join("");
+  const wv0=movesBy(/Free agent/),wvG=new Map();for(const m of wv0){const k=m.go||m.t;const e=wvG.get(k)||{m,ls:[]};e.ls.push(m.L);wvG.set(k,e);}const wv=[...wvG.values()];const wvRows=wv.slice(0,3).map(({m,ls})=>{const p=m.go&&PL[m.go.slice(7)];return mrow(`${p?pos(p.pos)+" ":""}${esc(m.t.replace(/^Add /,""))}`,multiL()?(ls.length>1?`${ls.length} leagues`:esc(lgS(ls[0]))):"",null,{go:"waivers",lg:ls[0].id,vc:"lgv"});}).join("");
+  let tr=[];try{tr=allTrends();}catch(e){}const trd=tr.filter(x=>PL[x.id]).slice(0,4).map(x=>mrow(esc(x.name),PCT(x.brk)+"%",Math.min(100,PCT(x.brk)/.75),{go:"player-"+x.id})).join("");
+  // holdings: market value you roster, summed across leagues
+  const own=new Map();SM.forEach(({L})=>{const t=L.teams[mineIdx(L)];if(t)for(const id of t.players){const p=PL[id];if(!p||!POSI.hasOwnProperty(p.pos))continue;const e=own.get(id)||{p,n:0};e.n++;own.set(id,e);}});
+  const hold=[...own.values()].map(e=>({...e,v:(e.p.val||0)*e.n})).sort((a,b)=>b.v-a.v).slice(0,8),mx=Math.max(1,...hold.map(h=>h.v)),tot=[...own.values()].reduce((s,e)=>s+(e.p.val||0)*e.n,0);
+  return `<div class="tiles big">
+   ${rtile("moves","moves","Moves",String(mv.length),`${mv.filter(m=>m.pr>=80).length} urgent across your leagues`,mvRows)}
+   ${rtile("trade","trade","Trade Lab",String(sells.length+buys.length),"trade ideas",trRows||`<p class="sub">No clear trades right now.</p>`)}
+   ${rtile("waivers","waiv","Waivers",wv.length?String(wv.length):"–",wv.length?"adds that fill a need":"wire is thin",wvRows)}
+   ${rtile("trends","trend","Trends",trd?PCT(tr[0].brk)+"%":"–",tr[0]?`top breakout odds · ${esc(tr[0].name)}`:"no signals",`<div class="mcap">Breakout odds</div>${trd}`)}</div>
+  ${hold.length?`<section class="pan mt"><div class="row sp"><h2>Your biggest holdings</h2><span class="tag">Market value ${info("mv")}</span></div><p class="sub">Players you roster${multiL()?", counted once per league you own them in":""}. ${f0(tot)} total value${multiL()?` across ${SM.length} teams`:""}; the top ${hold.length} are ${Math.round(hold.reduce((s,h)=>s+h.v,0)/Math.max(1,tot)*100)}% of it.</p>
+   <div class="hold mt" data-nolink>${hold.map(h=>`<div class="hrow" data-go="player-${h.p.id}" role="link">${pos(h.p.pos)}<span class="hn ell">${esc(h.p.name)}${h.n>1?` <span class="lgt">×${h.n}</span>`:""}</span><span class="hvb"><i style="width:${(h.v/mx*100).toFixed(1)}%"></i></span><b class="num">${f0(h.v)}</b></div>`).join("")}</div></section>`:""}`;};
+/* ---------- Scout landing ---------- */
+vScoutLand=function(){if(!CFB&&CFBst==="idle")setTimeout(loadCfb,50);const ny=+S.season+1;
+  const ris=Object.values(PL).filter(p=>p.adv&&p.adv.ts3!=null&&p.adv.ts!=null&&p.pos!=="QB"&&!lostSeason(p)).map(p=>({p,d:p.adv.ts3-p.adv.ts})).sort((a,b)=>b.d-a.d).slice(0,4);
+  const plRows=ris.map(({p})=>mrow(`${pos(p.pos)} ${esc(p.name)}`,`${pc(p.adv.ts)}→${pc(p.adv.ts3)}`,null,{go:"player-"+p.id})).join("");
+  let dv="",dp="",top=null,cls=[];if(CFB){const all=Object.values(CFB.p).filter(p=>!p.drafted&&p.active!==false);
+    const dvy=all.filter(p=>p.dclass>ny).sort((a,b)=>b.score-a.score).slice(0,4);top=dvy[0];dv=dvy.map(p=>mrow(`${p.pos} ${esc(p.n)}`,String(p.score),p.score,{go:"cfb-"+Object.keys(CFB.p).find(k=>CFB.p[k]===p)})).join("");
+    cls=all.filter(p=>p.dclass===ny&&p.proj).sort((a,b)=>a.proj.pick-b.proj.pick).slice(0,4);dp=cls.map(p=>mrow(`${p.pos} ${esc(p.n)}`,p.proj.rd?`Rd ${p.proj.rd}`:"Day 3",null,{go:"cfb-"+Object.keys(CFB.p).find(k=>CFB.p[k]===p)})).join("");}
+  let firsts=0;if(S.fmt.type!=="redraft")for(const L of liveLgs()){try{const pk=picksOf(L,mineIdx(L));if(pk)firsts+=pk.own.filter(o=>o.y===ny&&o.r===1).length;}catch(e){}}
+  const T=ADV.teams||{},off=Object.entries(T).filter(([,v])=>v.epa!=null).sort((a,b)=>b[1].epa-a[1].epa),mxe=off.length?Math.max(...off.slice(0,5).map(x=>Math.abs(x[1].epa)),.01):1;
+  const nfRows=off.slice(0,5).map(([t,v])=>mrow(`<span class="tb3" style="background:${(TEAMS[t]||["",""])[1]}">${t}</span>`,(v.epa>=0?"+":"")+v.epa.toFixed(2),Math.abs(v.epa)/mxe*100,{go:"nfl-"+t})).join("");
+  return `<div class="tiles big">
+   ${rtile("players","pl","Players",ris[0]?esc(ris[0].p.name):"Search",ris[0]?"biggest target-share jump (last 3 games)":"every NFL skill player",`<div class="mcap">Target share, season → last 3</div>${plRows}`)}
+   ${rtile("devy","devy","Devy Lab",top?esc(top.n):"College",top?`${top.pos} · ${esc(top.school)} · top devy score`:"loading prospects…",dv?`<div class="mcap">Devy score 0–100</div>${dv}`:"")}
+   ${rtile("prep","prep","Draft prep",cls[0]?esc(cls[0].n):"Board",S.fmt.type==="redraft"?"redraft board":`${ny} class${firsts?` · you own ${firsts} first${firsts===1?"":"s"}`:""}`,dp?`<div class="mcap">Projected draft round</div>${dp}`:"")}
+   ${rtile("nfl","lg","NFL teams",off[0]?off[0][0]:"32",off[0]?"best offense by EPA per play":"team pages",nfRows?`<div class="mcap">Offensive EPA per play</div>${nfRows}`:"")}</div>`;};
+/* landings show every league: no league bar there */
+hubHeader=(function(prev){return function(r){let h=prev(r);const hk=hubOf(r);if(hk&&HUBS[hk].lg&&r===HUBS[hk].land)h=h.replace(/<div class="lgbar[\s\S]*<\/div><\/div>$/,"</div>").replace(/(<div class="hpath">[\s\S]*?)(<\/div>)/,`$1<span class="lgall">All leagues</span>$2`);return h;};})(hubHeader);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
