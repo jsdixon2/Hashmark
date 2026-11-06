@@ -2835,7 +2835,7 @@ let VRK=null;
 function srcRank(key){VRK=VRK||{};if(VRK[key])return VRK[key];const isRank=/^ecr_/.test(key);const xs=Object.entries(VAL.v).filter(([,v])=>v[key]!=null&&(isRank||v[key]>0)).sort((a,b)=>isRank?a[1][key]-b[1][key]:b[1][key]-a[1][key]);
   const m={};if(isRank)xs.forEach(([id,v])=>m[id]=v[key]);else xs.forEach(([id],i)=>m[id]=i+1);return VRK[key]=m;}
 const SRCN={dd:"Dynasty Dealer",dd_1q:"Dynasty Dealer",dd_rd_sf:"Dynasty Dealer",dd_rd_1q:"Dynasty Dealer",fc_sf:"FantasyCalc",fc_1q:"FantasyCalc",fc_rd_sf:"FantasyCalc",fc_rd_1q:"FantasyCalc",ra_sf:"RosterAudit",ra_1q:"RosterAudit",dp_sf:"DynastyProcess",dp_1q:"DynastyProcess",ecr_dsf:"FantasyPros",ecr_d:"FantasyPros",ecr_ros:"FantasyPros",ecr_wk:"FantasyPros",model:"Hashmark model"};
-function srcSets(){const sf=S.fmt.qb==="sf",hasDD1=Object.values(VAL.v).some(v=>v.dd_1q!=null);
+function srcSets(){const sf=S.fmt.qb==="sf",hasDD1=Object.values(VAL.v).some(v=>v.dd_1q!=null&&v.dd!=null&&v.dd_1q!==v.dd);
   const dyn=[[sf?"dd":hasDD1?"dd_1q":null,.25],[sf?"fc_sf":"fc_1q",.25],[sf?"dp_sf":"dp_1q",.2],[sf?"ra_sf":"ra_1q",.1],[sf?"ecr_dsf":"ecr_d",.1],["model",.2]].filter(x=>x[0]);
   const ros=[[sf?"dd_rd_sf":"dd_rd_1q",.22],[sf?"fc_rd_sf":"fc_rd_1q",.22],["ecr_ros",.18],["model",.38]];
   return {dyn,ros};}
