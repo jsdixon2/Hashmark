@@ -2673,7 +2673,7 @@ function smartTiles(){const d=new Date().getDay(),live=liveSet(),n=NW.items.leng
   const up=tile("news","Updates",n[0]?esc(n[0].t.length>34?n[0].t.slice(0,33)+"…":n[0].t):"Quiet",n.length?`${n.length} stories for your players`:"No news on your players","news");
   const gd=tile("gameday","Gameday",live.size?"LIVE":`${g} games`,live.size?"Games in progress":"Lines, weather and edges","week");
   let first=up,second=gd;if(live.size||d===0||d===1||d===4)[first,second]=[gd,up];
-  let extra="";if(d===2||d===3){try{const fa=freeAgents().sort((a,b)=>rosN(b)-rosN(a))[0];if(fa)extra=tile("waivers","Waivers",esc(fa.name),"Best add before waivers run","waiv");}catch(e){}}
+  let extra="";if((d===2||d===3)&&S.L&&!S.L.rip){try{const fa=freeAgents().sort((a,b)=>rosN(b)-rosN(a))[0];if(fa)extra=tile("waivers","Waivers",esc(fa.name),"Best add before waivers run","waiv");}catch(e){}}
   return `<div class="tiles">${first}${second}${extra}</div>`;}
 function vOverview(){const live=S.mode==="live",n=S.leagues.filter(L=>!L.rip).length,dead=S.leagues.length-n;let warn=0;S.leagues.forEach(L=>{try{warn+=leagueSummary(L).rev||0;}catch(e){}});
   const L0=liveSet();const mine=new Set();S.leagues.forEach(L=>{if(L.rip)return;const t=L.teams[mineIdx(L)];if(t)t.players.forEach(id=>mine.add(id));});
@@ -3202,6 +3202,20 @@ function cfbdPanel(p){const u=p.use,e=p.ppa;if(!u&&!e)return "";const rows=[];
   return `<section class="pan mt"><div class="row sp"><h2>Usage and efficiency</h2><span class="tag">${esc(String(CFB.season||""))} season</span></div><div class="rkb rkw mt">${rows.join("")}</div><p class="sub mt">Bars are percentiles among college ${p.pos}s; longer is better. Usage is his share of his team’s plays; EPA per play is expected points added, garbage time removed. Source: CollegeFootballData.</p></section>`;}
 vCollege=(function(prev){return function(id){const h=prev(id);const p=CFB&&CFB.p[id];if(!p)return h;const panel=cfbdPanel(p);if(!panel)return h;const k='<section class="pan mt"><h2>Career</h2>';return h.includes(k)?h.replace(k,panel+k):h+panel;};})(vCollege);
 loadOdds();setInterval(()=>{if(!document.hidden)loadOdds();},30*6e4);
+
+/* ===== v28: no suggestions for chopped teams; never suggest players lost for the season ===== */
+function lostSeason(p){if(!p)return false;const s=String(p.inj||"");if(/\b(IR|PUP|NFI|Sus|Suspended)\b/i.test(s))return true;
+  if(p.offRep&&/injured reserve|\bIR\b|season/i.test(p.offRep))return true;if(p.news&&p.news.rep==="season")return true;
+  const ln=p.name;for(const it of (NW.items||[])){if(!it.ts||Date.now()-it.ts>45*864e5||!it.t.includes(ln))continue;if(RX.season.test(it.t)&&!RX.back.test(it.t))return true;}
+  return false;}
+freeAgents=(function(prev){return function(){return prev().filter(p=>!lostSeason(p));};})(freeAgents);
+leagueDigest=(function(prev){return function(L){if(L&&L.rip)return {mv:[],tr:[]};const v=prev(L);return {mv:v.mv.filter(m=>!(m.go&&m.go.startsWith("player-")&&lostSeason(PL[m.go.slice(7)])&&/Free agent|Waiver|Pre-breakout/.test(m.k))),tr:v.tr.filter(x=>!lostSeason(PL[x.id]))};};})(leagueDigest);
+tradeSignals=(function(prev){return function(L){if(L&&L.rip)return {ts:{st:"balanced"},buys:[],sells:[],pre:[],ctx:null};const G=prev(L);const rd=S.fmt.type!=="dynasty";
+  G.buys=G.buys.filter(x=>!(rd&&lostSeason(x.p)));G.sells=G.sells.filter(x=>!(rd&&lostSeason(x.p)));G.pre=G.pre.filter(x=>!lostSeason(x.p));return G;};})(tradeSignals);
+/* GM pages for a chopped league: say so instead of suggesting moves */
+function choppedNote(){const L=S.L;return `<section class="pan"><div class="ripm" style="margin-top:0">R.I.P.</div><p class="sub">You were chopped from ${esc(L.name)}, so there are no moves to make here. Switch leagues above, or follow the chopping block in Team › League.</p><div class="row" style="gap:8px"><button class="btn ghost sm" data-ctx="league">Switch league</button><button class="btn ghost sm" data-go="league">Chopping block</button></div></section>`;}
+const GMR=new Set(["gm","moves","trade","waivers","trends"]);
+render=(function(prev){return function(){prev();const r=route();if(!S.L||!S.L.rip||!(GMR.has(r)||r.startsWith("trade-")))return;const v=$("#view"),hh=v.querySelector(".hubh");v.innerHTML=(hh?hh.outerHTML:"")+choppedNote();};})(render);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
