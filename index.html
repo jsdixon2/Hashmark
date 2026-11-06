@@ -3669,6 +3669,8 @@ DEFS.ss=["Hashmark Start/Sit","Each player’s projection starts from Sleeper’
 const TLF=".bar>i,.pbar>i,.ht>i,.mb>i,.hvb>i,.tsb .bar>i";
 function tlPaint(root){if(!root)return;root.querySelectorAll(TLF).forEach(i=>{const w=parseFloat(i.style.width);if(!isFinite(w))return;
   const box=i.closest("section,.pan,.rtile,.tile,.scard");const h2=box&&box.querySelector("h2,.tn");const inv=!!i.closest(".rkrisk")||/risk|exposure|volatil|chop/i.test(h2?h2.textContent:"");
+  const cap=(i.closest(".tbd")||{}).querySelector?i.closest(".tbd").querySelector(".mcap"):null;
+  if(i.closest(".hvb")||/value breakdown|holdings/i.test(h2?h2.textContent:"")||(cap&&/played/i.test(cap.textContent))){i.style.setProperty("background","var(--accg)","important");return;}
   const v=inv?100-w:w;i.style.setProperty("background",v>=60?"var(--tl-g)":v>=35?"var(--tl-y)":"var(--tl-r)","important");});
   root.querySelectorAll(".score").forEach(s=>{const n=parseFloat(s.textContent);if(!isFinite(n))return;s.classList.remove("good");s.style.color=n>=60?"var(--tl-g)":n>=40?"var(--tl-y)":"var(--tl-r)";});}
 decorate=(function(prev){return function(root){prev(root);try{tlPaint(root);}catch(e){}};})(decorate);
