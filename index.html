@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hashmark</title>
-<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#000000"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Hashmark"><link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#06070A"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Hashmark"><link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Chakra+Petch:wght@500;600;700&family=Exo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Chakra+Petch:wght@500;600;700&family=Exo+2:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:light;--bg:#EDF1FA;--panel:#FFFFFF;--panel2:#F4F6FC;--line:#CDD5EC;--ink:#111936;--muted:#56628D;--amber:#B25E00;--ice:#006F9E;--rose:#BF1D4E;--mint:#0A8763;--violet:#5A3ED4;--onacc:#FFFFFF;--glowA:rgba(178,94,0,.10);--glowB:rgba(0,111,158,.10);
 --fd:"Chakra Petch","Rajdhani","Segoe UI",system-ui,sans-serif;--fb:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
@@ -412,6 +412,47 @@ html.noscroll,html.noscroll body{overflow:hidden;overscroll-behavior:none}
 main{padding-top:8px!important}
 .ctx{top:var(--hh)!important;margin-top:-8px!important;padding:8px 0!important;border-radius:0 0 18px 18px}
 .topline{margin-top:2px}
+
+/* ===== v19: Hashmark brand system — type + color ===== */
+/* Type: Exo 2 everywhere. Wordmark 400 tight; display 700–800; text 400–500; labels 600 caps, wide tracking; numbers tabular. */
+:root{--fd:"Exo 2",system-ui,sans-serif;--fb:"Exo 2",system-ui,sans-serif;
+  --hh:calc(max(10px, env(safe-area-inset-top, 0px)) + 52px);
+  /* Color: graphite neutrals + one signature, "Signal" (aqua) fading to "Iris" (blue-violet). Used sparingly: progress, live, best, selected. */
+  --bg:#F4F5F7;--panel:#FFFFFF;--panel2:#ECEEF2;--line:#DADDE3;--ink:#0B0C10;--muted:#687080;
+  --acc:#0E9F86;--acc2:#4B5BD6;--accg:linear-gradient(90deg,#14B898,#5266E0);--accs:color-mix(in srgb,#0E9F86 14%,transparent);
+  --glowA:rgba(20,184,152,.07);--glowB:rgba(82,102,224,.06)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#06070A;--panel:#13151A;--panel2:#1C1F26;--line:#2A2E37;--ink:#F3F5F8;--muted:#8D94A3;
+  --acc:#5CF2D0;--acc2:#8A93FF;--accg:linear-gradient(90deg,#5CF2D0,#8A93FF);--accs:color-mix(in srgb,#5CF2D0 14%,transparent);--glowA:rgba(92,242,208,.06);--glowB:rgba(138,147,255,.07);--amber:#D1D1D6;--ice:#fff;--onacc:#06070A}}
+:root[data-theme="dark"]{--bg:#06070A;--panel:#13151A;--panel2:#1C1F26;--line:#2A2E37;--ink:#F3F5F8;--muted:#8D94A3;--acc:#5CF2D0;--acc2:#8A93FF;--accg:linear-gradient(90deg,#5CF2D0,#8A93FF);--accs:color-mix(in srgb,#5CF2D0 14%,transparent);--glowA:rgba(92,242,208,.06);--glowB:rgba(138,147,255,.07)}
+body{font-family:var(--fb);background:radial-gradient(120% 60% at 0% 0%,var(--glowA),transparent 60%),radial-gradient(120% 60% at 100% 0%,var(--glowB),transparent 55%),var(--bg) !important;background-attachment:fixed!important;letter-spacing:.005em}
+h1{font:700 30px/1.08 var(--fd)!important;letter-spacing:-.022em}
+h2{font-family:var(--fd)!important;font-weight:650;letter-spacing:-.01em}
+.eyebrow,.mk,.ctxl,.hxk span,.tbl th{font-family:var(--fb)!important;font-weight:600!important;letter-spacing:.16em!important}
+.num,.lsc,.hxk b,.mst b,.stats b,.score,.big,td.num{font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum" 1,"lnum" 1}
+.lsc b,.hxk b,.big{font-weight:800!important;letter-spacing:-.02em}
+button,input,select,textarea{font-family:inherit}
+/* header: fixed height so content always starts right under it */
+.top{box-sizing:border-box;height:var(--hh);padding-bottom:10px!important;align-items:center}
+main{padding-top:10px!important}
+/* signature accents */
+.pbar i,.rkr .bar i.hi,.tsb .bar i,.ht i{background:var(--accg)!important}
+.dock button.on{color:var(--acc)!important}
+.dock button.on svg{filter:drop-shadow(0 0 6px var(--accs))}
+.mode b{background:var(--muted)!important}.mode.live b{background:var(--acc)!important;box-shadow:0 0 0 4px var(--accs)!important}
+.lnk{text-decoration-color:color-mix(in srgb,var(--acc) 70%,transparent)!important}
+.attn{box-shadow:0 0 0 1px color-mix(in srgb,var(--acc) 60%,transparent),0 8px 30px var(--accs)!important}
+.pill.hot{background:var(--accg)!important;color:#06070A!important}
+.grd.gA{background:var(--accg)!important;color:#06070A!important}
+.chart .cl0{stroke:var(--acc)!important}.chart .cd0{fill:var(--acc)!important}.chart .cb.hi,.chart .sd.hi{fill:var(--acc)!important}
+.chart .rp{fill:var(--accs)!important;stroke:var(--acc)!important}.leg i{background:var(--acc)}
+.seg button.on,.subnav button.on{box-shadow:0 0 0 1px color-mix(in srgb,var(--acc) 55%,transparent),0 4px 16px var(--accs)!important}
+.tag.good,.good{color:var(--acc)}
+.hxlab{background:var(--accg);-webkit-background-clip:text;background-clip:text;color:transparent}
+:focus-visible{outline:2px solid var(--acc)!important;outline-offset:2px}
+/* sign-in: same system */
+.gate{background:radial-gradient(90% 55% at 50% 0%,rgba(92,242,208,.10),transparent 60%),radial-gradient(80% 50% at 50% 100%,rgba(138,147,255,.08),transparent 60%),#06070A!important}
+.gate input:focus{box-shadow:0 0 0 2px #5CF2D0!important}
+.gnote::before{content:"";display:block;width:36px;height:2px;margin:0 auto 14px;border-radius:2px;background:linear-gradient(90deg,#5CF2D0,#8A93FF)}
 </style>
 </head>
 <body>
@@ -1327,7 +1368,7 @@ document.addEventListener("click",e=>{
   if(e.target.closest("#dLegal")){closeDrawer();}
 },true);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#drawer").hidden)closeDrawer();});
-function fitHeader(){const h=document.querySelector("header.top");if(h)document.documentElement.style.setProperty("--hh",h.offsetHeight+"px");}
+function fitHeader(){document.documentElement.style.removeProperty("--hh");}
 window.addEventListener("resize",fitHeader);window.addEventListener("load",fitHeader);try{new ResizeObserver(fitHeader).observe(document.querySelector("header.top"),{box:"border-box"});}catch(e){}if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitHeader);window.addEventListener("orientationchange",()=>setTimeout(fitHeader,250));document.addEventListener("visibilitychange",()=>{if(!document.hidden)fitHeader();});
 const _vH3=vHome;
 vHome=function(){const r=route();if(r.startsWith("nfl-"))return _vH3();const L=S.L;if(!L||!L.teams||!L.teams.length)return _vH3();
