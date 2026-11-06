@@ -473,6 +473,7 @@ body{padding-top:0!important}
 .dvr:last-child{border-bottom:0}.dvn{color:var(--muted);font-weight:700;text-align:right}.dvm{min-width:0;display:flex;flex-direction:column;gap:1px}.dvm b{font:700 15px var(--fd)}
 .dvp{font:600 12px var(--fb);color:var(--acc)}.dvs{text-align:right}.dvs b{display:block;font:800 22px var(--fd)}.dvs em{font:600 10px var(--fb);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-style:normal}
 .up{color:var(--acc);font-size:.8em}
+.insr{display:flex;gap:10px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line);font:500 14.5px/1.4 var(--fb)}.insr:last-child{border-bottom:0}.ins{flex:none;font-size:11px;width:14px;text-align:center}.ins.u{color:var(--acc)}.ins.d{color:#FF7A8A}.ins.n{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -2348,6 +2349,54 @@ advPanel=(function(prev){return function(id){let h=prev(id);const a=advOf(PL[id]
   const A=a.ath;if(A){if(A.forty)x.push(kv(A.forty+"s","40-yard dash",A.speed?`speed score ${A.speed}`:""));if(A.vert||A.broad)x.push(kv(`${A.vert||"–"}" / ${A.broad||"–"}"`,"Vertical / broad"));if(A.cone||A.shuttle)x.push(kv(`${A.cone||"–"} / ${A.shuttle||"–"}`,"3-cone / shuttle"));}
   const D=a.draft;if(D)x.push(kv(`Rd ${D.r}`,`Drafted ${D.y}`,`pick ${D.p} · ${D.t}${D.col?" · "+D.col:""}`));
   if(!x.length)return h;const block=`<div class="eyebrow mt">Role, routes and athletic profile</div><div class="hxk">${x.join("")}</div>`;const i=h.indexOf('<div class="rkb rkw');return i>=0?h.slice(0,i)+block+h.slice(i):h;};})(advPanel);
+/* ===== v23: trend insights — specific, quantified, ranked; no filler ===== */
+function advRank(pos,k,v,low){if(v==null)return null;advPct(pos,k,v);const A=ADVP&&ADVP[pos+k];if(!A||A.length<10)return null;const n=A.length;let r=low?A.filter(x=>x<v).length+1:A.filter(x=>x>v).length+1;return {r,n};}
+const rk=(o,pos)=>o&&o.r<=Math.max(12,Math.round(o.n*.15))?` (${ordn(o.r)} among ${pos}s)`:"";
+function nextOpps(p,n){if(typeof NFLS==="undefined"||!NFLS||!p.team)return [];const out=[];for(let w=(S.week||1)+1;w<=18&&out.length<n;w++){const g=NFLS.find(x=>x.wk===w&&(x.a===p.team||x.h===p.team));if(g)out.push(g.a===p.team?g.h:g.a);}return out;}
+function insights(p){if(!p)return [];const a=advOf(p),pos=p.pos,X=[];const add=(sc,dir,t)=>X.push({sc,dir,t});
+  if(a&&a.g>=3){
+    if(a.ts3!=null&&a.ts!=null&&pos!=="QB"&&Math.abs(a.ts3-a.ts)>=.04){const up=a.ts3>a.ts;add(Math.abs(a.ts3-a.ts)*40,up?1:-1,`Target share ${pc(a.ts3)} over his last 3 games, ${up?"up":"down"} from ${pc(a.ts)} on the season${up?rk(advRank(pos,"ts3",a.ts3),pos):""}`);}
+    if(a.snap3!=null&&a.snap!=null&&pos!=="QB"&&Math.abs(a.snap3-a.snap)>=10){const up=a.snap3>a.snap;add(Math.abs(a.snap3-a.snap)/8,up?1:-1,`Snap share ${Math.round(a.snap3)}% over his last 3, ${up?"up":"down"} from ${Math.round(a.snap)}%`);}
+    if(a.fpoe!=null&&Math.abs(a.fpoe)>=2){const up=a.fpoe<0,o=advRank(pos,"fpoe",a.fpoe,up),r=o&&o.r<=10?` — ${ordn(o.r)}-${up?"biggest shortfall":"most"} among ${pos}s`:"";add(Math.abs(a.fpoe)/1.2,up?1:-1,up?`Falling short of his expected points by ${f1(-a.fpoe)} PPR a game${r}`:`Outscoring his expected points by ${f1(a.fpoe)} PPR a game${r}`);}
+    if(a.td!=null&&a.xtd!=null&&Math.abs(a.td-a.xtd)>=2){const hot=a.td>a.xtd;add(Math.abs(a.td-a.xtd)*.9,hot?-1:1,`${a.td} TDs on ${f1(a.xtd)} expected from ${pos==="QB"?"where his throws and runs ended":"where his touches happened"}${hot?"; TD rate rarely holds":"; positive regression likely"}`);}
+    if(a.xfp3!=null&&a.xfp!=null&&Math.abs(a.xfp3-a.xfp)>=3){const up=a.xfp3>a.xfp;add(Math.abs(a.xfp3-a.xfp)/1.5,up?1:-1,`Opportunity ${up?"rising":"falling"}: ${f1(a.xfp3)} expected PPR a game over his last 3 vs ${f1(a.xfp)} on the season`);}
+    if(a.fp3!=null&&a.fp!=null&&a.xfp3!=null&&a.xfp!=null&&a.fp3-a.fp>=4&&a.xfp3-a.xfp<1)add(2.2,-1,`Hot streak without more volume: ${f1(a.fp3)} PPR over his last 3, but expected points flat at ${f1(a.xfp3)}`);
+    if(a.fp3!=null&&a.fp!=null&&a.xfp3!=null&&a.xfp!=null&&a.fp-a.fp3>=4&&a.xfp3>=a.xfp-.5)add(2.2,1,`Cold stretch with volume intact: ${f1(a.fp3)} PPR over his last 3 on ${f1(a.xfp3)} expected`);
+    if(a.rzshare!=null&&a.rzshare>=.25){const o=advRank(pos,"rzshare",a.rzshare);if(o&&o.r<=10)add(1.6,1,`Gets ${pc(a.rzshare)} of his team’s red-zone opportunities${rk(o,pos)}`);}
+    if(pos==="RB"&&a.hvt!=null){const o=advRank(pos,"hvt",a.hvt);if(o&&o.r<=8)add(1.7,1,`${f1(a.hvt)} high-value touches a game (targets + carries inside the 10)${rk(o,pos)}`);}
+    if(a.nopps!=null&&a.opps!=null&&Math.abs(a.nopps-a.opps)>=.05){const up=a.nopps>a.opps;add(1.3,up?1:-1,up?`Bigger role in close games: ${pc(a.nopps)} of team opportunities when the score is close vs ${pc(a.opps)} overall`:`Volume leans on garbage time: ${pc(a.nopps)} share in close games vs ${pc(a.opps)} overall`);}
+    if(a.d3s!=null&&a.d3s>=.3&&pos!=="QB")add(1,1,`Trusted on third down: ${pc(a.d3s)} of his team’s third-down opportunities`);
+    if(a.sep!=null){const o=advRank(pos,"sep",a.sep);if(o&&o.r<=8)add(1.2,1,`${f1(a.sep)} yards of average separation${rk(o,pos)}`);}
+    if(a.yacoe!=null&&Math.abs(a.yacoe)>=1.2)add(1,a.yacoe>0?1:-1,`${a.yacoe>0?"+":""}${f1(a.yacoe)} yards after catch vs expected per reception`);
+    if(a.ryoe!=null&&Math.abs(a.ryoe)>=.6)add(1.2,a.ryoe>0?1:-1,`${a.ryoe>0?"+":""}${f1(a.ryoe)} rushing yards over expected per carry`);
+    if(a.box8!=null&&a.box8>=30&&pos==="RB")add(.8,-1,`Faces 8+ defenders in the box on ${Math.round(a.box8)}% of carries`);
+    if(a.cpoe!=null&&pos==="QB"&&Math.abs(a.cpoe)>=4)add(1.2,a.cpoe>0?1:-1,`${a.cpoe>0?"+":""}${f1(a.cpoe)} completion % over expected`);
+    if(a.catch!=null&&a.catch<=.62&&pos!=="QB")add(1,1,`Only ${pc(a.catch)} of his targets were catchable; better QB play is upside`);
+    if(a.read1!=null&&a.read1>=.7)add(.9,1,`First read on ${pc(a.read1)} of his targets`);
+    const R=pos==="RB"?null:a.routes;if(R){const yp=R.yprr;if(yp>=2.2||yp<=1.1)add(1.4,yp>=2.2?1:-1,`${f1(yp)} yards per route run in ${R.season}${yp>=2.2?" — elite efficiency":" — below starter level"}`);
+      if(R.tprr_man!=null&&R.tprr_zone!=null&&Math.abs(R.tprr_man-R.tprr_zone)>=.06)add(.9,0,`Earns a target on ${pc(R.tprr_man)} of routes vs man and ${pc(R.tprr_zone)} vs zone`);}
+    if(a.prev&&a.prev.fp!=null&&a.fp!=null&&Math.abs(a.fp-a.prev.fp)>=4)add(1,a.fp>a.prev.fp?1:-1,`${f1(a.fp)} PPR a game, ${a.fp>a.prev.fp?"up":"down"} from ${f1(a.prev.fp)} last season${a.prev.xfp!=null&&a.xfp!=null?` (expected ${f1(a.prev.xfp)} → ${f1(a.xfp)})`:""}`);
+    const T=ADV.teams&&ADV.teams[a.team];if(T&&T.proe!=null&&Math.abs(T.proe)>=5&&pos!=="RB")add(.7,T.proe>0?1:-1,`${a.team} passes ${Math.abs(T.proe).toFixed(0)}% ${T.proe>0?"more":"less"} than expected in neutral situations`);
+    if(T&&T.proe!=null&&T.proe<=-5&&pos==="RB")add(.7,1,`${a.team} runs ${Math.abs(T.proe).toFixed(0)}% more than expected in neutral situations`);}
+  // schedule ahead (opponent-adjusted points allowed)
+  const opp=nextOpps(p,3);if(opp.length===3&&POSI.hasOwnProperty(pos)){const i=POSI[pos];const rks=opp.map(o=>DVP[o]?DVP[o][i+1]:null).filter(x=>x!=null);if(rks.length===3){const soft=rks.filter(r=>r<=8).length,hard=rks.filter(r=>r>=25).length;
+    if(soft>=2)add(1.3,1,`Next 3: ${opp.join(", ")} — ${soft} of them among the 8 softest ${pos} defenses`);else if(hard>=2)add(1.3,-1,`Next 3: ${opp.join(", ")} — ${hard} of them among the 8 toughest ${pos} defenses`);}}
+  if(p.prac&&/DNP|LIMITED/i.test(p.prac))add(1.5,-1,`${String(p.prac).toUpperCase()} in practice this week`);
+  return X.sort((x,y)=>y.sc-x.sc).slice(0,6);}
+const GENERIC=/due to rise|should rise|unlikely to last|pace has not|opportunity is there|doesn’t look sustainable|Production sits near|manageable risk/i;
+function insWhy(p,dir){const xs=insights(p).filter(x=>dir==null||x.dir===dir||x.dir===0);return xs.slice(0,2).map(x=>x.t);}
+tradeSignals=(function(prev){return function(L){const G=prev(L);
+  const fix=(arr,dir)=>{for(const b of arr){b.why=b.why.filter(w=>!GENERIC.test(w));const ins=insWhy(b.p,dir).filter(t=>!b.why.includes(t));b.why=ins.slice(0,2).concat(b.why);}};
+  fix(G.buys,1);fix(G.sells,-1);G.buys=G.buys.filter(b=>b.why.length);G.sells=G.sells.filter(b=>b.why.length);return G;};})(tradeSignals);
+verdictCard=(function(prev){return function(id){let h=prev(id);const p=PL[id];if(!p)return h;const ins=insights(p);
+  h=h.replace(/(Scoring [\d.]+ a game against [\d.]+ expected\. His record says production should rise\.|Top-tier value with manageable risk\. Production sits near what the model expects\.)/,ins.length?esc(ins.slice(0,2).map(x=>x.t).join(". "))+".":"");
+  return h.replace("Hold, due to rise","Hold: underperforming");};})(verdictCard);
+gapTagX=(function(prev){return function(r,mine){return prev(r,mine).replace(">Due to rise<",">Underperforming<");};})(gapTagX);
+const _arch23=archetype;archetype=function(p){const a=_arch23(p);if(a[1]==="Normal variance"&&p.rc){const ks=Object.entries(p.rc).filter(([,v])=>v!=null).sort((x,y)=>Math.abs(y[1]-50)-Math.abs(x[1]-50));if(ks[0])a[2]=`Most notable: ${RK_N[ks[0][0]]||ks[0][0]} in the ${ordn(ks[0][1])} percentile at ${p.pos}`;}return a;};
+advPanel=(function(prev){return function(id){return prev(id).replace(/<span class="tag">(Due to rise|Earning it)<\/span>/,(m,t)=>t==="Due to rise"?'<span class="tag">Underperforming</span>':"");};})(advPanel);
+vPlayer=(function(prev){return function(id){const h=prev(id),p=PL[id];const ins=insights(p);if(!ins.length)return h;
+  const panel=`<section class="pan mt"><div class="row sp"><h2>Trends</h2><span class="tag">${ins.length}</span></div>${ins.map(x=>`<div class="insr"><span class="ins ${x.dir>0?"u":x.dir<0?"d":"n"}">${x.dir>0?"▲":x.dir<0?"▼":"◆"}</span><span>${esc(x.t)}</span></div>`).join("")}</section>`;
+  const i=h.indexOf('<section class="pan mt"><div class="row sp"><h2>Advanced metrics</h2>');return i>=0?h.slice(0,i)+panel+h.slice(i):h+panel;};})(vPlayer);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
