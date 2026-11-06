@@ -730,6 +730,7 @@ main{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
 .sheet{z-index:70!important}.toast{z-index:80!important}
 .sheet.infop .card{max-width:440px;cursor:pointer}
 @media (min-width:900px){.sheet.infop .card{width:min(440px,92vw)!important}}
+.swdiv{font:650 10.5px var(--fb);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:14px 4px 6px;border-top:1px solid var(--line);margin-top:6px}.swr.rip{opacity:.6}
 </style>
 </head>
 <body>
@@ -1776,7 +1777,7 @@ const NOCTX=/^(home|news|moves|trends|stats|legal|connect|week|nfl-)/;
 function ctxBar(r){if(!S.L||NOCTX.test(r))return "";const multi=S.leagues.length>1,isT=r.startsWith("team-");if(!multi&&!isT)return "";
   const ti=isT?+r.slice(5):null,t=isT?S.L.teams[ti]:null;
   return `<div class="ctx">${multi?`<button class="ctxb" data-ctx="league" aria-label="Switch league"><span class="ctxl">League</span><span class="ctxv ell">${esc(S.L.name)}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>`:""}${t?`<button class="ctxb" data-ctx="team" aria-label="Switch team"><span class="ctxl">Team</span><span class="ctxv ell">${esc(t.name)}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>`:""}</div>`;}
-function leagueSheet(){openSheet("Switch league",`<div class="swl">${S.leagues.map(L=>{const t=L.teams[mineIdx(L)],on=L===S.L;return `<button class="swr${on?" on":""}" data-swl="${esc(L.id)}"><span class="swt"><b class="ell">${esc(L.name)}</b><span class="sub ell">${esc(t?t.name:"")} · ${t?t.w+"-"+t.l:""} · ${esc(TYPELBL(L))}</span></span>${on?`<span class="tag">Current</span>`:CHEV}</button>`;}).join("")}</div><p class="sub mt">You stay on this page; it reloads for the league you pick.</p>`);}
+function leagueSheet(){const ord=S.leagues.filter(L=>!L.rip).concat(S.leagues.filter(L=>L.rip));openSheet("Switch league",`<div class="swl">${ord.map((L,i)=>{const t=L.teams[mineIdx(L)],on=L===S.L;return `${L.rip&&(i===0||!ord[i-1].rip)?`<div class="swdiv">Eliminated</div>`:""}<button class="swr${on?" on":""}${L.rip?" rip":""}" data-swl="${esc(L.id)}"><span class="swt"><b class="ell">${esc(L.name)}</b><span class="sub ell">${esc(t?t.name:"")} · ${t?t.w+"-"+t.l:""} · ${esc(TYPELBL(L))}</span></span>${on?`<span class="tag">Current</span>`:L.rip?`<span class="tag">R.I.P.</span>`:CHEV}</button>`;}).join("")}</div><p class="sub mt">You stay on this page; it reloads for the league you pick.</p>`);}
 function teamSheet(){const L=S.L,r=route(),cur=+r.slice(5),me=mineIdx(L);const ord=L.teams.map((t,i)=>({t,i,s:standing(L,i).r})).sort((a,b)=>a.s-b.s);
   openSheet("Switch team",`<div class="swl">${ord.map(({t,i,s})=>`<button class="swr${i===cur?" on":""}" data-swt="${i}"><span class="swt"><b class="ell">${esc(t.name)}${i===me?" <span class='tag good'>you</span>":""}</b><span class="sub ell">${ordn(s)} · ${t.w}-${t.l} · ${esc(t.owner||"")}</span></span>${i===cur?`<span class="tag">Viewing</span>`:CHEV}</button>`).join("")}</div>`);}
 function switchLeague(id){const L=S.leagues.find(l=>l.id===id);if(!L)return;closeSheet();if(L===S.L)return;const r=route();selectLeague(id);
