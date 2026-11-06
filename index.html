@@ -811,6 +811,17 @@ html{overscroll-behavior-y:none}
 main{padding-top:calc(var(--chh,62px) + 10px)!important}
 html{scroll-padding-top:calc(var(--chh,62px) + 12px)}
 @media (min-width:1100px){#chrome{left:var(--sw);margin-left:0!important}#hubslot .hxpin{padding:6px max(32px,calc((100vw - var(--sw) - 1180px)/2)) 12px!important}}
+.ssc{padding:12px 0;border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)}
+.sst{font:600 15px var(--fd);min-width:0}.sst b{cursor:pointer;font-weight:800;border-bottom:1px dotted var(--muted)}
+.ssb{display:grid;grid-template-columns:minmax(0,42%) 1fr auto;gap:10px;align-items:center;margin-top:7px;font-size:13px}
+.ssn{display:flex;gap:6px;align-items:center;min-width:0}
+.ssrg{position:relative;height:10px;border-radius:5px;background:var(--panel2)}
+.ssrg .rng{position:absolute;top:2px;bottom:2px;border-radius:3px;background:color-mix(in srgb,var(--muted) 35%,transparent)}
+.ssrg .pt{position:absolute;top:-2px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--muted);box-shadow:0 0 0 2px var(--panel)}
+.ssrg .pt.w{background:var(--acc)}
+.ssb b{min-width:3em;text-align:right}
+.cf.muted{background:var(--panel2);color:var(--muted)}
+.ssc .why{margin-top:8px}
 </style>
 </head>
 <body>
@@ -3577,6 +3588,62 @@ window.addEventListener("resize",()=>centerTabs());
 /* fixed (not sticky) chrome: measure its height and pad the page; My stats league tabs join it */
 (function(){const c=document.getElementById("chrome");if(!c)return;const set=()=>document.documentElement.style.setProperty("--chh",c.offsetHeight+"px");try{new ResizeObserver(set).observe(c);}catch(e){window.addEventListener("resize",set);}set();})();
 shellPost=(function(prev){return function(){prev();const slot=document.getElementById("hubslot");if(!slot)return;const px=document.querySelector("#view .hxpin");if(px&&!slot.children.length){slot.appendChild(px);}};})(shellPost);
+
+/* ===== v33: Hashmark Start/Sit model — "start X over Y" with projections, trends, matchups and markets ===== */
+function hmProj(p){if(!p)return null;const g=gameOf(p);if(g&&g.bye)return {m:0,sd:0,f:[{t:"On bye",v:-99}],bye:true};
+  if(p.inj&&OUTRX.test(p.inj))return {m:0,sd:0,f:[{t:`${statusWord(p.inj).replace(/^is /,"")}`,v:-99}],out:true};
+  const F=[],a=p.adv||{},base=p.proj!=null?p.proj:rosPPG(p);let m=base;const add=(v,t)=>{if(t)F.push({t,v});};
+  // recent form (last 3 games) vs season
+  const lg=(p.log||[]).slice(-3).map(x=>x.pts);if(lg.length>=2&&p.ppg){const l3=lg.reduce((s,x)=>s+x,0)/lg.length,d=Math.max(-.2,Math.min(.2,(l3-p.ppg)/Math.max(4,p.ppg)));m*=1+d*.35;if(Math.abs(d)>=.12)add(d,`${d>0?"Hot":"Cold"}: ${f1(l3)} a game over his last ${lg.length} (season ${f1(p.ppg)})`);}
+  // opportunity trend
+  if(a.xfp3!=null&&a.fp){const sc=Math.max(.6,Math.min(1.6,(p.ppg||a.fp)/a.fp)),x=a.xfp3*sc,d=Math.max(-.2,Math.min(.2,(x-m)/Math.max(5,m)));m*=1+d*.3;if(Math.abs(d)>=.1)add(d,d>0?`Usage lately is worth ${f1(x)} a game, more than his projection`:`Usage lately is worth only ${f1(x)} a game, less than his projection`);}
+  if(a.ts3!=null&&a.ts!=null&&p.pos!=="QB"&&Math.abs(a.ts3-a.ts)>=.04)add((a.ts3-a.ts)*2,`Target share ${pc(a.ts)} → ${pc(a.ts3)} over the last 3`);
+  if(a.snap3!=null&&a.snap!=null&&p.pos!=="QB"&&Math.abs(a.snap3-a.snap)>=8)add((a.snap3-a.snap)/100,`Snap share ${Math.round(a.snap)}% → ${Math.round(a.snap3)}% over the last 3`);
+  // matchup and game environment
+  const mu=matchup(p);if(mu&&!mu.bye){if(mu.rank!=null){const d=(16.5-mu.rank)/16;m*=1+d*.08;if(mu.rank<=8||mu.rank>=25)add(d*.6,`${mu.home?"vs":"at"} ${mu.opp}, ${mu.rank<=8?"#"+mu.rank+" softest":"#"+(33-mu.rank)+" toughest"} defense against ${p.pos}s`);}
+    if(mu.imp!=null){const d=(mu.imp-22.5)/22.5;m*=1+d*.25;if(Math.abs(d)>=.12)add(d*.6,`Team implied for ${f1(mu.imp)} points`);}
+    const w=mu.g;if(w&&w.w!=null&&p.pos!=="RB"&&(w.w>=15||(w.g||0)>=25)){m*=.94;add(-.06,`Wind ${w.w} mph at kickoff`);}if(w&&w.pop>=60&&p.pos!=="RB"){m*=.97;add(-.03,`${w.pop}% chance of rain`);}}
+  // betting market
+  const pr=typeof propsOf==="function"?propsOf(p):null;if(pr){const sc=(S.L&&S.L.scoring)||{rec:1,rec_yd:.1,rush_yd:.1,pass_yd:.04,rec_td:6,rush_td:6,pass_td:4};let mk=0,n=0;
+    if(pr.rec!=null){mk+=pr.rec*(sc.rec_yd??.1)+(pr.rec/11.5)*(sc.rec??1);n++;}if(pr.rush!=null){mk+=pr.rush*(sc.rush_yd??.1);n++;}if(pr.pass!=null){mk+=pr.pass*(sc.pass_yd??.04)+1.6*(sc.pass_td??4);n++;}if(pr.atd!=null)mk+=pr.atd*6;
+    if(n){m=m*.7+mk*.3;const d=(mk-base)/Math.max(5,base);if(Math.abs(d)>=.1)add(d*.8,`Sportsbooks imply about ${f1(mk)} points${pr.atd!=null?` (${Math.round(pr.atd*100)}% to score)`:""}`);}
+    else if(pr.atd!=null&&pr.atd>=.45)add(.08,`${Math.round(pr.atd*100)}% anytime-TD odds`);}
+  // availability
+  if(p.inj){const s=p.inj.toLowerCase();if(/doubt/.test(s)){m*=.35;add(-.6,"Listed doubtful");}else if(/quest/.test(s)){m*=.88;add(-.12,"Listed questionable");}}
+  const pr2=String(p.prac||"").toUpperCase();if(/DNP|DID NOT/.test(pr2)){m*=.9;add(-.1,"Did not practice");}else if(/LIMITED/.test(pr2)){m*=.97;add(-.03,"Limited in practice");}
+  const sd=Math.max(2.5,m*Math.min(.75,Math.max(.3,p.cv||.45)));return {m:Math.max(0,m),sd,f:F,base};}
+function locked(p){if(!p)return false;const g=gameOf(p);if(g&&g.final)return true;try{return liveSet().has(p.id);}catch(e){return false;}}
+const phiSS=x=>1/(1+Math.exp(-1.702*x));
+function ssRecs(L){let W=null;try{const M=myMatchup(L);W=M&&M.A;}catch(e){}if(!W)W=teamWeek(L,mineIdx(L));
+  const cur=W.rows.filter(r=>r.p).map(r=>r.p),pool=cur.concat(W.bench).filter(p=>p&&POSI.hasOwnProperty(p.pos));const H=new Map(pool.map(p=>[p.id,hmProj(p)]));const hv=p=>(H.get(p.id)||{m:0}).m;
+  // best lineup by Hashmark projection (locked players stay where they are)
+  const slots=W.rows.map(r=>r.slot),used=new Set(),opt=new Map();W.rows.forEach((r,i)=>{if(r.p&&locked(r.p)){opt.set(i,r.p);used.add(r.p.id);}});
+  const order=slots.map((s,i)=>i).filter(i=>!opt.has(i)).sort((a,b)=>ELIG[slots[a]].length-ELIG[slots[b]].length);
+  for(const i of order){const c=pool.filter(p=>!used.has(p.id)&&!locked(p)&&ELIG[slots[i]].includes(p.pos)).sort((a,b)=>hv(b)-hv(a))[0];if(c){opt.set(i,c);used.add(c.id);}}
+  const optSet=new Set([...opt.values()].map(p=>p.id)),curSet=new Set(cur.map(p=>p.id));
+  const ins=[...optSet].filter(id=>!curSet.has(id)).map(id=>PL[id]).sort((a,b)=>hv(b)-hv(a)),outs=cur.filter(p=>!optSet.has(p.id)&&!locked(p)).sort((a,b)=>hv(a)-hv(b));
+  const swaps=[];const left=outs.slice();for(const s of ins){let k=left.findIndex(o=>o.pos===s.pos);if(k<0)k=left.findIndex(o=>W.rows.some(r=>r.p===o&&ELIG[r.slot].includes(s.pos)));if(k<0)k=0;const o=left.splice(k,1)[0];if(o)swaps.push(pair(s,o));}
+  // close calls: current starters with a bench option within 1.5 points
+  const close=[];for(const r of W.rows){const p=r.p;if(!p||locked(p)||!optSet.has(p.id))continue;const alt=W.bench.filter(b=>b&&!locked(b)&&!optSet.has(b.id)&&ELIG[r.slot].includes(b.pos)).sort((a,b)=>hv(b)-hv(a))[0];if(alt&&hv(p)-hv(alt)<=1.5&&hv(alt)>0)close.push(pair(p,alt));}
+  close.sort((a,b)=>Math.abs(a.d)-Math.abs(b.d));
+  return {swaps,close:close.slice(0,3),H,W};
+  function pair(a,b){const A=H.get(a.id),B=H.get(b.id),d=A.m-B.m,pw=phiSS(d/Math.sqrt(A.sd*A.sd+B.sd*B.sd||1));
+    const fa=A.f.map(x=>({...x,who:a})),fb=B.f.map(x=>({...x,who:b}));const why=fa.filter(x=>x.v>0).concat(fb.filter(x=>x.v<0)).sort((x,y)=>Math.abs(y.v)-Math.abs(x.v)).slice(0,3);
+    const against=fa.filter(x=>x.v<0).concat(fb.filter(x=>x.v>0)).sort((x,y)=>Math.abs(y.v)-Math.abs(x.v))[0];
+    return {a,b,A,B,d,pw,why,against,conf:pw>=.7?["Strong","good"]:pw>=.58?["Lean",""]:["Toss-up","muted"]};}}
+function ssCard(x,close){const ln=p=>esc(p.name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/,"").split(" ").slice(-1)[0]);const mx=Math.max(x.A.m+x.A.sd,x.B.m+x.B.sd,1);
+  const bar=(p,P,win)=>`<div class="ssb"><span class="ssn ell">${pos(p.pos)} ${esc(p.name)}</span><span class="ssrg"><i class="rng" style="left:${(Math.max(0,P.m-P.sd)/mx*100).toFixed(1)}%;width:${(Math.min(mx,P.m+P.sd)-Math.max(0,P.m-P.sd))/mx*100}%"></i><i class="pt${win?" w":""}" style="left:${(P.m/mx*100).toFixed(1)}%"></i></span><b class="num${win?" good":""}">${f1(P.m)}</b></div>`;
+  return `<div class="ssc"><div class="row sp"><div class="sst">${close?"Close call: keep":"Start"} <b data-go="player-${x.a.id}">${ln(x.a)}</b> over <b data-go="player-${x.b.id}">${ln(x.b)}</b></div><span class="cf ${x.conf[1]}">${x.conf[0]} · ${Math.round(x.pw*100)}%</span></div>
+   ${bar(x.a,x.A,true)}${bar(x.b,x.B,false)}
+   ${x.why.length?`<ul class="why">${x.why.map(w=>`<li><b>${ln(w.who)}:</b> ${esc(w.t)}</li>`).join("")}</ul>`:""}${x.against&&x.pw<.7?`<p class="sub" style="margin:4px 0 0">${x.against.who===x.b?`In ${ln(x.b)}’s favor`:`Working against ${ln(x.a)}`}: ${esc(x.against.t.charAt(0).toLowerCase()+x.against.t.slice(1))}.</p>`:""}</div>`;}
+startSit=function(){const L=S.L;if(!L||L.rip)return "";let R;try{R=ssRecs(L);}catch(e){console.error(e);return "";}let al=[];try{al=alertsFor(R.W).filter(a=>a.lvl==="bad"&&/Empty/.test(a.msg));}catch(e){}
+  const sw=R.swaps,cl=R.close;
+  return `<section class="pan"><div class="row sp"><h2>Start/Sit</h2><span class="tag">Hashmark model ${info("ss")}</span></div>
+   ${al.map(a=>`<div class="ssr"><span class="pill hot">Fix</span><div><div class="t">${esc(a.msg)}</div>${a.fix?`<div class="s">${esc(a.fix)}</div>`:""}</div></div>`).join("")}
+   ${sw.length?`<p class="sub" style="margin:2px 0 8px">Hashmark recommends ${sw.length} change${sw.length===1?"":"s"}. Moving players who already played isn’t possible, so they’re left out.</p>${sw.map(x=>ssCard(x,false)).join("")}`:`<p class="sub" style="margin:2px 0 8px"><b class="good">Your lineup is already Hashmark’s best lineup.</b></p>`}
+   ${cl.length?`<div class="eyebrow mt">Closest calls</div>${cl.map(x=>ssCard(x,true)).join("")}`:""}
+   <p class="sub mt">Dot: Hashmark projection. Bar: likely range. Percent: chance the first player outscores the second.</p></section>`;};
+DEFS.ss=["Hashmark Start/Sit","Each player’s projection starts from Sleeper’s weekly projection in your scoring, then adjusts for recent form, usage trends (targets, snaps, expected points), the opponent’s defense against his position, his team’s implied points, weather, sportsbook player lines and practice or injury status. The percentage is the chance the recommended player outscores the other, from both players’ projections and how much each one’s scoring usually swings."];
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
