@@ -784,6 +784,14 @@ main{padding-bottom:calc(96px + var(--dockb))!important}
 .toast{bottom:calc(var(--dockb) + 80px)!important}
 @media (min-width:1100px){main{padding-bottom:56px!important}.toast{bottom:28px!important}}
 .dock{grid-template-columns:repeat(5,1fr)!important}
+/* pinned chrome: app bar + hub header move as one */
+#chrome{position:sticky;top:0;z-index:40}
+#chrome .top{position:relative!important;top:auto!important}
+#hubslot .hubh{position:relative!important;top:auto!important;margin:0!important;padding:8px 16px 8px!important}
+#hubslot:empty{display:none}
+html{overscroll-behavior-y:none}
+@media (hover:none){body{background-attachment:scroll!important}}
+@media (min-width:1100px){#chrome{margin-left:var(--sw)}#chrome .top{margin-left:0!important}#hubslot .hubh{padding:14px max(32px,calc((100vw - var(--sw) - 1180px)/2)) 12px!important}}
 </style>
 </head>
 <body>
@@ -3532,6 +3540,10 @@ function pickStartLeague(last){if(!S.leagues.length)return;const alive=S.leagues
   const want=alive.find(L=>L.id===last)||alive[0];if(S.L!==want)selectLeague(want.id);if(last&&!alive.some(L=>L.id===last)&&S.leagues.some(L=>L.id===last))LS.set("hm_lastlg",want.id);else if(last)LS.set("hm_lastlg",last);
   try{const st=history.state;if(st&&st.lg&&st.lg!==S.L.id)history.replaceState(Object.assign({},st,{lg:S.L.id}),"");}catch(e){}}
 connectSleeper=(function(prev){return async function(u){const saved=S.L&&S.mode==="live"?S.L.id:LS.get("hm_lastlg");const r=await prev(u);try{chopCheck();pickStartLeague(saved);}catch(e){}return r;};})(connectSleeper);
+
+/* one pinned block for the app bar and the hub header, so they can't drift apart while scrolling */
+(function(){const top=document.querySelector("header.top");if(!top||document.getElementById("chrome"))return;const c=document.createElement("div");c.id="chrome";top.parentNode.insertBefore(c,top);c.appendChild(top);const s=document.createElement("div");s.id="hubslot";c.appendChild(s);})();
+shellPost=(function(prev){return function(){prev();const slot=document.getElementById("hubslot");if(!slot)return;const hh=document.querySelector("#view .hubh");slot.replaceChildren();if(hh)slot.appendChild(hh);};})(shellPost);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
