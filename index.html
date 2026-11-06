@@ -925,6 +925,10 @@ html{scroll-padding-top:calc(var(--chh,62px) + 12px)}
 .wrth1{font-size:14.5px}.wrth1 b{font:800 15px var(--fd)}.wrlink{font-weight:700;cursor:pointer;border-bottom:1px dotted var(--muted)}
 .wrt .sub{margin:2px 0 0;font-size:12.5px}.wrnum{font:650 12.5px var(--fb);margin-top:3px;font-variant-numeric:tabular-nums}
 .meta .trend{color:var(--tl-g);font-weight:650}
+html.kbopen .dock{opacity:0;pointer-events:none;transform:translateY(120%)!important;transition:transform .15s,opacity .15s}
+.dock{transition:transform .2s,opacity .2s}
+.tabs{scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.livep.lvs{margin:0 6px;vertical-align:1px}
 </style>
 </head>
 <body>
@@ -1276,7 +1280,7 @@ function alertHtml(a,link){return `<div class="alert${link&&a.id?" tap":""}"${li
 function ranksFor(L){const od=oddsFor(L);const ix=L.teams.map((_,i)=>i);const st=ix.slice().sort((a,b)=>(L.teams[b].w-L.teams[a].w)||(L.teams[b].pf-L.teams[a].pf));const pw=ix.slice().sort((a,b)=>od[b].str-od[a].str);
   return ix.map(i=>({st:st.indexOf(i)+1,pw:pw.indexOf(i)+1,po:od[i].po}));}
 function posEdges(A,B){const ps=["QB","RB","WR","TE"];const mx=Math.max(...ps.map(k=>Math.abs(A.byPos[k]-B.byPos[k])),1);
-  return ps.map(k=>{const d=A.byPos[k]-B.byPos[k];return `<div class="dv"><b>${k}</b><div class="l">${d<0?`<i style="width:${(Math.abs(d)/mx*100).toFixed(0)}%"></i>`:""}</div><div class="r">${d>0?`<i style="width:${(d/mx*100).toFixed(0)}%"></i>`:""}</div><span class="num ${d<0?"bad":"good"}">${d>0?"+":""}${f1(d)}</span></div>`;}).join("");}
+  return ps.map(k=>{const d=A.byPos[k]-B.byPos[k];return `<div class="dv"><b>${k}</b><div class="l">${d<0?`<i style="width:${(Math.abs(d)/mx*100).toFixed(0)}%"></i>`:""}</div><div class="r">${d>0?`<i style="width:${(d/mx*100).toFixed(0)}%"></i>`:""}</div><span class="num ${Math.abs(d)<.05?"":d<0?"bad":"good"}">${d>0.05?"+":""}${Math.abs(d)<.05?"even":f1(d)}</span></div>`;}).join("");}
 function mBox(li){const L=S.leagues[li];const M=myMatchup(L);
   if(!M)return `<div class="pan"><div class="row sp"><h3>${esc(L.name)}</h3><button class="chip" data-league="${esc(L.id)}">League hub</button></div><p class="sub">No Week ${S.week} matchup found.</p></div>`;
   const {A,B,wpA}=M;const rk=ranksFor(L);const al=alertsFor(A);const need=al.filter(a=>a.lvl!=="info");const info=al.filter(a=>a.lvl==="info");
@@ -1466,7 +1470,7 @@ function vTrade(){const T=S.trade,L=S.L;
   <div class="tradeg mt">${side("a","You give")}${side("b","You get")}</div>
   ${has?`<section class="pan mt verdict"><svg viewBox="0 0 300 80" width="100%" style="max-width:420px" role="img" aria-label="Trade balance"><polygon points="150,48 136,76 164,76" fill="var(--amber)"/><g transform="rotate(${(-ang).toFixed(1)} 150 46)"><rect x="20" y="42" width="260" height="6" rx="3" fill="var(--ice)"/><rect x="24" y="${T.a.length?18:36}" width="${Math.min(70,20+T.a.length*12)}" height="${T.a.length?24:6}" fill="var(--rose)" opacity=".85"/><rect x="${276-Math.min(70,20+T.b.length*12)}" y="${T.b.length?18:36}" width="${Math.min(70,20+T.b.length*12)}" height="${T.b.length?24:6}" fill="var(--mint)" opacity=".85"/></g></svg>
     <div class="v">${vn[1]}</div><p>${ag<.03?vn[2]:`Edge: <b>${gap>0?"you":"them"}</b>, by ${pc(ag)} of the bigger side. ${vn[2]}`}</p>
-    <div class="grid4 mt" style="text-align:left"><div><div class="sub">Win-now points you add</div><b class="${now(T.b)-now(T.a)>=0?"good":"bad"}">${f1(now(T.b)-now(T.a))}</b></div><div><div class="sub">Future value you add</div><b class="${fut(T.b)-fut(T.a)>=0?"good":"bad"}">${f1(fut(T.b)-fut(T.a))}</b></div><div><div class="sub">Risk you send</div><b>${rk(T.a)==null?"–":tierOf(rk(T.a))[1]}</b></div><div><div class="sub">Risk you take on</div><b>${rk(T.b)==null?"–":tierOf(rk(T.b))[1]}</b></div></div></section>${fit}${bal}`:""}
+    <div class="grid4 mt" style="text-align:left"><div><div class="sub">Win-now points you add</div><b class="${Math.abs(now(T.b)-now(T.a))<.05?"":now(T.b)-now(T.a)>0?"good":"bad"}">${f1(now(T.b)-now(T.a))}</b></div><div><div class="sub">Future value you add</div><b class="${Math.abs(fut(T.b)-fut(T.a))<.05?"":fut(T.b)-fut(T.a)>0?"good":"bad"}">${f1(fut(T.b)-fut(T.a))}</b></div><div><div class="sub">Risk you send</div><b>${rk(T.a)==null?"–":tierOf(rk(T.a))[1]}</b></div><div><div class="sub">Risk you take on</div><b>${rk(T.b)==null?"–":tierOf(rk(T.b))[1]}</b></div></div></section>${fit}${bal}`:""}
   <p class="sub mt">Trend window: ${S.trendFrom}–present. Inputs used: production, projections, age, games missed, injury tags, weekly volatility, schedule, lineup fit. Not wired in yet: player props, Next Gen Stats, contracts.</p>`;}
 function vConnect(){return vConnect0()+LEGAL;}function vConnect0(){const live=S.mode==="live";
   return `<h1>Link Sleeper</h1><section class="pan mt">${S.canLive?`<p>Enter your Sleeper username. Hashmark reads your leagues, rosters, scoring settings, matchups and weekly box scores from Sleeper’s public API, then rescores every stat to each league’s exact settings.</p>
@@ -2970,7 +2974,7 @@ function shellPost(){const r=route(),v=$("#view"),hk=hubOf(r);if(!v)return;
   $("#backBtn").hidden=NAV.length<=1||r===(HUBS[hk]||{}).land&&!["team","gm","scout"].includes(r);
   document.querySelectorAll(".dock [data-hub]").forEach(b=>b.classList.toggle("on",b.dataset.hub===hk));
   decorate(v);}
-function decorate(root){const live=liveSet();root.querySelectorAll('[data-go^="player-"]').forEach(el=>{const id=el.dataset.go.slice(7);if(el.closest(".livestrip,.pay,.why,.rtile,.tile,.hold,.fx"))return;if(live.has(id)&&!el.querySelector(".livep")){const v=live.get(id);const s=document.createElement("span");s.className="livep";s.textContent=v!=null?`LIVE ${f1(v)}`:"LIVE";(el.querySelector(".nm,.tsn>b,.name")||el.querySelector("b:not(.jn):not(.ji)")||el).appendChild(s);}});
+function decorate(root){const live=liveSet();root.querySelectorAll('[data-go^="player-"]').forEach(el=>{const id=el.dataset.go.slice(7);if(el.closest(".livestrip,.pay,.why,.rtile,.tile,.hold,.fx"))return;if(live.has(id)&&!el.querySelector(".livep")){const v=live.get(id);const s=document.createElement("span");s.className="livep";s.textContent=v!=null?`LIVE ${f1(v)}`:"LIVE";if(el.classList.contains("lnk")&&el.lastElementChild&&el.children.length>=3){s.classList.add("lvs");const last=el.lastElementChild;if(el.style.textAlign==="right")last.appendChild(s);else last.prepend(s);}else(el.querySelector(".nm,.tsn>b,.name")||el.querySelector("b:not(.jn):not(.ji)")||el).appendChild(s);}});
   root.querySelectorAll(".chart,.tblw").forEach(el=>{if(el.closest("#psheet .exp"))return;el.classList.add("expandable");});}
 
 /* ---------- dock: 4 hubs ---------- */
@@ -3681,7 +3685,7 @@ connectSleeper=(function(prev){return async function(u){const saved=S.L&&S.mode=
 shellPost=(function(prev){return function(){prev();const slot=document.getElementById("hubslot");if(!slot)return;const hh=document.querySelector("#view .hubh");slot.replaceChildren();if(hh)slot.appendChild(hh);};})(shellPost);
 
 /* tab bars: keep the selected tab in view, show edge fades when more tabs are off-screen */
-const TABBARS=".htabs,.seg,.hxseg,.ptabs";
+const TABBARS=".htabs,.seg,.hxseg,.ptabs,.tabs";
 function tabFade(sc){const m=sc.scrollWidth-sc.clientWidth;sc.classList.toggle("fl",sc.scrollLeft>4);sc.classList.toggle("fr",m>4&&sc.scrollLeft<m-4);}
 function centerTabs(root){(root||document).querySelectorAll(TABBARS).forEach(sc=>{const on=sc.querySelector("button.on");if(on&&sc.scrollWidth>sc.clientWidth){const a=sc.getBoundingClientRect(),b=on.getBoundingClientRect();const want=sc.scrollLeft+(b.left-a.left)-(a.width-b.width)/2;sc.scrollLeft=Math.max(0,Math.min(sc.scrollWidth-sc.clientWidth,want));}tabFade(sc);});}
 render=(function(prev){return function(){prev();centerTabs();};})(render);
@@ -4039,6 +4043,15 @@ function roleAvail(p){if(!p)return 1;const a=p.adv||{},dc=+(p.dc||a.dc||0);let r
   return {r,why};}
 neutral=(function(prev){return function(p){const n=prev(p);if(!n)return n;const A=roleAvail(p);return A.r<1?Object.assign({},n,{ppg:n.ppg*A.r,role:A.why}):n;};})(neutral);
 rosPPG=(function(prev){return function(p){const v=prev(p);const A=roleAvail(p);return A.r<1?v*A.r:v;};})(rosPPG);
+
+/* iOS: keep the dock in place around the keyboard and pickers */
+(function(){const vv=window.visualViewport,root=document.documentElement;
+  const kb=()=>{const open=!!vv&&vv.height<window.innerHeight*.78;root.classList.toggle("kbopen",open);};
+  if(vv){vv.addEventListener("resize",kb);vv.addEventListener("scroll",kb);}
+  const settle=()=>setTimeout(()=>{kb();if(!root.classList.contains("kbopen")){const y=window.scrollY;window.scrollTo(window.scrollX,y+1);window.scrollTo(window.scrollX,y);}},120);
+  document.addEventListener("focusout",e=>{if(e.target&&e.target.matches&&e.target.matches("input,select,textarea"))settle();},true);
+  document.addEventListener("change",e=>{if(e.target&&e.target.matches&&e.target.matches("select"))settle();},true);
+  window.addEventListener("orientationchange",settle);})();
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
