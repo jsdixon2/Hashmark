@@ -735,7 +735,7 @@ main{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
 .hxover{margin-top:6px;font:500 13px var(--fb);color:var(--muted)}.lnk2{all:unset;cursor:pointer;font-weight:700;color:var(--ink);border-bottom:1px dotted var(--muted)}
 @media (min-width:1100px){.hxpin{margin:0 calc(-1*max(32px,calc((100vw - var(--sw) - 1180px)/2))) 6px!important;padding:10px max(32px,calc((100vw - var(--sw) - 1180px)/2)) 12px!important}}
 /* no sideways page drift; icons always sized */
-html,body{overflow-x:clip}main{overflow-x:clip;max-width:100vw}
+main{overflow-x:clip;max-width:100vw}
 svg.chev{width:16px!important;height:16px!important;flex:none;color:var(--muted)}
 .tsr>svg,.act>svg,.nflr>svg,.swr>svg,.prow>svg,.lrow>svg{width:16px;height:16px;flex:none}
 .urv{margin-left:auto;flex:none;display:flex;flex-direction:column;align-items:flex-end;padding-left:8px}.urv b{font:800 15px var(--fd);color:var(--acc)}.urv .sub{margin:0;font-size:10.5px;white-space:nowrap}
@@ -878,6 +878,15 @@ html{scroll-padding-top:calc(var(--chh,62px) + 12px)}
 .own{font-weight:650}.own.mine{color:var(--acc)}.own.avail{color:var(--tl-g)}.own.other{color:var(--muted)}
 .tiles.big.t3{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (min-width:1100px){.tiles.big.t3{grid-template-columns:repeat(3,minmax(0,1fr))}.pinctl{padding:2px max(32px,calc((100vw - var(--sw) - 1180px)/2)) 10px}.pinctl .seg{flex-wrap:nowrap!important;overflow-x:auto!important}}
+/* dock on its own layer (iOS fixed-position stability) */
+.dock{transform:translateZ(0);-webkit-transform:translateZ(0);will-change:transform}
+/* collapsing header */
+.hsum{all:unset;display:none;box-sizing:border-box;cursor:pointer;width:100%;align-items:center;gap:8px;padding:6px 16px 9px;font:650 13px var(--fb);color:var(--ink)}
+.hsum .ell{flex:1;min-width:0}.hsum i{font-style:normal;color:var(--muted);margin:0 6px}.hsum svg{flex:none;width:16px;height:16px;color:var(--muted)}
+#chrome.compact #hubslot{display:none}
+#chrome.compact .hsum{display:flex;animation:hsin .18s ease}
+@keyframes hsin{from{opacity:0;transform:translateY(-4px)}}
+@media (min-width:1100px){.hsum{padding:8px max(32px,calc((100vw - var(--sw) - 1180px)/2)) 10px}}
 </style>
 </head>
 <body>
@@ -3642,7 +3651,7 @@ document.addEventListener("scroll",e=>{const t=e.target;if(t&&t.matches&&t.match
 window.addEventListener("resize",()=>centerTabs());
 
 /* fixed (not sticky) chrome: measure its height and pad the page; My stats league tabs join it */
-(function(){const c=document.getElementById("chrome");if(!c)return;const set=()=>document.documentElement.style.setProperty("--chh",c.offsetHeight+"px");try{new ResizeObserver(set).observe(c);}catch(e){window.addEventListener("resize",set);}set();})();
+(function(){const c=document.getElementById("chrome");if(!c)return;const set=()=>{if(c.classList.contains("compact"))return;document.documentElement.style.setProperty("--chh",c.offsetHeight+"px");};try{new ResizeObserver(set).observe(c);}catch(e){window.addEventListener("resize",set);}set();})();
 shellPost=(function(prev){return function(){prev();const slot=document.getElementById("hubslot");if(!slot)return;const px=document.querySelector("#view .hxpin");if(px&&!slot.children.length){slot.appendChild(px);}};})(shellPost);
 
 /* ===== v33: Hashmark Start/Sit model — "start X over Y" with projections, trends, matchups and markets ===== */
@@ -3823,6 +3832,24 @@ shellPost=(function(prev){return function(){prev();const r=route(),sel=PINS[r],s
   if(!els.length)return;const w=document.createElement("div");w.className="pinctl";els.sort((a,b)=>a.compareDocumentPosition(b)&2?1:-1).forEach(el=>w.appendChild(el));slot.appendChild(w);};})(shellPost);
 /* standings/power/playoff chips belong to League only */
 vMatchup=(function(prev){return function(li){return prev(li).replace(/<div class="chips mt"[^>]*><span class="chip">#\d+ standings<\/span><span class="chip">#\d+ power<\/span><span class="chip">[^<]*playoffs<\/span><\/div>/g,"");};})(vMatchup);
+
+/* collapse the section header to one summary line while scrolling down; full header returns on scroll up or tap */
+(function(){const c=document.getElementById("chrome");if(!c)return;const sum=document.createElement("button");sum.className="hsum";sum.type="button";sum.setAttribute("aria-label","Show page controls");c.appendChild(sum);
+  let compact=false,lastY=window.scrollY,ticking=false;
+  const setH=()=>{if(!compact)document.documentElement.style.setProperty("--chh",c.offsetHeight+"px");};
+  try{new ResizeObserver(setH).observe(c);}catch(e){}
+  window.hsumUpdate=function(){const slot=document.getElementById("hubslot");if(!slot)return;const parts=[];const hp=slot.querySelector(".hpath");if(hp)parts.push([...hp.querySelectorAll("button,span")].filter(x=>!x.classList.contains("lgall")).map(x=>x.textContent.trim()).filter(Boolean).join(" › "));
+    const lb=slot.querySelector(".lgt1");if(lb)parts.push(lb.textContent.trim());
+    slot.querySelectorAll(".pinctl button.on,.hxpin button.on").forEach(b=>{const t=b.textContent.replace(/\s+\d+$/,"").trim();if(t&&!/^(All|Everyone)$/.test(t))parts.push(t);});
+    const q=slot.querySelector(".pinctl input");if(q&&q.value)parts.push("“"+q.value+"”");if(!parts.length&&route()==="stats")parts.push("My stats");
+    sum.innerHTML=`<span class="ell">${parts.map(esc).join('<i>·</i>')}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;};
+  const set=v=>{if(v===compact)return;const slot=document.getElementById("hubslot");if(v&&(!slot||!slot.children.length))return;compact=v;c.classList.toggle("compact",v);if(v)hsumUpdate();else setH();};
+  window.addEventListener("scroll",()=>{if(ticking)return;ticking=true;requestAnimationFrame(()=>{ticking=false;const y=window.scrollY;if(PS.length||!$("#sheet").hidden){lastY=y;return;}
+    if(y<90)set(false);else if(y>lastY+8)set(true);else if(y<lastY-14)set(false);if(Math.abs(y-lastY)>8)lastY=y;});},{passive:true});
+  sum.addEventListener("click",()=>{set(false);});
+  window.hsumReset=()=>{set(false);lastY=window.scrollY;};})();
+shellPost=(function(prev){return function(){prev();if(window.hsumUpdate)hsumUpdate();if(window.scrollY<90&&window.hsumReset)hsumReset();};})(shellPost);
+document.addEventListener("input",e=>{if(e.target.closest&&e.target.closest("#hubslot")&&window.hsumUpdate)hsumUpdate();});
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
