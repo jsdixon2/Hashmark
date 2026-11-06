@@ -741,6 +741,42 @@ svg.chev{width:16px!important;height:16px!important;flex:none;color:var(--muted)
 .urv{margin-left:auto;flex:none;display:flex;flex-direction:column;align-items:flex-end;padding-left:8px}.urv b{font:800 15px var(--fd);color:var(--acc)}.urv .sub{margin:0;font-size:10.5px;white-space:nowrap}
 .fxa{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0;padding:3px 0}.fxa .flnk{min-width:0;overflow:hidden}.fxa .flnk .ell{min-width:0}.fxa .num{flex:none}.fx>div{gap:0!important}
 @media (max-width:600px){.fxa{flex-direction:column;align-items:flex-start;gap:1px;padding:5px 0}.fxa .flnk{overflow:visible;align-items:flex-start}.fxa .flnk .ell{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25}.fxa .num{font-size:11.5px;padding-left:2px}.fxa+.fxa{border-top:1px solid color-mix(in srgb,var(--line) 50%,transparent)}}
+/* v32 identity */
+.pos.QB{background:#FF6B7A!important;color:#0B0C10!important}.pos.RB{background:#5CF2D0!important;color:#0B0C10!important}.pos.WR{background:#8A93FF!important;color:#0B0C10!important}.pos.TE{background:#FFB23E!important;color:#0B0C10!important}
+:root:not([data-theme="dark"]) .pos.QB{background:#E5484D!important;color:#fff!important}:root:not([data-theme="dark"]) .pos.RB{background:#0E9F86!important;color:#fff!important}:root:not([data-theme="dark"]) .pos.WR{background:#4B5BD6!important;color:#fff!important}:root:not([data-theme="dark"]) .pos.TE{background:#B25E00!important;color:#fff!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pos.QB{background:#FF6B7A!important;color:#0B0C10!important}:root:not([data-theme="light"]) .pos.RB{background:#5CF2D0!important;color:#0B0C10!important}:root:not([data-theme="light"]) .pos.WR{background:#8A93FF!important;color:#0B0C10!important}:root:not([data-theme="light"]) .pos.TE{background:#FFB23E!important;color:#0B0C10!important}}
+.jt{position:relative;width:104px;height:104px;flex:none;border-radius:22px;overflow:hidden;display:grid;place-items:center;background:linear-gradient(160deg,var(--c1),color-mix(in srgb,var(--c1) 60%,#000));box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.jt i{position:absolute;left:0;right:0;bottom:16%;height:9%;background:var(--c2);box-shadow:0 -10px 0 -5px color-mix(in srgb,var(--c2) 60%,transparent);opacity:.9}
+.jt b{position:relative;font:800 50px/1 var(--fd);color:#fff;letter-spacing:-.03em;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 0 var(--c2)}
+.jt b.ji{font-size:36px}.jt em{position:absolute;top:8px;left:10px;font:800 10.5px var(--fd);letter-spacing:.08em;color:rgba(255,255,255,.85);font-style:normal}
+.jt.sm{width:38px;height:38px;border-radius:10px}.jt.sm b{font-size:17px}.jt.sm b.ji{font-size:13px}.jt.sm i{height:10%;bottom:14%}
+.tbg{position:relative;display:inline-grid;place-items:center;flex:none;min-width:38px;height:24px;padding:0 6px;border-radius:7px;overflow:hidden;background:linear-gradient(to top,var(--c2) 0 3px,var(--c1) 3px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.tbg b{position:relative;font:800 11px var(--fd);letter-spacing:.04em;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.4)}
+.tbg.sm{min-width:32px;height:20px;border-radius:6px}.tbg.sm b{font-size:10px}
+.tbg.xl{width:78px;height:78px;border-radius:20px;background:linear-gradient(to top,var(--c2) 0 9px,var(--c1) 9px)}.tbg.xl b{font-size:24px}
+.phero{padding:0!important;overflow:hidden}
+.phb{height:58px;background:linear-gradient(to top,var(--c2) 0 5px,var(--c1) 5px);position:relative}
+.phteam{position:absolute;right:14px;top:10px;font:700 11px var(--fb);letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.88)}
+.phr{display:flex;gap:14px;align-items:flex-start;padding:0 14px;margin-top:-40px;position:relative}
+.phr .jt{box-shadow:0 0 0 4px var(--panel),0 8px 20px rgba(0,0,0,.3)}
+.phm{min-width:0;padding-top:48px}.phm h1{margin:4px 0 0!important;font-size:26px!important;line-height:1.08!important}
+.phk{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.phrk{font:650 11.5px var(--fb);color:var(--muted)}
+.rtags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.rtag{font:650 11.5px var(--fb);padding:3px 9px;border-radius:99px;background:color-mix(in srgb,var(--c1,var(--acc)) 22%,var(--panel2));border:1px solid color-mix(in srgb,var(--c1,var(--acc)) 45%,transparent);color:var(--ink)}
+.rtag.good{border-color:color-mix(in srgb,var(--acc) 60%,transparent)}.rtag.bad{border-color:color-mix(in srgb,var(--bad) 60%,transparent)}
+.phg{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;padding:12px 14px 0}
+.phg>div{background:var(--panel2);border-radius:12px;padding:8px 10px;min-width:0;display:flex;flex-direction:column}
+.phg span{font:650 10px var(--fb);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}.phg b{font:750 15px var(--fd);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.phg em{font:500 11px var(--fb);font-style:normal;color:var(--muted)}
+.phg .phsp{grid-column:span 2}.phsp svg{margin-top:4px;color:var(--acc)}
+.phero .stb,.phero .chips,.phero>.row{padding:0 14px}.phero>.row:last-child{padding-bottom:14px}
+.thero{padding:0 0 14px!important;overflow:hidden}
+.thb{display:flex;align-items:center;gap:14px;padding:18px 14px 22px;background:linear-gradient(to top,var(--c2) 0 6px,var(--c1) 6px)}
+.thb .tbg.xl{box-shadow:0 0 0 3px rgba(255,255,255,.25)}
+.thn{display:flex;flex-direction:column;color:#fff;min-width:0}.thc{font:650 13px var(--fb);letter-spacing:.14em;text-transform:uppercase;opacity:.85}.thnn{font:800 34px/1.02 var(--fd);letter-spacing:-.02em;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.thero .rtags{padding:0 14px}
+.trow{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid color-mix(in srgb,var(--line) 50%,transparent)}.trow:last-child{border-bottom:0}
+.tce{box-shadow:inset 3px 0 0 var(--tc)!important;padding-left:9px!important;border-radius:4px}
+@media (min-width:900px){.jt{width:118px;height:118px}.jt b{font-size:58px}.phm h1{font-size:32px!important}.phb{height:64px}.phr{margin-top:-46px}.phm{padding-top:54px}}
 </style>
 </head>
 <body>
@@ -2784,7 +2820,7 @@ function shellPost(){const r=route(),v=$("#view"),hk=hubOf(r);if(!v)return;
   $("#backBtn").hidden=NAV.length<=1||r===(HUBS[hk]||{}).land&&!["team","gm","scout"].includes(r);
   document.querySelectorAll(".dock [data-hub]").forEach(b=>b.classList.toggle("on",b.dataset.hub===hk));
   decorate(v);}
-function decorate(root){const live=liveSet();root.querySelectorAll('[data-go^="player-"]').forEach(el=>{const id=el.dataset.go.slice(7);if(el.closest(".livestrip,.pay,.why,.rtile,.tile,.hold,.fx"))return;if(live.has(id)&&!el.querySelector(".livep")){const v=live.get(id);const s=document.createElement("span");s.className="livep";s.textContent=v!=null?`LIVE ${f1(v)}`:"LIVE";(el.querySelector(".nm,b,.name")||el).appendChild(s);}});
+function decorate(root){const live=liveSet();root.querySelectorAll('[data-go^="player-"]').forEach(el=>{const id=el.dataset.go.slice(7);if(el.closest(".livestrip,.pay,.why,.rtile,.tile,.hold,.fx"))return;if(live.has(id)&&!el.querySelector(".livep")){const v=live.get(id);const s=document.createElement("span");s.className="livep";s.textContent=v!=null?`LIVE ${f1(v)}`:"LIVE";(el.querySelector(".nm,.tsn>b,.name")||el.querySelector("b:not(.jn):not(.ji)")||el).appendChild(s);}});
   root.querySelectorAll(".chart,.tblw").forEach(el=>{if(el.closest("#psheet .exp"))return;el.classList.add("expandable");});}
 
 /* ---------- dock: 4 hubs ---------- */
@@ -3422,6 +3458,61 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-build]");i
   e.stopImmediatePropagation();e.preventDefault();const L=S.L,mi=mineIdx(L);
   S.calc={lid:L.id,sides:[mi,+b.dataset.bt],assets:[...d.a,...d.b].map(([id,f,t])=>{id=String(id);if(id.startsWith("k:")){const [y,r,o]=id.slice(2).split("-");return {k:"k",id:id.slice(2),y:+y,r:+r,orig:+o,from:f,to:t};}return {k:"p",id,from:f,to:t};})};
   if(PS.length)closePSAll();go("trade-calc");},true);
+
+/* ===== v32: player and team identity — jersey tiles, role tags, header cards, position colors, team themes and badges ===== */
+const TCITY={ARI:"Arizona",ATL:"Atlanta",BAL:"Baltimore",BUF:"Buffalo",CAR:"Carolina",CHI:"Chicago",CIN:"Cincinnati",CLE:"Cleveland",DAL:"Dallas",DEN:"Denver",DET:"Detroit",GB:"Green Bay",HOU:"Houston",IND:"Indianapolis",JAX:"Jacksonville",KC:"Kansas City",LV:"Las Vegas",LAC:"Los Angeles",LAR:"Los Angeles",MIA:"Miami",MIN:"Minnesota",NE:"New England",NO:"New Orleans",NYG:"New York",NYJ:"New York",PHI:"Philadelphia",PIT:"Pittsburgh",SF:"San Francisco",SEA:"Seattle",TB:"Tampa Bay",TEN:"Tennessee",WAS:"Washington",FA:""};
+const tcol=ab=>{const t=TEAMS[ab]||TEAMS.FA||["","#3a3f4b","#8d94a3"];return [t[1]||"#3a3f4b",t[2]||"#8d94a3"];};
+/* 7. original team badge: split diagonal in team colors with the abbreviation */
+function tbadge(ab,sz){const [c1,c2]=tcol(ab);return `<span class="tbg${sz?" "+sz:""}" style="--c1:${c1};--c2:${c2}" aria-label="${esc((TCITY[ab]||"")+" "+((TEAMS[ab]||[])[0]||ab))}"><b>${esc(ab||"FA")}</b></span>`;}
+/* 1. jersey-number tile (falls back to initials); team objects get the badge */
+mono=function(p,sm){if(!p.pos)return tbadge(p.team,sm?"sm":"xl");const [c1,c2]=tcol(p.team);const n=p.num!=null&&p.num!==""&&!isNaN(+p.num)?String(+p.num):null;
+  return `<div class="jt${sm?" sm":""}" style="--c1:${c1};--c2:${c2}" aria-hidden="true"><i></i>${n?`<b class="jn">${esc(n)}</b>`:`<b class="ji">${esc(initials(p.name))}</b>`}${sm?"":`<em>${esc(p.team||"FA")}</em>`}</div>`;};
+/* 2. role tags from usage */
+function roleTags(p){if(!p)return [];const a=p.adv||{},T=[],pp=p.pos,lg=(p.log||[]);const avg=k=>lg.length?lg.reduce((s,x)=>s+(+(x.raw&&x.raw[k])||0),0)/lg.length:null;
+  if(pp==="WR"){if(a.ts>=.25)T.push("Alpha WR");else if(a.ts>=.19)T.push("Lead receiver");else if(a.ts!=null&&a.ts<.12)T.push("Depth receiver");if(a.adot>=13)T.push("Deep threat");else if(a.adot!=null&&a.adot<8)T.push("Short-area target");if(a.yacoe>=1)T.push("YAC threat");if(a.rzshare>=.25)T.push("Red-zone target");}
+  else if(pp==="RB"){if(a.snap>=68&&a.ts>=.1)T.push("Three-down back");else if(a.snap>=60)T.push("Bell-cow");else if(a.snap!=null&&a.snap<42)T.push("Committee back");if(a.ts>=.12)T.push("Receiving back");if(a.gl>=4||a.rzshare>=.4)T.push("Goal-line back");if(a.ryoe>=.5)T.push("Creates yards");}
+  else if(pp==="QB"){const ry=avg("rush_yd");if(ry!=null&&ry>=28)T.push("Rushing QB");else if(ry!=null)T.push("Pocket passer");if(a.epad>=.15)T.push("Efficient passer");else if(a.epad!=null&&a.epad<0)T.push("Struggling passer");if(a.aggr>=20)T.push("Aggressive thrower");}
+  else if(pp==="TE"){if(a.ts>=.18)T.push("Primary-target TE");else if(a.ts>=.12)T.push("Move TE");else if(a.snap>=75)T.push("Blocking-first TE");if(a.rzshare>=.2)T.push("Red-zone target");if(a.adot>=10)T.push("Seam stretcher");}
+  if(p.age!=null&&p.age<=23)T.push("Young riser");else if(p.age!=null&&p.age>=(AGE_CLIFF[pp]||29))T.push("Veteran");
+  return [...new Set(T)].slice(0,3);}
+/* 3. player header card */
+function heroCard(p){const [c1,c2]=tcol(p.team),t=TEAMS[p.team]||["Free agent"],L=S.L;const own=L?L.teams.find(x=>x.players.includes(p.id)):null;
+  const ht=p.ht?`${Math.floor(p.ht/12)}′${p.ht%12}″${p.wt?", "+esc(p.wt)+" lb":""}`:"";const lg=(p.log||[]).slice(-6).map(x=>x.pts);
+  const cell=(k,v,s)=>v?`<div><span>${k}</span><b>${v}</b>${s?`<em>${s}</em>`:""}</div>`:"";
+  const tags=roleTags(p);
+  return `<section class="pan phero" style="--c1:${c1};--c2:${c2}"><div class="phb"><span class="phteam">${esc(TCITY[p.team]||"")} ${esc(t[0])}</span></div>
+  <div class="phr">${mono(p)}<div class="phm"><div class="phk">${pos(p.pos)}${p.vprk?`<span class="phrk">${p.pos}${p.vprk} by value</span>`:""}${p.rank?`<span class="phrk">${p.pos}${p.rank} in points</span>`:""}</div><h1>${esc(p.name)}</h1>${tags.length?`<div class="rtags">${tags.map(x=>`<span class="rtag">${esc(x)}</span>`).join("")}</div>`:""}</div></div>
+  <div class="phg">${cell("Age",p.age?String(p.age):"")}${cell("Size",ht)}${cell("College",p.col?esc(p.col):"")}${cell("Draft",p.draft?esc(p.draft):"Undrafted")}${lg.length>=2?`<div class="phsp"><span>Last ${lg.length} games</span>${spark(lg,120,30)}<em>${lg.map(v=>Math.round(v)).join(" · ")}</em></div>`:""}</div>
+  ${statusBlock(p)}
+  <div class="chips mt">${own?`<button class="chip" data-go="team-${L.teams.indexOf(own)}">Rostered: ${esc(own.name)}</button>`:`<span class="chip good">Available in ${esc(L?L.name:"your league")}</span>`}</div>
+  <div class="row mt" style="flex-wrap:wrap;gap:8px"><button class="btn" data-calcadd="${p.id}">Add to trade calculator</button>${p.team&&p.team!=="FA"?`<button class="btn ghost" data-go="nfl-${p.team}">${esc(t[0])} team page</button>`:""}</div></section>`;}
+playerTabs=(function(prev){return function(id){let h=prev(id);const p=PL[id];if(!p)return h;
+  return h.replace(/<section class="pan"><div class="row" style="align-items:flex-start;gap:16px;flex-wrap:wrap">[\s\S]*?<\/section>/,()=>heroCard(p));};})(playerTabs);
+/* 5 + 6. team pages: themed header, identity tags, fantasy roster by number and role */
+function teamTags(ab){const T=ADV.teams||{},me=T[ab];if(!me)return [];const all=Object.entries(T).filter(([k,v])=>v&&k!=="FA");const rk=(k,desc=true)=>{const xs=all.filter(([,v])=>v[k]!=null).sort((a,b)=>desc?b[1][k]-a[1][k]:a[1][k]-b[1][k]);return xs.findIndex(([k2])=>k2===ab)+1;};const out=[];
+  const e=rk("epa");if(e&&e<=5)out.push(["Top-5 offense","good"]);else if(e&&e>=28)out.push(["Bottom-5 offense","bad"]);
+  if(me.proe!=null){if(me.proe>=4)out.push(["Pass-heavy",""]);else if(me.proe<=-4)out.push(["Run-first",""]);else out.push(["Balanced",""]);}
+  const pc0=rk("ppg");if(pc0&&pc0<=6)out.push(["Fast pace",""]);else if(pc0&&pc0>=27)out.push(["Slow pace",""]);
+  const rz=rk("rzpg");if(rz&&rz<=6)out.push(["Red-zone machine","good"]);
+  const sc=rk("succ");if(sc&&sc<=6)out.push(["Efficient","good"]);
+  return out;}
+vNfl=(function(prev){return function(ab){let h=prev(ab);const t=TEAMS[ab];if(!t||ab==="FA")return h;const [c1,c2]=tcol(ab),T=(ADV.teams||{})[ab]||{},rec=(typeof REC!=="undefined"&&REC[ab])||"";
+  const eR=(()=>{const xs=Object.entries(ADV.teams||{}).filter(([,v])=>v&&v.epa!=null).sort((a,b)=>b[1].epa-a[1].epa);const i=xs.findIndex(([k])=>k===ab);return i>=0?i+1:null;})();
+  const tags=teamTags(ab);
+  const hero=`<section class="pan thero" style="--c1:${c1};--c2:${c2}"><div class="thb">${tbadge(ab,"xl")}<div class="thn"><span class="thc">${esc(TCITY[ab]||"")}</span><span class="thnn">${esc(t[0])}</span></div></div>
+   <div class="phg">${rec?`<div><span>Record</span><b>${esc(rec)}</b></div>`:""}${eR?`<div><span>Offense</span><b>#${eR}</b><em>by EPA per play</em></div>`:""}${T.proe!=null?`<div><span>Pass rate vs expected</span><b>${T.proe>=0?"+":""}${Math.round(T.proe)}%</b></div>`:""}${T.rzpg!=null?`<div><span>Red-zone trips</span><b>${f1(T.rzpg)}</b><em>per game</em></div>`:""}</div>
+   ${tags.length?`<div class="rtags mt">${tags.map(([x,c])=>`<span class="rtag${c?" "+c:""}">${esc(x)}</span>`).join("")}</div>`:""}</section>`;
+  h=h.replace(/^<div class="row" style="gap:14px;align-items:center">[\s\S]*?<\/h1><\/div><\/div>/,hero);
+  const ps=Object.values(PL).filter(p=>p.team===ab&&POSI.hasOwnProperty(p.pos)).sort((a,b)=>(["QB","RB","WR","TE"].indexOf(a.pos)-["QB","RB","WR","TE"].indexOf(b.pos))||b.val-a.val).slice(0,24);
+  const own=p=>{const x=ownerOf(p);return x==="mine"?"Your team":x==="avail"||x==null?"Free agent":x;};
+  const rows=ps.map(p=>`<button class="trow" data-go="player-${p.id}">${mono(p,1)}<span class="tsn"><b class="ell">${esc(p.name)}</b><span class="sub ell">${p.pos}${roleTags(p)[0]?" · "+esc(roleTags(p)[0]):""} · ${esc(own(p))}</span></span><b class="num">${f0(p.val)}</b></button>`).join("");
+  h=h.replace(/<section class="pan mt"><div class="row sp"><h2>Fantasy-relevant players<\/h2>[\s\S]*?<\/section>$/,`<section class="pan mt"><div class="row sp"><h2>Fantasy roster</h2><span class="tag">Market value ${info("mv")}</span></div><div class="mt">${rows||'<p class="sub">No players loaded for this team.</p>'}</div></section>`);
+  return h;};})(vNfl);
+/* team badges everywhere a team row appears */
+vNflIndex=(function(prev){return function(){return prev().replace(/<span class="tb2" style="background:[^"]*">([A-Z]{2,3})<\/span>/g,(m,ab)=>tbadge(ab));};})(vNflIndex);
+vScoutLand=(function(prev){return function(){return prev().replace(/<span class="tb3" style="background:[^"]*">([A-Z]{2,3})<\/span>/g,(m,ab)=>tbadge(ab,"sm"));};})(vScoutLand);
+/* 4. team-color edge on player rows */
+decorate=(function(prev){return function(root){prev(root);root.querySelectorAll('.tsr[data-go^="player-"],.prow[data-ctog],.lrow[data-go^="player-"],.pr[data-go^="player-"],.trow[data-go^="player-"]').forEach(el=>{const id=(el.dataset.go||"").slice(7)||el.dataset.ctog;const p=PL[id];if(!p)return;el.style.setProperty("--tc",tcol(p.team)[0]);el.classList.add("tce");});};})(decorate);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
