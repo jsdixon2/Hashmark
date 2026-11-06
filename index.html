@@ -731,6 +731,9 @@ main{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
 .sheet.infop .card{max-width:440px;cursor:pointer}
 @media (min-width:900px){.sheet.infop .card{width:min(440px,92vw)!important}}
 .swdiv{font:650 10.5px var(--fb);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:14px 4px 6px;border-top:1px solid var(--line);margin-top:6px}.swr.rip{opacity:.6}
+.hxpin{position:sticky;top:var(--hh);z-index:16;margin:0 -16px 4px!important;padding:8px 16px 10px!important;background:color-mix(in srgb,var(--bg) 84%,transparent)!important;backdrop-filter:saturate(1.4) blur(16px);-webkit-backdrop-filter:saturate(1.4) blur(16px);border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)!important}
+.hxover{margin-top:6px;font:500 13px var(--fb);color:var(--muted)}.lnk2{all:unset;cursor:pointer;font-weight:700;color:var(--ink);border-bottom:1px dotted var(--muted)}
+@media (min-width:1100px){.hxpin{margin:0 calc(-1*max(32px,calc((100vw - var(--sw) - 1180px)/2))) 6px!important;padding:10px max(32px,calc((100vw - var(--sw) - 1180px)/2)) 12px!important}}
 </style>
 </head>
 <body>
@@ -3337,6 +3340,34 @@ hubHeader=(function(prev){return function(r){let h=prev(r);const hk=hubOf(r);if(
 openSheet=(function(prev){return function(t,html){$("#sheet").classList.remove("infop");return prev(t,html);};})(openSheet);
 closeSheet=(function(prev){return function(){$("#sheet").classList.remove("infop");return prev();};})(closeSheet);
 document.addEventListener("click",e=>{const sh=$("#sheet");if(!sh||sh.hidden||!sh.classList.contains("infop"))return;if(e.target.closest("[data-inf]"))return;if(e.target.closest("#sheet a[href]")){closeSheet();return;}e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();closeSheet();},true);
+
+function glProfile(G,sc,me,all){const ss=me.seasons.slice().sort((a,b)=>b.s-a.s),done=ss.filter(s=>!s.live),wins=ss.filter(s=>s.champ).length,alive=ss.find(s=>s.alive);
+  const fin=done.filter(s=>s.rank),avgFin=fin.length?fin.reduce((t,s)=>t+s.rank/(s.size||12),0)/fin.length:null,wk=done.filter(s=>s.chopWk).map(s=>s.chopWk),avgWk=wk.length?wk.reduce((a,b)=>a+b,0)/wk.length:null;
+  const lab=wins>=2?"Guillotine Royalty":wins?"Last One Standing":alive?"Still Standing":avgWk!=null&&avgWk<=3?"First to the Block":avgFin!=null&&avgFin<=.25?"Survived the Purge":avgWk!=null&&avgWk>=10?"Late-Season Casualty":"Fed to the Blade";
+  const KP=(v,l,s)=>`<div><b class="num">${v}</b><span>${l}</span>${s?`<em>${s}</em>`:""}</div>`;
+  return `<section class="pan hxhero mt"><div class="eyebrow">League profile · ${esc(G.chainName[sc])} · guillotine</div><div class="hxlab">${esc(lab)}</div><div class="hxover">Overall: <button class="lnk2" data-hxs="all">${esc(all.label)}</button></div>
+   <div class="hxk mt">${KP(ss.length,"Seasons",alive?"alive this season":"")}${KP(wins,"Titles","last team standing")}${KP(avgWk!=null?"Wk "+f1(avgWk):"–","Average chop week",wk.length?`${wk.length} season${wk.length===1?"":"s"} chopped`:"never chopped")}${KP(avgFin!=null?"Top "+Math.round(avgFin*100)+"%":"–","Average finish","of the field")}</div></section>
+  <section class="pan mt"><h2>Season by season</h2><div class="tblw"><table class="tbl"><thead><tr><th>Year</th><th>Result</th><th>Finish</th><th>Points</th></tr></thead><tbody>${ss.map(s=>`<tr><td>${s.s}</td><td>${s.champ?"Champion":s.alive?"Alive":s.chopWk?"Chopped Week "+s.chopWk:s.live?"In progress":"–"}</td><td>${s.rank?ordn(s.rank)+" of "+(s.size||"–"):"–"}</td><td class="num">${f1(s.pf)}</td></tr>`).join("")}</tbody></table></div>
+  <p class="sub mt">Guillotine leagues have no head-to-head games, so this profile uses survival: when you were chopped and where you finished.</p></section>`;}
+/* ===== v30: My stats — overall profile across all leagues, separate profile per league, pinned league tabs ===== */
+function hxPer(chain){const D=HX.data;if(!D)return null;if(!HX.per||HX.per.k!==HX.key)HX.per={k:HX.key,m:{}};if(HX.per.m[chain]!==undefined)return HX.per.m[chain];
+  let r=null;try{const L=D.LS.filter(x=>x.chain===chain);if(L.length){r=analyze(D.uid,L);if(r&&r.me&&D.me&&r.me.label===D.me.label){/* give the league its own title when it would repeat the overall one */const used=new Set([D.me.label]);r.me.label=null;const keep=Object.values(r.M).filter(m=>m!==r.me&&m.label);keep.forEach(m=>used.add(m.label));const tmp={};tmp[D.me.label]={label:D.me.label};assignLabels([r.me],Object.assign({},r.M,{__g:{label:D.me.label}}));}}}catch(e){console.error(e);}
+  HX.per.m[chain]=r;return r;}
+vStats=(function(prev){return function(){const G=HX.data;if(HX.st!=="ready"||!G||!G.me||!G.me.g)return prev();
+  const all=G.me,chains=[...new Set(all.seasons.map(s=>s.chain))];let sc=statsScope();if(sc!=="all"&&!chains.includes(sc)){S.hxScope="all";sc="all";}
+  const seg=chains.length>1?`<div class="seg hxseg hxpin"><button data-hxs="all" class="${sc==="all"?"on":""}">All leagues</button>${chains.map(c=>`<button data-hxs="${esc(c)}" class="${sc===c?"on":""}">${esc(G.chainName[c])}</button>`).join("")}</div>`:"";
+  let html,P=null;
+  if(sc==="all")html=prev();
+  else{P=hxPer(sc);const ss=P&&P.me?P.me.seasons:[];if(P&&P.me&&!P.me.g&&ss.length&&ss.every(s=>s.gl))return seg+glProfile(G,sc,P.me,all);if(!P||!P.me||!P.me.g)html=prev();else{HX.data=Object.assign({},P,{uid:G.uid,chainName:G.chainName});try{html=prev();}finally{HX.data=G;}}}
+  html=html.replace(/<div class="seg hxseg">[\s\S]*?<\/div>/,"");
+  const n=P?Object.values(P.M).filter(x=>x.g>=8).length:0;
+  if(sc==="all"){html=html.replace('<div class="eyebrow">Manager profile</div>',`<div class="eyebrow">Overall manager profile · all ${chains.length} league${chains.length===1?"":"s"}</div>`);}
+  else if(P&&P.me){html=html.replace('<div class="eyebrow">Manager profile</div>',`<div class="eyebrow">League profile · ${esc(G.chainName[sc])}</div>`)
+    .replace(/(<div class="hxlab">[^<]*<\/div>)/,`$1<div class="hxover">Overall: <button class="lnk2" data-hxs="all">${esc(all.label)}</button></div>`)
+    .replace("Percentiles against every manager you’ve shared a Sleeper league with.",`Percentiles against the ${n} managers who have played in ${esc(G.chainName[sc])}.`)
+    .replace("100 is the best in your Sleeper circle.","100 is the best in this league.");
+    if(n<3)html=html.replace(/Percentiles against the \d+ managers who have played in [^<]*\./,`Not enough completed games in ${esc(G.chainName[sc])} to rank managers yet; ranks fill in once managers have 8+ games here.`);}
+  const i=html.indexOf('<section class="pan hxhero');return i>=0?html.slice(0,i)+seg+html.slice(i):seg+html;};})(vStats);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
