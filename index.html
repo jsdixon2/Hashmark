@@ -961,6 +961,24 @@ main{box-sizing:border-box;min-height:100vh;min-height:100lvh;min-height:max(100
 .pks:not(.last)::before{content:"";position:absolute;left:7px;top:14px;bottom:0;width:2px;background:var(--line)}
 .pkd{width:12px;height:12px;border-radius:50%;margin:3px 0 0 1px;background:var(--panel2);border:2px solid var(--acc)}.pks.last .pkd{background:var(--acc)}
 .pks .sub{margin:2px 0 0;font-size:12.5px}
+/* v42 My stats tiles + breakdowns */
+.sttiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:1100px){.sttiles{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}}
+.sttile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-width:0;padding:13px 14px;border-radius:var(--r);background:var(--panel);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);transition:transform .12s}
+.sttile:active{transform:scale(.97)}
+.sth{display:flex;align-items:center;justify-content:space-between;gap:6px}.sth .eyebrow{font-size:10.5px}.sth .grd{font-size:12px;height:24px;min-width:34px;border-radius:8px;padding:0}
+.stbig{font:800 24px/1.1 var(--fd);margin-top:8px;letter-spacing:-.02em}.stsub{font:500 12px/1.35 var(--fb);color:var(--muted)}
+.stviz{margin-top:8px;color:var(--acc)}.stviz svg{width:100%;height:28px}
+.stminirad svg{width:100%;height:auto;max-height:92px}.stminirad .rt,.stminirad .ct{display:none}
+@media (hover:hover){.sttile:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.18);border-color:color-mix(in srgb,var(--acc) 35%,var(--line))}}
+.sdbody .sdt1{font:800 24px var(--fd)!important;margin:4px 0 0}
+.sdh{display:flex;gap:12px;align-items:center;margin-top:12px}.sdh .grd{font-size:18px;height:auto;min-width:50px;padding:8px 0;border-radius:12px}
+.sdsec{margin-top:18px;padding-top:14px;border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)}.sdsec h3{font:750 16px var(--fd);margin:0 0 6px}
+.sdtr{padding:9px 0;border-bottom:1px solid color-mix(in srgb,var(--line) 45%,transparent)}.sdtr:last-child{border-bottom:0}
+.sdtx{font-size:13.5px;line-height:1.45;margin-top:2px}.sdgr{display:inline-flex;gap:5px;align-items:center;flex:none}.sdgr .grd{font-size:11px;height:22px;min-width:30px;border-radius:7px;padding:0}
+.sdt td,.sdt th{font-size:12.5px;white-space:nowrap}.sdt td:first-child{white-space:normal}
+.stsea{margin:2px 0 6px!important}
+.sheet .skseg{background:var(--panel)!important;box-shadow:0 6px 10px -6px rgba(0,0,0,.35)}
 </style>
 </head>
 <body>
@@ -2289,7 +2307,8 @@ async function loadLeagueSeason(l){const season=+l.season,cur=+S.season,past=sea
 function slotsOf(rpos){const order={QB:0,RB:0,WR:0,TE:0,K:0,DEF:0,WRRB_FLEX:1,REC_FLEX:1,FLEX:2,SUPER_FLEX:3};return rpos.filter(s=>!["BN","IR","TAXI"].includes(s)).sort((a,b)=>(order[a]??0)-(order[b]??0));}
 const ELIG2=Object.assign({K:["K"],DEF:["DEF"],IDP_FLEX:["DL","LB","DB"],DL:["DL"],LB:["LB"],DB:["DB"]},ELIG);
 function optimal(ids,pp,slots){const pool=ids.map(id=>({id,pos:hxPos(id),v:+pp[id]||0})).filter(x=>x.pos).sort((a,b)=>b.v-a.v),used=new Set();let tot=0;
-  for(const s of slots){const el=ELIG2[s]||[s];const p=pool.find(x=>!used.has(x.id)&&el.includes(x.pos));if(p){used.add(p.id);tot+=p.v;}}return tot;}
+  for(const s of slots){const el=ELIG2[s]||[s];const p=pool.find(x=>!used.has(x.id)&&el.includes(x.pos));if(p){used.add(p.id);tot+=p.v;}}OPTU=used;return tot;}
+let OPTU=new Set();
 
 /* ---------- analysis ---------- */
 function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
@@ -2318,7 +2337,7 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
           if(Math.abs(me.pts-op.pts)<7){S2.close[0]++;if(won)S2.close[1]++;}
           const prevG=S2.scores.length>1?S2.scores[S2.scores.length-2]:null;if(prevG&&prevG.s===x.season&&prevG.w===w-1&&!prevG.won){S2.bounce[0]++;if(won)S2.bounce[1]++;}
           const h=S2.h2h[o]=S2.h2h[o]||{w:0,l:0,pf:0,pa:0,g:0};h.g++;won?h.w++:tie?0:h.l++;h.pf+=me.pts;h.pa+=op.pts;
-          const ids=Object.keys(me.pp).length?Object.keys(me.pp):me.st;const opt=optimal(ids,me.pp,slots)||me.pts;S2.opt+=Math.max(opt,me.pts);S2.act+=me.pts;S2.bench+=Math.max(0,opt-me.pts);S2.weeksN++;{const _sc=S2.scores[S2.scores.length-1];_sc.bn=Math.max(0,opt-me.pts);_sc.ow=opt>op.pts;_sc.top=all.every(v=>v<=me.pts);_sc.low=all.every(v=>v>=me.pts);}
+          const ids=Object.keys(me.pp).length?Object.keys(me.pp):me.st;const opt=optimal(ids,me.pp,slots)||me.pts;S2.opt+=Math.max(opt,me.pts);S2.act+=me.pts;S2.bench+=Math.max(0,opt-me.pts);S2.weeksN++;{const _sc=S2.scores[S2.scores.length-1];_sc.bn=Math.max(0,opt-me.pts);if(_sc.bn>.5){const st=new Set((me.st||[]).filter(x=>x&&x!=="0"));_sc.sw={i:[...OPTU].filter(id=>!st.has(id)).map(id=>[id,+me.pp[id]||0]),o:[...st].filter(id=>!OPTU.has(id)).map(id=>[id,+me.pp[id]||0])};}_sc.ow=opt>op.pts;_sc.top=all.every(v=>v<=me.pts);_sc.low=all.every(v=>v>=me.pts);}
           if(won&&opt>me.pts&&false)0;
           if(!won&&!tie&&opt>op.pts){S2.pickBad++;}
           const bw=Object.keys(me.pp).filter(id=>!me.st.includes(id)).map(id=>({id,v:+me.pp[id]||0})).sort((a,b)=>b.v-a.v)[0];
@@ -2333,6 +2352,9 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
     tbl.forEach((t,i)=>{const S2=mgr(t.u);S2.finishes.push(i+1);const won=x.complete&&champ===t.rid,rn=x.complete&&ru===t.rid;if(won)S2.titles++;if(rn)S2.runner++;if(poR.has(t.rid))S2.po++;
       S2.seasons.push({s:x.season,lg:x.name,chain:x.chain,type:x.type,size:x.size,w:t.w,l:t.l,pf:t.pf,pa:t.pa,g:t.g,rank:i+1,champ:won,ru:rn,po:poR.has(t.rid),live:!x.complete});});
     x.rid2u=rid2u;x.uname=uname;}
+  // playoff games (winners bracket + playoff-week scores)
+  for(const x of LSs){if(x.gl||!x.bracket||!x.bracket.length||!x.rid2u)continue;for(const b of x.bracket){if(b.w==null||typeof b.t1!=="number"||typeof b.t2!=="number")continue;const wk=x.weeks[(x.pws||15)+b.r-2]||[];const sc=rid=>{const m=wk.find(q=>+q.rid===+rid);return m?m.pts:null;};
+      for(const [me,op] of [[b.t1,b.t2],[b.t2,b.t1]]){const u=x.rid2u[me];if(!u)continue;const S2=mgr(u);(S2.poG=S2.poG||[]).push({s:x.season,lg:x.chain,r:b.r,won:+b.w===+me,v:sc(me),opp:sc(op),op:x.rid2u[op],p:b.p||null,last:b.p===1});}}}
   // draft-pick realization lookup per chain
   const usersOf=x=>new Set(x.rosters.map(r=>r.uid).filter(Boolean));
   const related=chain=>{const mine=LSs.filter(x=>x.chain===chain);const U=new Set(mine.flatMap(x=>[...usersOf(x)]));return new Set(LSs.filter(x=>{if(x.chain===chain)return true;const u=[...usersOf(x)];return u.length&&u.filter(v=>U.has(v)).length/u.length>=.6;}).map(x=>x.chain));};
@@ -4184,6 +4206,146 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-pkf]");if(
    <div class="pks last"><span class="pkd"></span><div><div class="eyebrow">Realized result</div><div><b>${esc(f.rec.concat(f.recK.map(pkText)).join(", ")||"Nothing")}</b></div></div></div></div>
    <div class="hxk mt"><div><b class="num">${f0(Math.round(f.v))}</b><span>Value credited</span><em>${f.share<.999?`${Math.round(f.share*100)}% of that trade’s return`:"all of that trade’s return"}</em></div><div><b class="num">${f0(Math.round(f.was))}</b><span>Pick’s own value</span><em>${k.real&&k.real.real?"player drafted with it":"by round"}</em></div></div>
    <p class="sub mt">The pick was flipped before it was used, so this trade is graded on what it turned into. When the pick was one of several pieces sent, it’s credited with its share of the return.</p>`);},true);
+
+/* ===== v42: My stats — profile banner + category tiles; detailed category popups ===== */
+const STC=[["skills","Skills"],["trades","Trades"],["waivers","Waivers & FAAB"],["drafts","Drafts"],["lineups","Lineups"],["scoring","Scoring"],["clutch","Clutch"],["luck","Luck"],["rivals","Rivalries"],["seasons","Seasons & playoffs"],["activity","Activity"]];
+const gcl=g=>/^A/.test(g)?"gA":/^B|C\+/.test(g)?"gB":!g||g==="–"?"":"gC";
+const sgnN=(v,d=1)=>v==null||!isFinite(v)?"–":(v>=0?"+":"")+(+v).toFixed(d);
+function stData(){const C=skillCtx();if(!C)return null;const {m,M,G}=C;const pool=Object.values(M).filter(x=>x.g>=8);
+  const nm=u=>(M[u]&&M[u].name)||(G.M&&G.M[u]&&G.M[u].name)||"opponent";const all=statsScope()==="all";
+  const lgN=c=>all&&G.chainName?` · ${esc(G.chainName[c]||"")}`:"";
+  const rank=(f,dir=1)=>{const xs=pool.map(x=>({x,v:f(x)})).filter(o=>o.v!=null&&isFinite(o.v)).sort((a,b)=>dir*(b.v-a.v));const i=xs.findIndex(o=>o.x===m);return i>=0?{r:i+1,n:xs.length}:null;};
+  const avg=f=>{const v=pool.map(f).filter(x=>x!=null&&isFinite(x));return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;};
+  return Object.assign({},C,{pool,nm,lgN,S:m.scores.slice().sort((a,b)=>a.s-b.s||a.w-b.w),rank,avg,d:m.d,k:m.sk||{},gl:!m.g});}
+const sdHdr=(g,pct,rk,note,kpis)=>`<div class="sdh">${g&&g!=="–"?`<span class="grd ${gcl(g)}">${g}</span>`:""}<div style="min-width:0">${pct!=null?`<b>${ordn(pct)} percentile</b>`:""}<div class="sub" style="margin:0">${rk?`#${rk.r} of ${rk.n} managers`:""}${note?(rk?" · ":"")+note:""}</div></div></div><div class="hxk mt">${kpis.filter(Boolean).map(([v,l,e])=>`<div><b class="num">${v}</b><span>${l}</span>${e?`<em>${e}</em>`:""}</div>`).join("")}</div>`;
+const sdSec=(t,body,tag)=>body?`<div class="sdsec"><div class="row sp"><h3>${t}</h3>${tag?`<span class="tag">${tag}</span>`:""}</div>${body}</div>`:"";
+const sdTbl=(head,rows)=>rows.length?`<div class="tblw"><table class="tbl sdt"><thead><tr>${head.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`:"";
+const sdWhy=xs=>`<ul class="why">${xs.filter(Boolean).map(x=>`<li>${x}</li>`).join("")}</ul>`;
+const grp=(xs,f)=>{const m=new Map();for(const x of xs){const k=f(x);if(!m.has(k))m.set(k,[]);m.get(k).push(x);}return [...m.entries()];};
+const wkL=(D,x)=>`Wk ${x.w} ${x.s}${D.lgN(x.lg)}`;
+function seaChips(D,xs){const ys=[...new Set(xs.map(x=>x.s??x.season))].filter(Boolean).sort((a,b)=>b-a);if(ys.length<2)return "";const cur=S.stSea||"all";
+  return `<div class="seg sm stsea">${["all",...ys].map(y=>`<button data-stsea="${y}" class="${String(cur)===String(y)?"on":""}">${y==="all"?"All seasons":y}</button>`).join("")}</div>`;}
+const bySea=xs=>S.stSea&&S.stSea!=="all"?xs.filter(x=>String(x.s??x.season)===String(S.stSea)):xs;
+
+/* ---------- tiles ---------- */
+function stTile(key,name,g,big,sub,viz){return `<button class="sttile" data-stc="${key}"><div class="sth"><span class="eyebrow">${name}</span>${g&&g!=="–"?`<span class="grd ${gcl(g)}">${g}</span>`:""}</div><div class="stbig">${big}</div><div class="stsub">${sub}</div>${viz?`<div class="stviz">${viz}</div>`:""}</button>`;}
+function stTiles(D){const {m,d,k,S:sc}=D,T=m.trades||[],A=m.adds||[],Dr=m.drafts||[],six=["lineup","waivers","trading","drafting","clutch","scoring"].map(x=>k[x]).filter(v=>v!=null);
+  const out=[];const H=Object.keys(m.h2h||{}).length;
+  if(!D.gl&&six.length){const av=six.reduce((a,b)=>a+b,0)/six.length,best=["lineup","waivers","trading","drafting","clutch","scoring"].filter(x=>k[x]!=null).sort((a,b)=>k[b]-k[a])[0];out.push(stTile("skills","Skills",SKG(Math.round(av)),`${ordn(Math.round(av))}`,`average percentile · best: ${({lineup:"Lineups",waivers:"Waivers",trading:"Trading",drafting:"Drafting",clutch:"Clutch",scoring:"Scoring"})[best]}`,`<div class="stminirad">${chRadar(["lineup","waivers","trading","drafting","clutch","scoring"].map(x=>({n:"",v:k[x]})))}</div>`));}
+  if(T.length){let c=0;const cum=T.slice().sort((a,b)=>(a.ord||0)-(b.ord||0)).map(t=>(c+=t.net));out.push(stTile("trades","Trades",SKG(k.trading),String(T.length),`trades · avg ${GR(d.trAvg)} · won ${pcx(d.trWin)}`,cum.length>1?spark(cum,120,28):""));}
+  if(A.length){const yrs=grp(A,a=>a.s).sort((a,b)=>a[0]-b[0]).map(([,xs])=>xs.reduce((s,x)=>s+x.started,0));out.push(stTile("waivers","Waivers & FAAB",SKG(k.waivers),String(A.length),`pickups · ${pcx(A.filter(a=>a.stW>=3).length/A.length)} became starters`,yrs.length>1?spark(yrs,120,28):""));}
+  if(Dr.length)out.push(stTile("drafts","Drafts",SKG(k.drafting),sgnN(d.drVoe),`pts per pick vs the slot · ${Dr.length} picks`,spark(Dr.slice().sort((a,b)=>a.s-b.s||a.no-b.no).map(x=>x.voe),120,28)));
+  if(!D.gl&&sc.length){const ef=sc.slice(-17).map(x=>x.bn!=null?x.v/Math.max(1,x.v+x.bn)*100:null).filter(v=>v!=null);
+    out.push(stTile("lineups","Lineups",SKG(k.lineup),pcx(d.opt),`of your best lineup · ${f1(d.benchPg)}/wk benched`,ef.length>1?spark(ef,120,28):""));
+    const oa=sc.reduce((s,x)=>s+x.opp,0)/sc.length;out.push(stTile("scoring","Scoring",SKG(k.scoring),f1(d.ppg),`points a game · league ~${f1(oa)}`,spark(sc.slice(-17).map(x=>x.v),120,28)));
+    const dog=sc.filter(x=>x.p<.4);out.push(stTile("clutch","Clutch",SKG(k.clutch),`${dog.filter(x=>x.won).length}-${dog.filter(x=>!x.won).length}`,"record as an underdog",""));
+    const lw=m.w-d.allPlay*d.g;out.push(stTile("luck","Luck",SKG(k.luck),sgnN(lw),`wins vs your all-play record`,""));}
+  if(H){const hs=Object.entries(m.h2h).map(([u,h])=>({u,...h})).filter(h=>h.g>=2);const nem=hs.sort((a,b)=>(a.w-a.l)-(b.w-b.l)||b.g-a.g)[0];out.push(stTile("rivals","Rivalries","",String(Object.keys(m.h2h).length),`managers faced${nem?` · nemesis ${esc(D.nm(nem.u))}`:""}`,""));}
+  const ss=m.seasons.filter(s=>!s.live);if(m.seasons.length){const wp=m.seasons.filter(s=>!s.gl&&s.g).sort((a,b)=>a.s-b.s).map(s=>s.w/Math.max(1,s.g)*100);out.push(stTile("seasons","Seasons & playoffs","",`${m.titles||0} title${m.titles===1?"":"s"}`,`${ss.filter(s=>s.po).length} of ${ss.length} seasons in the playoffs`,wp.length>1?spark(wp,120,28):""));}
+  out.push(stTile("activity","Activity",SKG(k.activity),f1(d.txPerS),"moves a season",""));
+  return `<div class="sttiles mt">${out.join("")}</div><p class="sub mt">Tap a tile for the full breakdown. Everything on this tab covers ${esc(D.lbl)}.</p>`;}
+vStats=(function(prev){return function(){const h=prev();if(HX.st!=="ready"||!HX.data)return h;const D=stData();if(!D)return h;
+  const i=h.indexOf('<section class="pan hxhero');if(i<0)return h;const j=h.indexOf("</section>",i)+10;return h.slice(0,j)+stTiles(D);};})(vStats);
+
+/* ---------- popups ---------- */
+function stOpen(key){if(key==="skills"){skillDetail();return;}const D=stData();if(!D)return;const name=(STC.find(x=>x[0]===key)||[])[1]||"";
+  const keys=STC.filter(([k])=>{const m=D.m;if(k==="trades")return (m.trades||[]).length;if(k==="waivers")return (m.adds||[]).length;if(k==="drafts")return (m.drafts||[]).length;if(["skills","lineups","scoring","clutch","luck"].includes(k))return !D.gl&&D.S.length;if(k==="rivals")return Object.keys(m.h2h||{}).length;return true;});
+  let body="";try{body=(STB[key]||(()=>""))(D);}catch(e){console.error(e);body=`<p class="sub">Couldn’t build this breakdown.</p>`;}
+  openSheet("My stats",`<div class="seg sm skseg">${keys.map(([k,n])=>`<button data-stp="${k}" class="${k===key?"on":""}">${n}</button>`).join("")}</div><div class="sdbody"><h2 class="sdt1">${name}</h2><div class="eyebrow">${esc(D.lbl)}</div>${body}</div>`);
+  $("#sheet").classList.add("skpop");S._stKey=key;setTimeout(()=>{centerTabs($("#sheet"));try{tlPaint($("#sheetB"));}catch(_){}},30);}
+document.addEventListener("click",e=>{let b;if((b=e.target.closest("[data-stc]"))&&route()==="stats"){e.preventDefault();e.stopPropagation();S.stSea=null;stOpen(b.dataset.stc);return;}
+  if((b=e.target.closest("[data-stp]"))){e.stopPropagation();S.stSea=null;stOpen(b.dataset.stp);$("#sheet .card").scrollTop=0;return;}
+  if((b=e.target.closest("[data-stsea]"))){e.stopPropagation();const c=$("#sheet .card"),y=c?c.scrollTop:0;S.stSea=b.dataset.stsea==="all"?null:b.dataset.stsea;stOpen(S._stKey);const c2=$("#sheet .card");if(c2)c2.scrollTop=y;}},true);
+
+const STB={};
+STB.trades=D=>{const {m,d}=D,T=m.trades.slice().sort((a,b)=>(b.ord||0)-(a.ord||0)),won=T.filter(t=>t.rz>.52).length,lost=T.filter(t=>t.rz<.48).length,net=T.reduce((s,t)=>s+t.net,0),stAvg=T.reduce((s,t)=>s+t.st,0)/T.length,ca=D.avg(x=>x.d.trAvg),flips=T.flatMap(t=>t.recK.filter(k=>k.flip));
+  const kin=T.flatMap(t=>t.recK),kout=T.flatMap(t=>t.gaveK),used=kin.filter(k=>k.real&&k.real.real);
+  const row=t=>`<div class="sdtr"><div class="row sp"><span class="sub ell" style="margin:0">${t.season} · Wk ${t.wk}${D.lgN(t.chain)} · with ${esc(t.partner)}</span><span class="sdgr"><span class="grd ${grCls(GR(t.st))}">${GR(t.st)}</span>→<span class="grd ${grCls(GR(t.rz))}">${GR(t.rz)}</span></span></div><div class="sdtx"><b>Got</b> ${t.rec.map(esc).concat(t.recK.map(k=>pkLab(k,t))).join(", ")||"nothing"}${t.fb>0?` +$${t.fb}`:""}</div><div class="sdtx sub"><b>Gave</b> ${t.gave.map(esc).concat(t.gaveK.map(k=>pkLab(k,t))).join(", ")||"nothing"}${t.fb<0?` +$${-t.fb}`:""}</div><div class="sdtx"><span class="${t.net>=0?"good":"bad"}">${sgnN(t.net,0)} pts</span> <span class="sub">net to date · ${t.rz>=.7?"fleece":t.rz<.36?"got fleeced":t.st<.46&&t.rz>.56?"aged like wine":t.st>.56&&t.rz<.44?"spoiled milk":t.rz>.52?"won":t.rz<.48?"lost":"even"}</span></div></div>`;
+  const byP=grp(T,t=>t.partner).map(([p,xs])=>({p,n:xs.length,w:xs.filter(t=>t.rz>.52).length,l:xs.filter(t=>t.rz<.48).length,g:xs.reduce((s,t)=>s+t.rz,0)/xs.length,net:xs.reduce((s,t)=>s+t.net,0)})).sort((a,b)=>b.n-a.n||b.net-a.net);
+  const byS=grp(T,t=>t.season).sort((a,b)=>b[0]-a[0]).map(([s,xs])=>[s,xs.length,GR(xs.reduce((a,t)=>a+t.rz,0)/xs.length),`${xs.filter(t=>t.rz>.52).length}-${xs.filter(t=>t.rz<.48).length}`,sgnN(xs.reduce((a,t)=>a+t.net,0),0)]);
+  const best=T.slice().sort((a,b)=>b.rz-a.rz).slice(0,3),worst=T.slice().sort((a,b)=>a.rz-b.rz).slice(0,3);const Tf=bySea(T);
+  return sdHdr(SKG(D.k.trading),D.k.trading,D.rank(x=>x.d.trN?x.d.trAvg:null),ca!=null?`circle average ${GR(ca)}`:"",[[T.length,"Trades",`${f1(T.length/Math.max(1,m.seasons.length))} a season`],[GR(d.trAvg),"Realized grade",`day-one ${GR(stAvg)}`],[`${won}-${lost}`,"Won-lost",`${T.length-won-lost} even`],[sgnN(net,0),"Net points","in your scoring"]])
+   +sdSec("Why this grade",sdWhy([`Average realized grade <b>${GR(d.trAvg)}</b>${ca!=null?`, against a circle average of ${GR(ca)}`:""}.`,`Won <b>${pcx(won/T.length)}</b> of trades on value to date; net ${sgnN(net,0)} points.`,d.wine||d.milk?`${d.wine} aged like wine (lost early, won later); ${d.milk} spoiled (won early, lost later).`:null,T.filter(t=>t.rz>=.7).length?`${T.filter(t=>t.rz>=.7).length} fleece${T.filter(t=>t.rz>=.7).length===1?"":"s"} (A+ or better).`:null,T.filter(t=>t.rz<.36).length?`Fleeced ${T.filter(t=>t.rz<.36).length} time${T.filter(t=>t.rz<.36).length===1?"":"s"}.`:null,Math.abs(stAvg-d.trAvg)>.04?`Your trades ${d.trAvg>stAvg?"improve":"fade"} with time: day-one ${GR(stAvg)} → realized ${GR(d.trAvg)}.`:null]))
+   +sdSec("Every trade, graded",chBars(T.slice().reverse().map(t=>Math.round(t.rz*100)),T.slice().reverse().map(t=>String(t.season).slice(2)),{h:120,max:100,min:0,cls:v=>v>=55?"cb hi":v>=45?"cb mid":"cb"})+`<p class="sub">Oldest to newest. Green bars are wins, yellow even, red losses.</p>`)
+   +sdSec("By trading partner",sdTbl(["Partner","Trades","W-L","Avg","Net"],byP.map(x=>[esc(x.p),x.n,`${x.w}-${x.l}`,`<span class="grd ${grCls(GR(x.g))}">${GR(x.g)}</span>`,`<span class="${x.net>=0?"good":"bad"}">${sgnN(x.net,0)}</span>`])))
+   +sdSec("By season",sdTbl(["Season","Trades","Avg","W-L","Net"],byS))
+   +sdSec("Draft picks traded",sdWhy([`Received <b>${kin.length}</b> picks, sent <b>${kout.length}</b>.`,used.length?`Picks you received that were used: ${used.map(k=>esc(pkText(k))).join(", ")}.`:null,flips.length?`${flips.length} flipped before their draft: ${flips.map(k=>esc(pkText(k))+" → "+esc(k.flip.rec.concat(k.flip.recK.map(pkText)).join(", "))).join("; ")}.`:null]))
+   +sdSec("Best trades",best.map(row).join(""))+(T.length>3?sdSec("Worst trades",worst.map(row).join("")):"")
+   +sdSec("All trades",seaChips(D,T.map(t=>({s:t.season})))+lst(Tf.map(row),8,"No trades this season."),`${Tf.length}`);};
+STB.waivers=D=>{const {m,d}=D,A=m.adds.slice().sort((a,b)=>b.s-a.s||b.wk-a.wk),hit=A.filter(a=>a.stW>=3),pts=A.reduce((s,a)=>s+a.started,0),brk=A.filter(a=>a.brk),bids=A.filter(a=>a.bid>0),spent=bids.reduce((s,a)=>s+a.bid,0),ppd=spent?bids.reduce((s,a)=>s+a.started,0)/spent:null,ca=D.avg(x=>x.d.adHit);
+  const row=a=>`<div class="lrow"><span>${pos(a.pos)} <b>${esc(a.name)}</b> <span class="sub">${a.s} Wk ${a.wk}${a.bid?` · $${a.bid}`:""}${D.lgN&&statsScope()==="all"?"":""}</span></span><span class="num">${f1(a.started)} <span class="sub">pts · ${a.stW} st</span></span></div>`;
+  const byPos=grp(A,a=>a.pos).sort((a,b)=>b[1].length-a[1].length).map(([p,xs])=>[pos(p),xs.length,pcx(xs.filter(a=>a.stW>=3).length/xs.length),f0(Math.round(xs.reduce((s,a)=>s+a.started,0))),f1(xs.reduce((s,a)=>s+a.after,0)/xs.length)]);
+  const byS=grp(A,a=>a.s).sort((a,b)=>b[0]-a[0]).map(([s,xs])=>[s,xs.length,pcx(xs.filter(a=>a.stW>=3).length/xs.length),f0(Math.round(xs.reduce((t,a)=>t+a.started,0))),"$"+xs.reduce((t,a)=>t+(a.bid||0),0)]);
+  const val=bids.filter(a=>a.started>0).sort((a,b)=>b.started/b.bid-a.started/a.bid).slice(0,5),miss=bids.filter(a=>a.stW===0).sort((a,b)=>b.bid-a.bid).slice(0,5);const Af=bySea(A);
+  return sdHdr(SKG(D.k.waivers),D.k.waivers,D.rank(x=>x.d.adScore),ca!=null?`circle hit rate ${pcx(ca)}`:"",[[A.length,"Pickups",`${f1(A.length/Math.max(1,m.seasons.length))} a season`],[pcx(hit.length/A.length),"Hit rate","started 3+ weeks"],[f0(Math.round(pts)),"Points started","from pickups"],[brk.length,"Breakouts found"],spent?["$"+spent,"FAAB spent",ppd!=null?`${f1(ppd)} pts per $`:""]:null])
+   +sdSec("Why this grade",sdWhy([`<b>${pcx(hit.length/A.length)}</b> of pickups became starters for 3+ weeks${ca!=null?` (circle average ${pcx(ca)})`:""}.`,`${f0(Math.round(pts))} points started from waivers and free agency.`,brk.length?`${brk.length} broke out after you added them: ${brk.slice(0,4).map(a=>esc(a.name)).join(", ")}${brk.length>4?"…":""}.`:null,spent?`$${spent} FAAB spent for ${f1(ppd)} started points per dollar; ${miss.length} paid add${miss.length===1?"":"s"} never started.`:null]))
+   +sdSec("By position",sdTbl(["Pos","Adds","Hit rate","Pts started","PPG after"],byPos))+sdSec("By season",sdTbl(["Season","Adds","Hit rate","Pts started","FAAB"],byS))
+   +sdSec("Best pickups",lst(A.slice().sort((a,b)=>b.started-a.started).slice(0,10).map(row),5,""))
+   +(val.length?sdSec("Best value per FAAB dollar",val.map(a=>`<div class="lrow"><span>${pos(a.pos)} <b>${esc(a.name)}</b> <span class="sub">$${a.bid}</span></span><span class="num">${f1(a.started/a.bid)} <span class="sub">pts/$</span></span></div>`).join("")):"")
+   +(miss.length?sdSec("Paid and never started",miss.map(a=>`<div class="lrow"><span>${pos(a.pos)} <b>${esc(a.name)}</b> <span class="sub">${a.s} Wk ${a.wk}</span></span><span class="num bad">$${a.bid}</span></div>`).join("")):"")
+   +sdSec("All pickups",seaChips(D,A)+lst(Af.map(row),10,"No pickups this season."),`${Af.length}`);};
+STB.drafts=D=>{const {m,d}=D,R=m.drafts.slice().sort((a,b)=>b.s-a.s||a.no-b.no),beat=R.filter(x=>x.voe>0),ca=D.avg(x=>x.d.drVoe);
+  const byR=grp(R,x=>x.round).sort((a,b)=>a[0]-b[0]).map(([r,xs])=>{const b=xs.slice().sort((a,c)=>c.voe-a.voe)[0];return [r,xs.length,pcx(xs.filter(x=>x.voe>0).length/xs.length),`<span class="${xs.reduce((s,x)=>s+x.voe,0)>=0?"good":"bad"}">${sgnN(xs.reduce((s,x)=>s+x.voe,0)/xs.length)}</span>`,esc(b.name)];});
+  const bestR=byR.length?byR.slice().sort((a,b)=>parseFloat(String(b[3]).replace(/<[^>]+>/g,""))-parseFloat(String(a[3]).replace(/<[^>]+>/g,"")))[0][0]:null;
+  const byP=grp(R,x=>x.pos).sort((a,b)=>b[1].length-a[1].length).map(([p,xs])=>[pos(p),xs.length,pcx(xs.filter(x=>x.voe>0).length/xs.length),sgnN(xs.reduce((s,x)=>s+x.voe,0)/xs.length)]);
+  const row=x=>`<div class="lrow"><span><span class="sub num">${x.round}.${String(x.no).padStart(2,"0")}</span> ${pos(x.pos)} <b>${esc(x.name)}</b> <span class="sub">${x.s}</span></span><span class="num ${x.voe>=0?"good":"bad"}">${sgnN(x.voe,0)}</span></div>`;const Rf=bySea(R);
+  return sdHdr(SKG(D.k.drafting),D.k.drafting,D.rank(x=>x.d.drVoe),ca!=null?`circle ${sgnN(ca)} per pick`:"",[[R.length,"Picks scored"],[sgnN(d.drVoe),"Pts per pick","vs what the slot returns"],[pcx(beat.length/R.length),"Beat their slot"],bestR!=null?[`Rd ${bestR}`,"Best round"]:null])
+   +sdSec("Why this grade",sdWhy([`Your picks score <b>${sgnN(d.drVoe)}</b> points more than players taken around the same slot${ca!=null?` (circle ${sgnN(ca)})`:""}.`,`${beat.length} of ${R.length} picks beat their slot.`,bestR!=null?`You draft best in round ${bestR}.`:null]))
+   +sdSec("By round",sdTbl(["Rd","Picks","Beat slot","Avg vs slot","Best pick"],byR))+sdSec("By position",sdTbl(["Pos","Picks","Beat slot","Avg vs slot"],byP))
+   +sdSec("Steals",R.slice().sort((a,b)=>b.voe-a.voe).slice(0,5).map(row).join(""))+sdSec("Busts",R.slice().sort((a,b)=>a.voe-b.voe).slice(0,5).map(row).join(""))
+   +sdSec("Every pick",seaChips(D,R)+lst(Rf.map(row),10,"No picks this season."),`${Rf.length}`)+`<p class="sub mt">Each pick is scored on the fantasy points that player has produced in this league since the draft, compared with the players picked just before and after.</p>`;};
+STB.lineups=D=>{const {m,d,S:sc}=D,W=sc.filter(x=>x.bn!=null),perf=W.filter(x=>x.bn<.5),flip=W.filter(x=>!x.won&&x.ow&&x.v!==x.opp),lostPts=flip.reduce((s,x)=>s+(x.opp-x.v),0),ca=D.avg(x=>x.d.opt);
+  const sw=x=>x.sw&&x.sw.i.length?`Start ${x.sw.i.map(([id,v])=>`<b>${esc(hxName(id))}</b> (${f1(v)})`).join(", ")} over ${x.sw.o.map(([id,v])=>`${esc(hxName(id))} (${f1(v)})`).join(", ")}`:`${f1(x.bn)} points were on your bench`;
+  const byS=grp(W,x=>x.s).sort((a,b)=>b[0]-a[0]).map(([s,xs])=>[s,xs.length,pcx(xs.reduce((t,x)=>t+x.v,0)/Math.max(1,xs.reduce((t,x)=>t+x.v+x.bn,0))),f1(xs.reduce((t,x)=>t+x.bn,0)/xs.length),xs.filter(x=>!x.won&&x.ow&&x.v!==x.opp).length]);
+  return sdHdr(SKG(D.k.lineup),D.k.lineup,D.rank(x=>x.d.opt),ca!=null?`circle ${pcx(ca)}`:"",[[pcx(d.opt),"Lineup efficiency","of your best possible"],[f1(d.benchPg),"Bench pts / week"],[perf.length,"Perfect weeks",`of ${W.length}`],[flip.length,"Losses you could have won"]])
+   +sdSec("Why this grade",sdWhy([`You started <b>${pcx(d.opt)}</b> of your best possible score${ca!=null?` (circle ${pcx(ca)})`:""}.`,`${f1(d.benchPg)} points a week left on the bench.`,flip.length?`<b>${flip.length}</b> losses your best lineup would have won, by a combined ${f1(lostPts)} points.`:"No losses your best lineup would have flipped."]))
+   +sdSec("Week by week",chBars(W.slice(-30).map(x=>Math.round(x.v/Math.max(1,x.v+x.bn)*100)),W.slice(-30).map(x=>"W"+x.w),{h:120,max:100,min:0,cls:v=>v>=97?"cb hi":v>=88?"cb mid":"cb"})+`<p class="sub">Share of your best possible score you started, last ${Math.min(30,W.length)} weeks.</p>`)
+   +sdSec("Losses your best lineup would have won",flip.slice().reverse().map(x=>`<div class="sdtr"><div class="row sp"><b>${wkL(D,x)}</b><span class="num bad">${f1(x.v)}–${f1(x.opp)}</span></div><div class="sub" style="margin:2px 0">Lost to ${esc(D.nm(x.op))} by ${f1(x.opp-x.v)}; your best lineup scored ${f1(x.v+x.bn)}.</div><div class="sdtx">${sw(x)}</div></div>`).join("")||`<p class="sub">None.</p>`)
+   +sdSec("Most points left on the bench",W.slice().sort((a,b)=>b.bn-a.bn).slice(0,5).map(x=>`<div class="sdtr"><div class="row sp"><b>${wkL(D,x)}</b><span class="num">${f1(x.bn)} benched</span></div><div class="sdtx">${sw(x)}</div></div>`).join(""))
+   +sdSec("By season",sdTbl(["Season","Games","Efficiency","Bench/wk","Flippable losses"],byS));};
+STB.scoring=D=>{const {m,d,S:sc}=D,oa=sc.reduce((s,x)=>s+x.opp,0)/sc.length,tops=sc.filter(x=>x.top),lows=sc.filter(x=>x.low),mean=sc.reduce((s,x)=>s+x.v,0)/sc.length,sd=Math.sqrt(sc.reduce((t,x)=>t+(x.v-mean)**2,0)/sc.length),L=sc.slice(-17);
+  const row=x=>`<div class="lrow"><span><b>${wkL(D,x)}</b> <span class="sub">vs ${esc(D.nm(x.op))}</span></span><span class="num">${f1(x.v)} <span class="sub">${x.won?"W":"L"} ${f1(x.opp)}</span></span></div>`;
+  const byS=grp(sc,x=>x.s).sort((a,b)=>b[0]-a[0]).map(([s,xs])=>[s,xs.length,f1(xs.reduce((t,x)=>t+x.v,0)/xs.length),f1(xs.reduce((t,x)=>t+x.opp,0)/xs.length),xs.filter(x=>x.top).length,f1(Math.max(...xs.map(x=>x.v)))]);
+  return sdHdr(SKG(D.k.scoring),D.k.scoring,D.rank(x=>x.d.ppg),`league ~${f1(oa)} a game`,[[f1(d.ppg),"Points per game"],[sgnN(d.ppg-oa),"vs league average"],[tops.length,"Weekly high scores"],[lows.length,"Weekly low scores"],[`±${f1(sd)}`,"Typical swing"]])
+   +sdSec("Why this grade",sdWhy([`<b>${f1(d.ppg)}</b> points a game against a league average around ${f1(oa)}.`,`Top score of the week ${tops.length} time${tops.length===1?"":"s"}; lowest ${lows.length} time${lows.length===1?"":"s"}.`,`Two-thirds of your weeks land within ±${f1(sd)} of your average (consistency ${ordn(D.k.consistency??50)} percentile).`]))
+   +sdSec("Last 17 weeks",chLine([{n:"You",v:L.map(x=>x.v)},{n:"Opponent",v:L.map(x=>x.opp)}],L.map(x=>"W"+x.w),{h:150}))
+   +sdSec("How your scores spread",chHist(sc.map(x=>x.v))+`<p class="sub">Number of weeks in each scoring range.</p>`)
+   +sdSec("By season",sdTbl(["Season","Games","PPG","Opp PPG","High scores","Best"],byS))
+   +sdSec("Best weeks",sc.slice().sort((a,b)=>b.v-a.v).slice(0,5).map(row).join(""))+sdSec("Worst weeks",sc.slice().sort((a,b)=>a.v-b.v).slice(0,5).map(row).join(""));};
+STB.clutch=D=>{const {m,d,S:sc}=D,dog=sc.filter(x=>x.p<.4),cl=sc.filter(x=>Math.abs(x.v-x.opp)<7),hd=sc.filter(x=>x.p<.3),fav=sc.filter(x=>x.p>.7);
+  const bk=[0,1,2,3,4].map(i=>{const xs=sc.filter(x=>Math.min(4,Math.floor(x.p*5))===i);return {n:xs.length,r:xs.length?xs.filter(x=>x.won).length/xs.length:null,e:xs.length?xs.reduce((s,x)=>s+x.p,0)/xs.length:null};});
+  const row=x=>`<div class="lrow"><span><b>${wkL(D,x)}</b> <span class="sub">vs ${esc(D.nm(x.op))} · ${Math.round(x.p*100)}% pregame</span></span><span class="num ${x.won?"good":"bad"}">${f1(x.v)}–${f1(x.opp)}</span></div>`;
+  return sdHdr(SKG(D.k.clutch),D.k.clutch,D.rank(x=>x.d.clutch),"",[[`${dog.filter(x=>x.won).length}-${dog.filter(x=>!x.won).length}`,"As an underdog","under 40% pregame"],[`${cl.filter(x=>x.won).length}-${cl.filter(x=>!x.won).length}`,"Close games","decided by under 7"],[pcx(d.comeback),"Bounce-back rate","won after a loss"],[`${fav.filter(x=>!x.won).length} of ${fav.length}`,"Upset losses","as a 70%+ favorite"]])
+   +sdSec("Why this grade",sdWhy([`Won ${pcx(dog.length?dog.filter(x=>x.won).length/dog.length:null)} as an underdog; ${pcx(hd.length?hd.filter(x=>x.won).length/hd.length:null)} as a big underdog (under 30%).`,`${cl.filter(x=>x.won).length}-${cl.filter(x=>!x.won).length} in close games.`,d.comeback!=null?`Won ${pcx(d.comeback)} of the weeks right after a loss.`:null]))
+   +sdSec("Wins by pregame chance",chBars(bk.map(b=>b.r==null?0:Math.round(b.r*100)),["0–20%","20–40%","40–60%","60–80%","80–100%"],{h:130,max:100,min:0,top:(v,i)=>bk[i].n?v+"%":"",cls:(v,i)=>bk[i].r!=null&&bk[i].e!=null&&bk[i].r>bk[i].e?"cb hi":"cb"})+`<p class="sub">Actual win rate by pregame win chance. Green bars beat the odds.</p>`)
+   +sdSec("Biggest upsets",sc.filter(x=>x.won).sort((a,b)=>a.p-b.p).slice(0,5).map(row).join("")||`<p class="sub">None yet.</p>`)
+   +sdSec("Toughest losses as a favorite",sc.filter(x=>!x.won&&x.v!==x.opp).sort((a,b)=>b.p-a.p).slice(0,5).map(row).join("")||`<p class="sub">None.</p>`)
+   +sdSec("Every close game",lst(cl.slice().reverse().map(row),6,"No close games."));};
+STB.luck=D=>{const {m,d,S:sc}=D,exp=d.allPlay*d.g,lw=m.w-exp,rkPA=D.rank(x=>x.d.papg);
+  const byS=grp(sc,x=>x.s).sort((a,b)=>b[0]-a[0]).map(([s,xs])=>{const w=xs.filter(x=>x.won).length,e=xs.reduce((t,x)=>t+x.p,0);return [s,`${w}-${xs.length-w}`,f1(e),`<span class="${w-e>=0?"good":"bad"}">${sgnN(w-e)}</span>`,f1(xs.reduce((t,x)=>t+x.opp,0)/xs.length)];});
+  const row=x=>`<div class="lrow"><span><b>${wkL(D,x)}</b> <span class="sub">vs ${esc(D.nm(x.op))}</span></span><span class="num ${x.won?"good":"bad"}">${f1(x.v)}–${f1(x.opp)}</span></div>`;
+  return sdHdr(SKG(D.k.luck),D.k.luck,null,"luck isn’t a skill, but it explains records",[[m.w,"Actual wins"],[f1(exp),"All-play wins","if you played everyone weekly"],[sgnN(lw),"Schedule luck","wins"],[f1(d.papg),"Points against / game",rkPA?`#${rkPA.r} of ${rkPA.n} most`:""]])
+   +sdSec("What this means",sdWhy([`You have <b>${m.w}</b> wins; scoring the same way against every team every week would give about ${f1(exp)}.`,lw>=1?`That’s ${f1(lw)} wins of good fortune.`:lw<=-1?`That’s ${f1(-lw)} wins the schedule took from you.`:"Your record is about what your scoring earned.",`Opponents averaged ${f1(d.papg)} against you.`]))
+   +sdSec("By season",sdTbl(["Season","W-L","Expected W","Luck","Opp PPG"],byS))+`<p class="sub">Expected wins add up each game’s pregame win chance.</p>`
+   +sdSec("Unluckiest losses",sc.filter(x=>!x.won&&x.v!==x.opp).sort((a,b)=>b.v-a.v).slice(0,5).map(row).join("")||`<p class="sub">None.</p>`)
+   +sdSec("Luckiest wins",sc.filter(x=>x.won).sort((a,b)=>a.v-b.v).slice(0,5).map(row).join("")||`<p class="sub">None.</p>`);};
+STB.rivals=D=>{const {m,S:sc}=D,H=Object.entries(m.h2h).map(([u,h])=>({u,...h})).sort((a,b)=>b.g-a.g),q=H.filter(h=>h.g>=2);
+  const nem=q.slice().sort((a,b)=>(a.w-a.l)-(b.w-b.l)||b.g-a.g)[0],vic=q.slice().sort((a,b)=>(b.w-b.l)-(a.w-a.l)||b.g-a.g)[0];
+  const bw=u=>{const xs=sc.filter(x=>x.op===u);const w=xs.filter(x=>x.won).sort((a,b)=>(b.v-b.opp)-(a.v-a.opp))[0];return w?`+${f1(w.v-w.opp)} (${w.s})`:"–";};
+  return sdHdr("",null,null,"",[[H.length,"Managers faced"],nem?[esc(D.nm(nem.u)),"Nemesis",`${nem.w}-${nem.l}`]:null,vic?[esc(D.nm(vic.u)),"Favorite opponent",`${vic.w}-${vic.l}`]:null])
+   +sdSec("Head to head",sdTbl(["Manager","G","W-L","PF/g","PA/g","Best win"],H.map(h=>[esc(D.nm(h.u)),h.g,`<span class="${h.w>h.l?"good":h.w<h.l?"bad":""}">${h.w}-${h.l}</span>`,f1(h.pf/h.g),f1(h.pa/h.g),bw(h.u)])));};
+STB.seasons=D=>{const {m}=D,ss=m.seasons.slice().sort((a,b)=>b.s-a.s),done=ss.filter(s=>!s.live),po=done.filter(s=>s.po),pg=(m.poG||[]).slice().sort((a,b)=>b.s-a.s||b.r-a.r),pw=pg.filter(x=>x.won).length,best=done.filter(s=>s.rank).sort((a,b)=>a.rank-b.rank)[0];
+  const res=s=>s.gl?(s.champ?"Champion":s.alive?"Alive":s.chopWk?`Chopped Wk ${s.chopWk}`:"–"):s.champ?"🏆 Champion":s.ru?"Runner-up":s.live?"In progress":s.po?"Playoffs":"Missed";
+  const h2=ss.filter(s=>!s.gl&&s.g).sort((a,b)=>a.s-b.s);
+  return sdHdr("",null,null,"",[[m.titles||0,"Titles",ss.filter(s=>s.champ).map(s=>s.s).join(", ")],[m.runner||0,"Runner-up"],[`${po.length}/${done.length}`,"Playoff trips"],pg.length?[`${pw}-${pg.length-pw}`,"Playoff record"]:null,best?[ordn(best.rank),"Best regular-season finish",`${best.s}`]:null])
+   +(h2.length>1?sdSec("Career arc",chLine([{n:"Points / game",v:h2.map(s=>s.pf/s.g)},{n:"Against / game",v:h2.map(s=>s.pa/s.g)}],h2.map(s=>String(s.s)))+chBars(h2.map(s=>Math.round(s.w/s.g*100)),h2.map(s=>String(s.s)),{h:100,max:100,min:0,top:v=>v+"%",cls:v=>v>=60?"cb hi":v>=45?"cb mid":"cb"})+`<p class="sub">Bars: regular-season win rate.</p>`):"")
+   +sdSec("Season by season",sdTbl(["Year","League","W-L","PF","Finish","Result"],ss.map(s=>[s.s,esc(s.lg),s.gl?"–":`${s.w}-${s.l}`,f0(Math.round(s.pf)),s.rank?ordn(s.rank):"–",res(s)])))
+   +(pg.length?sdSec("Playoff games",pg.map(x=>`<div class="lrow"><span><b>${x.s}</b> <span class="sub">${x.last?"Championship":x.p===3?"3rd place":"Round "+x.r}${D.lgN(x.lg)} · vs ${esc(D.nm(x.op))}</span></span><span class="num ${x.won?"good":"bad"}">${x.v!=null?f1(x.v)+"–"+f1(x.opp):x.won?"W":"L"}</span></div>`).join("")):"");};
+STB.activity=D=>{const {m,d}=D,T=m.trades||[],A=m.adds||[],ca=D.avg(x=>x.act);
+  const ys=[...new Set(T.map(t=>t.season).concat(A.map(a=>a.s)))].sort((a,b)=>b-a);
+  return sdHdr(SKG(D.k.activity),D.k.activity,D.rank(x=>x.act),ca!=null?`circle ${f1(ca)} a season`:"",[[f1(d.txPerS),"Moves per season"],[T.length,"Trades"],[A.length,"Pickups"],m.faab?["$"+m.faab,"FAAB spent"]:null])
+   +sdSec("By season",sdTbl(["Season","Trades","Pickups","FAAB"],ys.map(y=>[y,T.filter(t=>t.season===y).length,A.filter(a=>a.s===y).length,"$"+A.filter(a=>a.s===y).reduce((s,a)=>s+(a.bid||0),0)])))
+   +sdWhy(["Activity isn’t a skill on its own; it shows how hands-on you are compared with the managers in "+esc(D.lbl)+"."]);};
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
