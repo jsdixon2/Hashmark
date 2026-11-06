@@ -9,7 +9,6 @@ Sources (each optional; a failed source is skipped and reported):
   FantasyPros ECR  via DynastyProcess (weekly / rest-of-season consensus ranks and expert spread)
   Fantasy Football Calculator ADP (attribution required)
   nflverse injury reports (career injury history)
-  The Odds API     player props, only if ODDS_API_KEY is set (kept under the free monthly credit budget)
 """
 import csv, io, json, os, re, sys, time, urllib.parse, urllib.request
 from collections import defaultdict
@@ -198,39 +197,8 @@ def main():
     for sid, a in inj.items():
         put(sid, "injh", a)
     note("injury history", len(inj))
-    # The Odds API player props (optional key; one pull on Wednesdays keeps us under the free credit budget)
-    ok = os.environ.get("ODDS_API_KEY", "").strip()
-    props = {}
-    if ok and time.gmtime().tm_wday in (2,) or (ok and os.environ.get("FORCE_PROPS")):
-        ev = jget(f"https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events?apiKey={ok}") or []
-        for e in ev[:16]:
-            j = jget(f"https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events/{e['id']}/odds?apiKey={ok}&regions=us&markets=player_anytime_td,player_reception_yds&oddsFormat=american&bookmakers=draftkings")
-            for d in walk(j):
-                if d.get("key") not in ("player_anytime_td", "player_reception_yds"):
-                    continue
-                for o in d.get("outcomes", []):
-                    nm = o.get("description") or o.get("name")
-                    sid = next((n2s.get((norm(nm), ps)) for ps in ("WR", "RB", "TE", "QB") if n2s.get((norm(nm), ps))), None)
-                    if not sid:
-                        continue
-                    pr = f(o.get("price"))
-                    p = (100 / (pr + 100)) if pr and pr > 0 else (-pr / (-pr + 100)) if pr else None
-                    if d["key"] == "player_anytime_td" and (o.get("name") in ("Yes", None) or o.get("name") == nm):
-                        props.setdefault(sid, {})["atd"] = round(p, 3) if p else None
-                    elif d["key"] == "player_reception_yds" and o.get("name") == "Over":
-                        props.setdefault(sid, {})["recyd"] = f(o.get("point"))
-        note("Odds API props", len(props))
     os.makedirs("data", exist_ok=True)
     out = {"asof": time.strftime("%Y-%m-%dT%H:%MZ", time.gmtime()), "season": cur, "sources": STATUS, "v": V}
-    if props:
-        out["props"] = props; out["props_asof"] = out["asof"]
-    elif os.path.exists("data/values.json"):
-        try:
-            old = json.load(open("data/values.json"))
-            if old.get("props"):
-                out["props"] = old["props"]; out["props_asof"] = old.get("props_asof")
-        except Exception:
-            pass
     with open("data/values.json", "w") as fh:
         json.dump(out, fh, separators=(",", ":"))
     print(f"{len(V)} players with values; file {os.path.getsize('data/values.json')//1024} KB")

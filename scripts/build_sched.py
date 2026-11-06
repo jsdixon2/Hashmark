@@ -59,6 +59,22 @@ def weather(games):
         except Exception as e:
             print("  weather skip", g["h"], e)
 weather(games)
+# ---- live betting lines from The Odds API (consensus of US books), when fresh ----
+try:
+    od = json.load(open("data/odds.json"))
+    fresh = od.get("lines_asof") and (datetime.datetime.utcnow() - datetime.datetime.strptime(od["lines_asof"], "%Y-%m-%dT%H:%M:%SZ")).total_seconds() < 36 * 3600
+    n = 0
+    for g in games:
+        o = (od.get("games") or {}).get(f'{g["a"]}@{g["h"]}') if fresh and not g["final"] else None
+        if o:
+            if o.get("sp") is not None: g["sp"] = o["sp"]
+            if o.get("tot") is not None: g["tot"] = o["tot"]
+            g["lsrc"] = f'{o.get("n", 0)} sportsbooks'; n += 1
+    print(f"  odds lines merged for {n} games")
+except FileNotFoundError:
+    pass
+except Exception as e:
+    print("  odds merge skip", e)
 os.makedirs("data", exist_ok=True)
 json.dump({"built": datetime.datetime.utcnow().isoformat() + "Z", "season": season, "games": games}, open("data/sched.json", "w"), separators=(",", ":"))
 print(f"{len(games)} games for {season}; lines on {sum(1 for g in games if g['tot'] is not None)}")

@@ -10,9 +10,9 @@ jobs:
       - run: python3 scripts/build_data.py
       - run: python3 scripts/build_adv.py || true
       - run: python3 scripts/build_values.py || true
-        env: {ROSTERAUDIT_KEY: "${{ secrets.ROSTERAUDIT_KEY }}", ODDS_API_KEY: "${{ secrets.ODDS_API_KEY }}"}
+        env: {ROSTERAUDIT_KEY: "${{ secrets.ROSTERAUDIT_KEY }}"}
       - run: python3 scripts/build_cfb.py || true
         env: {CFBD_API_KEY: "${{ secrets.CFBD_API_KEY }}"}
       - run: |
           git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
-          git add data/nfl.json data/adv.json data/cfb.json data/values.json 2>/dev/null; git add data/nfl.json; git diff --staged --quiet || (git commit -m "data refresh" && (git pull --rebase -q origin main; git push))
+          for f in data/nfl.json data/adv.json data/cfb.json data/values.json data/cfbd_cache.json; do [ -f $f ] && git add $f; done; git diff --staged --quiet || (git commit -m "data refresh" && (git pull --rebase -q origin main; git push))

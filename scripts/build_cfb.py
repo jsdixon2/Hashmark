@@ -246,26 +246,92 @@ def main():
                 ideal = {"WR": 200, "RB": 210, "TE": 245}[pos]
                 sc *= 1 - min(.08, abs(p["wt"] - ideal) / 400)
             p["score"] = round(sc * 100)
-    # recruiting + portal (optional CFBD key)
+    # CollegeFootballData (optional key, free tier 1,000 calls a month): cached so twice-daily runs stay ~150 calls a month
     if KEY:
         H = {"Authorization": "Bearer " + KEY, "Accept": "application/json"}
-        rec = {}
-        for y in range(cur - 5, cur + 1):
-            t = get(f"https://api.collegefootballdata.com/recruiting/players?year={y}&classification=HighSchool", headers=H)
-            for x in json.loads(t) if t else []:
-                rec[str(x.get("id"))] = {"stars": x.get("stars"), "rating": x.get("rating"), "rank": x.get("ranking"), "cls": y, "from": x.get("committedTo")}
-        portal = {}
-        for y in (cur, cur + 1):
-            t = get(f"https://api.collegefootballdata.com/player/portal?year={y}", headers=H)
-            for x in json.loads(t) if t else []:
-                portal[norm(f'{x.get("firstName","")} {x.get("lastName","")}')] = {"from": x.get("origin"), "to": x.get("destination"), "y": y, "stars": x.get("stars")}
-        for p in out.values():
-            for r_ in p["rid"]:
-                if r_ in rec:
-                    p["rec"] = rec[r_]; break
+        cpath = "data/cfbd_cache.json"
+        try:
+            cache = json.load(open(cpath))
+        except Exception:
+            cache = {}
+        now = time.time()
+        SK = {"QB", "RB", "WR", "TE", "ATH", "APB", "DUAL", "PRO"}
+
+        def cached(name, max_h, fetch):
+            c = cache.get(name)
+            if c and now - c.get("t", 0) < max_h * 3600:
+                return c["d"]
+            d = fetch()
+            if d is not None:
+                cache[name] = {"t": now, "d": d}
+                return d
+            return c["d"] if c else None
+
+        def jl(url):
+            t = get(url, headers=H)
+            try:
+                return json.loads(t) if t else None
+            except Exception:
+                return None
+
+        def f_rec():
+            rec = {}
+            for y in range(cur - 5, cur + 1):
+                xs = jl(f"https://api.collegefootballdata.com/recruiting/players?year={y}&classification=HighSchool")
+                if xs is None:
+                    return None
+                for x in xs:
+                    if (x.get("position") or "") in SK:
+                        rec[str(x.get("id"))] = {"stars": x.get("stars"), "rating": x.get("rating"), "rank": x.get("ranking"), "cls": y, "from": x.get("committedTo"), "aid": str(x.get("athleteId") or "")}
+            return rec
+
+        def f_portal():
+            pt = {}
+            for y in (cur, cur + 1):
+                for x in jl(f"https://api.collegefootballdata.com/player/portal?year={y}") or []:
+                    if (x.get("position") or "") in SK:
+                        pt[norm(f'{x.get("firstName","")} {x.get("lastName","")}')] = {"from": x.get("origin"), "to": x.get("destination"), "y": y, "stars": x.get("stars")}
+            return pt
+
+        def f_usage():
+            xs = jl(f"https://api.collegefootballdata.com/player/usage?year={cur}&excludeGarbageTime=true")
+            if xs is None:
+                return None
+            return {str(x["id"]): {k: round(v, 3) for k, v in (x.get("usage") or {}).items() if isinstance(v, (int, float))} for x in xs if x.get("position") in POS and x.get("id")}
+
+        def f_ppa():
+            xs = jl(f"https://api.collegefootballdata.com/ppa/players/season?year={cur}&excludeGarbageTime=true")
+            if xs is None:
+                return None
+            return {str(x["id"]): {"avg": {k: round(v, 3) for k, v in (x.get("averagePPA") or {}).items() if isinstance(v, (int, float))},
+                                   "tot": round((x.get("totalPPA") or {}).get("all") or 0, 1)} for x in xs if x.get("position") in POS and x.get("id")}
+
+        rec = cached("rec", 24 * 7, f_rec) or {}
+        portal = cached("portal", 24, f_portal) or {}
+        usage = cached("usage", 20, f_usage) or {}
+        ppa = cached("ppa", 20, f_ppa) or {}
+        recA = {v["aid"]: v for v in rec.values() if v.get("aid")}
+        for k, p in out.items():
+            r0 = recA.get(str(k))
+            if not r0:
+                for r_ in p["rid"]:
+                    if r_ in rec:
+                        r0 = rec[r_]; break
+            if r0:
+                p["rec"] = {kk: vv for kk, vv in r0.items() if kk != "aid"}
             if norm(p["n"]) in portal:
                 p["portal"] = portal[norm(p["n"])]
-        print(f"  recruiting: {sum(1 for p in out.values() if 'rec' in p)} matched; portal: {sum(1 for p in out.values() if 'portal' in p)}")
+            u = usage.get(str(k))
+            if u:
+                p["use"] = u
+            q = ppa.get(str(k))
+            if q:
+                p["ppa"] = q
+        json.dump(cache, open(cpath, "w"), separators=(",", ":"))
+        print(f"  CFBD: recruiting {sum(1 for p in out.values() if 'rec' in p)} matched; portal {sum(1 for p in out.values() if 'portal' in p)}; "
+              f"usage {sum(1 for p in out.values() if 'use' in p)}; EPA {sum(1 for p in out.values() if 'ppa' in p)}")
+    else:
+        print("  CFBD_API_KEY not set; skipping recruiting, portal, usage and EPA")
     # NFL draft results: tie drafted prospects to their NFL team
     picks = rows(NV + "draft_picks/draft_picks.csv")
     byname = {}
