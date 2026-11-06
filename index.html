@@ -407,6 +407,11 @@ html.noscroll,html.noscroll body{overflow:hidden;overscroll-behavior:none}
   box-shadow:inset 0 1px 0 color-mix(in srgb,#fff 35%,transparent),0 2px 10px rgba(0,0,0,.08)!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%)}
 .seg button.on,.subnav button.on{background:color-mix(in srgb,var(--ink) 88%,transparent)!important;color:var(--bg)!important;border-color:transparent!important;box-shadow:0 4px 14px rgba(0,0,0,.18)!important}
 .subnav{gap:8px!important;padding:4px 2px 10px!important;margin:0 -2px 4px!important}
+
+/* v18: content sits snug under the fixed header */
+main{padding-top:8px!important}
+.ctx{top:var(--hh)!important;margin-top:-8px!important;padding:8px 0!important;border-radius:0 0 18px 18px}
+.topline{margin-top:2px}
 </style>
 </head>
 <body>
@@ -1323,7 +1328,7 @@ document.addEventListener("click",e=>{
 },true);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#drawer").hidden)closeDrawer();});
 function fitHeader(){const h=document.querySelector("header.top");if(h)document.documentElement.style.setProperty("--hh",h.offsetHeight+"px");}
-window.addEventListener("resize",fitHeader);window.addEventListener("load",fitHeader);
+window.addEventListener("resize",fitHeader);window.addEventListener("load",fitHeader);try{new ResizeObserver(fitHeader).observe(document.querySelector("header.top"),{box:"border-box"});}catch(e){}if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitHeader);window.addEventListener("orientationchange",()=>setTimeout(fitHeader,250));document.addEventListener("visibilitychange",()=>{if(!document.hidden)fitHeader();});
 const _vH3=vHome;
 vHome=function(){const r=route();if(r.startsWith("nfl-"))return _vH3();const L=S.L;if(!L||!L.teams||!L.teams.length)return _vH3();
   try{const me=L.teams[mineIdx(L)],live=S.mode==="live",multi=S.leagues.length>1,ex=exploits().slice(0,3),n=NEWS[S.newsI%NEWS.length];
