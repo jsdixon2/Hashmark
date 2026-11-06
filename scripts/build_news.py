@@ -29,6 +29,10 @@ FEEDS = [
     ("Google News: The Ringer", "https://news.google.com/rss/search?q=site:theringer.com+NFL+when:3d&hl=en-US&gl=US&ceid=US:en"),
     ("Google News: Sports Illustrated", "https://news.google.com/rss/search?q=site:si.com+NFL+when:2d&hl=en-US&gl=US&ceid=US:en"),
     ("Google News: Bleacher Report", "https://news.google.com/rss/search?q=site:bleacherreport.com+NFL+when:2d&hl=en-US&gl=US&ceid=US:en"),
+    ("CBS College Football", "https://www.cbssports.com/rss/headlines/college-football/"),
+    ("Yahoo College Football", "https://sports.yahoo.com/college-football/rss/"),
+    ("Google News: college football", "https://news.google.com/rss/search?q=college+football+(injury+OR+transfer+OR+portal+OR+depth+chart+OR+declares)+when:2d&hl=en-US&gl=US&ceid=US:en"),
+    ("Google News: NFL draft prospects", "https://news.google.com/rss/search?q=NFL+draft+prospect+OR+big+board+when:3d&hl=en-US&gl=US&ceid=US:en"),
 ]
 KEEP_HOURS = 96
 MAX_ITEMS = 500

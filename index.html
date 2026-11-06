@@ -467,6 +467,12 @@ body{padding-top:0!important}
 .tag.warn{color:#E8B04A}.tag.bad{color:#FF7A8A}
 .pr.dead{opacity:.5}
 .rkw .rkr{grid-template-columns:minmax(0,11em) minmax(0,1fr) 4.4em}
+
+/* v22 devy lab */
+.dvr{display:grid;grid-template-columns:2.2em auto minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:11px 2px;text-align:left;color:var(--ink);font:inherit}
+.dvr:last-child{border-bottom:0}.dvn{color:var(--muted);font-weight:700;text-align:right}.dvm{min-width:0;display:flex;flex-direction:column;gap:1px}.dvm b{font:700 15px var(--fd)}
+.dvp{font:600 12px var(--fb);color:var(--acc)}.dvs{text-align:right}.dvs b{display:block;font:800 22px var(--fd)}.dvs em{font:600 10px var(--fb);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-style:normal}
+.up{color:var(--acc);font-size:.8em}
 </style>
 </head>
 <body>
@@ -1492,11 +1498,11 @@ function applySlate(){const wk=S.week,gs=NFLS.filter(g=>g.wk===wk);if(!gs.length
       (allow[d]=allow[d]||{QB:0,RB:0,WR:0,TE:0})[m.position]+=(s.pts_ppr||0);if(!seen.has(d)){seen.add(d);gp[d]=(gp[d]||0)+1;}}}
   const teams=Object.keys(allow).filter(t=>gp[t]);
   if(teams.length>=16){for(const k of Object.keys(DVP))delete DVP[k];const per={};for(const t of teams)per[t]={QB:allow[t].QB/gp[t],RB:allow[t].RB/gp[t],WR:allow[t].WR/gp[t],TE:allow[t].TE/gp[t]};
-    for(const t of teams)DVP[t]=[0,0,0,0,0,0,0,0];
+    for(const t of teams)DVP[t]=[0,0,0,0,0,0,0,0];const adj=t=>ADV.teams&&ADV.teams[t]&&ADV.teams[t].dvp;for(const pos of Object.keys(POSI)){const av=teams.reduce((s,t)=>s+per[t][pos],0)/teams.length;for(const t of teams){const a=adj(t);if(a&&a[pos]!=null)per[t][pos]=av+a[pos];}}
     for(const [pos,i] of Object.entries(POSI)){const ord=teams.slice().sort((a,b)=>per[b][pos]-per[a][pos]);ord.forEach((t,k)=>{DVP[t][i]=+per[t][pos].toFixed(1);DVP[t][i+1]=k+1;});}}
   const haveWk=LIVE.stats.some(x=>+x[0]===wk);GAMES.length=0;
   for(const g of gs){const tot=g.tot??44,sp=g.sp??0,fav=sp>=0?g.h:g.a,dome=/dome|closed/i.test(g.roof);
-    GAMES.push({a:g.a,h:g.h,fav,sp:Math.abs(sp),tot,ai:+((tot-sp)/2).toFixed(1),hi:+((tot+sp)/2).toFixed(1),when:g.when||"",venue:g.venue||"",roof:dome?"Dome":/open/i.test(g.roof)?"Retractable roof, open":"Open air",wx:"",t:null,w:null,g:null,pop:null,flag:dome?"roof":g.tot==null?"pending":"none",final:!!(g.final&&haveWk),top:[],noLine:g.tot==null});}
+    GAMES.push({a:g.a,h:g.h,fav,sp:Math.abs(sp),tot,ai:+((tot-sp)/2).toFixed(1),hi:+((tot+sp)/2).toFixed(1),when:g.when||"",venue:g.venue||"",roof:dome?"Dome":/open/i.test(g.roof)?"Retractable roof, open":"Open air",wx:g.wx?[g.wx.w>=15?`Wind ${Math.round(g.wx.w)} mph`:"",g.wx.pop>=40?`${g.wx.pop}% rain`:"",`${Math.round(g.wx.t)}°F`].filter(Boolean).join(" · "):"",t:g.wx?Math.round(g.wx.t):null,w:g.wx?Math.round(g.wx.w):null,g:g.wx?Math.round(g.wx.gust):null,pop:g.wx?g.wx.pop:null,flag:dome?"roof":g.tot==null?"pending":g.wx&&(g.wx.w>=12||g.wx.gust>=20||g.wx.pop>=50||g.wx.t<=25)?"watch":"none",final:!!(g.final&&haveWk),top:[],noLine:g.tot==null});}
   BYES.length=0;for(const t of Object.keys(TEAMS))if(t!=="FA"&&!gs.some(g=>g.a===t||g.h===t))BYES.push(t);
   const rec={};for(const g of NFLS){if(!g.final||g.as==null)continue;for(const [t,me,op] of [[g.a,g.as,g.hs],[g.h,g.hs,g.as]]){const r=rec[t]=rec[t]||[0,0,0];r[me>op?0:me<op?1:2]++;}}
   for(const k of Object.keys(REC))delete REC[k];for(const t in rec)REC[t]=rec[t][0]+"-"+rec[t][1]+(rec[t][2]?"-"+rec[t][2]:"");
@@ -2278,6 +2284,70 @@ function advPanel(id){const p=PL[id],a=advOf(p);if(!p||!a)return "";const M=ADVM
    ${rows?`<div class="rkb rkw mt">${rows}</div><p class="sub mt">Bars are percentiles among ${p.pos}s with 3+ games; longer is better.</p>`:""}${pv}${rep}
    <p class="sub">Sources: nflverse (player stats, play-by-play, Next Gen Stats, PFR advanced stats, snap counts, ESPN QBR, injury reports, depth charts), ffopportunity expected points, FTN charting (CC-BY-SA 4.0). Updated ${esc((ADV.asof||"").slice(0,10))}.</p></section>`;}
 vPlayer=(function(prev){return function(id){const h=prev(id),panel=advPanel(id);if(!panel)return h;const i=h.indexOf('<section class="pan mt"><div class="row sp"><h2>News</h2>');return i>=0?h.slice(0,i)+panel+h.slice(i):h+panel;};})(vPlayer);
+/* ===== v22: Devy Lab — college scouting from free play-level data ===== */
+let CFB=null,CFBst="idle";
+async function loadCfb(){if(CFBst!=="idle")return;CFBst="loading";try{const r=await fetch("data/cfb.json?t="+Math.floor(Date.now()/36e5),{cache:"no-store"});if(r.ok){CFB=await r.json();CFBst="ready";CFBP=null;}else CFBst="error";}catch(e){CFBst="error";}const rt=route();if(rt==="devy"||rt.startsWith("cfb-")||rt==="prep"||rt.startsWith("player-"))render();}
+const CLS=c=>c==null?"":["","Fr","So","Jr","Sr","5th"][Math.min(5,Math.round(c))]||"";
+const ftin=h=>h?`${Math.floor(h/12)}'${Math.round(h%12)}"`:"";
+let CFBP=null;
+function cfbPct(pos,k,v){if(v==null||!CFB)return null;CFBP=CFBP||{};const key=pos+k;if(!CFBP[key])CFBP[key]=Object.values(CFB.p).filter(p=>p.pos===pos&&p.m&&p.m[k]!=null).map(p=>p.m[k]).sort((a,b)=>a-b);const A=CFBP[key];if(A.length<10)return null;let lo=0;for(const x of A)if(x<v)lo++;return Math.round(100*lo/A.length);}
+function keyLine(p){const m=p.m||{},bo=p.bo?` · broke out as ${CLS(p.bo.cls)||p.bo.y}`:"";
+  if(p.pos==="WR"||p.pos==="TE")return `${pc(m.dom)} dominator · ${f1(m.yptpa)} yds/team att · ${pc(m.ts)} target share${bo}`;
+  if(p.pos==="RB")return `${pc(m.scrim)} of team scrimmage yds · ${f1(m.ypc)} YPC · ${pc(m.ts)} target share${bo}`;
+  const L=p.seasons[p.seasons.length-1]||{};return `${f1(m.ypa)} yds/att · ${L.ptd||0} TD, ${L.int||0} INT this year · ${Math.round(m.rush||0)} rush yds/g`;}
+function projLine(p){if(p.drafted)return `Drafted ${p.drafted.y} · Rd ${p.drafted.r}, pick ${p.drafted.p} · ${p.drafted.t}`;const q=p.proj;if(!q)return "";return q.rd?`Proj. Rd ${q.rd}${q.rd<=2?` (~#${q.pick})`:""}${q.team?` · ${q.team} slot`:""}`:"Proj. Day 3 / UDFA";}
+function vDevyLab(){if(!CFB){loadCfb();return `<div class="topline"><div class="eyebrow">College scouting</div><h1>Devy Lab</h1></div><section class="pan"><p class="sub">${CFBst==="error"?"The college data file isn’t built yet. It appears after the refresh-data GitHub Action runs.":"Loading college data…"}</p></section>`;}
+  const yr=+CFB.season,classes=[...new Set(Object.values(CFB.p).filter(p=>!p.drafted).map(p=>p.dclass))].sort();const tab=S.dvTab||String(classes[0]),pos=S.dvPos||"ALL",q=(S.dvQ||"").toLowerCase();
+  let xs=Object.values(CFB.p).filter(p=>tab==="drafted"?p.drafted&&p.drafted.y>=yr:!p.drafted&&String(p.dclass)===tab);
+  if(pos!=="ALL")xs=xs.filter(p=>p.pos===pos);if(q)xs=xs.filter(p=>(p.n+" "+p.school).toLowerCase().includes(q));
+  xs.sort(tab==="drafted"?(a,b)=>a.drafted.p-b.drafted.p:(a,b)=>(a.proj?a.proj.pick:999)-(b.proj?b.proj.pick:999));
+  const risers=Object.values(CFB.p).filter(p=>!p.drafted&&p.trend>=.35&&p.score>=60).sort((a,b)=>b.trend-a.trend).slice(0,6);
+  const names=new Map(Object.values(CFB.p).map(p=>[nrm(p.n),p]));const pn=NW.items.filter(it=>{const t=nrm(it.t);for(const [k,p] of names){if(k.split(" ").length>1&&t.includes(k)){it._cfb=p.id;return true;}}return false;}).slice(0,5);
+  const row=(p,i)=>`<button class="dvr" data-go="cfb-${p.id}"><span class="dvn num">${tab==="drafted"?p.drafted.p:i+1}</span>${pos_(p.pos)}<span class="dvm"><b class="ell">${esc(p.n)}${p.trend>=.35?' <span class="up">▲</span>':''}</b><span class="sub ell">${esc(p.school)}${p.cls?" · "+CLS(p.cls):""}${p.conf?" · "+esc(p.conf):""}</span><span class="sub ell">${esc(keyLine(p))}</span><span class="dvp ell">${esc(projLine(p))}</span></span><span class="dvs"><b class="num">${p.score}</b><em>score</em></span></button>`;
+  return `<div class="topline"><div class="eyebrow">College scouting · ${yr} season</div><h1>Devy Lab</h1></div>
+  <div class="seg">${classes.map(c=>`<button data-dvtab="${c}" class="${tab===String(c)?"on":""}">${c} class</button>`).join("")}<button data-dvtab="drafted" class="${tab==="drafted"?"on":""}">Drafted ${yr}</button></div>
+  <div class="seg">${["ALL","QB","RB","WR","TE"].map(x=>`<button data-dvpos="${x}" class="${pos===x?"on":""}">${x==="ALL"?"All":x}</button>`).join("")}</div>
+  <div class="field"><input id="dvq" placeholder="Search a player or school" value="${esc(S.dvQ||"")}" autocomplete="off"></div>
+  ${risers.length&&tab!=="drafted"?`<section class="pan mt"><div class="row sp"><h2>Risers</h2><span class="tag">vs last season</span></div><div class="chips mt">${risers.map(p=>`<button class="chip" data-go="cfb-${p.id}">${esc(p.pos)} ${esc(p.n)} <span class="up">+${Math.round(p.trend*100)}%</span></button>`).join("")}</div></section>`:""}
+  ${pn.length?`<section class="pan mt"><h2>Prospect news</h2>${pn.map(it=>nItem(it,0)).join("")}</section>`:""}
+  <section class="pan mt">${xs.slice(0,150).map(row).join("")||`<p class="sub">No prospects match.</p>`}</section>
+  <p class="sub mt">Scores rank production within each position: market share, efficiency, explosive plays and how early a player broke out, adjusted for conference and size. Projected rounds and landing slots are model estimates from those scores and the current NFL standings, not mock drafts.${CFB.recruiting?" Recruiting ratings from CollegeFootballData.":""} Data: cfbfastR-data (CollegeFootballData), nflverse draft and combine results. Updated ${esc((CFB.asof||"").slice(0,10))}.</p>`;}
+const pos_=x=>typeof pos==="function"?pos(x):`<span class="tag">${x}</span>`;
+function vCollege(id){if(!CFB){loadCfb();return `<section class="pan"><p class="sub">Loading college data…</p></section>`;}const p=CFB.p[id];if(!p)return `<div class="empty">That prospect isn’t in the college file.</div>`;
+  const L=p.seasons,M=p.m||{},ks={WR:[["dom","Dominator rating",pc],["yptpa","Yards per team pass att",f1],["ts","Target share",pc],["ypr","Yards per catch",f1],["x20","20+ yd catches / game",f1]],
+   RB:[["scrim","Share of team scrimmage yds",pc],["rs","Share of team carries",pc],["ypc","Yards per carry",f1],["ts","Target share",pc],["x15","15+ yd runs / game",f1],["rtd","Rush TDs (best year)",x=>x]],
+   QB:[["ypa","Yards per attempt",f1],["cmp","Completion %",pc],["tdint","TD-to-INT ratio",f1],["rush","Rush yds / game",f1],["att","Career attempts",x=>x]]};ks.TE=ks.WR;
+  const bars=(ks[p.pos]||[]).filter(([k])=>M[k]!=null).map(([k,n,fmt])=>{const v=cfbPct(p.pos,k,M[k]);return `<div class="rkr"><span>${n}</span><span class="bar"><i class="${v!=null&&v>=75?"hi":v!=null&&v<=25?"lo":""}" style="width:${Math.max(3,v??0)}%"></i></span><b class="num">${fmt(M[k])}</b></div>`;}).join("");
+  const sk=p.pos==="QB"?"pyd":p.pos==="RB"?"scrim":"dom";const series=L.map(l=>l[sk]!=null?(sk==="pyd"?l[sk]:Math.round(l[sk]*1000)/10):null);
+  const head=p.pos==="QB"?["Yr","Team","G","Cmp/Att","Yds","TD","INT","Rush"]:p.pos==="RB"?["Yr","Team","G","Car","Yds","TD","Rec","Rec yds"]:["Yr","Team","G","Tgt","Rec","Yds","TD","Dom"];
+  const cells=l=>p.pos==="QB"?[l.y,l.team,l.g,`${l.cmp||0}/${l.att||0}`,l.pyd||0,l.ptd||0,l.int||0,l.ruyd||0]:p.pos==="RB"?[l.y,l.team,l.g,l.car||0,l.ruyd||0,l.rutd||0,l.rec||0,l.ryd||0]:[l.y,l.team,l.g,l.tgt||0,l.rec||0,l.ryd||0,l.rtd||0,pc(l.dom)];
+  const nfl=p.drafted?Object.values(PL).find(q=>nrm(q.name)===nrm(p.n)):null;
+  const tr=(p.teams||[]).length>1?`<p class="sub">Transfer history: ${p.teams.map(t=>`${esc(t[1])} (${t[0]})`).join(" → ")}</p>`:"";
+  return `<div class="topline"><div class="eyebrow">${esc(p.pos)} · ${esc(p.school)}${p.conf?" · "+esc(p.conf):""}</div><h1>${esc(p.n)}</h1><div class="hsub"><span>${p.cls?CLS(p.cls)+" · ":""}${p.drafted?"Drafted "+p.drafted.y:p.dclass+" draft class"}</span>${p.ht?`<span>${ftin(p.ht)}${p.wt?", "+p.wt+" lb":""}</span>`:""}${p.home?`<span>${esc(p.home)}</span>`:""}</div></div>
+  <section class="pan"><div class="hxk"><div><b class="num">${p.score}</b><span>Devy score</span><em>${p.proj?`#${p.proj.rank} ${p.pos} in the class`:""}</em></div><div><b class="num">${p.drafted?"Rd "+p.drafted.r:p.proj&&p.proj.rd?"Rd "+p.proj.rd:"Day 3"}</b><span>${p.drafted?"Drafted":"Projected round"}</span><em>${p.drafted?`Pick ${p.drafted.p} · ${p.drafted.t}`:p.proj&&p.proj.team?`Model slot: ${p.proj.team}`:"Model estimate"}</em></div><div><b class="num">${p.bo?CLS(p.bo.cls)||p.bo.y:"–"}</b><span>Breakout</span><em>${p.bo?"First season as a featured target/back":"No breakout season yet"}</em></div>${p.rec?`<div><b class="num">${"★".repeat(p.rec.stars||0)}</b><span>Recruit</span><em>${p.rec.rank?"#"+p.rec.rank+" nationally · ":""}class of ${p.rec.cls}</em></div>`:""}</div>
+   ${nfl?`<button class="btn ghost mt" data-go="player-${nfl.id}">Open his NFL profile</button>`:""}</section>
+  <section class="pan mt"><h2>Profile</h2><div class="rkb rkw mt">${bars}</div><p class="sub mt">Percentiles among FBS ${esc(p.pos)}s on this board, best college season.</p>${L.length>1?chLine([{n:sk==="pyd"?"Passing yards":sk==="scrim"?"Scrimmage share %":"Dominator %",v:series}],L.map(l=>String(l.y)),{h:130}):""}</section>
+  <section class="pan mt"><h2>Career</h2><div class="tblw"><table class="tbl"><thead><tr>${head.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${L.slice().reverse().map(l=>`<tr>${cells(l).map((c,i)=>`<td${i>1?' class="num"':""}>${esc(String(c))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${tr}${p.portal?`<p class="sub">Transfer portal ${p.portal.y}: ${esc(p.portal.from||"")} → ${esc(p.portal.to||"undecided")}</p>`:""}</section>
+  ${p.comps&&p.comps.length?`<section class="pan mt"><h2>College profile comps</h2><div class="list">${p.comps.map(c=>`<div class="pr" data-go="cfb-${c.id}" role="link" tabindex="0"><span class="tag">Rd ${c.r}</span><div><div class="nm">${esc(c.n)}</div><div class="meta">${c.y} draft · ${esc(c.t)}</div></div></div>`).join("")}</div><p class="sub mt">Recently drafted ${esc(p.pos)}s whose college production and size looked most like his.</p></section>`:""}
+  ${p.news&&p.news.length?`<section class="pan mt"><h2>Latest</h2>${p.news.map(n=>`<div class="nitem" data-nurl="${esc(n.url)}" role="link" tabindex="0"><div class="nk"><span class="nmeta">${esc(n.src||"")}${n.d?" · "+esc(new Date(n.d).toLocaleDateString(undefined,{month:"short",day:"numeric"})):""}</span></div><div class="nt">${esc(n.t)}</div></div>`).join("")}</section>`:""}
+  <p class="sub mt">From play-level college data (cfbfastR-data / CollegeFootballData). Scores, projections and comps are Hashmark model estimates.</p>`;}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-dvtab]");if(t){S.dvTab=t.dataset.dvtab;render();return;}const q=e.target.closest("[data-dvpos]");if(q){S.dvPos=q.dataset.dvpos;render();return;}},true);
+document.addEventListener("input",e=>{if(e.target&&e.target.id==="dvq"){S.dvQ=e.target.value;clearTimeout(S._dvt);S._dvt=setTimeout(()=>{render();const i=$("#dvq");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},250);}});
+vPlayers=(function(prev){return function(devy){if(devy)return (typeof subnav==="function"?"":"")+vDevyLab();return prev(devy);};})(vPlayers);
+vHome=(function(prev){return function(){const r=route();if(r.startsWith("cfb-"))return vCollege(r.slice(4));return prev();};})(vHome);
+LABEL=(function(prev){return function(r){return r==="devy"?"Devy Lab":r.startsWith("cfb-")?"Prospect":prev(r);};})(LABEL);
+/* college link on NFL player pages */
+vPlayer=(function(prev){return function(id){const h=prev(id),p=PL[id];if(!CFB){if(CFBst==="idle")setTimeout(loadCfb,300);return h;}if(!p)return h;const c=Object.values(CFB.p).find(x=>x.drafted&&nrm(x.n)===nrm(p.name));if(!c)return h;
+  return h+`<section class="pan mt"><div class="row sp"><h2>College profile</h2><span class="tag">${esc(c.school)}</span></div><p class="sub">${esc(keyLine(c))}</p><button class="btn ghost mt" data-go="cfb-${c.id}">Open college profile</button></section>`;};})(vPlayer);
+/* advanced panel extras: usage shares, routes, athleticism, draft capital */
+advPanel=(function(prev){return function(id){let h=prev(id);const a=advOf(PL[id]);if(!h||!a)return h;const x=[];
+  const kv=(v,l,s)=>`<div><b class="num">${v}</b><span>${l}</span>${s?`<em>${s}</em>`:""}</div>`;
+  if(a.opps!=null)x.push(kv(pc(a.opps),"Opportunity share","carries + targets of team"));if(a.hvt!=null&&PL[id].pos==="RB")x.push(kv(f1(a.hvt),"High-value touches / g","targets + carries inside the 10"));
+  if(a.nopps!=null)x.push(kv(pc(a.nopps),"Neutral-script share","close games only"));if(a.d3s!=null)x.push(kv(pc(a.d3s),"Third-down share"));if(a.twos!=null)x.push(kv(pc(a.twos),"Two-minute share"));
+  const R=a.routes;if(R){x.push(kv(f1(R.yprr),"Yards per route",`${R.season}`));x.push(kv(pc(R.tprr),"Targets per route",R.tprr_man!=null?`man ${pc(R.tprr_man)} · zone ${pc(R.tprr_zone)}`:""));if(R.rp!=null)x.push(kv(pc(R.rp),"Route participation",`${R.rt} routes`));}
+  const A=a.ath;if(A){if(A.forty)x.push(kv(A.forty+"s","40-yard dash",A.speed?`speed score ${A.speed}`:""));if(A.vert||A.broad)x.push(kv(`${A.vert||"–"}" / ${A.broad||"–"}"`,"Vertical / broad"));if(A.cone||A.shuttle)x.push(kv(`${A.cone||"–"} / ${A.shuttle||"–"}`,"3-cone / shuttle"));}
+  const D=a.draft;if(D)x.push(kv(`Rd ${D.r}`,`Drafted ${D.y}`,`pick ${D.p} · ${D.t}${D.col?" · "+D.col:""}`));
+  if(!x.length)return h;const block=`<div class="eyebrow mt">Role, routes and athletic profile</div><div class="hxk">${x.join("")}</div>`;const i=h.indexOf('<div class="rkb rkw');return i>=0?h.slice(0,i)+block+h.slice(i):h;};})(advPanel);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}

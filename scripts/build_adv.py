@@ -126,7 +126,8 @@ def build(season, ids, light=False):
             continue
         P[e2s[r["player_id"]]]["wk"].setdefault(w, {})["qbr"] = f(r.get("qbr_total"))
     # --- play-by-play (+ FTN charting): red zone, goal line, first reads, catchable/contested ---
-    team = defaultdict(lambda: {"plays": 0, "games": set(), "pass_oe": [], "rz": 0, "gl": 0})
+    team = defaultdict(lambda: {"plays": 0, "games": set(), "pass_oe": [], "rz": 0, "gl": 0, "epa": 0.0, "succ": 0})
+    TW = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))  # team -> week -> counters
     pbp = get(NV + f"pbp/play_by_play_{season}.csv.gz")
     ftn = {}
     for r in rows(NV + f"ftn_charting/ftn_charting_{season}.csv"):
@@ -137,6 +138,12 @@ def build(season, ids, light=False):
                 continue
             tm = r.get("posteam"); T = team[tm]; T["plays"] += 1; T["games"].add(r.get("game_id"))
             yl = f(r.get("yardline_100")) or 99; wp = f(r.get("wp")); dn = r.get("down")
+            ep = f(r.get("epa"))
+            if ep is not None: T["epa"] += ep; T["succ"] += 1 if ep > 0 else 0
+            wk_ = int(r["week"]); tw = TW[tm][wk_]
+            neutral = wp is not None and .2 <= wp <= .8
+            two = r.get("qtr") in ("2", "4") and (f(r.get("half_seconds_remaining")) or 999) <= 120
+            tw["opp"] += 1; tw["nopp"] += 1 if neutral else 0; tw["d3"] += 1 if dn == "3" else 0; tw["two"] += 1 if two else 0
             if wp is not None and .2 <= wp <= .8 and dn in ("1", "2") and f(r.get("pass_oe")) is not None:
                 T["pass_oe"].append(f(r["pass_oe"]))
             if yl <= 20: T["rz"] += 1
@@ -145,6 +152,11 @@ def build(season, ids, light=False):
             if not who or who not in g2s:
                 continue
             s = g2s[who]; w = int(r["week"]); o = P[s]["wk"].setdefault(w, {})
+            o["opp"] = o.get("opp", 0) + 1
+            if neutral: o["nopp"] = o.get("nopp", 0) + 1
+            if dn == "3": o["d3"] = o.get("d3", 0) + 1
+            if two: o["two"] = o.get("two", 0) + 1
+            if r.get("play_type") == "pass" or yl <= 10: o["hvt"] = o.get("hvt", 0) + 1
             if yl <= 20: o["rz"] = o.get("rz", 0) + 1
             if yl <= 5: o["gl"] = o.get("gl", 0) + 1
             o.setdefault("team", tm)
@@ -159,7 +171,14 @@ def build(season, ids, light=False):
     tm_out = {}
     for tm, T in team.items():
         g = max(1, len(T["games"]))
-        tm_out[tm] = {"ppg": r2(T["plays"] / g, 1), "proe": r2(mean(T["pass_oe"]), 2), "rzpg": r2(T["rz"] / g, 2), "glpg": r2(T["gl"] / g, 2)}
+        tm_out[tm] = {"ppg": r2(T["plays"] / g, 1), "proe": r2(mean(T["pass_oe"]), 2), "rzpg": r2(T["rz"] / g, 2), "glpg": r2(T["gl"] / g, 2),
+                      "epa": r2(T["epa"] / max(1, T["plays"]), 3), "succ": r2(T["succ"] / max(1, T["plays"]), 3)}
+    for s, v in P.items():
+        for w, o in v["wk"].items():
+            tm = o.get("team")
+            if tm in TW and w in TW[tm]:
+                for k in ("opp", "nopp", "d3", "two"):
+                    o["T" + k] = TW[tm][w][k]
     # team red-zone share
     for s, v in P.items():
         for w, o in v["wk"].items():
@@ -220,6 +239,9 @@ def summarize(P, tm, season):
              "ybc": r2(tot("ybc") / tot("car"), 2) if tot("car") >= 10 else None, "yaco": r2(tot("yac2") / tot("car"), 2) if tot("car") >= 10 else None,
              "bt": (tot("bt") + tot("rbt")) or None, "bad": r2(mean(col("bad")), 1), "prs": r2(mean(col("prs")), 1),
              "xfp3": r2(mean(col("xfp", l3))), "fp3": r2(mean(col("fp", l3))),
+             "hvt": r2(tot("hvt") / g, 1), "opps": r2(tot("opp") / tot("Topp"), 3) if tot("Topp") else None,
+             "nopps": r2(tot("nopp") / tot("Tnopp"), 3) if tot("Tnopp") else None, "d3s": r2(tot("d3") / tot("Td3"), 3) if tot("Td3") else None,
+             "twos": r2(tot("two") / tot("Ttwo"), 3) if tot("Ttwo") else None,
              "w": [[w, r2(wk[w].get("fp"), 1), r2(wk[w].get("xfp"), 1), wk[w].get("snap"), r2((wk[w].get("ts") or 0) * 100, 1) if wk[w].get("ts") is not None else None] for w in ws]}
         n = v.get("ngs") or {}
         if not n:
@@ -233,6 +255,101 @@ def summarize(P, tm, season):
             S["dc"] = v["dc"]
         out[s] = {k: val for k, val in S.items() if val is not None}
     return out
+
+
+def norm(n):
+    import re
+    n = (n or "").lower().replace(".", "").replace("'", "").replace("’", "")
+    n = re.sub(r"\s+(jr|sr|ii|iii|iv|v)$", "", n.strip())
+    return re.sub(r"[^a-z ]", "", n).strip()
+
+
+def extras(cur, ids, idr, out, tm):
+    g2s, p2s, e2s = ids
+    c2s = {r["cfbref_id"]: r["sleeper_id"] for r in idr if r.get("cfbref_id") not in ("", "NA", None) and r["sleeper_id"] not in ("", "NA")}
+    n2s = {}
+    for r in idr:
+        if r["sleeper_id"] in ("", "NA") or r.get("position") not in ("QB", "RB", "WR", "TE"):
+            continue
+        k = (norm(r.get("merge_name") or r.get("name")), r.get("position"))
+        n2s.setdefault(k, r["sleeper_id"])
+    def put(s, key, val):
+        if s and val:
+            out.setdefault(s, {})[key] = val
+    # combine + athletic scores
+    for r in rows(NV + "combine/combine.csv"):
+        s = p2s.get(r.get("pfr_id")) or c2s.get(r.get("cfb_id"))
+        if not s:
+            continue
+        wt, fo, vj, bj = f(r.get("wt")), f(r.get("forty")), f(r.get("vertical")), f(r.get("broad_jump"))
+        a = {"ht": r.get("ht") or None, "wt": wt, "forty": fo, "vert": vj, "broad": bj, "cone": f(r.get("cone")), "shuttle": f(r.get("shuttle")), "bench": f(r.get("bench")),
+             "speed": r2(wt * 200 / fo ** 4, 1) if wt and fo else None, "school": r.get("school") or None}
+        put(s, "ath", {k: v for k, v in a.items() if v is not None})
+    # draft capital
+    for r in rows(NV + "draft_picks/draft_picks.csv"):
+        s = g2s.get(r.get("gsis_id")) or p2s.get(r.get("pfr_player_id")) or c2s.get(r.get("cfb_player_id"))
+        if s:
+            put(s, "draft", {"y": int(r["season"]), "r": int(r["round"]), "p": int(r["pick"]), "t": r.get("team"), "col": r.get("college")})
+    # (nflverse contracts are not used: that file stopped updating in 2022)
+    # routes run (participation + play-by-play), current season if published else last season
+    for season in (cur, cur - 1):
+        part = get(NV + f"pbp_participation/pbp_participation_{season}.csv")
+        if not part:
+            continue
+        pbp = get(NV + f"pbp/play_by_play_{season}.csv.gz")
+        if not pbp:
+            continue
+        plays = {}
+        for r in csv.DictReader(io.StringIO(pbp)):
+            if r.get("season_type") != "REG" or r.get("qb_dropback") != "1":
+                continue
+            yd = f(r.get("yards_gained")) if r.get("complete_pass") == "1" else 0
+            plays[(r["game_id"], r["play_id"])] = (r.get("receiver_player_id"), yd or 0, r.get("posteam"))
+        R = defaultdict(lambda: {"rt": 0, "tg": 0, "yd": 0.0, "man": [0, 0], "zone": [0, 0], "games": set()})
+        TD = defaultdict(int)
+        for r in csv.DictReader(io.StringIO(part)):
+            k = (r.get("nflverse_game_id"), r.get("play_id"))
+            if k not in plays:
+                continue
+            rec, yd, tm_ = plays[k]
+            TD[(tm_, r["nflverse_game_id"])] += 1
+            ids_ = (r.get("offense_players") or "").split(";"); pos_ = (r.get("offense_positions") or "").split(";")
+            mz = (r.get("defense_man_zone_type") or "").upper()
+            for gid, ps in zip(ids_, pos_):
+                if ps not in ("WR", "TE", "RB") or gid not in g2s:
+                    continue
+                o = R[gid]; o["rt"] += 1; o["games"].add((tm_, r["nflverse_game_id"]))
+                hit = gid == rec
+                if hit: o["tg"] += 1; o["yd"] += yd
+                b = o["man"] if "MAN" in mz else o["zone"] if "ZONE" in mz else None
+                if b is not None:
+                    b[0] += 1; b[1] += 1 if hit else 0
+        for gid, o in R.items():
+            if o["rt"] < 40:
+                continue
+            team_db = sum(TD[g] for g in o["games"])
+            put(g2s[gid], "routes", {"season": season, "rt": o["rt"], "rp": r2(o["rt"] / team_db, 3) if team_db else None, "tprr": r2(o["tg"] / o["rt"], 3),
+                                     "yprr": r2(o["yd"] / o["rt"], 2), "tprr_man": r2(o["man"][1] / o["man"][0], 3) if o["man"][0] >= 25 else None,
+                                     "tprr_zone": r2(o["zone"][1] / o["zone"][0], 3) if o["zone"][0] >= 25 else None})
+        print(f"  routes from {season} participation: {sum(1 for v in out.values() if 'routes' in v)} players")
+        break
+    # opponent-adjusted fantasy points allowed by position
+    sr = [r for r in rows(NV + f"stats_player/stats_player_week_{cur}.csv") if r.get("season_type") == "REG" and r.get("position") in ("QB", "RB", "WR", "TE")]
+    pts = defaultdict(list)
+    for r in sr:
+        v = f(r.get("fantasy_points_ppr"))
+        if v is not None:
+            pts[r["player_id"]].append(v)
+    avgp = {k: sum(v) / len(v) for k, v in pts.items() if len(v) >= 3}
+    allow = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+    for r in sr:
+        k = r["player_id"]
+        if k not in avgp:
+            continue
+        v = f(r.get("fantasy_points_ppr")) or 0
+        allow[r["opponent_team"]][r["position"]][r.get("game_id")] += v - avgp[k]
+    for d, byp in allow.items():
+        tm.setdefault(d, {})["dvp"] = {ps: r2(sum(g.values()) / max(1, len(g)), 2) for ps, g in byp.items()}
 
 
 def main():
@@ -251,6 +368,7 @@ def main():
     for s, v in prev.items():
         keep = {k: v[k] for k in ("g", "fp", "xfp", "fpoe", "ts", "wopr", "snap") if k in v}
         cur_s.setdefault(s, {})["prev"] = keep
+    extras(cur, ids, idr, cur_s, tm)
     os.makedirs("data", exist_ok=True)
     with open("data/adv.json", "w") as fh:
         json.dump({"asof": time.strftime("%Y-%m-%dT%H:%MZ", time.gmtime()), "season": cur, "teams": tm, "p": cur_s}, fh, separators=(",", ":"))
