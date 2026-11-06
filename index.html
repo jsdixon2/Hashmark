@@ -3771,7 +3771,7 @@ function skillDetail(focus){const C=skillCtx();if(!C)return;const {m,M,G}=C,d=m.
   const S=m.scores.slice().sort((a,b)=>a.s-b.s||a.w-b.w),sc2=m.scores.map(x=>x.v),mean=sc2.length?sc2.reduce((a,b)=>a+b,0)/sc2.length:0,sd=sc2.length>2?Math.sqrt(sc2.reduce((t,v)=>t+(v-mean)**2,0)/sc2.length):0;
   const by=(xs,f,dir=1)=>xs.slice().sort((a,b)=>dir*(f(b)-f(a)))[0];
   const tradeTxt=t=>`Got ${[...(t.rec||[]),...(t.recK||[]).map(x=>`${x.season} R${x.round}`)].join(", ")||"nothing"} for ${[...(t.gave||[]),...(t.gaveK||[]).map(x=>`${x.season} R${x.round}`)].join(", ")||"nothing"}`;
-  const card=(key,name,why,bw)=>{const v=k[key],g=SKG(v);return `<div class="skc" id="sk-${key}"><div class="skh"><span class="grd ${/^A/.test(g)?"gA":/^B|C\+/.test(g)?"gB":g==="–"?"":"gC"}">${g}</span><div style="min-width:0"><b>${name}</b><div class="sub" style="margin:0">${v==null?"Not enough data yet":`${v}th percentile of ${pool.length} managers`}</div></div></div>
+  const card=(key,name,why,bw)=>{const v=k[key],g=SKG(v);return `<div class="skc" id="sk-${key}"><div class="skh"><span class="grd ${/^A/.test(g)?"gA":/^B|C\+/.test(g)?"gB":g==="–"?"":"gC"}">${g}</span><div style="min-width:0"><b>${name}</b><div class="sub" style="margin:0">${v==null?"Not enough data yet":`${ordn(v)} percentile of ${pool.length} managers`}</div></div></div>
     <ul class="why">${why.filter(Boolean).map(x=>`<li>${x}</li>`).join("")}</ul>${bw.filter(Boolean).length?`<div class="skbw">${bw.filter(Boolean).map(([t,c,x])=>`<div class="sk-${c}"><span class="eyebrow">${t}</span><div>${x}</div></div>`).join("")}</div>`:""}</div>`;};
   const cards=[];
   { // lineups
