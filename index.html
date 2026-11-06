@@ -887,6 +887,33 @@ html{scroll-padding-top:calc(var(--chh,62px) + 12px)}
 #chrome.compact .hsum{display:flex;animation:hsin .18s ease}
 @keyframes hsin{from{opacity:0;transform:translateY(-4px)}}
 @media (min-width:1100px){.hsum{padding:8px max(32px,calc((100vw - var(--sw) - 1180px)/2)) 10px}}
+/* War Room */
+.wrsel{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.wrsel select,#hubslot #wrlg{appearance:none;-webkit-appearance:none;width:100%;height:42px;padding:0 38px 0 14px;border-radius:14px;border:1px solid var(--line);background:var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") right 12px center/16px no-repeat;color:var(--ink);font:700 14px var(--fd)}
+.capg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.capg>div{background:var(--panel2);border-radius:12px;padding:8px 10px;display:flex;flex-wrap:wrap;gap:5px;align-items:center}.capg .eyebrow{flex-basis:100%;font-size:10px}
+.wrp{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid color-mix(in srgb,var(--line) 50%,transparent)}.wrp:last-of-type{border-bottom:0}
+.wrpk{display:flex;flex-direction:column;align-items:center;background:var(--panel2);border-radius:12px;padding:6px 0}.wrpk b{font:800 17px var(--fd)}.wrpk .sub{margin:0;font-size:10.5px}
+.wrp [data-go]{cursor:pointer;border-bottom:1px dotted var(--muted)}
+.wrt{display:flex;gap:10px;align-items:flex-start;padding:8px 0;font-size:13.5px;line-height:1.45}.wrt .pill{flex:none}
+.wrt.up .pill{background:color-mix(in srgb,var(--tl-g) 18%,transparent)!important;color:var(--tl-g)!important}.wrt.down .pill{background:color-mix(in srgb,var(--tl-y) 18%,transparent)!important;color:var(--tl-y)!important}
+.wrb{display:flex;flex-direction:column;margin-top:4px}
+.wrth{font:700 11px var(--fb);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:12px 2px 4px;border-bottom:1px solid var(--line)}
+.wrr{display:grid;grid-template-columns:24px 34px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid color-mix(in srgb,var(--line) 45%,transparent)}
+.wrr.star{background:color-mix(in srgb,var(--tl-y) 7%,transparent);border-radius:10px}
+.wrn{font:700 13px var(--fd);color:var(--muted);text-align:right}
+.wtier{all:unset;cursor:pointer;text-align:center;font:800 11px var(--fd);padding:4px 0;border-radius:8px}
+.wtier.t1{background:color-mix(in srgb,var(--tl-g) 22%,transparent);color:var(--tl-g)}.wtier.t2{background:color-mix(in srgb,var(--acc) 18%,transparent);color:var(--acc)}.wtier.t3{background:color-mix(in srgb,var(--tl-y) 20%,transparent);color:var(--tl-y)}.wtier.t4{background:color-mix(in srgb,var(--tl-r) 16%,transparent);color:var(--tl-r)}.wtier.t5{background:var(--panel2);color:var(--muted)}
+.wrm{display:flex;gap:8px;align-items:center;min-width:0;cursor:pointer}
+.wrv{font:700 13px var(--fd);color:var(--muted)}
+.wra{display:flex;gap:2px}.wra button{all:unset;cursor:pointer;width:26px;height:26px;display:grid;place-items:center;border-radius:8px;font-size:12px;color:var(--muted)}.wra button:hover{background:var(--panel2);color:var(--ink)}
+.tt{background:var(--panel2);color:var(--muted)}
+@media (max-width:520px){.wrr{grid-template-columns:20px 30px minmax(0,1fr) auto;row-gap:2px}.wrv{display:none}.wra button{width:24px}}
+.t10g{display:grid;grid-template-columns:1fr;gap:0;margin-top:6px}
+@media (min-width:760px){.t10g{grid-template-columns:1fr 1fr;column-gap:18px}}
+.t10r{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:22px 30px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 2px;border-bottom:1px solid color-mix(in srgb,var(--line) 45%,transparent);font-size:13.5px}
+.t10r>.num:first-child{font:800 14px var(--fd);color:var(--muted);text-align:right}
+.ndot{color:var(--tl-g);font-weight:700}
+.t10{margin-top:0!important}
 </style>
 </head>
 <body>
@@ -3850,6 +3877,102 @@ vMatchup=(function(prev){return function(li){return prev(li).replace(/<div class
   window.hsumReset=()=>{set(false);lastY=window.scrollY;};})();
 shellPost=(function(prev){return function(){prev();if(window.hsumUpdate)hsumUpdate();if(window.scrollY<90&&window.hsumReset)hsumReset();};})(shellPost);
 document.addEventListener("input",e=>{if(e.target.closest&&e.target.closest("#hubslot")&&window.hsumUpdate)hsumUpdate();});
+
+/* ===== v36: War Room (dynasty/keeper) — stance, capital, draft plan, trade up/down, interactive big board; Devy Lab top 10 ===== */
+HUBS.scout.tabs=HUBS.scout.tabs.map(t=>t[0]==="prep"?["prep","War Room"]:t);
+LABEL=(function(prev){return function(r){return r==="prep"?"War Room":prev(r);};})(LABEL);
+vScoutLand=(function(prev){return function(){return prev().replace(/(<div class="rtile" data-go="prep"[\s\S]*?<span>)Draft prep(<\/span>)/,"$1War Room$2");};})(vScoutLand);
+const wrLeagues=()=>S.leagues.filter(L=>!L.rip&&(L.type===2||L.type===1));
+const WRK=L=>"hm_wr_"+L.id+"_"+(+S.season+1);
+const wrLoad=L=>{try{return JSON.parse(localStorage.getItem(WRK(L))||"{}");}catch(e){return {};}};
+const wrSave=(L,o)=>{try{localStorage.setItem(WRK(L),JSON.stringify(o));}catch(e){}};
+const rv=k=>Math.round(6800*Math.pow(.93,Math.max(0,k-1)))+150;
+function wrStance(L){const mi=mineIdx(L);let ts={st:"balanced",po:.5,rank:mi+1,n:L.teams.length};try{ts=teamStatus(L,mi);}catch(e){}const t=L.teams[mi];
+  const st=t.players.map(id=>PL[id]).filter(p=>p&&POSI.hasOwnProperty(p.pos)).sort((a,b)=>b.val-a.val).slice(0,10);const age=st.length?st.reduce((s,p)=>s+(p.age||26),0)/st.length:26;
+  const auto=ts.st==="contender"?"load":ts.st==="rebuilding"?"rebuild":"balanced";
+  const why=[`${recOf(t)} with ${PCT(ts.po)}% playoff odds`,`#${ts.rank} of ${ts.n} in lineup strength`,`core of ${st.length} best players averages ${f1(age)} years old`];
+  const o=wrLoad(L).stance;return {auto,cur:o||auto,why,ts,age};}
+const STN={load:"Load up",balanced:"Balanced",rebuild:"Rebuild"};
+function wrPool(L,stance){const ny=+S.season+1,out=[],keeper=L.type===1;
+  if(CFB){const ps=Object.entries(CFB.p).filter(([,p])=>!p.drafted&&p.dclass===ny&&p.proj&&["QB","RB","WR","TE"].includes(p.pos)).sort((a,b)=>a[1].proj.pick-b[1].proj.pick).slice(0,72);
+    const PV=S.fmt.qb==="sf"?{QB:1.05,RB:1,WR:1,TE:.8}:{QB:.7,RB:1,WR:1,TE:.8};
+    const ranked=ps.map(([id,p])=>({id,p,s:(p.score||50)*PV[p.pos]*(p.proj.rd===1?1.25:p.proj.rd===2?1.1:p.proj.rd<=3?1:.85)})).sort((a,b)=>b.s-a.s);
+    ranked.forEach((x,i)=>out.push({id:"c:"+x.id,k:"rook",name:x.p.n,pos:x.p.pos,sub:`${x.p.school} · Proj. ${x.p.proj.rd?"Rd "+x.p.proj.rd:"Day 3"}${x.p.proj.team?" · "+x.p.proj.team:""}`,go:"cfb-"+x.id,v:rv(i+1),age:21,young:true}));}
+  let keepN=0;if(keeper){keepN=+(L.lset&&L.lset.max_keepers)||3;
+    L.teams.forEach((t,ti)=>{const ps=t.players.map(id=>PL[id]).filter(p=>p&&POSI.hasOwnProperty(p.pos)).sort((a,b)=>b.val-a.val);ps.slice(keepN).filter(p=>p.val>=400&&!lostSeason(p)).forEach(p=>out.push({id:p.id,k:"drop",name:p.name,pos:p.pos,sub:`${p.team} · likely not kept by ${t.mine?"you":t.name}`,go:"player-"+p.id,v:p.val,age:p.age,ros:rosPPG(p)}));});
+    freeAgents().filter(p=>p.val>=700).forEach(p=>out.push({id:p.id,k:"fa",name:p.name,pos:p.pos,sub:`${p.team} · free agent`,go:"player-"+p.id,v:p.val,age:p.age,ros:rosPPG(p)}));}
+  const C=leagueCtx(L),me=C[mineIdx(L)],need=new Set(Object.entries(me.nd||{}).filter(([,d])=>d<-.5).map(([p])=>p));
+  for(const x of out){let m=1;if(stance==="rebuild"){if(x.k==="rook"||(x.age||30)<=24)m*=1.15;else if((x.age||26)>=28)m*=.78;}else if(stance==="load"){if(x.k==="rook")m*=.85;else m*=1+Math.min(.25,(x.ros||0)/60);if((x.age||26)>=29)m*=.95;}
+    if(need.has(x.pos))m*=1.06;x.need=need.has(x.pos);x.bv=x.v*m;}
+  out.sort((a,b)=>b.bv-a.bv);out.forEach((x,i)=>x.cr=i+1);const top=out[0]?out[0].bv:1;out.forEach(x=>{const r=x.bv/top;x.dt=r>=.8?1:r>=.6?2:r>=.42?3:r>=.28?4:5;});
+  return {list:out,keepN,need};}
+function wrBoard(L,pool){const o=wrLoad(L),by=new Map(pool.list.map(x=>[x.id,x]));const off=new Set(o.off||[]);let order=(o.order||[]).filter(id=>by.has(id));
+  for(const x of pool.list){if(!order.includes(x.id)){const i=Math.min(order.length,x.cr-1);order.splice(i,0,x.id);}}
+  const rows=order.map(id=>by.get(id)).filter(x=>x&&!off.has(x.id));rows.forEach((x,i)=>{x.br=i+1;x.t=(o.tier&&o.tier[x.id])||x.dt;x.star=(o.star||[]).includes(x.id);});
+  return {rows,off:[...off].map(id=>by.get(id)).filter(Boolean),o};}
+function wrSlots(L,mi){const ny=+S.season+1,N=L.teams.length;let pk=null;try{pk=picksOf(L,mi);}catch(e){}if(!pk)return [];
+  let order=L.teams.map((t,i)=>i);try{const o=oddsFor(L);order.sort((a,b)=>o[a].str-o[b].str);}catch(e){}
+  return pk.own.filter(x=>x.y===ny).map(x=>{const orig=x.from?L.teams.findIndex(t=>t.name===x.from):mi;const s=order.indexOf(orig<0?mi:orig)+1;return {y:x.y,r:x.r,s,o:(x.r-1)*N+s,from:x.from};}).sort((a,b)=>a.o-b.o);}
+const slotLbl=(r,s)=>`${r}.${String(s).padStart(2,"0")}`;
+function vWarRoom(){const Ls=wrLeagues();if(!Ls.length)return `<section class="pan"><h2>War Room</h2><p class="sub">The War Room is for dynasty and keeper leagues. None of your leagues are dynasty or keeper.</p></section>`;
+  if(!Ls.includes(S.L)){selectLeague(Ls[0].id);}const L=S.L;if(!CFB&&CFBst==="idle")setTimeout(loadCfb,30);
+  const mi=mineIdx(L),N=L.teams.length,ny=+S.season+1,keeper=L.type===1,SN=wrStance(L),pool=wrPool(L,SN.cur),B=wrBoard(L,pool),slots=wrSlots(L,mi);
+  const sel=`<label class="wrsel"><span class="eyebrow">League</span><select id="wrlg">${Ls.map(x=>`<option value="${esc(x.id)}"${x===L?" selected":""}>${esc(x.name)} · ${x.type===2?"Dynasty":"Keeper"}</option>`).join("")}</select></label>`;
+  // stance
+  const stance=`<section class="pan"><div class="row sp"><h2>Front office stance</h2><span class="tag">${STN[SN.cur]}</span></div>
+   <p class="mt" style="margin-bottom:6px">Hashmark’s read: <b>${STN[SN.auto]}</b>. ${SN.why.map(esc).join("; ")}.</p>
+   <div class="seg sm">${["load","balanced","rebuild"].map(k=>`<button data-wrst="${k}" class="${SN.cur===k?"on":""}">${STN[k]}${k===SN.auto?" · auto":""}</button>`).join("")}</div>
+   <p class="sub">${SN.cur==="load"?"The board favors players who score now; picks are currency for veterans.":SN.cur==="rebuild"?"The board favors youth and upside; extra picks are worth more than a late title push.":"The board balances now and later."} Changing this re-ranks everything below.</p></section>`;
+  // capital
+  let cap="";try{const pk=picksOf(L,mi);if(pk){const tot=ti=>{const q=picksOf(L,ti);return q?q.own.reduce((s,x)=>s+pickVal(L,x.y,x.r,(L.teams.find(t=>t.name===x.from)||L.teams[ti]).id),0):0;};const all=L.teams.map((_,ti)=>tot(ti)),mine=all[mi],rk=all.slice().sort((a,b)=>b-a).indexOf(mine)+1;
+    cap=`<section class="pan mt"><div class="row sp"><h2>Draft capital</h2><span class="tag">#${rk} of ${N} ${info("mv")}</span></div><div class="capg mt">${pk.yrs.map(y=>`<div><span class="eyebrow">${y}</span>${pk.own.filter(x=>x.y===y).sort((a,b)=>a.r-b.r).map(x=>{const sl=y===ny?slots.find(s=>s.r===x.r&&(s.from||null)===(x.from||null)):null;return `<span class="pk${x.r==1?" r1":""}">${sl?slotLbl(x.r,sl.s):"R"+x.r}${x.from?"*":""}</span>`;}).join("")||'<span class="sub">none</span>'}</div>`).join("")}</div><p class="sub mt">${f0(Math.round(mine))} in pick value. ${ny} slots are projected from current lineup strength (weakest team picks first); * acquired by trade.</p></section>`;}}catch(e){}
+  // plan
+  const taken=new Set();const plan=slots.map(s=>{const av=B.rows.filter(x=>!taken.has(x.id)&&x.cr>=s.o-1).slice(0,3);const t=av[0];if(t)taken.add(t.id);return {s,av,t};});
+  const planH=plan.length?plan.map(({s,av,t})=>`<div class="wrp"><div class="wrpk"><b>${slotLbl(s.r,s.s)}</b><span class="sub">#${s.o} overall</span></div><div style="min-width:0">${t?`<div>Target <b data-go="${t.go}">${esc(t.name)}</b> <span class="sub">${t.pos} · Tier ${t.t}${t.need?" · fills a need":""}</span></div><div class="sub ell">Also likely there: ${av.slice(1).map(x=>esc(x.name)).join(", ")||"–"}</div>`:`<div class="sub">Board is thin here; add players or trade the pick.</div>`}</div></div>`).join(""):`<p class="sub">You don’t own a ${ny} pick. ${SN.cur==="rebuild"?"A rebuild usually wants picks; see Trade partners.":""}</p>`;
+  // trade up/down
+  const tr=[];for(const {s,t} of plan){if(!t)continue;const sameTier=B.rows.filter(x=>x.t===t.t&&x.cr>=s.o-1).length;const better=B.rows.filter(x=>x.t<t.t&&x.cr>=s.o-4&&x.cr<s.o-1).slice(-1)[0];
+    if(better){const up=Math.max(1,better.cr-1),cost=rv(up)-rv(s.o);tr.push(["up",`Trade up from ${slotLbl(s.r,s.s)} to about #${up} for <b>${esc(better.name)}</b>, the last Tier ${better.t} player likely left. Expect to pay around ${f0(cost)} in value (roughly a ${cost>2500?"future 1st":cost>900?"2nd":"3rd"}).`]);}
+    else if(sameTier>=4&&SN.cur!=="load"){const dn=Math.min(N*4,s.o+Math.round(N/3));tr.push(["down",`Trade down from ${slotLbl(s.r,s.s)} to about #${dn}: ${sameTier} Tier ${t.t} players should still be there, so you can add a later pick for free.`]);}
+    if(SN.cur==="load"&&s.r>=2)tr.push(["vet",`${slotLbl(s.r,s.s)} is worth about ${f0(rv(s.o))}. Packaged with a bench player it can land a starter now.`]);}
+  const trH=tr.length?tr.slice(0,4).map(([k,x])=>`<div class="wrt ${k}"><span class="pill">${k==="up"?"Trade up":k==="down"?"Trade down":"Cash in"}</span><div>${x}</div></div>`).join("")+`<button class="btn ghost sm mt" data-go="trade-finder" data-fdt0="picks">Find pick trades</button>`:`<p class="sub">No clear trade-up or trade-down spots on your board.</p>`;
+  // board
+  const pf=S.wrPos||"ALL";const rows=B.rows.filter(x=>pf==="ALL"||x.pos===pf);
+  const brow=x=>`<div class="wrr${x.star?" star":""}" data-wid="${esc(x.id)}"><span class="wrn num">${x.br}</span><button class="wtier t${x.t}" data-wtier="${esc(x.id)}" aria-label="Change tier">T${x.t}</button><div class="wrm" data-go="${x.go}" role="link">${pos(x.pos)}<span class="tsn"><b class="ell">${esc(x.name)}</b><span class="sub ell">${x.need?'<span class="ndot">need</span> ':""}${esc(x.sub)}</span></span></div><span class="wrv num">${f0(x.v)}</span><span class="wra"><button data-wmv="${esc(x.id)}:-1" aria-label="Move up">▲</button><button data-wmv="${esc(x.id)}:1" aria-label="Move down">▼</button><button data-wstar="${esc(x.id)}" aria-label="Star">${x.star?"★":"☆"}</button><button data-woff="${esc(x.id)}" aria-label="Remove from board">✕</button></span></div>`;
+  let tierHead=0;const boardH=rows.slice(0,120).map(x=>{const h=x.t!==tierHead?`<div class="wrth">Tier ${x.t}</div>`:"";tierHead=x.t;return h+brow(x);}).join("");
+  const kpH=keeper?(()=>{const t=L.teams[mi],ps=t.players.map(id=>PL[id]).filter(p=>p&&POSI.hasOwnProperty(p.pos)).sort((a,b)=>b.val-a.val);const k=pool.keepN;return `<section class="pan mt"><div class="row sp"><h2>Keeper decisions</h2><span class="tag">${k} keepers</span></div>${ps.slice(0,k+3).map((p,i)=>`<div class="lrow" data-go="player-${p.id}" role="link"><span>${i<k?'<span class="tt buy">Keep</span>':i<k+1?'<span class="tt">Bubble</span>':'<span class="tt sell">Release</span>'} ${pos(p.pos)} <b>${esc(p.name)}</b></span><span class="num">${f0(p.val)}</span></div>`).join("")}<p class="sub mt">Hashmark assumes every team keeps its top ${k} by keeper value; everyone else lands in the draft pool below.</p></section>`;})():"";
+  return `${sel}${stance}${cap}${kpH}
+  <section class="pan mt"><div class="row sp"><h2>Draft plan</h2><span class="tag">${ny}</span></div>${planH}<p class="sub mt">Assumes other teams draft by Hashmark’s consensus ranks; targets come from your board.</p></section>
+  <section class="pan mt"><h2>Trade up or down</h2>${trH}</section>
+  <section class="pan mt wrbp"><div class="row sp"><h2>Big board</h2><span class="tag">${keeper?"Rookies + likely free agents":"Rookie class"}</span></div>
+   <div class="seg sm mt">${["ALL","QB","RB","WR","TE"].map(x=>`<button data-wrpos="${x}" class="${pf===x?"on":""}">${x==="ALL"?"All":x}</button>`).join("")}</div>
+   <p class="sub">Your board, your order: ▲▼ to move, tap the tier to change it, ☆ to star, ✕ to take a player off. Saved on this device for ${esc(L.name)}.</p>
+   <div class="wrb">${boardH||`<p class="sub">${CFB?"No prospects yet.":"Loading prospects…"}</p>`}</div>
+   ${B.off.length?`<details class="mt"><summary class="sub">Off the board (${B.off.length})</summary>${B.off.map(x=>`<div class="lrow"><span>${pos(x.pos)} ${esc(x.name)}</span><button class="btn ghost sm" data-won="${esc(x.id)}">Restore</button></div>`).join("")}</details>`:""}
+   <button class="btn ghost sm mt" data-wreset>Reset to Hashmark ranks</button></section>`;}
+vPrep=function(){return vWarRoom();};
+document.addEventListener("change",e=>{if(e.target&&e.target.id==="wrlg"){selectLeague(e.target.value);render();}});
+document.addEventListener("click",e=>{const L=S.L;if(!L||route()!=="prep")return;let b;const upd=f=>{const o=wrLoad(L);f(o);wrSave(L,o);render();};
+  if((b=e.target.closest("[data-wrst]"))){upd(o=>{o.stance=b.dataset.wrst===wrStance(L).auto?null:b.dataset.wrst;});return;}
+  if((b=e.target.closest("[data-wrpos]"))){S.wrPos=b.dataset.wrpos;render();return;}
+  const cur=()=>{const SN=wrStance(L),pool=wrPool(L,SN.cur);return wrBoard(L,pool);};
+  if((b=e.target.closest("[data-wmv]"))){e.stopPropagation();const [id,d]=b.dataset.wmv.split(":");const B=cur(),ids=B.rows.map(x=>x.id),i=ids.indexOf(id),j=i+(+d);if(i<0||j<0||j>=ids.length)return;[ids[i],ids[j]]=[ids[j],ids[i]];upd(o=>{o.order=ids.concat((o.off||[]));});return;}
+  if((b=e.target.closest("[data-wtier]"))){e.stopPropagation();const id=b.dataset.wtier,B=cur(),x=B.rows.find(r=>r.id===id);upd(o=>{o.tier=o.tier||{};o.tier[id]=x?x.t%5+1:1;});return;}
+  if((b=e.target.closest("[data-wstar]"))){e.stopPropagation();const id=b.dataset.wstar;upd(o=>{o.star=o.star||[];o.star=o.star.includes(id)?o.star.filter(x=>x!==id):o.star.concat(id);});return;}
+  if((b=e.target.closest("[data-woff]"))){e.stopPropagation();const id=b.dataset.woff,B=cur();upd(o=>{o.order=B.rows.map(x=>x.id);o.off=(o.off||[]).concat(id);});return;}
+  if((b=e.target.closest("[data-won]"))){e.stopPropagation();const id=b.dataset.won;upd(o=>{o.off=(o.off||[]).filter(x=>x!==id);});return;}
+  if(e.target.closest("[data-wreset]")){upd(o=>{delete o.order;delete o.tier;delete o.off;delete o.star;});return;}
+  if((b=e.target.closest("[data-fdt0]"))){S.fdT=b.dataset.fdt0;S.fdOff=0;}},true);
+PINS.prep=["#wrlg"];
+shellPost=(function(prev){return function(){const r=route();prev();if(r!=="prep")return;const s=document.querySelector("#hubslot .pinctl #wrlg");if(s){const lab=document.querySelector("#view .wrsel");if(lab)lab.remove();}};})(shellPost);
+/* Devy Lab: compact top 10 above prospect news; full list continues from #11 */
+vDevyLab=(function(prev){return function(){const h=prev();if(!CFB)return h;const yr=+CFB.season,classes=[...new Set(Object.values(CFB.p).filter(p=>!p.drafted).map(p=>p.dclass))].sort();const tab=S.dvTab||String(classes[0]),pos0=S.dvPos||"ALL",q=(S.dvQ||"").toLowerCase();
+  let xs=Object.entries(CFB.p).filter(([,p])=>tab==="drafted"?p.drafted&&p.drafted.y>=yr:!p.drafted&&String(p.dclass)===tab);if(pos0!=="ALL")xs=xs.filter(([,p])=>p.pos===pos0);if(q)xs=xs.filter(([,p])=>(p.n+" "+p.school).toLowerCase().includes(q));
+  xs.sort(tab==="drafted"?(a,b)=>a[1].drafted.p-b[1].drafted.p:(a,b)=>(a[1].proj?a[1].proj.pick:999)-(b[1].proj?b[1].proj.pick:999));const top=xs.slice(0,10);if(!top.length)return h;
+  const box=`<section class="pan mt t10"><div class="row sp"><h2>Top 10 · ${tab==="drafted"?"drafted rookies":tab+" class"}</h2><span class="tag">${pos0==="ALL"?"All positions":pos0}</span></div><div class="t10g">${top.map(([id,p],i)=>`<button class="t10r" data-go="cfb-${id}"><span class="num">${i+1}</span>${pos(p.pos)}<span class="ell"><b>${esc(p.n)}</b> <span class="sub">${esc(p.school)}</span></span><span class="sub num">${tab==="drafted"?`${p.drafted.r}.${p.drafted.p}`:p.proj&&p.proj.rd?"Rd "+p.proj.rd:"D3"}</span></button>`).join("")}</div></section>`;
+  let out=h;const rs=out.indexOf('<section class="pan mt"><div class="row sp"><h2>Risers</h2>');if(rs>=0)out=out.slice(0,rs)+box+out.slice(rs);else{const pn=out.indexOf('<section class="pan mt"><h2>Prospect news</h2>');const k=pn>=0?pn:out.indexOf('<section class="pan mt"><button class="dvr"');out=out.slice(0,k)+box+out.slice(k);}
+  // drop the first 10 rows from the full list (they're in the box)
+  let n=0;out=out.replace(/<button class="dvr"[\s\S]*?<\/button>(?=<button class="dvr"|<\/section>)/g,m=>(++n<=10?"":m));
+  return out.replace('<section class="pan mt"><button class="dvr"','<section class="pan mt"><div class="row sp"><h2>Full class</h2><span class="tag">from #11</span></div><button class="dvr"');};})(vDevyLab);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
