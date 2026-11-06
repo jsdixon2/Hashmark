@@ -929,6 +929,15 @@ html.kbopen .dock{opacity:0;pointer-events:none;transform:translateY(120%)!impor
 .dock{transition:transform .2s,opacity .2s}
 .tabs{scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
 .livep.lvs{margin:0 6px;vertical-align:1px}
+/* v39 unified page header */
+#hubslot .hubh .hpath{display:none!important}
+#hubslot .hubh{padding-top:6px!important}
+#hubslot .hubh .htabs{margin-top:0}
+.pgtitle{margin:2px 2px 14px!important}
+.pgtitle .eyebrow{display:block;margin-bottom:2px}
+.pgtitle h1{margin:2px 0 0!important}
+h2.pgsub{font:750 22px/1.15 var(--fd)!important;margin:0 0 4px}
+@media (min-width:1100px){#hubslot .hubh{display:flex!important;justify-content:flex-end;min-height:0;padding:10px max(32px,calc((100vw - var(--sw) - 1180px)/2)) 10px!important}#hubslot .hubh .lgbar{width:min(440px,100%)}#hubslot .hubh:not(:has(.lgbar)){display:none!important}}
 </style>
 </head>
 <body>
@@ -4052,6 +4061,26 @@ rosPPG=(function(prev){return function(p){const v=prev(p);const A=roleAvail(p);r
   document.addEventListener("focusout",e=>{if(e.target&&e.target.matches&&e.target.matches("input,select,textarea"))settle();},true);
   document.addEventListener("change",e=>{if(e.target&&e.target.matches&&e.target.matches("select"))settle();},true);
   window.addEventListener("orientationchange",settle);})();
+
+/* ===== v39: one page layout everywhere (matches My stats): tabs under the Hashmark bar, then eyebrow + large title ===== */
+function pageTitle(r){if(r==="stats"){const sc=statsScope(),G=HX.data;return {eb:["Manager analytics",sc!=="all"&&G&&G.chainName?G.chainName[sc]:"All leagues"],h:"My stats"};}const hk=hubOf(r);if(!hk)return null;const H=HUBS[hk],t=tabOf(r),tab=(H.tabs.find(x=>x[0]===t)||[])[1];
+  const lg=H.lg&&S.L&&r!==H.land?S.L.name:null;
+  if(r===H.land)return {eb:[hk==="home"?`Week ${S.week}`:hk==="scout"?"College and NFL scouting":"All leagues"],h:hk==="home"?"Overview":H.n};
+  if(r==="prep")return {eb:[H.n,S.L&&(S.L.type===1||S.L.type===2)?S.L.name:null].filter(Boolean),h:tab};
+  if(SUBN[r])return {eb:[H.n,tab,lg].filter(Boolean),h:SUBN[r]};
+  return {eb:[H.n,lg].filter(Boolean),h:tab||H.n};}
+shellPost=(function(prev){return function(){prev();const r=route(),v=$("#view");if(!v)return;const T=pageTitle(r);window._pgT=T;if(!T)return;
+  if(v.querySelector(".pgtitle"))return;
+  let extra="";const first=v.firstElementChild;
+  if(first&&first.classList.contains("topline")){const eb=first.querySelector(".eyebrow"),hs=first.querySelector(".hsub");extra=(eb?eb.textContent:hs?[...hs.children].map(x=>x.textContent).join(" · "):"").trim();first.remove();}
+  const eb=T.eb.slice();for(const part of extra.split(/\s*·\s*/)){const x=part.trim();if(!x||/^week \d+$/i.test(x)&&eb.some(y=>/^week/i.test(y)))continue;if(!eb.some(y=>y.toLowerCase()===x.toLowerCase()))eb.push(x);}
+  v.querySelectorAll("h1").forEach(h=>{if(h.closest("#psheet,.sheet"))return;if(h.textContent.trim().toLowerCase()===T.h.toLowerCase()){h.remove();return;}const h2=document.createElement("h2");h2.className="pgsub";h2.innerHTML=h.innerHTML;h.replaceWith(h2);});
+  v.insertAdjacentHTML("afterbegin",`<div class="topline pgtitle"><div class="eyebrow">${eb.map(esc).join(" · ")}</div><h1>${esc(T.h)}</h1></div>`);};})(shellPost);
+/* collapsed summary uses the page title */
+const _hsU39=window.hsumUpdate;window.hsumUpdate=function(){_hsU39&&_hsU39();const s=document.querySelector(".hsum .ell");const T=window._pgT;if(!s||!T)return;const parts=[...s.querySelectorAll("i")].length?s.innerHTML.split('<i>·</i>'):[s.innerHTML];parts[0]=esc(T.eb[0]&&T.eb[0]!==T.h&&!/^Week|^All/.test(T.eb[0])?`${T.eb[0]} › ${T.h}`:T.h);s.innerHTML=parts.join('<i>·</i>');};
+
+/* desktop sidebar always reflects the current sections and tabs */
+(function(){const g=document.querySelector(".side .sgs");if(!g)return;g.innerHTML=Object.entries(HUBS).map(([k,h])=>`<div class="sg"><button class="sh" data-hub="${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${DOCKI[k]}</svg><span>${h.n}</span><kbd>${Object.keys(HUBS).indexOf(k)+1}</kbd></button><div class="st">${h.tabs.map(([r,t])=>`<button data-go="${r}" data-stab="${r}">${t}</button>`).join("")}</div></div>`).join("");})();
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
