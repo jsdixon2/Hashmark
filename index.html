@@ -850,6 +850,22 @@ html{scroll-padding-top:calc(var(--chh,62px) + 12px)}
 .skbw>.sk-good{border-left:3px solid var(--tl-g)}.skbw>.sk-bad{border-left:3px solid var(--tl-r)}
 .skbw .eyebrow{display:block;font-size:10px;margin-bottom:2px}
 .pan:has(>.radar),.pan:has(.rkb) h2{cursor:pointer}
+.skpan .skgrid{display:grid;grid-template-columns:1fr;gap:6px;align-items:center}
+.skrad{cursor:pointer;max-width:340px;margin:0 auto;width:100%}
+.sklist{display:flex;flex-direction:column}
+.skrow{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:grid;grid-template-columns:44px minmax(0,1fr) 34% 2.4em 16px;gap:10px;align-items:center;padding:7px 4px;border-bottom:1px solid color-mix(in srgb,var(--line) 50%,transparent)}
+.skrow:last-child{border-bottom:0}.skrow:hover{background:color-mix(in srgb,var(--ink) 4%,transparent);border-radius:10px}
+.skrow .grd{font-size:13px;height:26px;min-width:40px;border-radius:9px;padding:0}
+.skn{font:650 14px var(--fb);min-width:0}.skn em{display:block;font:500 11px var(--fb);font-style:normal;color:var(--muted)}
+.skrow .bar{height:8px}.skrow b{text-align:right;font-size:13.5px}
+@media (min-width:760px){.skpan .skgrid{grid-template-columns:minmax(260px,1fr) 1.2fr;gap:18px}}
+.sheet.skpop .card{max-height:78vh!important;padding-top:12px!important}
+@media (min-width:900px){.sheet.skpop .card{width:min(620px,92vw)!important}}
+.skseg{position:sticky;top:-12px;z-index:2;background:var(--panel);margin:0 -16px 6px!important;padding:8px 16px 10px!important}
+.skseg button{display:inline-flex;align-items:center;gap:6px}
+.skd{font:800 11px var(--fd);font-style:normal;padding:1px 6px;border-radius:6px}.skd.g{background:color-mix(in srgb,var(--tl-g) 22%,transparent);color:var(--tl-g)}.skd.y{background:color-mix(in srgb,var(--tl-y) 22%,transparent);color:var(--tl-y)}.skd.r{background:color-mix(in srgb,var(--tl-r) 22%,transparent);color:var(--tl-r)}
+.skseg button.on .skd{background:color-mix(in srgb,var(--bg) 85%,transparent)}
+#skbody .skc{border-top:0;padding-top:4px}.sksub{margin-top:14px;padding-top:12px;border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)}.sksub h2{font-size:17px}
 </style>
 </head>
 <body>
@@ -3740,19 +3756,28 @@ function skillDetail(focus){const C=skillCtx();if(!C)return;const {m,M,G}=C,d=m.
   { cards.push(card("activity","Activity",[`<b>${f1(d.txPerS)}</b> transactions a season (${m.tx} total).`,"Activity isn’t a skill on its own; it shows how hands-on you are."],[]));}
   // playoffs
   const ss=m.seasons.filter(s=>!s.gl),done=ss.filter(s=>!s.live),po=done.filter(s=>s.po),ti=done.filter(s=>s.champ),ru=done.filter(s=>s.ru),bestF=done.filter(s=>s.rank).sort((a,b)=>a.rank-b.rank)[0];
-  const playoffs=`<section class="pan mt"><h2>Playoffs</h2><div class="hxk mt"><div><b class="num">${po.length}/${done.length}</b><span>Playoff trips</span><em>${done.length?pcx(po.length/done.length):"–"} of finished seasons</em></div><div><b class="num">${ti.length}</b><span>Titles</span><em>${ti.map(s=>s.s).join(", ")||"none yet"}</em></div><div><b class="num">${ru.length}</b><span>Runner-up</span></div><div><b class="num">${bestF?ordn(bestF.rank):"–"}</b><span>Best finish</span><em>${bestF?`${bestF.s} · ${esc(bestF.lg)}`:""}</em></div></div></section>`;
+  const playoffs=`<section class="pan mt"><h2>Playoffs</h2><div class="hxk mt"><div><b class="num">${po.length}/${done.length}</b><span>Playoff trips</span><em>${done.length?pcx(po.length/done.length):"–"} of finished seasons</em></div><div><b class="num">${ti.length}</b><span>Titles</span><em>${ti.map(s=>s.s).join(", ")||"none yet"}</em></div><div><b class="num">${ru.length}</b><span>Runner-up</span></div><div><b class="num">${bestF?ordn(bestF.rank):"–"}</b><span>Best regular-season finish</span><em>${bestF?`${bestF.s} · ${esc(bestF.lg)}`:""}</em></div></div></section>`;
   // wild games
   let st=0,bw=0,bl=0,cur=0,lastLg=null;for(const x of S){if(x.lg!==lastLg){cur=0;lastLg=x.lg;}if(x.won){cur=cur>0?cur+1:1;}else if(x.v!==x.opp){cur=cur<0?cur-1:-1;}bw=Math.max(bw,cur);bl=Math.min(bl,cur);}
   const blow=by(S.filter(x=>x.won),x=>x.v-x.opp),crush=by(S.filter(x=>!x.won),x=>x.opp-x.v),close=by(S,x=>-Math.abs(x.v-x.opp));
   const wild=[blow?`<li><b>Biggest win:</b> ${wk(blow)}, ${f1(blow.v)}–${f1(blow.opp)} over ${esc(on(blow.op))} (by ${f1(blow.v-blow.opp)})</li>`:"",crush?`<li><b>Worst loss:</b> ${wk(crush)}, ${f1(crush.v)}–${f1(crush.opp)} to ${esc(on(crush.op))}</li>`:"",close?`<li><b>Closest game:</b> ${wk(close)}, ${f1(close.v)}–${f1(close.opp)} vs ${esc(on(close.op))} (${close.won?"won":"lost"} by ${f1(Math.abs(close.v-close.opp))})</li>`:"",bw>=3?`<li><b>Longest win streak:</b> ${bw} straight</li>`:"",bl<=-3?`<li><b>Longest losing streak:</b> ${-bl} straight</li>`:""].join("");
   const summ=`<p class="sub">Built from <b>${d.g}</b> games, <b>${(m.trades||[]).length}</b> trades, <b>${(m.adds||[]).length}</b> pickups and <b>${(m.drafts||[]).length}</b> draft picks across ${ss.length} season${ss.length===1?"":"s"} in ${esc(C.lbl)}. Grades are your percentile against the ${pool.length} managers you’ve shared those leagues with: A+ is the top 10%, C+ is the middle, F is the bottom 20%. Green grades are strengths, yellow is average, red needs work.</p>`;
   const radar=chRadar([["Lineups","lineup"],["Waivers","waivers"],["Trading","trading"],["Drafting","drafting"],["Clutch","clutch"],["Scoring","scoring"]].map(([n,kk])=>({n,v:k[kk]})));
-  openPS({t:"Skill profile",html:`<section class="pan"><div class="eyebrow">${esc(m.label||"")}</div>${radar}${summ}</section><section class="pan mt"><h2>Grades and why</h2>${cards.join("")}</section>${playoffs}${wild?`<section class="pan mt"><h2>Wildest games</h2><ul class="why mt">${wild}</ul></section>`:""}`});
-  if(focus)setTimeout(()=>{const el=document.getElementById("sk-"+focus);if(el)$("#psb").scrollTop=el.offsetTop-70;},60);}
-window.addEventListener("click",e=>{if(route()!=="stats"||!HX.data)return;const pan=e.target.closest(".pan");if(!pan||pan.closest("#psheet"))return;const h=(pan.querySelector("h2")||{}).textContent||"";
-  if(h==="Skill profile"){e.preventDefault();e.stopPropagation();skillDetail();return;}
-  if(h==="Skill ranks"){const row=e.target.closest(".rkr");const map={Lineups:"lineup",Waivers:"waivers",Trading:"trading",Drafting:"drafting",Clutch:"clutch",Scoring:"scoring",Consistency:"consistency",Luck:"luck",Activity:"activity"};e.preventDefault();e.stopPropagation();skillDetail(row?map[(row.querySelector("span")||{}).textContent]:null);}},true);
-vStats=(function(prev){return function(){return prev().replace(/(<h2>Skill profile<\/h2>[\s\S]*?Percentiles against[^<]*)(<\/p>)/,"$1 Tap for grades, reasons and your best and worst moves.$2");};})(vStats);
+  const keys=["lineup","waivers","trading","drafting","clutch","scoring","consistency","luck","activity"],names={lineup:"Lineups",waivers:"Waivers",trading:"Trading",drafting:"Drafting",clutch:"Clutch",scoring:"Scoring",consistency:"Consistency",luck:"Luck",activity:"Activity"};
+  const SEC={ov:`<div class="eyebrow">${esc(m.label||"")}</div>${summ}${playoffs.replace('<section class="pan mt">','<div class="sksub">').replace(/<\/section>$/,"</div>")}${wild?`<div class="sksub"><h2>Wildest games</h2><ul class="why mt">${wild}</ul></div>`:""}`};keys.forEach((kk,i)=>SEC[kk]=cards[i]);
+  window._SKS=SEC;const f=focus&&SEC[focus]?focus:"ov";const gcol=g=>/^A/.test(g)?"g":/^B|C\+/.test(g)?"y":g==="–"?"":"r";
+  openSheet("Skill profile",`<div class="seg sm skseg">${[["ov","Overview",""]].concat(keys.map(kk=>[kk,names[kk],SKG(k[kk])])).map(([kk,n,g])=>`<button data-skt="${kk}" class="${kk===f?"on":""}">${g?`<i class="skd ${gcol(g)}">${g}</i>`:""}${n}</button>`).join("")}</div><div id="skbody">${SEC[f]}</div>`);
+  $("#sheet").classList.add("skpop");setTimeout(()=>centerTabs($("#sheet")),30);}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-skt]");if(!b||!window._SKS)return;e.stopPropagation();const k=b.dataset.skt;$("#skbody").innerHTML=window._SKS[k];document.querySelectorAll("[data-skt]").forEach(x=>x.classList.toggle("on",x===b));$("#sheet .card").scrollTop=0;centerTabs($("#sheet"));try{tlPaint($("#skbody"));}catch(_){}},true);
+openSheet=(function(prev){return function(t,html){$("#sheet").classList.remove("skpop");return prev(t,html);};})(openSheet);
+
+function skillsPanel(){const C=skillCtx();if(!C)return "";const k=C.m.sk||{},n=Object.values(C.M).filter(x=>x.g>=8).length;
+  const rows=[["lineup","Lineups"],["waivers","Waivers"],["trading","Trading"],["drafting","Drafting"],["clutch","Clutch"],["scoring","Scoring"],["consistency","Consistency"],["luck","Luck","not a skill"],["activity","Activity","not a skill"]];
+  const radar=chRadar(rows.slice(0,6).map(([kk,nm])=>({n:nm,v:k[kk]})));
+  const list=rows.map(([kk,nm,note])=>{const v=k[kk],g=SKG(v),cls=/^A/.test(g)?"gA":/^B|C\+/.test(g)?"gB":g==="–"?"":"gC";return `<button class="skrow" data-sk="${kk}"><span class="grd ${cls}">${g}</span><span class="skn">${nm}${note?` <em>${note}</em>`:""}</span><span class="bar"><i style="width:${Math.max(3,v??0)}%"></i></span><b class="num">${v??"–"}</b>${CHEV}</button>`;}).join("");
+  return `<section class="pan mt skpan"><div class="row sp"><h2>Skills</h2><span class="tag">vs ${n} managers</span></div><div class="skgrid"><div class="skrad" data-sk="ov" role="button">${radar}</div><div class="sklist">${list}</div></div><p class="sub mt">Percentiles against managers in ${esc(C.lbl)}; 100 is the best. Tap any skill for the reasons behind its grade and your best and worst moves.</p></section>`;}
+vStats=(function(prev){return function(){const h=prev();const i=h.indexOf('<section class="grid2 mt"><div class="pan"><div class="row sp"><h2>Skill profile</h2>');if(i<0)return h;const j=h.indexOf("</section>",i);return h.slice(0,i)+skillsPanel()+h.slice(j+10);};})(vStats);
+document.addEventListener("click",e=>{const s=e.target.closest(".skpan [data-sk]");if(!s)return;e.preventDefault();e.stopPropagation();skillDetail(s.dataset.sk==="ov"?null:s.dataset.sk);},true);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
