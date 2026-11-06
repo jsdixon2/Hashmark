@@ -919,6 +919,11 @@ html{scroll-padding-top:calc(var(--chh,62px) + 12px)}
 .palt{display:flex;flex-direction:column;min-width:0;flex:1}.palt b{font-weight:650}.palt .sub{margin:0;font-size:12px}
 .palic{flex:none;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--panel2);color:var(--acc)}.palic svg{width:18px;height:18px}
 .urseg{margin:6px 0 2px!important}
+.wrt{padding:10px 0;border-top:1px solid color-mix(in srgb,var(--line) 50%,transparent)}.wrt:first-of-type{border-top:0}
+.wrt .pill{min-width:84px;text-align:center}
+.pill.wr-up{background:color-mix(in srgb,var(--tl-g) 18%,transparent)!important;color:var(--tl-g)!important}.pill.wr-down{background:color-mix(in srgb,var(--tl-y) 18%,transparent)!important;color:var(--tl-y)!important}.pill.wr-cash{background:var(--panel2)!important;color:var(--muted)!important}
+.wrth1{font-size:14.5px}.wrth1 b{font:800 15px var(--fd)}.wrlink{font-weight:700;cursor:pointer;border-bottom:1px dotted var(--muted)}
+.wrt .sub{margin:2px 0 0;font-size:12.5px}.wrnum{font:650 12.5px var(--fb);margin-top:3px;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -3935,11 +3940,16 @@ function vWarRoom(){const Ls=wrLeagues();if(!Ls.length)return `<section class="p
   const taken=new Set();const plan=slots.map(s=>{const av=B.rows.filter(x=>!taken.has(x.id)&&x.cr>=s.o-1).slice(0,3);const t=av[0];if(t)taken.add(t.id);return {s,av,t};});
   const planH=plan.length?plan.map(({s,av,t})=>`<div class="wrp"><div class="wrpk"><b>${slotLbl(s.r,s.s)}</b><span class="sub">#${s.o} overall</span></div><div style="min-width:0">${t?`<div>Target <b data-go="${t.go}">${esc(t.name)}</b> <span class="sub">${t.pos} · Tier ${t.t}${t.need?" · fills a need":""}</span></div><div class="sub ell">Also likely there: ${av.slice(1).map(x=>esc(x.name)).join(", ")||"–"}</div>`:`<div class="sub">Board is thin here; add players or trade the pick.</div>`}</div></div>`).join(""):`<p class="sub">You don’t own a ${ny} pick. ${SN.cur==="rebuild"?"A rebuild usually wants picks; see Trade partners.":""}</p>`;
   // trade up/down
-  const tr=[];for(const {s,t} of plan){if(!t)continue;const sameTier=B.rows.filter(x=>x.t===t.t&&x.cr>=s.o-1).length;const better=B.rows.filter(x=>x.t<t.t&&x.cr>=s.o-4&&x.cr<s.o-1).slice(-1)[0];
-    if(better){const up=Math.max(1,better.cr-1),cost=rv(up)-rv(s.o);tr.push(["up",`Trade up from ${slotLbl(s.r,s.s)} to about #${up} for <b>${esc(better.name)}</b>, the last Tier ${better.t} player likely left. Expect to pay around ${f0(cost)} in value (roughly a ${cost>2500?"future 1st":cost>900?"2nd":"3rd"}).`]);}
-    else if(sameTier>=4&&SN.cur!=="load"){const dn=Math.min(N*4,s.o+Math.round(N/3));tr.push(["down",`Trade down from ${slotLbl(s.r,s.s)} to about #${dn}: ${sameTier} Tier ${t.t} players should still be there, so you can add a later pick for free.`]);}
-    if(SN.cur==="load"&&s.r>=2)tr.push(["vet",`${slotLbl(s.r,s.s)} is worth about ${f0(rv(s.o))}. Packaged with a bench player it can land a starter now.`]);}
-  const trH=tr.length?tr.slice(0,4).map(([k,x])=>`<div class="wrt ${k}"><span class="pill">${k==="up"?"Trade up":k==="down"?"Trade down":"Cash in"}</span><div>${x}</div></div>`).join("")+`<button class="btn ghost sm mt" data-go="trade-finder" data-fdt0="picks">Find pick trades</button>`:`<p class="sub">No clear trade-up or trade-down spots on your board.</p>`;
+  const pickName=o=>{const r=Math.ceil(o/N),s=o-(r-1)*N;return slotLbl(r,s);};const costAs=v=>{let o=1;while(o<N*6&&rv(o)>v)o++;return o;};
+  const tr=[],used=new Set();for(const {s,t} of plan){if(!t)continue;
+    const better=B.rows.filter(x=>x.t<t.t&&!used.has(x.id)&&x.cr>=s.o-Math.max(4,Math.round(N*.6))&&x.cr<s.o-1).sort((a,b)=>a.t-b.t||a.br-b.br)[0];
+    if(better){used.add(better.id);const up=Math.max(1,better.cr-1),cost=Math.max(0,rv(up)-rv(s.o)),eq=costAs(cost);
+      const mine2=slots.filter(o=>o!==s).map(o=>({l:`your ${slotLbl(o.r,o.s)}`,v:rv(o.o)})).filter(o=>o.v>=cost*.85).sort((a,b)=>a.v-b.v)[0];const fut=cost>3000?"a future 1st":cost>1200?"a future 2nd":cost>500?"a future 3rd":"a future 4th";
+      tr.push({k:"up",tag:"Trade up",h:`${slotLbl(s.r,s.s)} → ${pickName(up)}`,who:better,why:`Tier ${better.t} ends before your pick; your board drops to Tier ${t.t} at ${slotLbl(s.r,s.s)}.`,num:`Cost ≈ ${f0(cost)} value · about ${mine2?mine2.l:fut}`});continue;}
+    const dn=Math.min(N*5,s.o+Math.max(2,Math.round(N/3))),left=B.rows.filter(x=>x.t===t.t&&x.cr>=dn-1).length;
+    if(left>=3&&SN.cur!=="load"){const gain=Math.max(0,rv(s.o)-rv(dn));tr.push({k:"down",tag:"Trade down",h:`${slotLbl(s.r,s.s)} → ${pickName(dn)}`,who:null,why:`Tier ${t.t} runs deep: ${left} players project to remain at ${pickName(dn)}.`,num:`Gain ≈ ${f0(gain)} value · ask for a future ${gain>2500?"1st":gain>900?"2nd":"3rd or 4th"}`});continue;}
+    if(SN.cur==="load"&&s.r>=2)tr.push({k:"cash",tag:"Cash in",h:`Sell ${slotLbl(s.r,s.s)}`,who:null,why:"Load-up stance: a mid pick does more as a trade chip than a roster spot.",num:`Worth ≈ ${f0(rv(s.o))} · pair with a bench player for a starter`});}
+  const trH=tr.length?tr.slice(0,5).map(x=>`<div class="wrt"><span class="pill wr-${x.k}">${x.tag}</span><div style="min-width:0"><div class="wrth1"><b>${x.h}</b>${x.who?` · <span data-go="${x.who.go}" class="wrlink">${esc(x.who.name)}</span> <span class="sub">${x.who.pos}, T${x.who.t}</span>`:""}</div><div class="sub">${esc(x.why)}</div><div class="wrnum">${x.num}</div></div></div>`).join("")+`<button class="btn ghost sm mt" data-go="trade-finder" data-fdt0="picks">Find pick trades</button>`:`<p class="sub">No clear trade-up or trade-down spots on your board.</p>`;
   // board
   const pf=S.wrPos||"ALL";const rows=B.rows.filter(x=>pf==="ALL"||x.pos===pf);
   const brow=x=>`<div class="wrr${x.star?" star":""}" data-wid="${esc(x.id)}"><span class="wrn num">${x.br}</span><button class="wtier t${x.t}" data-wtier="${esc(x.id)}" aria-label="Change tier">T${x.t}</button><div class="wrm" data-go="${x.go}" role="link">${pos(x.pos)}<span class="tsn"><b class="ell">${esc(x.name)}</b><span class="sub ell">${x.need?'<span class="ndot">need</span> ':""}${esc(x.sub)}</span></span></div><span class="wrv num">${f0(x.v)}</span><span class="wra"><button data-wmv="${esc(x.id)}:-1" aria-label="Move up">▲</button><button data-wmv="${esc(x.id)}:1" aria-label="Move down">▼</button><button data-wstar="${esc(x.id)}" aria-label="Star">${x.star?"★":"☆"}</button><button data-woff="${esc(x.id)}" aria-label="Remove from board">✕</button></span></div>`;
