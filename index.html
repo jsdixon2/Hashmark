@@ -802,6 +802,15 @@ html{overscroll-behavior-y:none}
 .htabs.fl,.seg.fl,.hxseg.fl,.ptabs.fl{-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px);mask-image:linear-gradient(90deg,transparent,#000 36px)}
 .htabs.fl.fr,.seg.fl.fr,.hxseg.fl.fr,.ptabs.fl.fr{-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(90deg,transparent,#000 36px,#000 calc(100% - 36px),transparent)}
 @media (min-width:1100px){.seg,.hxseg{flex-wrap:wrap!important;overflow:visible!important;-webkit-mask-image:none!important;mask-image:none!important}}
+/* stable fixed header for iOS: one blur layer, no nested glass, own compositing layer */
+#chrome{position:fixed!important;top:0;left:0;right:0;z-index:40;transform:translateZ(0);-webkit-transform:translateZ(0);background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(18px);backdrop-filter:saturate(1.4) blur(18px);border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+#chrome .top,#chrome .hubh,#chrome .hxpin{background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-bottom:0!important;box-shadow:none!important}
+#chrome .htabs button,#chrome .hxpin button,#chrome .lgn,#chrome .lgdots{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+#chrome .htabs button:not(.on),#chrome .hxpin button:not(.on){background:color-mix(in srgb,var(--panel) 80%,transparent)!important}
+#hubslot .hxpin{position:relative!important;top:auto!important;margin:0!important;padding:4px 16px 10px!important}
+main{padding-top:calc(var(--chh,62px) + 10px)!important}
+html{scroll-padding-top:calc(var(--chh,62px) + 12px)}
+@media (min-width:1100px){#chrome{left:var(--sw);margin-left:0!important}#hubslot .hxpin{padding:6px max(32px,calc((100vw - var(--sw) - 1180px)/2)) 12px!important}}
 </style>
 </head>
 <body>
@@ -3564,6 +3573,10 @@ psRender=(function(prev){return function(){prev();const b=document.getElementByI
 showPTab=(function(prev){return function(k){prev(k);const b=document.getElementById("psb");if(b)centerTabs(b);};})(showPTab);
 document.addEventListener("scroll",e=>{const t=e.target;if(t&&t.matches&&t.matches(TABBARS))tabFade(t);},true);
 window.addEventListener("resize",()=>centerTabs());
+
+/* fixed (not sticky) chrome: measure its height and pad the page; My stats league tabs join it */
+(function(){const c=document.getElementById("chrome");if(!c)return;const set=()=>document.documentElement.style.setProperty("--chh",c.offsetHeight+"px");try{new ResizeObserver(set).observe(c);}catch(e){window.addEventListener("resize",set);}set();})();
+shellPost=(function(prev){return function(){prev();const slot=document.getElementById("hubslot");if(!slot)return;const px=document.querySelector("#view .hxpin");if(px&&!slot.children.length){slot.appendChild(px);}};})(shellPost);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
