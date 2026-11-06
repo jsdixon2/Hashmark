@@ -1676,7 +1676,7 @@ vMoves=function(){const ms=mergedMoves();
 /* updates box: drop the count tag that repeats the list length; dedupe news by player */
 const _fd13=feed;feed=function(sc){const xs=_fd13(sc),seen=new Set();return xs.filter(it=>{if(it.src==="Sleeper"){const k="s"+(it._p||[])[0];if(seen.has(k))return false;seen.add(k);}const k2=(it.t||"").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,60);if(seen.has(k2))return false;seen.add(k2);return true;});};
 /* ===== v15: My Stats — manager analytics engine ===== */
-const HX={st:"idle",done:0,tot:0,data:null,err:null,v:3};
+const HX={st:"idle",done:0,tot:0,data:null,err:null,v:4};
 const DEMOPL={};
 const hxPos=id=>(DEMOPL[id]&&DEMOPL[id].pos)||(LIVE&&LIVE.players&&LIVE.players[id]&&LIVE.players[id].position)||(PL[id]&&PL[id].pos)||null;
 const hxName=id=>{const m=LIVE&&LIVE.players&&LIVE.players[id];if(m)return m.full_name||((m.first_name||"")+" "+(m.last_name||"")).trim()||(m.team?m.team+" D/ST":id);return DEMOPL[id]?DEMOPL[id].name:PL[id]?PL[id].name:(isNaN(+id)?id+" D/ST":"Player "+id);};
@@ -1716,6 +1716,7 @@ async function loadLeagueSeason(l){const season=+l.season,cur=+S.season,past=sea
     weeks:(mus||[]).map(a=>(a||[]).map(m=>({rid:m.roster_id,mid:m.matchup_id,pts:+m.points||0,st:(m.starters||[]).filter(x=>x&&x!=="0"),pp:m.players_points||{}}))),
     tx:[].concat(...(txs||[]).map((a,i)=>(a||[]).filter(t=>t.status==="complete").map(t=>({id:t.transaction_id,type:t.type,wk:t.leg||i+1,ts:t.status_updated||t.created,rids:t.roster_ids||[],adds:t.adds||{},drops:t.drops||{},dp:(t.draft_picks||[]).map(p=>({season:+p.season,round:p.round,orig:p.roster_id,from:p.previous_owner_id,to:p.owner_id})),fb:(t.waiver_budget||[]).map(b=>({from:b.sender,to:b.receiver,amt:b.amount})),bid:t.settings&&t.settings.waiver_bid!=null?t.settings.waiver_bid:null})))),
     bracket:(bracket||[]).map(b=>({r:b.r,w:b.w,l:b.l,t1:b.t1,t2:b.t2,p:b.p})),drafts:picks,complete:l.status==="complete"};
+  LS.gl=/chop|guillotine/i.test(l.name||"")||Object.keys(st).some(k=>/chop|guillotin/i.test(k)&&st[k])||(LS.weeks.length>0&&LS.weeks.slice(0,3).every(wk=>wk.length>2&&wk.every(m=>m.mid==null)));
   if(past&&LS.complete)idbPut(ck,LS);return LS;}
 
 /* ---------- lineup math ---------- */
@@ -1734,6 +1735,7 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
   const M={};// manager stats keyed by uid
   const mgr=u=>M[u]=M[u]||{uid:u,names:new Set(),seasons:[],g:0,w:0,l:0,t:0,pf:0,pa:0,scores:[],ap:0,apg:0,opt:0,act:0,bench:0,dog:[0,0],hdog:[0,0],fav:[0,0],close:[0,0],bounce:[0,0],wp:[],h2h:{},tx:0,faab:0,adds:[],trades:[],drafts:[],titles:0,runner:0,po:0,finishes:[],pickBad:0,weeksN:0,wbuck:[[0,0],[0,0],[0,0],[0,0],[0,0]],bestWeek:null,worstWeek:null,bigWin:null,badLoss:null,benchWorst:null};
   for(const x of LSs){const slots=slotsOf(x.rpos),rid2u={},uname={};x.rosters.forEach(r=>rid2u[r.rid]=r.uid||("rid"+r.rid));x.users.forEach(u=>uname[u.uid]=u.name);
+    if(x.gl){glSeason(x,rid2u,uname,mgr);x.rid2u=rid2u;x.uname=uname;continue;}
     const reg=x.weeks.slice(0,x.pws-1),hist={};
     reg.forEach((wk,wi)=>{const w=wi+1,byM={};wk.forEach(m=>{if(m.mid!=null)(byM[m.mid]=byM[m.mid]||[]).push(m);});const all=wk.map(m=>m.pts).filter(v=>v>0);if(!all.length)return;
       for(const pair of Object.values(byM)){if(pair.length!==2)continue;const [a,b]=pair;if(a.pts===0&&b.pts===0)continue;
@@ -1827,6 +1829,19 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
   assignLabels([...rivalsU].map(u=>M[u]).filter(Boolean),M);if(me&&!me.label)assignLabels([me],M);
   return {uid,me,M,LS:LSs,TR,SK,chainName,curChains:[...curChains]};}
 
+/* guillotine seasons: finish = order of elimination */
+function glSeason(x,rid2u,uname,mgr){const alive=wk=>(wk||[]).filter(m=>m.pts>0||m.st.length);const last={},ptsBy={},wkPts={};
+  x.weeks.forEach((wk,i)=>{const al=alive(wk);for(const m of al){last[m.rid]=i+1;ptsBy[m.rid]=(ptsBy[m.rid]||0)+m.pts;(wkPts[m.rid]=wkPts[m.rid]||{})[i+1]=m.pts;}});
+  const rids=x.rosters.map(r=>r.rid),known=Object.keys(last).length>0,maxW=Math.max(0,...Object.values(last));
+  const aliveNow=rids.filter(r=>last[r]===maxW);
+  // exact order: later elimination = better; same week = higher score that week; never-seen rosters at the bottom
+  const ord=rids.slice().sort((a,b)=>(last[b]||0)-(last[a]||0)||((wkPts[b]||{})[last[b]]||0)-((wkPts[a]||{})[last[a]]||0));
+  const exact=known&&x.weeks.length>=3;const done=x.complete||aliveNow.length===1;
+  ord.forEach((rid,i)=>{const u=rid2u[rid],S2=mgr(u);S2.names.add(uname[u]||"");const isAlive=last[rid]===maxW,champ=done&&i===0&&(aliveNow.length===1||x.complete);
+    const g=last[rid]||0;S2.pf+=0;
+    if(champ)S2.titles++;
+    S2.seasons.push({s:x.season,lg:x.name,chain:x.chain,type:x.type,size:x.size,gl:true,w:null,l:null,pf:ptsBy[rid]||0,pa:0,g,rank:exact?i+1:(champ?1:null),champ,ru:false,po:false,live:!done,alive:!done&&isAlive,chopWk:champ||(!done&&isAlive)?null:(last[rid]||null)});});}
+
 /* ---------- manager labels ---------- */
 const LBLS={
  lineup_hi:["Lineup Surgeon","The Optimizer","Set It and Nail It","Start/Sit Sommelier","Never Benches a Banger"],
@@ -1900,9 +1915,9 @@ function vStats(){const D=HX.data;
   const ex=m.scores.reduce((s,x)=>s+x.p,0),dog=m.scores.filter(x=>x.p<.4),hd=m.scores.filter(x=>x.p<.3),fav=m.scores.filter(x=>x.p>.7),close=m.scores.filter(x=>Math.abs(x.v-x.opp)<7);
   const rate=(a,f)=>a.length?a.filter(f).length/a.length:null;
   const k=m0.sk,skills=[["Lineups",k.lineup],["Waivers",k.waivers],["Trading",k.trading],["Drafting",k.drafting],["Clutch",k.clutch],["Scoring",k.scoring]].map(([n,v])=>({n,v}));
-  const seasons=m.seasons.slice().sort((a,b)=>a.s-b.s||a.lg.localeCompare(b.lg));
-  const yrs=[...new Set(seasons.map(s=>s.s))];const ppgY=yrs.map(y=>{const ss=seasons.filter(s=>s.s===y);const gg=ss.reduce((s,x)=>s+x.g,0);return gg?ss.reduce((s,x)=>s+x.pf,0)/gg:null;}),papgY=yrs.map(y=>{const ss=seasons.filter(s=>s.s===y);const gg=ss.reduce((s,x)=>s+x.g,0);return gg?ss.reduce((s,x)=>s+x.pa,0)/gg:null;});
-  const wpY=yrs.map(y=>{const ss=seasons.filter(s=>s.s===y);const gg=ss.reduce((s,x)=>s+x.g,0);return gg?ss.reduce((s,x)=>s+x.w,0)/gg:0;});
+  const seasons=m.seasons.slice().sort((a,b)=>a.s-b.s||a.lg.localeCompare(b.lg)),h2hS=seasons.filter(s=>!s.gl);
+  const yrs=[...new Set(h2hS.map(s=>s.s))];const ppgY=yrs.map(y=>{const ss=h2hS.filter(s=>s.s===y);const gg=ss.reduce((s,x)=>s+x.g,0);return gg?ss.reduce((s,x)=>s+x.pf,0)/gg:null;}),papgY=yrs.map(y=>{const ss=h2hS.filter(s=>s.s===y);const gg=ss.reduce((s,x)=>s+x.g,0);return gg?ss.reduce((s,x)=>s+x.pa,0)/gg:null;});
+  const wpY=yrs.map(y=>{const ss=h2hS.filter(s=>s.s===y);const gg=ss.reduce((s,x)=>s+x.g,0);return gg?ss.reduce((s,x)=>s+x.w,0)/gg:0;});
   const tr=m.trades.slice().sort((a,b)=>(b.ts||0)-(a.ts||0)),ad=m.adds.slice().sort((a,b)=>b.score-a.score),dr=m.drafts.slice().sort((a,b)=>b.voe-a.voe);
   const h2h=Object.entries(m0.h2h).map(([u,h])=>({u,n:(D.M[u]&&D.M[u].name)||"Opponent",...h})).filter(h=>h.g>=2).sort((a,b)=>b.g-a.g);
   const nem=h2h.slice().sort((a,b)=>(a.w-a.l)-(b.w-b.l)||b.g-a.g)[0],vic=h2h.slice().sort((a,b)=>(b.w-b.l)-(a.w-a.l)||b.g-a.g)[0];
@@ -1919,9 +1934,9 @@ function vStats(){const D=HX.data;
    <div class="hxk mt">${KP(`${W}-${Lr}`,"Record",pcx(W/g)+" wins")}${KP(f1(pf/g),"Points per game",`${f1(pa/g)} against`)}${KP(titles,"Titles",`${po} playoff trips · ${done} seasons`)}${KP(pcx(m0.d.opt),"Lineup efficiency",`${f1(m0.d.benchPg)} pts/wk left on bench`)}</div></section>
   <section class="grid2 mt"><div class="pan"><div class="row sp"><h2>Skill profile</h2><span class="tag">vs ${Object.values(D.M).filter(x=>x.g>=8).length} managers</span></div>${chRadar(skills)}<p class="sub">Percentiles against every manager you’ve shared a Sleeper league with.</p></div>
    <div class="pan"><h2>Skill ranks</h2><div class="rkb mt">${[["Lineups","lineup"],["Waivers","waivers"],["Trading","trading"],["Drafting","drafting"],["Clutch","clutch"],["Scoring","scoring"],["Consistency","consistency"],["Luck","luck"],["Activity","activity"]].map(([n,kk])=>`<div class="rkr"><span>${n}</span><span class="bar"><i class="${(k[kk]??50)>=75?"hi":(k[kk]??50)<=25?"lo":""}" style="width:${Math.max(3,k[kk]??0)}%"></i></span><b class="num">${k[kk]??"–"}</b></div>`).join("")}</div><p class="sub mt">100 is the best in your Sleeper circle. Luck and activity aren’t skills, but they explain a lot.</p></div></section>
-  <section class="pan mt"><div class="row sp"><h2>Career arc</h2><span class="tag">${yrs[0]}–${yrs[yrs.length-1]}</span></div>${yrs.length>1?chLine([{n:"Points for / game",v:ppgY},{n:"Points against / game",v:papgY}],yrs.map(String)):`<p class="sub">One season so far. The arc fills in as seasons are added.</p>`}
+  <section class="pan mt"><div class="row sp"><h2>Career arc</h2>${yrs.length?`<span class="tag">${yrs[0]}–${yrs[yrs.length-1]}</span>`:""}</div>${yrs.length>1?chLine([{n:"Points for / game",v:ppgY},{n:"Points against / game",v:papgY}],yrs.map(String)):`<p class="sub">One season so far. The arc fills in as seasons are added.</p>`}
    ${chBars(wpY.map(x=>Math.round(x*100)),yrs.map(String),{h:110,max:100,min:0,top:v=>v+"%",cls:v=>v>=50?"cb hi":"cb"})}<p class="sub">Bars: regular-season win rate by year.</p></section>
-  <section class="pan mt"><h2>Season by season</h2><div class="tblw"><table class="tbl"><thead><tr><th>Year</th><th>League</th><th>W-L</th><th>PF</th><th>PA</th><th>Finish</th></tr></thead><tbody>${seasons.slice().reverse().map(s=>`<tr><td>${s.s}</td><td class="ell" style="max-width:9em">${esc(s.lg)}</td><td class="num">${s.w}-${s.l}</td><td class="num">${Math.round(s.pf)}</td><td class="num">${Math.round(s.pa)}</td><td>${s.champ?"<b>🏆 Champion</b>":s.ru?"Runner-up":s.live?ordn(s.rank)+" (now)":ordn(s.rank)+(s.po?" · playoffs":"")}</td></tr>`).join("")}</tbody></table></div></section>
+  <section class="pan mt"><h2>Season by season</h2><div class="tblw"><table class="tbl"><thead><tr><th>Year</th><th>League</th><th>W-L</th><th>PF</th><th>PA</th><th>Finish</th></tr></thead><tbody>${seasons.slice().reverse().map(s=>`<tr><td>${s.s}</td><td class="ell" style="max-width:9em">${esc(s.lg)}</td><td class="num">${s.gl?"—":s.w+"-"+s.l}</td><td class="num">${Math.round(s.pf)}</td><td class="num">${s.gl?"—":Math.round(s.pa)}</td><td>${s.gl?(s.champ?"<b>🏆 Last man standing</b>":s.alive?"Still alive"+(s.rank?" · "+ordn(s.rank):""):(s.rank?ordn(s.rank)+" · ":"")+"Chopped"+(s.chopWk?" wk "+s.chopWk:"")):s.champ?"<b>🏆 Champion</b>":s.ru?"Runner-up":s.live?ordn(s.rank)+" (now)":ordn(s.rank)+(s.po?" · playoffs":"")}</td></tr>`).join("")}</tbody></table></div></section>
   <section class="pan mt"><div class="row sp"><h2>Clutch and comebacks</h2><span class="tag">${m.scores.length} games</span></div>
    <div class="hxk">${KP(pcx(rate(dog,x=>x.won)),"Clutch",`won ${dog.filter(x=>x.won).length} of ${dog.length} as an underdog`)}${KP(pcx(rate(hd,x=>x.won)),"Upset rate",`under 30% to win`)}${KP(pcx(m0.d.comeback),"Comeback rate","won the week after a loss")}${KP(pcx(rate(fav,x=>!x.won&&x.v!==x.opp)),"Choke rate","lost as a 70%+ favorite")}${KP(pcx(rate(close,x=>x.won)),"Close games",`${close.filter(x=>x.won).length}-${close.filter(x=>!x.won).length} within 7 pts`)}${KP((luck>=0?"+":"")+f1(luck),"Wins vs expected",luck>=0?"luckier than your scores":"unluckier than your scores")}</div>
    ${chBars(bucket.map(b=>b.r==null?0:Math.round(b.r*100)),["0–20%","20–40%","40–60%","60–80%","80–100%"],{h:130,max:100,min:0,top:(v,i)=>bucket[i].n?v+"%":"",cls:(v,i)=>bucket[i].r!=null&&bucket[i].e!=null&&bucket[i].r>bucket[i].e?"cb hi":"cb"})}
