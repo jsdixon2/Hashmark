@@ -822,6 +822,26 @@ html{scroll-padding-top:calc(var(--chh,62px) + 12px)}
 .ssb b{min-width:3em;text-align:right}
 .cf.muted{background:var(--panel2);color:var(--muted)}
 .ssc .why{margin-top:8px}
+/* traffic-light palette for data (brand aqua stays on controls) */
+:root{--tl-g:#16A34A;--tl-y:#CA8A04;--tl-r:#DC2626}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tl-g:#4ADE80;--tl-y:#FACC15;--tl-r:#F87171}}
+:root[data-theme="dark"]{--tl-g:#4ADE80;--tl-y:#FACC15;--tl-r:#F87171}
+:root{--bad:var(--tl-r)}
+.good,.tag.good,.mv.good,.urv b,.lvp b{color:var(--tl-g)!important}.tag.good{border-color:color-mix(in srgb,var(--tl-g) 45%,transparent)!important}
+.bad,.tag.bad,.mv.bad{color:var(--tl-r)!important}.warn,.tag.warn{color:var(--tl-y)!important}
+.cf{background:color-mix(in srgb,var(--tl-y) 16%,transparent)!important;color:var(--tl-y)!important}
+.cf.good{background:color-mix(in srgb,var(--tl-g) 16%,transparent)!important;color:var(--tl-g)!important}
+.cf.bad{background:color-mix(in srgb,var(--tl-r) 16%,transparent)!important;color:var(--tl-r)!important}
+.cf.muted{background:color-mix(in srgb,var(--tl-y) 12%,transparent)!important;color:var(--tl-y)!important}
+.grd.gA{background:color-mix(in srgb,var(--tl-g) 22%,var(--panel))!important;color:var(--tl-g)!important;border:1px solid color-mix(in srgb,var(--tl-g) 45%,transparent)!important}
+.grd.gB{background:color-mix(in srgb,var(--tl-y) 18%,var(--panel))!important;color:var(--tl-y)!important;border:1px solid color-mix(in srgb,var(--tl-y) 45%,transparent)!important}
+.grd.gC,.grd.gD,.grd.gF{background:color-mix(in srgb,var(--tl-r) 18%,var(--panel))!important;color:var(--tl-r)!important;border:1px solid color-mix(in srgb,var(--tl-r) 45%,transparent)!important}
+.fit{background:color-mix(in srgb,var(--tl-r) 14%,transparent)!important;color:var(--tl-r)!important}.fit.fit1{background:color-mix(in srgb,var(--tl-y) 16%,transparent)!important;color:var(--tl-y)!important}.fit.fit2,.fit.fit3{background:color-mix(in srgb,var(--tl-g) 16%,transparent)!important;color:var(--tl-g)!important}
+.tt.buy{background:color-mix(in srgb,var(--tl-g) 16%,transparent)!important;color:var(--tl-g)!important}.tt.sell{background:color-mix(in srgb,var(--tl-r) 16%,transparent)!important;color:var(--tl-r)!important}
+.cb{fill:var(--tl-r)!important;opacity:.75!important}.cb.hi{fill:var(--tl-g)!important;opacity:1!important}
+.ssrg .pt.w{background:var(--tl-g)!important}
+.rtag.good{border-color:color-mix(in srgb,var(--tl-g) 60%,transparent)!important}.rtag.bad{border-color:color-mix(in srgb,var(--tl-r) 60%,transparent)!important}
+.cb.mid{fill:var(--tl-y)!important;opacity:.9!important}.cb.n{fill:var(--muted)!important;opacity:.6!important}
 </style>
 </head>
 <body>
@@ -2322,7 +2342,7 @@ function chRadar(items){const W=300,H=250,cx=150,cy=128,R=92,n=items.length;cons
 function chScatter(pts,opt={}){const W=CH.w,H=196,pad=[18,10,26,32];if(!pts.length)return "";const mx=Math.max(10,...pts.flatMap(p=>[p.x,p.y]))*1.05,X=v=>pad[3]+v/mx*(W-pad[1]-pad[3]),Y=v=>pad[0]+(1-v/mx)*(H-pad[0]-pad[2]);
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img"><line x1="${X(0)}" y1="${Y(0)}" x2="${X(mx)}" y2="${Y(mx)}" class="cg dash"/>${[0,mx/2,mx].map(v=>`<text x="${pad[3]-4}" y="${Y(v)+3}" class="ct" text-anchor="end">${Math.round(v)}</text><text x="${X(v)}" y="${H-12}" class="ct" text-anchor="middle">${Math.round(v)}</text>`).join("")}<text x="${W/2}" y="${H-1}" class="ct" text-anchor="middle">${esc(opt.xl||"")}</text><text x="${pad[3]+6}" y="${pad[0]-2}" class="ct">${esc(opt.yl||"")} ↑</text>${pts.map(p=>`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="${p.r||4}" class="${p.c||"sd"}"><title>${esc(p.t||"")}</title></circle>`).join("")}</svg>`;}
 function chHist(vals,bins=12){if(vals.length<3)return "";const mn=Math.floor(Math.min(...vals)/10)*10,mx=Math.ceil(Math.max(...vals)/10)*10,bw=(mx-mn)/bins||10,c=Array(bins).fill(0);vals.forEach(v=>c[Math.min(bins-1,Math.floor((v-mn)/bw))]++);
-  return chBars(c,c.map((_,i)=>i%2?"":String(Math.round(mn+i*bw))),{h:130,cls:(v,i)=>"cb"});}
+  return chBars(c,c.map((_,i)=>i%2?"":String(Math.round(mn+i*bw))),{h:130,cls:(v,i)=>"cb n"});}
 
 /* ---------- page ---------- */
 const GR=sh=>sh>=.7?"A+":sh>=.64?"A":sh>=.59?"A−":sh>=.555?"B+":sh>=.52?"B":sh>=.48?"C":sh>=.445?"C−":sh>=.41?"D":"F";
@@ -2624,7 +2644,7 @@ function advPanel(id){const p=PL[id],a=advOf(p);if(!p||!a)return "";const M=ADVM
     return `<div class="rkr"><span>${n}</span><span class="bar"><i class="${v!=null&&v>=75?"hi":v!=null&&v<=25?"lo":""}" style="width:${Math.max(3,v??0)}%"></i></span><b class="num">${fmt(a[k])}</b></div>`;}).join("");
   const W=a.w||[],labels=W.map(w=>"W"+w[0]);
   const chart=W.length>=2&&W.some(w=>w[2]!=null)?chLine([{n:"Actual PPR",v:W.map(w=>w[1])},{n:"Expected",v:W.map(w=>w[2])}],labels,{h:150}):"";
-  const snaps=W.some(w=>w[3]!=null)?chBars(W.map(w=>w[3]||0),labels,{h:90,max:100,min:0,cls:v=>v>=70?"cb hi":"cb"}):"";
+  const snaps=W.some(w=>w[3]!=null)?chBars(W.map(w=>w[3]||0),labels,{h:90,max:100,min:0,cls:v=>v>=70?"cb hi":v>=45?"cb mid":"cb"}):"";
   const pv=a.prev?`<p class="sub">Last season: ${f1(a.prev.fp)} PPR a game on ${a.prev.xfp!=null?f1(a.prev.xfp):"–"} expected${a.prev.ts?`, ${pc(a.prev.ts)} target share`:""}.</p>`:"";
   const rep=a.inj&&(a.inj[0]||a.inj[1])?`<p class="sub">Week ${a.injw} report: ${esc([a.inj[0]?a.inj[0].toUpperCase():"",a.inj[1]?(PRAC[a.inj[1]]||a.inj[1])+" in practice":"",a.inj[2]].filter(Boolean).join(" · "))}${a.dc?` · ${ordn(a.dc)} on the depth chart`:""}</p>`:a.dc?`<p class="sub">${ordn(a.dc)} on the depth chart.</p>`:"";
   return `<section class="pan mt"><div class="row sp"><h2>Advanced metrics</h2>${tag?`<span class="tag">${tag}</span>`:""}</div>
@@ -3644,6 +3664,16 @@ startSit=function(){const L=S.L;if(!L||L.rip)return "";let R;try{R=ssRecs(L);}ca
    ${cl.length?`<div class="eyebrow mt">Closest calls</div>${cl.map(x=>ssCard(x,true)).join("")}`:""}
    <p class="sub mt">Dot: Hashmark projection. Bar: likely range. Percent: chance the first player outscores the second.</p></section>`;};
 DEFS.ss=["Hashmark Start/Sit","Each player’s projection starts from Sleeper’s weekly projection in your scoring, then adjusts for recent form, usage trends (targets, snaps, expected points), the opponent’s defense against his position, his team’s implied points, weather, sportsbook player lines and practice or injury status. The percentage is the chance the recommended player outscores the other, from both players’ projections and how much each one’s scoring usually swings."];
+
+/* traffic-light data colors: green good, yellow middling, red bad */
+const TLF=".bar>i,.pbar>i,.ht>i,.mb>i,.hvb>i,.tsb .bar>i";
+function tlPaint(root){if(!root)return;root.querySelectorAll(TLF).forEach(i=>{const w=parseFloat(i.style.width);if(!isFinite(w))return;
+  const box=i.closest("section,.pan,.rtile,.tile,.scard");const h2=box&&box.querySelector("h2,.tn");const inv=!!i.closest(".rkrisk")||/risk|exposure|volatil|chop/i.test(h2?h2.textContent:"");
+  const v=inv?100-w:w;i.style.setProperty("background",v>=60?"var(--tl-g)":v>=35?"var(--tl-y)":"var(--tl-r)","important");});
+  root.querySelectorAll(".score").forEach(s=>{const n=parseFloat(s.textContent);if(!isFinite(n))return;s.classList.remove("good");s.style.color=n>=60?"var(--tl-g)":n>=40?"var(--tl-y)":"var(--tl-r)";});}
+decorate=(function(prev){return function(root){prev(root);try{tlPaint(root);}catch(e){}};})(decorate);
+openSheet=(function(prev){return function(t,html){const r=prev(t,html);try{tlPaint(document.getElementById("sheetB"));}catch(e){}return r;};})(openSheet);
+gauge=(function(prev){return function(r){return prev(r).replace('<stop offset="0" stop-color="var(--acc)"/><stop offset=".55" stop-color="var(--muted)"/><stop offset="1" stop-color="var(--bad)"/>','<stop offset="0" stop-color="var(--tl-g)"/><stop offset=".5" stop-color="var(--tl-y)"/><stop offset="1" stop-color="var(--tl-r)"/>');};})(gauge);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
