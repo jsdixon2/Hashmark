@@ -727,6 +727,9 @@ main{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
 @media (max-width:520px){.mrow .mv.lgv,.mrow .pill.soft,.mrow .ml .pos{display:none}.mrow .mb{flex-basis:22%!important}.rtile{padding:12px 11px 10px}.rtile .tb{font-size:19px}.mrow{font-size:11.5px;min-height:22px}.mrow .mb{flex-basis:28%}.mrow .mv{font-size:11px}.tbd .mrow:nth-of-type(n+5){display:none}.hn{flex-basis:44%}}
 @media (hover:hover){.rtile:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.18);border-color:color-mix(in srgb,var(--acc) 35%,var(--line))}}
 @media (min-width:1100px){.hubh .lgall{margin-left:16px}.tiles.big{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.rtile{min-height:270px;padding:18px 18px 14px}.rtile .tb{font-size:26px}.mrow{font-size:13px;min-height:27px}.lgall{margin-top:0}}
+.sheet{z-index:70!important}.toast{z-index:80!important}
+.sheet.infop .card{max-width:440px;cursor:pointer}
+@media (min-width:900px){.sheet.infop .card{width:min(440px,92vw)!important}}
 </style>
 </head>
 <body>
@@ -2877,7 +2880,7 @@ const DEFS={
   impl:["Implied team value","What this player is worth to that specific team: market value scaled by how much he would add to their best lineup now and, in dynasty, over the next three seasons, compared with the league average team."],
   chop:["Chop odds","Chance this team has the lowest score this week, from 2,000 simulations of the remaining games."]};
 const info=k=>`<button class="inf" data-inf="${k}" aria-label="What is ${DEFS[k]?DEFS[k][0]:k}?">i</button>`;
-document.addEventListener("click",e=>{const b=e.target.closest("[data-inf]");if(!b)return;e.preventDefault();e.stopPropagation();const d=DEFS[b.dataset.inf];if(d)openSheet(d[0],`<p style="margin:0;line-height:1.55">${esc(d[1])}</p>`);},true);
+document.addEventListener("click",e=>{const b=e.target.closest("[data-inf]");if(!b)return;e.preventDefault();e.stopPropagation();const d=DEFS[b.dataset.inf];if(d){openSheet(d[0],`<p style="margin:0;line-height:1.55">${esc(d[1])}</p><p class="sub mt" style="margin-bottom:0">Tap anywhere to close.</p>`);$("#sheet").classList.add("infop");}},true);
 const verdictCls=v=>v>0?"good":v<0?"bad":"";
 
 /* ---------- risk gauge: labeled arc, Safe → Volatile ---------- */
@@ -3328,6 +3331,11 @@ vScoutLand=function(){if(!CFB&&CFBst==="idle")setTimeout(loadCfb,50);const ny=+S
    ${rtile("nfl","lg","NFL teams",off[0]?off[0][0]:"32",off[0]?"best offense by EPA per play":"team pages",nfRows?`<div class="mcap">Offensive EPA per play</div>${nfRows}`:"")}</div>`;};
 /* landings show every league: no league bar there */
 hubHeader=(function(prev){return function(r){let h=prev(r);const hk=hubOf(r);if(hk&&HUBS[hk].lg&&r===HUBS[hk].land)h=h.replace(/<div class="lgbar[\s\S]*<\/div><\/div>$/,"</div>").replace(/(<div class="hpath">[\s\S]*?)(<\/div>)/,`$1<span class="lgall">All leagues</span>$2`);return h;};})(hubHeader);
+
+/* popups always sit on top; info popups close on any tap or click */
+openSheet=(function(prev){return function(t,html){$("#sheet").classList.remove("infop");return prev(t,html);};})(openSheet);
+closeSheet=(function(prev){return function(){$("#sheet").classList.remove("infop");return prev();};})(closeSheet);
+document.addEventListener("click",e=>{const sh=$("#sheet");if(!sh||sh.hidden||!sh.classList.contains("infop"))return;if(e.target.closest("[data-inf]"))return;if(e.target.closest("#sheet a[href]")){closeSheet();return;}e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();closeSheet();},true);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
