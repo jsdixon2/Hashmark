@@ -914,6 +914,10 @@ html{scroll-padding-top:calc(var(--chh,62px) + 12px)}
 .t10r>.num:first-child{font:800 14px var(--fd);color:var(--muted);text-align:right}
 .ndot{color:var(--tl-g);font-weight:700}
 .t10{margin-top:0!important}
+.palg{font:700 10.5px var(--fb);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:12px 12px 4px}
+#palRes button{display:flex!important;align-items:center;gap:10px;width:100%;text-align:left}
+.palt{display:flex;flex-direction:column;min-width:0;flex:1}.palt b{font-weight:650}.palt .sub{margin:0;font-size:12px}
+.palic{flex:none;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--panel2);color:var(--acc)}.palic svg{width:18px;height:18px}
 </style>
 </head>
 <body>
@@ -3043,10 +3047,7 @@ document.addEventListener("click",e=>{const t=e.target.closest("[data-ptab]");if
   document.addEventListener("click",e=>{const n=e.target.closest("[data-navback]");if(n){closeSheet();const k=+n.dataset.navback;const tgt=NAV[NAV.length-1-k];NAV.splice(NAV.length-k);go(tgt);}},true);})();
 
 /* ---------- command search: pages ---------- */
-palSearch=(function(prev){return function(q){prev(q);const box=$("#palL")||$("#palR")||document.querySelector("#pal .list,#pal ul,#pal [role=listbox]");q=(q||"").toLowerCase().trim();if(!q||!box)return;
-  const pages=[];for(const [k,h] of Object.entries(HUBS)){pages.push([h.land,h.n]);for(const [r,n] of h.tabs)pages.push([r,`${h.n} › ${n}`]);}Object.entries(SUBN).forEach(([r,n])=>pages.push([r,"GM › Trade Lab › "+n]));pages.push(["stats","My stats"]);
-  const hit=pages.filter(([,n])=>n.toLowerCase().includes(q)).slice(0,5);if(!hit.length)return;
-  box.insertAdjacentHTML("afterbegin",hit.map(([r,n])=>`<button class="pi" data-go="${r}" data-palclose><b>${esc(n)}</b><span class="sub">Page</span></button>`).join(""));};})(palSearch);
+
 document.addEventListener("click",e=>{if(e.target.closest("[data-palclose]"))closePal();},true);
 
 /* ===== v25: market value engine, status accuracy, Trade Lab rebuild, GM tabs, labels ===== */
@@ -3973,6 +3974,43 @@ vDevyLab=(function(prev){return function(){const h=prev();if(!CFB)return h;const
   // drop the first 10 rows from the full list (they're in the box)
   let n=0;out=out.replace(/<button class="dvr"[\s\S]*?<\/button>(?=<button class="dvr"|<\/section>)/g,m=>(++n<=10?"":m));
   return out.replace('<section class="pan mt"><button class="dvr"','<section class="pan mt"><div class="row sp"><h2>Full class</h2><span class="tag">from #11</span></div><button class="dvr"');};})(vDevyLab);
+
+/* ===== v37: universal search — pages and tabs, players, NFL teams (city/nickname/code), prospects, schools, leagues, fantasy teams ===== */
+const PAGES=[["home","Overview","Home","home dashboard summary"],["news","Updates","Home","news injuries reports"],["gameday","Gameday","Home","slate games edges weather vegas lines odds live"],
+ ["team","Team","Team","my teams"],["league","Standings","Team › League","league table playoff odds power",{lgT:"standings"}],["league","Transactions","Team › League","trades adds drops history",{lgT:"tx"}],["league","Rules","Team › League","settings scoring roster waiver",{lgT:"rules"}],
+ ["matchup","Matchup","Team","opponent this week score win probability"],["roster","Roster","Team","lineup start sit start/sit bench"],["roster","Start/Sit","Team › Roster","lineup recommendations who to start"],["tupd","Team updates","Team","matchup news"],
+ ["gm","GM","GM","general manager"],["moves","Moves","GM","recommended moves to do"],["trade","Trade Lab","GM","trades"],["trade-calc","Trade calculator","GM › Trade Lab","grade trade value"],["trade-buy","Buy low","GM › Trade Lab","targets"],["trade-sell","Sell high","GM › Trade Lab","sell"],["trade-pre","Pre-breakout","GM › Trade Lab","breakout"],["trade-partners","Trade partners","GM › Trade Lab","fit"],["trade-finder","Trade finder","GM › Trade Lab","ideas 2 for 1 picks"],
+ ["waivers","Waiver wire","GM › Players","free agents faab adds pickups",{plT:"wire"}],["waivers","All players","GM › Players","player search rankings values",{plT:"all"}],["trends","Trends","GM","breakout odds usage risers"],
+ ["scout","Scout","Scout","scouting"],["devy","Devy Lab","Scout","college prospects ncaa devy rookies class"],["prep","War Room","Scout","draft board big board rookie draft picks keeper stance rebuild load up"],["nfl","NFL teams","Scout","teams offense epa"],
+ ["stats","My stats","Stats","manager profile skills history record"],["stats","Skill profile","Stats","grades skills best worst trades"],["legal","Data and legal","Profile","sources privacy"]];
+const nrm2=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[.'’]/g,"").replace(/[\/_-]+/g," ").replace(/\s+/g," ").trim();
+function sc(text,q){const t=nrm2(text);if(!t)return 0;if(t===q)return 100;if(t.startsWith(q))return 80;if(t.split(/[\s·›]+/).some(w=>w.startsWith(q)))return 60;if(q.length>3&&t.includes(q))return 40;return 0;}
+palSearch=function(raw){const q=nrm2(raw);const R=[];const add=(g,o,s)=>{if(s>0)R.push(Object.assign({g,s},o));};
+  if(!q){for(const r of ["roster","matchup","waivers","trade","gameday","prep","stats"]){const P=PAGES.find(x=>x[0]===r);R.push({g:"Pages",s:1,r:P[0],l:P[1],sub:P[2],set:P[4]});}palItems=R;palSel=0;drawPal();return;}
+  // pages and tabs
+  for(const [r,l,sub,kw,set] of PAGES){const s=Math.max(sc(l,q),sc(sub,q)*.6,sc(kw,q)*.7);add("Pages",{r,l,sub,set},s);}
+  // NFL teams
+  for(const ab of Object.keys(TEAMS)){if(ab==="FA")continue;const nick=TEAMS[ab][0],city=TCITY[ab]||"",full=city+" "+nick;const s=Math.max(sc(ab,q)*(q.length<=3?1.1:.5),sc(nick,q),sc(city,q),sc(full,q));
+    if(s){add("NFL teams",{r:"nfl-"+ab,l:full,sub:"Team page",ab},s+5);add("NFL teams",{r:"waivers",l:`${nick} players`,sub:"All players on "+ab,set:{plT:"all",pq:ab.toLowerCase(),ptab:"ALL",plOwn:"all"},ab},s);}}
+  // players (name, or team by city / nickname / code)
+  const teamHit=new Set(Object.keys(TEAMS).filter(ab=>ab!=="FA"&&(nrm2(ab)===q||sc(TEAMS[ab][0],q)>=60||sc(TCITY[ab]||"",q)>=60||sc((TCITY[ab]||"")+" "+TEAMS[ab][0],q)>=60)));
+  for(const p of Object.values(PL)){if(!POSI.hasOwnProperty(p.pos))continue;let s=sc(p.name,q);if(!s&&teamHit.has(p.team))s=30+Math.min(20,(p.val||0)/500);if(s)add("Players",{r:"player-"+p.id,l:p.name,sub:`${p.pos} · ${p.team}`,p},s+(p.val||0)/2000);}
+  // college prospects and schools
+  if(CFB){const schools=new Map();for(const [id,p] of Object.entries(CFB.p)){const s=sc(p.n,q);if(s)add("Prospects",{r:"cfb-"+id,l:p.n,sub:`${p.pos} · ${p.school}`,cp:p},s);const ss=sc(p.school,q);if(ss>=40)schools.set(p.school,Math.max(schools.get(p.school)||0,ss));}
+    for(const [sch,s] of schools)add("Schools",{r:"devy",l:sch,sub:"Prospects in Devy Lab",set:{dvQ:sch,dvPos:"ALL"}},s-5);}
+  else if(CFBst==="idle")loadCfb();
+  // your leagues and fantasy teams
+  for(const L of S.leagues){add("Your leagues",{r:"league",l:L.name,sub:(L.rip?"Chopped · ":"")+(L.type===2?"Dynasty":L.type===1?"Keeper":"Redraft"),lg:L.id},sc(L.name,q));
+    L.teams.forEach((t,i)=>{const s=Math.max(sc(t.name,q),sc(t.owner||"",q)*.9);if(s&&!t.mine)add("League teams",{r:"team-"+i,l:t.name,sub:`${L.name}${t.owner?" · "+t.owner:""}`,lg:L.id},s-8);});}
+  const ord=["Pages","NFL teams","Players","Your leagues","League teams","Prospects","Schools"],cap={Pages:6,"NFL teams":4,Players:8,"Your leagues":4,"League teams":5,Prospects:5,Schools:3};
+  R.sort((a,b)=>b.s-a.s);const bestG=[...new Set(R.map(x=>x.g))];const groups=bestG.concat(ord.filter(g=>!bestG.includes(g)));
+  palItems=groups.flatMap(g=>R.filter(x=>x.g===g).slice(0,cap[g]||5));palSel=0;drawPal();};
+drawPal=function(){let last=null;$("#palRes").innerHTML=palItems.map((x,i)=>{const h=x.g!==last?`<div class="palg">${esc(x.g)}</div>`:"";last=x.g;
+  const icon=x.p?mono(x.p,1):x.ab?tbadge(x.ab,"sm"):x.cp?pos(x.cp.pos):`<span class="palic">${ic(x.g==="Pages"?"pl":x.g==="Your leagues"||x.g==="League teams"?"lg":x.g==="Schools"?"devy":"news").replace(ICO.pl,'<path d="M5 4h10l4 4v12H5z"/><path d="M14 4v5h5"/>')}</span>`;
+  return `${h}<button class="${i===palSel?"sel":""}" data-pi="${i}">${icon}<span class="palt"><b class="ell">${esc(x.l)}</b><span class="sub ell">${esc(x.sub||"")}</span></span></button>`;}).join("")||`<div class="empty">Nothing matches “${esc($("#palIn").value)}”. Try a player, team, city, school or page.</div>`;
+  const s=$("#palRes .sel");if(s)s.scrollIntoView({block:"nearest"});};
+palGo=function(x){if(!x)return;closePal();if(x.lg&&(!S.L||S.L.id!==x.lg))selectLeague(x.lg);if(x.set)Object.assign(S,x.set);if(x.r==="league"&&x.set&&x.set.lgT==="standings")S.lgT=null;if(route()===x.r)render();else go(x.r);};
+$("#palIn").setAttribute("placeholder","Search players, teams, cities, schools or pages");
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
