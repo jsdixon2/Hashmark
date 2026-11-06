@@ -783,6 +783,7 @@ svg.chev{width:16px!important;height:16px!important;flex:none;color:var(--muted)
 main{padding-bottom:calc(96px + var(--dockb))!important}
 .toast{bottom:calc(var(--dockb) + 80px)!important}
 @media (min-width:1100px){main{padding-bottom:56px!important}.toast{bottom:28px!important}}
+.dock{grid-template-columns:repeat(5,1fr)!important}
 </style>
 </head>
 <body>
@@ -3519,6 +3520,11 @@ vNflIndex=(function(prev){return function(){return prev().replace(/<span class="
 vScoutLand=(function(prev){return function(){return prev().replace(/<span class="tb3" style="background:[^"]*">([A-Z]{2,3})<\/span>/g,(m,ab)=>tbadge(ab,"sm"));};})(vScoutLand);
 /* 4. team-color edge on player rows */
 decorate=(function(prev){return function(root){prev(root);root.querySelectorAll('.tsr[data-go^="player-"],.prow[data-ctog],.lrow[data-go^="player-"],.pr[data-go^="player-"],.trow[data-go^="player-"]').forEach(el=>{const id=(el.dataset.go||"").slice(7)||el.dataset.ctog;const p=PL[id];if(!p)return;el.style.setProperty("--tc",tcol(p.team)[0]);el.classList.add("tce");});};})(decorate);
+
+/* My stats in the dock */
+(function(){const d=document.querySelector("nav.dock");if(!d||d.querySelector("[data-stats]"))return;d.insertAdjacentHTML("beforeend",`<button data-stats aria-label="My stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V12M10 20V6M15 20v-9M20 20V9"/></svg>Stats</button>`);})();
+document.addEventListener("click",e=>{if(!e.target.closest(".dock [data-stats]"))return;e.preventDefault();e.stopPropagation();closePSAll(true);if(route()==="stats")window.scrollTo({top:0,behavior:"smooth"});else go("stats");},true);
+shellPost=(function(prev){return function(){prev();const b=document.querySelector(".dock [data-stats]");if(b)b.classList.toggle("on",route()==="stats");};})(shellPost);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
