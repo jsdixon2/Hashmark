@@ -956,6 +956,11 @@ main{box-sizing:border-box;min-height:100vh;min-height:100lvh;min-height:max(100
 .nfsr .num{text-align:right;font-size:13px}.nfsr .good::before,.nfsr .bad::before{content:none!important}.nfsr.lead{font-weight:700}
 .nfx{margin-top:10px}.nfx summary{cursor:pointer;font:650 13.5px var(--fb);color:var(--acc);padding:8px 0;list-style:none}.nfx summary::-webkit-details-marker{display:none}.nfx summary::after{content:" ▾"}.nfx[open] summary::after{content:" ▴"}
 @media (min-width:1100px){#view:has(#nf-pr){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;align-items:start}#view:has(#nf-pr)>:not(.nfc){grid-column:1/-1}#view:has(#nf-pr) .nfc{margin-top:16px!important}}
+.pkf{all:unset;cursor:pointer;color:var(--acc);font-weight:650;border-bottom:1px dotted var(--acc)}
+.pkc{display:flex;flex-direction:column;gap:0;margin-top:4px}.pks{display:grid;grid-template-columns:16px 1fr;gap:10px;padding-bottom:14px;position:relative}
+.pks:not(.last)::before{content:"";position:absolute;left:7px;top:14px;bottom:0;width:2px;background:var(--line)}
+.pkd{width:12px;height:12px;border-radius:50%;margin:3px 0 0 1px;background:var(--panel2);border:2px solid var(--acc)}.pks.last .pkd{background:var(--acc)}
+.pks .sub{margin:2px 0 0;font-size:12.5px}
 </style>
 </head>
 <body>
@@ -2236,7 +2241,7 @@ vMoves=function(){const ms=mergedMoves();
 /* updates box: drop the count tag that repeats the list length; dedupe news by player */
 const _fd13=feed;feed=function(sc){const xs=_fd13(sc),seen=new Set();return xs.filter(it=>{if(it.src==="Sleeper"){const k="s"+(it._p||[])[0];if(seen.has(k))return false;seen.add(k);}const k2=(it.t||"").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,60);if(seen.has(k2))return false;seen.add(k2);return true;});};
 /* ===== v15: My Stats — manager analytics engine ===== */
-const HX={st:"idle",done:0,tot:0,data:null,err:null,v:4};
+const HX={st:"idle",done:0,tot:0,data:null,err:null,v:5};
 const DEMOPL={};
 const hxPos=id=>(DEMOPL[id]&&DEMOPL[id].pos)||(LIVE&&LIVE.players&&LIVE.players[id]&&LIVE.players[id].position)||(PL[id]&&PL[id].pos)||null;
 const hxName=id=>{const m=LIVE&&LIVE.players&&LIVE.players[id];if(m)return m.full_name||((m.first_name||"")+" "+(m.last_name||"")).trim()||(m.team?m.team+" D/ST":id);return DEMOPL[id]?DEMOPL[id].name:PL[id]?PL[id].name:(isNaN(+id)?id+" D/ST":"Player "+id);};
@@ -2270,7 +2275,7 @@ async function loadLeagueSeason(l){const season=+l.season,cur=+S.season,past=sea
   const mus=await poolRun(wk.map(w=>()=>hxGet(`/league/${l.league_id}/matchups/${w}`)),6);
   const txs=await poolRun(wk.map(w=>()=>hxGet(`/league/${l.league_id}/transactions/${w}`)),6);
   const dr=(drafts||[]).filter(d=>d.status==="complete");const picks=[];
-  for(const d of dr){const p=await hxGet(`/draft/${d.draft_id}/picks`).catch(()=>[]);HX.done++;picks.push({type:d.type,season:+d.season,s2r:d.slot_to_roster_id||{},rounds:(d.settings||{}).rounds,picks:(p||[]).map(x=>({pid:x.player_id,rid:x.roster_id,round:x.round,slot:x.draft_slot,no:x.pick_no,kp:!!x.is_keeper}))});}
+  for(const d of dr){const p=await hxGet(`/draft/${d.draft_id}/picks`).catch(()=>[]);HX.done++;picks.push({type:d.type,season:+d.season,s2r:d.slot_to_roster_id||{},do:d.draft_order||null,start:d.start_time||null,rounds:(d.settings||{}).rounds,picks:(p||[]).map(x=>({pid:x.player_id,rid:x.roster_id,round:x.round,slot:x.draft_slot,no:x.pick_no,kp:!!x.is_keeper}))});}
   const LS={id:l.league_id,prev:l.previous_league_id||null,name:l.name,season,type:st.type||0,size:l.total_rosters||rosters.length,pws,rpos:l.roster_positions||[],
     users:(users||[]).map(u=>({uid:u.user_id,name:u.display_name,team:(u.metadata&&u.metadata.team_name)||u.display_name})),
     rosters:(rosters||[]).map(r=>({rid:r.roster_id,uid:r.owner_id,co:r.co_owners||[]})),
@@ -2329,7 +2334,16 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
       S2.seasons.push({s:x.season,lg:x.name,chain:x.chain,type:x.type,size:x.size,w:t.w,l:t.l,pf:t.pf,pa:t.pa,g:t.g,rank:i+1,champ:won,ru:rn,po:poR.has(t.rid),live:!x.complete});});
     x.rid2u=rid2u;x.uname=uname;}
   // draft-pick realization lookup per chain
-  const pickOf=(chain,season,round,orig)=>{for(const x of LSs){if(x.chain!==chain)continue;for(const d of x.drafts){if(d.season!==season)continue;const slot=Object.keys(d.s2r).find(k=>+d.s2r[k]===orig);if(slot==null)continue;const pk=d.picks.find(p=>p.round===round&&+p.slot===+slot);if(pk)return pk;}}return null;};
+  const usersOf=x=>new Set(x.rosters.map(r=>r.uid).filter(Boolean));
+  const related=chain=>{const mine=LSs.filter(x=>x.chain===chain);const U=new Set(mine.flatMap(x=>[...usersOf(x)]));return new Set(LSs.filter(x=>{if(x.chain===chain)return true;const u=[...usersOf(x)];return u.length&&u.filter(v=>U.has(v)).length/u.length>=.6;}).map(x=>x.chain));};
+  const finalOwner=(chain,season,round,orig)=>{let o=orig;const xs=[];for(const x of LSs){if(x.chain!==chain)continue;for(const t of x.tx)if(t.type==="trade")for(const p of t.dp)if(p.season===season&&p.round===round&&+p.orig===+orig)xs.push([t.ts||x.season*1e3+t.wk,p.to]);}xs.sort((a,b)=>a[0]-b[0]);if(xs.length)o=xs[xs.length-1][1];return o;};
+  const PKC=new Map();
+  const pickOf=(chain,season,round,orig)=>{const key=chain+"|"+season+"|"+round+"|"+orig;if(PKC.has(key))return PKC.get(key);
+    const rel=related(chain),cand=LSs.filter(x=>rel.has(x.chain)).sort((a,b)=>(b.chain===chain)-(a.chain===chain));let res=null;
+    const slotIn=(x,d)=>{let s=Object.keys(d.s2r||{}).find(k=>+d.s2r[k]===+orig);if(s==null&&d.do){const r=x.rosters.find(r=>+r.rid===+orig);if(r&&r.uid&&d.do[r.uid]!=null)s=d.do[r.uid];}return s;};
+    for(const x of cand){for(const d of x.drafts){if(d.season!==season)continue;const s=slotIn(x,d);if(s==null)continue;const pk=d.picks.find(p=>p.round===round&&+p.slot===+s&&!p.kp);if(pk&&pk.pid){res=pk;break;}}if(res)break;}
+    if(!res){const fo=finalOwner(chain,season,round,orig);for(const x of cand){for(const d of x.drafts){if(d.season!==season)continue;const ms=d.picks.filter(p=>p.round===round&&+p.rid===+fo&&!p.kp&&p.pid);if(ms.length===1){res=ms[0];break;}}if(res)break;}}
+    PKC.set(key,res);return res;};
   // production of a player from week w of season s onward inside a chain, in that league's scoring
   const prodAfter=(chain,pid,s,w,limitW)=>{let pts=0,g=0;for(const x of LSs){if(x.chain!==chain||x.season<s)continue;const pp=x.PP[pid];if(!pp)continue;for(const [wk,v] of Object.entries(pp)){const k=+wk;if(x.season===s&&k<w)continue;if(limitW&&(x.season!==s||k>=w+limitW))continue;if(k>=x.pws&&x.season!==s)continue;pts+=v;if(v>0)g++;}}return {pts,g};};
   const ppgBefore=(x,pid,w)=>{const pp=x.PP[pid]||{};const v=Object.entries(pp).filter(([k,v])=>+k<w&&v>0).map(([,v])=>v);return v.length?avgx(v):0;};
@@ -2355,8 +2369,14 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
       const st=sh(inST+Math.max(0,kST),outST+Math.max(0,-kST)),rz=sh(inRZ,outRZ);
       // value drift: cumulative net production by week since trade (this season)
       const drift=[];let cum=0;for(let w=t.wk;w<=x.weeks.length;w++){for(const p of sd.recP)cum+=(x.PP[p]||{})[w]||0;for(const p of sd.gaveP)cum-=(x.PP[p]||{})[w]||0;drift.push(+cum.toFixed(1));}
-      TR.push({id:t.id,lg:x.name,chain:x.chain,season:x.season,wk:t.wk,ts:t.ts,u:sd.u,partner:op.map(o=>x.uname[o.u]||"").join(", "),rec:sd.recP.map(hxName),gave:sd.gaveP.map(hxName),recK:sd.recK.map((k,i)=>({...k,real:kin[i]})),gaveK:sd.gaveK.map((k,i)=>({...k,real:kout[i]})),fb:sd.fb,st,rz,net:inRZ-outRZ,stNet:inST-outST,drift,type:x.type});
+      TR.push({id:t.id,lg:x.name,chain:x.chain,season:x.season,wk:t.wk,ts:t.ts,u:sd.u,partner:op.map(o=>x.uname[o.u]||"").join(", "),rec:sd.recP.map(hxName),gave:sd.gaveP.map(hxName),recK:sd.recK.map((k,i)=>({...k,real:kin[i]})),gaveK:sd.gaveK.map((k,i)=>({...k,real:kout[i]})),fb:sd.fb,st,rz,net:inRZ-outRZ,stNet:inST-outST,drift,type:x.type,inRZ,outRZ,ord:t.ts||(x.season*1e6+t.wk)});
       mgr(sd.u).trades.push(TR[TR.length-1]);}}}
+  // picks flipped before their draft: the realized value is what the pick was traded for
+  {const kk=k=>k.season+"-"+k.round+"-"+k.orig;const byU=new Map();for(const t of TR){const a=byU.get(t.chain+"|"+t.u)||[];a.push(t);byU.set(t.chain+"|"+t.u,a);}
+   for(const t of TR.slice().sort((a,b)=>b.ord-a.ord)){let ch=false;for(const k of t.recK){const later=(byU.get(t.chain+"|"+t.u)||[]).filter(z=>z!==t&&z.ord>t.ord&&z.gaveK.some(g=>kk(g)===kk(k))).sort((a,b)=>a.ord-b.ord)[0];if(!later)continue;
+     const g=later.gaveK.find(g=>kk(g)===kk(k)),gv=g.real?g.real.v:0,share=later.outRZ>0?Math.min(1,gv/later.outRZ):1,fv=later.inRZ*share,ov=k.real?k.real.v:0;
+     k.flip={id:later.id,season:later.season,wk:later.wk,ts:later.ts,partner:later.partner,rec:later.rec,recK:later.recK,gave:later.gave,gaveK:later.gaveK,share,v:fv,was:ov,rz:later.rz};t.inRZ+=fv-ov;ch=true;}
+     if(ch){t.rz=t.inRZ+t.outRZ<=0?.5:t.inRZ/(t.inRZ+t.outRZ);t.net=t.inRZ-t.outRZ;}}}
   // waivers
   for(const x of LSs){for(const t of x.tx.filter(t=>t.type==="waiver"||t.type==="free_agent")){for(const [pid,rid] of Object.entries(t.adds)){const u=x.rid2u[rid];if(!u)continue;const S2=mgr(u);
       const before=ppgBefore(x,pid,t.wk);let after=[],started=0,stW=0;for(let w=t.wk;w<=x.weeks.length;w++){const v=(x.PP[pid]||{})[w];if(v!=null&&v>0)after.push(v);const me=(x.weeks[w-1]||[]).find(m=>m.rid===rid);if(me&&me.st.includes(pid)){started+=+me.pp[pid]||0;stW++;}}
@@ -2506,8 +2526,8 @@ function vStats(){const D=HX.data;
    <p class="sub">Actual win rate by pregame win chance. Dark bars beat the odds. Clutch means winning when the model gave you under 40%; pregame odds come from both teams’ scoring to that point in the season.</p></section>
   <section class="pan mt"><div class="row sp"><h2>Wheel’n’Deal</h2><span class="tag">${wnd==null?"No trades":wnd+" / 100"}</span></div>
    ${tr.length?`<div class="hxk">${KP(tr.length,"Trades")}${KP(stG,"Day-one grade","first 4 weeks")}${KP(rzG,"Realized grade","to date, repriced weekly")}${KP(m0.d.wine,"Aged like wine","lost early, won late")}</div>
-   <div class="trl mt">${tr.slice(0,12).map(t=>{const a=GR(t.st),b=GR(t.rz),tag=t.st<.46&&t.rz>.56?"Aged like wine":t.st>.56&&t.rz<.44?"Spoiled milk":t.rz>=.7?"Fleece":t.rz<.36?"Got fleeced":"";
-     return `<div class="tri"><div class="row sp"><span class="sub ell">${t.season} · ${esc(t.lg)} · with ${esc(t.partner)}</span>${tag?`<span class="pill">${tag}</span>`:""}</div><div class="trg"><span class="grd ${grCls(a)}">${a}</span><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span class="grd ${grCls(b)}">${b}</span><span class="trt"><b>Got</b> ${esc(t.rec.concat(t.recK.map(k=>k.real&&k.real.pk&&k.real.real?`${k.season} R${k.round} (${hxName(k.real.pk.pid)})`:`${k.season} R${k.round}`)).join(", ")||"nothing")}${t.fb>0?` +$${t.fb}`:""}<br><span class="sub"><b>Gave</b> ${esc(t.gave.concat(t.gaveK.map(k=>k.real&&k.real.pk&&k.real.real?`${k.season} R${k.round} (${hxName(k.real.pk.pid)})`:`${k.season} R${k.round}`)).join(", ")||"nothing")}${t.fb<0?` +$${-t.fb}`:""}</span></span>${spark(t.drift.length>1?t.drift:[0,0],70,26)}</div></div>`;}).join("")}</div>
+   <div class="trl mt">${lst(tr.map(t=>{const a=GR(t.st),b=GR(t.rz),tag=t.st<.46&&t.rz>.56?"Aged like wine":t.st>.56&&t.rz<.44?"Spoiled milk":t.rz>=.7?"Fleece":t.rz<.36?"Got fleeced":"";
+     return `<div class="tri"><div class="row sp"><span class="sub ell">${t.season} · ${esc(t.lg)} · with ${esc(t.partner)}</span>${tag?`<span class="pill">${tag}</span>`:""}</div><div class="trg"><span class="grd ${grCls(a)}">${a}</span><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span class="grd ${grCls(b)}">${b}</span><span class="trt"><b>Got</b> ${t.rec.map(esc).concat(t.recK.map(k=>pkLab(k,t))).join(", ")||"nothing"}${t.fb>0?` +$${t.fb}`:""}<br><span class="sub"><b>Gave</b> ${t.gave.map(esc).concat(t.gaveK.map(k=>pkLab(k,t))).join(", ")||"nothing"}${t.fb<0?` +$${-t.fb}`:""}</span></span>${spark(t.drift.length>1?t.drift:[0,0],70,26)}</div></div>`;}),12,"")}</div>
    <p class="sub mt">Day-one grade uses the first four weeks after the deal. Realized grade adds everything since, in this league’s scoring, plus today’s projection for players still producing; picks are priced by round until they’re made, then by the player drafted. Sparkline: net points gained since the trade.</p>`:`<p class="sub">No trades on record. The Trade Lab can fix that.</p>`}</section>
   <section class="pan mt"><div class="row sp"><h2>Waiver wire report</h2><span class="tag">${m.adds.length} adds</span></div>
    ${m.adds.length?`<div class="hxk">${KP(pcx(hit),"Hit rate","started 3+ weeks")}${KP(brk.length,"Pre-breakout finds","added before they popped")}${KP(Math.round(m.adds.reduce((s,a)=>s+a.started,0)),"Points started","from pickups")}${KP(m0.d.adN&&m0.faab?"$"+m0.faab:"–","FAAB spent",m0.faab?f1(m.adds.reduce((s,a)=>s+a.started,0)/Math.max(1,m0.faab))+" pts per $":"")}</div>
@@ -3801,7 +3821,7 @@ function skillDetail(focus){const C=skillCtx();if(!C)return;const {m,M,G}=C,d=m.
   const on=u=>(M[u]&&M[u].name)||(G.M[u]&&G.M[u].name)||"opponent";const wk=x=>`Wk ${x.w} ${x.s}${C.lbl==="all your leagues"?" · "+esc(cn(x.lg)):""}`;
   const S=m.scores.slice().sort((a,b)=>a.s-b.s||a.w-b.w),sc2=m.scores.map(x=>x.v),mean=sc2.length?sc2.reduce((a,b)=>a+b,0)/sc2.length:0,sd=sc2.length>2?Math.sqrt(sc2.reduce((t,v)=>t+(v-mean)**2,0)/sc2.length):0;
   const by=(xs,f,dir=1)=>xs.slice().sort((a,b)=>dir*(f(b)-f(a)))[0];
-  const tradeTxt=t=>`Got ${[...(t.rec||[]),...(t.recK||[]).map(x=>`${x.season} R${x.round}`)].join(", ")||"nothing"} for ${[...(t.gave||[]),...(t.gaveK||[]).map(x=>`${x.season} R${x.round}`)].join(", ")||"nothing"}`;
+  const tradeTxt=t=>`Got ${[...(t.rec||[]),...(t.recK||[]).map(x=>pkText(x)+(x.flip?` → ${x.flip.rec.concat(x.flip.recK.map(pkText)).join(", ")}`:""))].join(", ")||"nothing"} for ${[...(t.gave||[]),...(t.gaveK||[]).map(pkText)].join(", ")||"nothing"}`;
   const card=(key,name,why,bw)=>{const v=k[key],g=SKG(v);return `<div class="skc" id="sk-${key}"><div class="skh"><span class="grd ${/^A/.test(g)?"gA":/^B|C\+/.test(g)?"gB":g==="–"?"":"gC"}">${g}</span><div style="min-width:0"><b>${name}</b><div class="sub" style="margin:0">${v==null?"Not enough data yet":`${ordn(v)} percentile of ${pool.length} managers`}</div></div></div>
     <ul class="why">${why.filter(Boolean).map(x=>`<li>${x}</li>`).join("")}</ul>${bw.filter(Boolean).length?`<div class="skbw">${bw.filter(Boolean).map(([t,c,x])=>`<div class="sk-${c}"><span class="eyebrow">${t}</span><div>${x}</div></div>`).join("")}</div>`:""}</div>`;};
   const cards=[];
@@ -4151,6 +4171,19 @@ vNflIndex=function(){if(!SCHALL&&SCHST==="idle"&&!(typeof NFLS!=="undefined"&&NF
   ${nflCard("fm","Hot and cold",`Last 3 games`,null,`<div class="eyebrow mt">Hottest</div>${lst(form.slice(0,8).map(fr),5,"")}<div class="eyebrow mt">Coldest</div>${lst(form.slice(-8).reverse().map(fr),5,"")}`,"Average margin over the last 3 games compared with the season average, plus the last five results.")}
   ${nflCard("sc","Remaining schedule",`Easiest first`,null,lst(sos.map(sr),5,"Schedule not loaded."),"Average win percentage of remaining opponents. Lower is easier; longer bars are easier schedules.")}`;};
 document.addEventListener("click",e=>{let b;if((b=e.target.closest("[data-nfconf]"))){S.nfConf=b.dataset.nfconf;render();return;}if((b=e.target.closest("[data-nfoff]"))){S.nfOff=b.dataset.nfoff;render();return;}if((b=e.target.closest("[data-nfdef]"))){S.nfDef=b.dataset.nfdef;render();return;}},true);
+
+/* ===== v41: draft picks show who was drafted; picks flipped before the draft show what they became ===== */
+const PKR=[];
+function pkText(k){const n=k.real&&k.real.real&&k.real.pk?hxName(k.real.pk.pid):null;return `${k.season} Rd ${k.round}${n?` (${n})`:""}`;}
+function pkLab(k,t){const base=pkText(k);if(!k.flip)return esc(base);const i=PKR.push({k,t})-1;const got=k.flip.rec.concat(k.flip.recK.map(pkText));return `<button class="pkf" data-pkf="${i}">${esc(base)} → ${esc(got.join(", ")||"pick")}</button>`;}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-pkf]");if(!b)return;e.preventDefault();e.stopPropagation();const {k,t}=PKR[+b.dataset.pkf]||{};if(!k)return;const f=k.flip;
+  const d=ts=>ts?new Date(ts).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}):"";
+  const list=(ps,ks)=>ps.map(esc).concat(ks.map(x=>esc(pkText(x)))).join(", ")||"nothing";
+  openSheet(`${k.season} Round ${k.round} pick`,`<div class="pkc"><div class="pks"><span class="pkd"></span><div><div class="eyebrow">${d(t.ts)||t.season+" · Week "+t.wk}</div><div><b>Acquired</b> from ${esc(t.partner)}</div><div class="sub">Got ${list(t.rec,t.recK)} · Gave ${list(t.gave,t.gaveK)}</div></div></div>
+   <div class="pks"><span class="pkd"></span><div><div class="eyebrow">${d(f.ts)||f.season+" · Week "+f.wk}</div><div><b>Traded again</b> to ${esc(f.partner)}, before the draft</div><div class="sub">Got ${list(f.rec,f.recK)} · Gave ${list(f.gave,f.gaveK)}</div></div></div>
+   <div class="pks last"><span class="pkd"></span><div><div class="eyebrow">Realized result</div><div><b>${esc(f.rec.concat(f.recK.map(pkText)).join(", ")||"Nothing")}</b></div></div></div></div>
+   <div class="hxk mt"><div><b class="num">${f0(Math.round(f.v))}</b><span>Value credited</span><em>${f.share<.999?`${Math.round(f.share*100)}% of that trade’s return`:"all of that trade’s return"}</em></div><div><b class="num">${f0(Math.round(f.was))}</b><span>Pick’s own value</span><em>${k.real&&k.real.real?"player drafted with it":"by round"}</em></div></div>
+   <p class="sub mt">The pick was flipped before it was used, so this trade is graded on what it turned into. When the pick was one of several pieces sent, it’s credited with its share of the return.</p>`);},true);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
