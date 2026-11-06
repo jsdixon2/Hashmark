@@ -453,6 +453,19 @@ main{padding-top:10px!important}
 .gate{background:radial-gradient(90% 55% at 50% 0%,rgba(92,242,208,.10),transparent 60%),radial-gradient(80% 50% at 50% 100%,rgba(138,147,255,.08),transparent 60%),#06070A!important}
 .gate input:focus{box-shadow:0 0 0 2px #5CF2D0!important}
 .gnote::before{content:"";display:block;width:36px;height:2px;margin:0 auto 14px;border-radius:2px;background:linear-gradient(90deg,#5CF2D0,#8A93FF)}
+
+/* v20 */
+.top{position:sticky!important;top:0!important}
+body{padding-top:0!important}
+.ctx{top:var(--hh)!important;margin-top:0!important}
+.glr{padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}.glr:last-child{border-bottom:0}.glr.me b{color:var(--acc)}
+.glb{position:relative;height:12px;border-radius:99px;background:var(--panel2);margin:7px 0 6px;overflow:hidden}
+.glb .gl1{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--accg)}
+.glb .gl2{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--ink) 14%,transparent);border-radius:99px}
+.glb u{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);transform:translateX(-1px)}
+.glg{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line);font:500 14px var(--fb)}.glg:last-child{border-bottom:0}.glg .tag{flex:none}
+.tag.warn{color:#E8B04A}.tag.bad{color:#FF7A8A}
+.pr.dead{opacity:.5}
 </style>
 </head>
 <body>
@@ -715,7 +728,7 @@ async function loadLeague(l,week){
   const idx=id=>teams.findIndex(t=>t.id===id);
   const pairs=arr=>{const g={};for(const m of arr||[]){if(m.matchup_id==null)continue;(g[m.matchup_id]=g[m.matchup_id]||[]).push(m);}return Object.values(g).filter(x=>x.length===2);};
   const slots=(l.roster_positions||[]).filter(s=>ELIG[s]);const allSlots=(l.roster_positions||[]).filter(s=>!["BN","IR","TAXI"].includes(s));const sc=l.scoring_settings||{};
-  return {gl:/chop|guillotine/i.test(l.name||"")||Object.keys(l.settings||{}).some(k=>/chop|guillotin/i.test(k)&&(l.settings||{})[k])||((mu||[]).length>2&&(mu||[]).every(m=>m.matchup_id==null)),glMu:(mu||[]).filter(m=>(m.starters||[]).some(x=>x&&x!=="0")||m.points).map(m=>({rid:m.roster_id,pts:m.points||0})),tp:tp||[],rounds:(l.settings&&l.settings.draft_rounds)||4,divs:(l.settings&&l.settings.divisions)||0,dmeta:l.metadata||{},lset:l.settings||{},rpos:l.roster_positions||[],id:l.league_id,name:l.name,size:l.total_rosters,slots,allSlots,type:(l.settings&&l.settings.type)||0,qb:slots.includes("SUPER_FLEX")||slots.filter(s=>s==="QB").length>1?"sf":"1qb",scoring:sc,scoringLabel:sc.rec===1?"PPR":sc.rec===.5?"Half PPR":"Standard",ps,pteams:(l.settings&&l.settings.playoff_teams)||6,teams,
+  return {gl:/chop|guillotine/i.test(l.name||"")||Object.keys(l.settings||{}).some(k=>/chop|guillotin/i.test(k)&&(l.settings||{})[k])||((mu||[]).length>2&&(mu||[]).every(m=>m.matchup_id==null)),glMu:(mu||[]).filter(m=>(m.starters||[]).some(x=>x&&x!=="0")||m.points).map(m=>({rid:m.roster_id,pts:m.points||0,st:m.starters||[],pp:m.players_points||{}})),tp:tp||[],rounds:(l.settings&&l.settings.draft_rounds)||4,divs:(l.settings&&l.settings.divisions)||0,dmeta:l.metadata||{},lset:l.settings||{},rpos:l.roster_positions||[],id:l.league_id,name:l.name,size:l.total_rosters,slots,allSlots,type:(l.settings&&l.settings.type)||0,qb:slots.includes("SUPER_FLEX")||slots.filter(s=>s==="QB").length>1?"sf":"1qb",scoring:sc,scoringLabel:sc.rec===1?"PPR":sc.rec===.5?"Half PPR":"Standard",ps,pteams:(l.settings&&l.settings.playoff_teams)||6,teams,
     matchups:pairs(mu).map(p=>p.map(m=>({i:idx(m.roster_id),pts:m.points||0,starters:m.starters||[],pp:m.players_points||{}}))),future:fut.map(a=>pairs(a).map(p=>[idx(p[0].roster_id),idx(p[1].roster_id)]).filter(x=>x[0]>=0&&x[1]>=0)).filter(x=>x.length),remWeeks:fw.length};}
 function rebuildLive(L){const sc=L.scoring;const meta=LIVE.players;const ids=new Set();
   for(const lg of S.leagues)for(const t of lg.teams)for(const id of t.players)ids.add(id);
@@ -794,7 +807,7 @@ function alertsFor(W){const out=[];const taken=new Set();
     if(!p){out.push({lvl:"bad",msg:`Empty ${sl} slot`,fix:fix(best(r.slot,0))});continue;}
     const g=gameOf(p);
     if(g&&g.bye){out.push({lvl:"bad",msg:`${p.name} is on bye`,fix:fix(best(r.slot,0)),id:p.id});continue;}
-    if(p.inj&&OUTRX.test(p.inj)){out.push({lvl:"bad",msg:`${p.name} is ${p.inj}`,fix:fix(best(r.slot,0)),id:p.id});continue;}
+    if(p.inj&&OUTRX.test(p.inj)){out.push({lvl:"bad",msg:`${p.name} ${statusWord(p.inj)}`,fix:fix(best(r.slot,0)),id:p.id});continue;}
     if(g&&g.final){out.push({lvl:"info",msg:`${p.name} played Thursday`,fix:`${f1(p.last)} points banked`,id:p.id});continue;}
     if(g&&g.thu)out.push({lvl:"warn",msg:`${p.name} plays Thursday`,fix:`Kickoff ${g.g.when}; his slot locks then`,id:p.id});
     if(p.inj)out.push({lvl:"warn",msg:`${p.name}: ${p.inj.split(";")[0]}`,fix:"Check the inactive list before kickoff",id:p.id});
@@ -1103,7 +1116,7 @@ function kpiRow(L){const o=oddsFor(L),me=mineIdx(L),t=L.teams[me],ord=L.teams.ma
   const k=(lab,val,sub,cu,sfx)=>`<div class="k"><div class="eyebrow">${lab}</div><div class="kv"${cu!=null?` data-cu="${cu}" data-sfx="${sfx||""}"`:""}>${val}</div><div class="sub">${sub}</div></div>`;
   return `<div class="kpi4">${k("Playoffs",PCT(o[me].po)+"%","top "+L.pteams+" of "+L.size,PCT(o[me].po),"%")}${k("Title",PCT(o[me].top)+"%","simulated 1,500×",PCT(o[me].top),"%")}${k("Power rank","#"+pr,"of "+L.size+" by lineup")}${k("Record",t.w+"-"+t.l+(t.t?"-"+t.t:""),f1(t.pf)+" points")}</div>`;}
 function gapRows(t){return t.players.map(i=>PL[i]).filter(p=>p&&p.ppg!=null&&POSI.hasOwnProperty(p.pos)).map(p=>{const n=neutral(p),exp=n?n.ppg:rosPPG(p);return {p,pace:p.ppg,exp,gap:p.ppg-exp,thr:Math.max(1.5,exp*.15)};}).sort((a,b)=>b.p.val-a.p.val).slice(0,8);}
-const gapTag=(r,mine)=>r.gap>=r.thr?`<span class="pill hot">${mine?"Sell high":"Overheated"}</span>`:r.gap<=-r.thr?`<span class="pill hot">${mine?"Due to rise":"Buy low"}</span>`:`<span class="pill">Fair</span>`;
+const gapTag=(r,mine)=>typeof gapTagX==="function"?gapTagX(r,mine):r.gap>=r.thr?`<span class="pill hot">${mine?"Sell high":"Overheated"}</span>`:r.gap<=-r.thr?`<span class="pill hot">${mine?"Due to rise":"Buy low"}</span>`:`<span class="pill">Fair</span>`;
 function gapPanel(t){const rows=gapRows(t);if(rows.length<3)return "";const mx=Math.max(...rows.map(r=>Math.max(r.pace,r.exp)))*1.12||1,X=v=>(v/mx*100).toFixed(1);
   return `<section class="pan mt"><h2>Underlying value</h2><p class="sub">Points per game so far against what the model expects from every game he has played, weighted equally. A wide gap means the production may not last.</p><div class="mt">${rows.map(r=>{const lo=Math.min(r.pace,r.exp),hi=Math.max(r.pace,r.exp);return `<div class="db" data-go="player-${r.p.id}" role="link" tabindex="0"><span class="dl">${esc(r.p.name)}</span><div class="dt"><i class="dline" style="left:${X(lo)}%;width:${(X(hi)-X(lo)).toFixed(1)}%"></i><b class="d1" style="left:${X(r.pace)}%"></b><u class="d2" style="left:${X(r.exp)}%"></u></div>${gapTag(r,t.mine)}</div>`;}).join("")}</div><div class="dk"><span><i style="background:var(--ink)"></i>Season pace</span><span><i style="border:2.5px solid var(--ink)"></i>Model expectation</span></div></section>`;}
 function perfSeries(L,t){const ps=t.players.map(i=>PL[i]).filter(p=>p&&p.log&&p.log.length);if(ps.length<5)return null;const wks=[...new Set(ps.flatMap(p=>p.log.map(x=>x.wk)))].sort((a,b)=>a-b);if(wks.length<3)return null;const order=[...L.slots].sort((a,b)=>ELIG[a].length-ELIG[b].length);
@@ -1131,7 +1144,8 @@ const _vTm=vTeam;vTeam=function(i){const L=S.L;return _vTm(i)+(L&&L.teams[i]?gap
 
 function verdictCard(id){const p=PL[id];if(!p)return "";const mine=!!(S.L&&myTeam()&&myTeam().players.includes(id));const n=neutral(p),exp=n?n.ppg:rosPPG(p),pace=p.ppg!=null?p.ppg:exp,gap=pace-exp,thr=Math.max(1.5,exp*.15),risk=p.risk==null?50:p.risk;
   const vals=Object.values(PL).map(x=>x.val),pct=vals.length?vals.filter(v=>v<=p.val).length/vals.length:0;let lab,why;
-  if(gap>=thr&&risk>=35){lab=mine?"Sell high":"Overheated";why=`Scoring ${f1(pace)} a game against ${f1(exp)} expected. That pace has not held up over his full record.`;}
+  if(gap>=thr&&sustain(p)>=.6){lab=mine?"Hold: real breakout":"Real breakout";why=`Scoring ${f1(pace)} a game against ${f1(exp)} expected, and the usage backs it up (${sustainWhy(p)}).`;}
+  else if(gap>=thr&&risk>=35){lab=mine?"Sell high":"Overheated";why=`Scoring ${f1(pace)} a game against ${f1(exp)} expected. The underlying usage says the pace is unlikely to hold (${sustainWhy(p)}).`;}
   else if(gap<=-thr&&risk<65){lab=mine?"Hold, due to rise":"Buy low";why=`Scoring ${f1(pace)} a game against ${f1(exp)} expected. His record says production should rise.`;}
   else if(pct>=.8&&risk<50){lab="Core hold";why=`Top-tier value with manageable risk. Production sits near what the model expects.`;}
   else if(risk>=65){lab="Reduce exposure";why=`Risk is ${risk} of 100, which outweighs his value of ${f0(p.val)}.`;}
@@ -1211,7 +1225,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&document.activeEleme
 const AGE_CLIFF={QB:35,RB:27,WR:29,TE:30},ABS=/\bout\b|\bir\b|\bpup\b|\bsus|doubt/i;
 const pctOf=(arr,v)=>{let lo=0,hi=arr.length;while(lo<hi){const m=(lo+hi)>>1;if(arr[m]<=v)lo=m+1;else hi=m;}return arr.length?lo/arr.length:0;};
 function sigCtx(){const A=Object.values(PL);return {now:A.map(rosN).sort((a,b)=>a-b),long:A.map(p=>p.val).sort((a,b)=>a-b)};}
-function returnEffect(p){const o={pct:0,why:[]},st=q=>q.inj.split(" (")[0].toLowerCase();
+function returnEffect(p){const o={pct:0,why:[]},st=q=>statusWord(q.inj).replace(/^is /,"");
   for(const q of Object.values(PL)){if(q.team!==p.team||q.id===p.id||!q.inj||!ABS.test(q.inj))continue;if(!(q.pos==="QB"||q.val>=p.val*.5))continue;
     if(q.pos==="QB"&&p.pos!=="QB"){o.pct+=8;o.why.push({v:8,t:`${q.name} is ${st(q)}; the offense improves when he returns`});}
     else if(q.pos===p.pos&&p.pos!=="QB"){const hi=q.val>p.val*.8;o.pct-=hi?9:3;o.why.push({v:hi?-9:-3,t:hi?`He is absorbing volume while ${q.name} is ${st(q)}; expect fewer looks on his return`:`${q.name} is ${st(q)} but does not threaten his role`});}
@@ -1251,7 +1265,7 @@ function signalsPanel(L){let G;try{G=tradeSignals(L);}catch(e){return "";}const 
   const note=!ts.dyn?"Redraft league: only this season counts, so age and long-term value are ignored.":ts.st==="contender"?"Weights this season at about 78% and the future at 22%. Age matters little until a player passes his cliff.":ts.st==="rebuilding"?"Weights the future at about 75%. Older players past their position’s cliff are sell candidates, and young risers are targets.":"Weights this season and the future about evenly.";
   const str=x=>x.s>=1.9?"Strong":"Moderate";
   const own=p=>{const o=ownerOf(p);return o==="avail"||o==null?"Free agent. Claim on waivers.":"Owned by "+o+".";};
-  const row=(x,buy)=>`<div class="sgi"><div class="sgh">${pos(x.p.pos)}<b>${esc(x.p.name)}</b><span class="sub">${esc(x.p.team)}${x.p.age?" · age "+x.p.age:""}</span><span class="tag">${str(x)}</span></div>${x.why.slice(0,3).map(w=>`<div class="sgw">${esc(w)}</div>`).join("")}<div class="sgo sub">${buy?own(x.p)+(x.pay?" Offer "+esc(x.pay.p.name)+" ("+f0(x.pay.p.val)+" vs "+f0(x.p.val)+").":""):"Value "+f0(x.p.val)+"."}</div></div>`;
+  const row=(x,buy)=>`<div class="sgi"><div class="sgh">${pos(x.p.pos)}<b>${esc(x.p.name)}</b><span class="sub">${esc(x.p.team)}${x.p.age?" · age "+x.p.age:""}</span><span class="tag">${str(x)}</span></div>${x.why.slice(0,3).map(w=>`<div class="sgw">${esc(w)}</div>`).join("")}<div class="sgo sub">${buy?own(x.p)+(x.pay?(x.pay.p?" Offer "+esc(x.pay.p.name)+". "+esc(x.pay.why)+".":" "+esc(x.pay.why)+"."):""):"Value "+f0(x.p.val)+"."}</div></div>`;
   const sec=(h,sub,a,buy)=>a.length?`<section class="pan mt"><h2>${h}</h2><p class="sub">${sub}</p><div class="mt">${a.map(x=>row(x,buy)).join("")}</div></section>`:"";
   return `<section class="pan"><div class="vhead"><div><div class="eyebrow">Your team status</div><div class="vlab">${lab}</div></div><div style="text-align:right"><div class="eyebrow">Power rank</div><div class="kv">#${ts.rank} of ${ts.n}</div></div></div><p class="sub mt">${note}</p></section>`
    +sec("Sell high","Players on your roster whose production, role or age suggests selling now.",G.sells,false)
@@ -2100,6 +2114,110 @@ homeBoxes=(function(prev){return function(){let h=prev();S.leagues.forEach((L,li
 const _mh16=menuHtml;menuHtml=function(){let h=_mh16();for(const L of S.leagues)if(L.rip){h=h.replace(new RegExp(`(<b class="mn ell">${esc(L.name).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}</b><span class="tag">)[^<]*(</span></div><div class="msub ell">)[^<]*`),`$1R.I.P.$2Chopped · guillotine league`);h=h.replace(new RegExp(`(<button class="chip" data-golg="${L.id.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}" data-go="(?:team-\\d+|matchup-\\d+|trade|waivers)" data-dclose="1">[^<]*</button>)`,"g"),"");}return h;};
 vHome=(function(prev){return function(){let h=prev();if(route()!=="home")return h;const act=S.leagues.filter(L=>!L.rip).length,dead=S.leagues.length-act;
   return h.replace(/<span>(\d+) teams?<\/span>/,`<span>${act} team${act===1?"":"s"}${dead?` · ${dead} chopped`:""}</span>`);};})(vHome);
+/* ===== v20: status wording, trade engine 2.0, guillotine board ===== */
+function statusWord(inj){const s=String(inj||"").trim(),l=s.toLowerCase(),rep=/\(reported\)/i.test(s)?" (reported)":"";
+  if(/^ir\b|injured reserve/.test(l))return "is on IR"+rep;if(/^pup/.test(l))return "is on PUP";if(/^sus/.test(l))return "is SUSPENDED";if(/^out/.test(l))return "is OUT"+rep;
+  if(/^doubt/.test(l))return "is DOUBTFUL";if(/^quest/.test(l))return "is QUESTIONABLE";if(/^na$|^dnr|not active/.test(l))return "is INACTIVE";if(/^cov/.test(l))return "is on the COVID list";return "is "+s.toUpperCase();}
+statusItems=function(){const out=[],snapTs=Date.parse("2026-10-31T12:00:00-04:00");
+  for(const id of myIds()){const p=PL[id];if(!p||!p.inj||p.injN)continue;const pr=p.prac?` · ${String(p.prac).toUpperCase()} in practice`:"";
+    out.push({id:"s"+id,t:`${p.name} ${statusWord(p.inj)}${pr}`,s:"",src:"Sleeper",url:null,ts:p.nu||(S.mode==="live"?null:snapTs),k:["status"],brk:false,_p:[id],_tm:[],_ix:newsIndex()});}return out;};
+
+/* sustainability: real breakout vs flash in the pan (0 = flash, 1 = real) */
+function sustain(p){const f=p._rf||{},c=p.rc||{},n=(p.log||[]).length;let s=.35;
+  s+=Math.min(1,n/8)*.15;
+  if(f.snap!=null&&p.pos!=="QB")s+=f.snap>=75?.18:f.snap>=60?.08:f.snap<45?-.15:0;
+  if(f.tdp!=null){const norm=p.pos==="QB"?.32:.24;s+=f.tdp<=norm?.12:-Math.min(.3,(f.tdp-norm)*1.1);}
+  if(c.vol!=null)s+=(50-c.vol)/50*.1;if(f.tr!=null)s+=f.tr<-.1?.1:f.tr>.15?-.1:0;
+  if(p.age!=null){const cl=AGE_CLIFF[p.pos]||29;s+=p.age<=25?.08:p.age>=cl?-.06:0;}
+  if(p.dc===1)s+=.05;if(p.news&&p.news.m<.95)s-=.1;
+  return Math.max(0,Math.min(1,s));}
+function sustainWhy(p){const f=p._rf||{},x=[];if(f.snap!=null&&p.pos!=="QB")x.push(`${Math.round(f.snap)}% of snaps lately`);if(f.tdp!=null)x.push(`${Math.round(f.tdp*100)}% of points from TDs`);if((p.log||[]).length)x.push(`${p.log.length} games`);return x.join(", ");}
+function gapTagX(r,mine){if(r.gap>=r.thr){const su=r.p?sustain(r.p):.4;if(su>=.6)return `<span class="pill">${mine?"Hold: real breakout":"Real breakout"}</span>`;return `<span class="pill hot">${mine?(su<.4?"Sell high":"Monitor"):"Overheated"}</span>`;}
+  return r.gap<=-r.thr?`<span class="pill hot">${mine?"Due to rise":"Buy low"}</span>`:`<span class="pill">Fair</span>`;}
+
+/* team context per league: status, lineup baseline, needs, injuries, depth, picks */
+const remW=L=>Math.max(1,L.remWeeks||Math.max(1,18-(S.week||1)));
+function futPts(p,reb){if(!p||S.fmt.type==="redraft")return 0;const b=Math.max(0,rosPPG(p)),a=p.age||26,m0=ageMult(p.pos,a)||1,cl=AGE_CLIFF[p.pos]||29,W=reb?[.4,1,1]:[1,.65,.4];let v=0;for(let k=1;k<=3;k++){let r=Math.min(1.3,ageMult(p.pos,a+k)/m0);if(a+k>cl)r*=Math.max(.05,1-(a+k-cl)*.35);v+=b*r*14*W[k-1];}return v*(S.fmt.type==="keeper"?.45:1);}
+function lpts(ids,L){return lineup(ids,L.slots).pts;}
+function leagueCtx(L){const key=L.id+"|"+S.week+"|"+Object.keys(PL).length+"|"+(NW.built||0)+"|"+L.teams.map(t=>t.players.length+":"+t.w).join(",");if(L._ctx&&L._ctx.k===key)return L._ctx.v;
+  const v=L.teams.map((t,ti)=>{let ts;try{ts=teamStatus(L,ti);}catch(e){ts={st:"balanced",rank:ti+1,po:.5,n:L.teams.length,dyn:S.fmt.type!=="redraft",wNow:.5};}
+    const lu=lineup(t.players,L.slots),st=new Set(lu.out.filter(x=>x.p).map(x=>x.p.id));let nd=[];try{nd=needs(L,t);}catch(e){}
+    const nd2={};nd.forEach(x=>nd2[x.pos]=x.d);const hurt=lu.out.filter(x=>x.p&&x.p.inj&&ABS.test(x.p.inj)).length;
+    const depth={};for(const id of t.players){const p=PL[id];if(p&&!st.has(id)&&POSI.hasOwnProperty(p.pos)&&rosPPG(p)>=repl(p.pos)*.8)depth[p.pos]=(depth[p.pos]||0)+1;}
+    let picks=0;try{const pk=picksOf(L,ti);if(pk)picks=pk.own.length;}catch(e){}
+    const w=!ts.dyn?1:Math.max(.12,Math.min(.92,ts.wNow+(ts.po-.5)*.2));
+    return {ti,t,ts,w,base:lu.pts,st,nd:nd2,hurt,depth,picks};});
+  L._ctx={k:key,v};return v;}
+function valIn(L,c,p){const rem=remW(L),g=Math.max(0,lpts(c.t.players.concat(p.id),L)-c.base);return {g,v:c.w*g*rem+(1-c.w)*futPts(p,c.w<.45)+(c.ts.st==="contender"?(p.brk||0)*rosPPG(p)*2.5:0)};}
+function valOut(L,c,p){const rem=remW(L),g=Math.max(0,c.base-lpts(c.t.players.filter(x=>x!==p.id),L));return {g,v:c.w*g*rem+(1-c.w)*futPts(p,c.w<.45)};}
+const recOf=t=>`${t.w}-${t.l}${t.t?"-"+t.t:""}`;
+const stLbl=c=>c.ts.st==="contender"?"contending":c.ts.st==="rebuilding"?"rebuilding":"in the middle";
+
+tradeSignals=function(L){const C=leagueCtx(L),mi=mineIdx(L),me=C[mi],ts=me.ts,ctx=sigCtx(),rem=remW(L);const myNeed=Object.entries(me.nd).sort((a,b)=>a[1]-b[1])[0];
+  const buys=[],sells=[];
+  // BUY: players on other rosters whose value to you beats their value to their owner
+  for(const c of C){if(c.ti===mi)continue;for(const id of c.t.players){const p=PL[id];if(!p||!POSI.hasOwnProperty(p.pos))continue;if(rosPPG(p)<3&&(p.val||0)<ctx.long[Math.floor(ctx.long.length*.6)])continue;
+    const mine=valIn(L,me,p),theirs=valOut(L,c,p),g=playerSignal(p,ctx,ts);const edge=mine.v-theirs.v,scale=Math.max(25,mine.v,theirs.v);let s=edge/scale*2.2;const why=[];
+    if(mine.g>=.8)why.push(`+${f1(mine.g)} pts a week to your starting lineup${myNeed&&p.pos===myNeed[0]&&myNeed[1]<0?` at ${p.pos}, your thinnest spot`:""}`);
+    else if(me.w>.6){s-=.6;}
+    if(me.w<.5){const fp=futPts(p,true);if(fp>=120&&(p.age||30)<=26){s+=.4;why.push(`${Math.round(fp)} projected points over the next 3 seasons at age ${p.age}`);}if(p.age!=null&&p.age>=(AGE_CLIFF[p.pos]||29)){s-=.9;}}
+    if(theirs.g<.3&&rosPPG(p)>=6){s+=.3;why.push(`Not starting for ${c.t.name}, so he’s cheap to pry loose`);}
+    if(c.ts.st==="rebuilding"&&me.w>.6&&p.age!=null&&p.age>=(AGE_CLIFF[p.pos]||29)-1){s+=.5;why.push(`${c.t.name} is ${recOf(c.t)} and rebuilding; a ${p.age}-year-old is worth more to you than to them`);}
+    if(c.ts.st==="contender"&&me.w<.5&&c.hurt>=2){s+=.3;why.push(`${c.t.name} is contending with ${c.hurt} injured starters and may pay for help`);}
+    if(p.news&&p.news.m>1&&p.news.why){s+=.35;why.push(`Trending healthy: “${p.news.why.t}”`);}
+    else if(g.ret.pct>=3){s+=g.ret.pct/14;why.push(g.ret.why.find(x=>x.v>0).t);}
+    if(g.z<=-.6&&sustain(p)>=.45){s+=-g.z*.35;why.push(`Scoring ${f1(g.pace)} a game against ${f1(g.exp)} expected; due to rise`);}
+    if(g.pre&&(me.w<.75)){s+=.5*Math.min(1,g.brk/.45);why.push(`${PCT(g.brk)}% breakout odds while priced mid-tier`);}
+    const myExtra=Object.entries(me.depth).filter(([ps,n])=>n>=2&&(c.nd[ps]||0)<-.5).map(([ps])=>ps);if(myExtra.length){s+=.2;why.push(`${c.t.name} is thin at ${myExtra[0]}, where you have depth to send`);}
+    if(g.inj&&!(p.news&&p.news.m>1))s-=me.w>.6?.6:.15;
+    if(s>=.55&&why.length)buys.push({p,g,s,why,c,mine,theirs});}}
+  buys.sort((a,b)=>b.s-a.s);
+  // pay: the player from your roster that helps their lineup most for the least cost to yours
+  const myPl=me.t.players.map(id=>PL[id]).filter(q=>q&&POSI.hasOwnProperty(q.pos));
+  for(const b of buys.slice(0,8)){const c=b.c,need=b.theirs.v*.8,pB=lpts(c.t.players.filter(x=>x!==b.p.id),L);let best=null;
+    for(const q of myPl){if(q.id===b.p.id)continue;const gT=Math.max(0,lpts(c.t.players.filter(x=>x!==b.p.id).concat(q.id),L)-pB),vT=c.w*gT*rem+(1-c.w)*futPts(q,c.w<.45);if(vT<need)continue;const cost=valOut(L,me,q).v;const sc=vT-cost*1.3;if(!best||sc>best.sc)best={q,sc,vT,cost};}
+    if(best&&best.cost<=Math.max(b.mine.v*.75,best.vT*1.25)){b.pay={p:best.q,why:`Fills a need for them; you net about +${Math.max(1,Math.round(b.mine.v-best.cost))} in value`};}
+    else if(b.theirs.v<40)b.pay={p:null,why:"He’s barely playing for them; a late pick or bench depth should do it"};
+    else if(me.picks&&c.ts.st==="contender"&&me.w<.5)b.pay={p:null,why:"Offer a future pick; contenders pay for now"};}
+  // SELL: your players worth clearly more to another roster than to yours
+  for(const id of me.t.players){const p=PL[id];if(!p||!POSI.hasOwnProperty(p.pos)||rosPPG(p)<3)continue;const g=playerSignal(p,ctx,ts),hold=valOut(L,me,p),su=sustain(p);
+    let best=null;for(const c of C){if(c.ti===mi)continue;const v=valIn(L,c,p);if(!best||v.v>best.v.v)best={c,v};}if(!best)continue;
+    const edge=best.v.v-hold.v,scale=Math.max(25,hold.v,best.v.v);let s=edge/scale*2;const why=[];
+    if(g.z>=.6){if(su<.4){s+=.7;why.push(`Scoring ${f1(g.pace)} a game against ${f1(g.exp)} expected, and it doesn’t look sustainable (${sustainWhy(p)})`);}else if(su>=.6){s-=1.2;}else{s+=.15;}}
+    if(me.w<.5&&p.age!=null&&p.age>=(AGE_CLIFF[p.pos]||29)){s+=.5;why.push(`Age ${p.age}: most of his value lands before your window opens`);}
+    if(hold.g<.3&&rosPPG(p)>=6){s+=.3;why.push(`Not in your best lineup; he’s more useful to someone who’d start him`);}
+    if(best.v.g>=1.5)why.push(`Worth +${f1(best.v.g)} pts a week to ${best.c.t.name} (${recOf(best.c.t)}, ${stLbl(best.c)})`);
+    if(g.ret.pct<=-3){s+=-g.ret.pct/14;why.push(g.ret.why.find(x=>x.v<0).t);}
+    if(me.w>.6&&hold.g>=2)s-=.8;
+    if(s>=.6&&why.length)sells.push({p,g,s,why,c:best.c,su});}
+  sells.sort((a,b)=>b.s-a.s);
+  const pre=buys.filter(b=>b.g.pre).slice(0,3);
+  return {ts,sells:sells.slice(0,5),buys:buys.slice(0,6),pre,ctx:me};};
+
+/* ---------- guillotine board ---------- */
+function glRows(L){const mu=L.glMu||[];const alive=new Set(mu.map(m=>m.rid));const rows=[];
+  L.teams.forEach((t,ti)=>{if(!alive.has(t.id)){rows.push({t,ti,dead:true});return;}const m=mu.find(x=>x.rid===t.id);let W=null;try{W=teamWeek(L,ti,{starters:m.st||[],pts:m.pts});}catch(e){}
+    const live=m.pts||0,proj=W?W.proj:0;let yet=0,tot=0;if(W&&W.rows)for(const r of W.rows){if(!r.p)continue;tot++;const pp=(m.pp||{})[r.p.id];if(!(pp>0))yet++;}
+    const frac=tot?yet/tot:1,mean=live>0?live+proj*frac:proj,sd=4+22*Math.sqrt(frac);rows.push({t,ti,live,proj,mean,sd,frac});});
+  const al=rows.filter(r=>!r.dead);const N=2000,chop=new Array(al.length).fill(0);
+  for(let k=0;k<N;k++){let lo=1e9,li=-1;for(let i=0;i<al.length;i++){let u=0,v=0;while(!u)u=Math.random();v=Math.random();const x=al[i].mean+al[i].sd*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);if(x<lo){lo=x;li=i;}}chop[li]++;}
+  al.forEach((r,i)=>r.pc=chop[i]/N);al.sort((a,b)=>b.mean-a.mean);return {al,dead:rows.filter(r=>r.dead)};}
+function vGuillotine(L){const {al,dead}=glRows(L),me=L.teams.find(t=>t.mine);const mx=Math.max(1,...al.map(r=>Math.max(r.live,r.mean+r.sd)));
+  const tier=r=>r.pc<.03?["Safe","good"]:r.pc<.12?["Should be fine",""]:r.pc<.3?["Getting nervous","warn"]:r.pc<.55?["Should be worried","bad"]:["Say a prayer","bad"];
+  const grp={};al.forEach(r=>{const k=tier(r)[0];(grp[k]=grp[k]||[]).push(r);});
+  const order=["Say a prayer","Should be worried","Getting nervous","Should be fine","Safe"];
+  const bar=r=>`<div class="glr${r.t.mine?" me":""}" data-go="team-${r.ti}" role="link" tabindex="0"><div class="row sp"><b class="ell">${esc(r.t.name)}</b><span class="num">${f1(r.live)} <span class="sub">/ ${f1(r.mean)}</span></span></div>
+    <div class="glb"><i class="gl1" style="width:${(r.live/mx*100).toFixed(1)}%"></i><i class="gl2" style="left:${(Math.max(0,r.mean-r.sd)/mx*100).toFixed(1)}%;width:${(2*r.sd/mx*100).toFixed(1)}%"></i><u style="left:${(r.mean/mx*100).toFixed(1)}%"></u></div>
+    <div class="row sp sub"><span>${Math.round((1-r.frac)*100)}% of lineup played</span><span class="tag ${tier(r)[1]}">${PCT(r.pc)}% chop</span></div></div>`;
+  const ripMe=L.rip;
+  return `<div class="topline"><div class="eyebrow">Guillotine · Week ${S.week}</div><h1>${esc(L.name)}</h1></div>
+  ${ripMe?`<section class="pan"><div class="ripm" style="margin-top:0">R.I.P.</div><p class="sub">You’ve been chopped. Here’s who’s next.</p></section>`:""}
+  <section class="pan mt"><div class="row sp"><h2>Chopping block</h2><span class="tag">${al.length} alive</span></div><p class="sub">Solid bar: live score. Shaded band: likely final range; tick: projected final. Chop odds come from 2,000 simulations of the rest of this week.</p>${al.slice().sort((a,b)=>a.pc-b.pc).map(bar).join("")||`<p class="sub">No scores yet this week.</p>`}</section>
+  <section class="pan mt"><h2>Outlook</h2>${order.filter(k=>grp[k]).map(k=>`<div class="glg"><span class="tag ${tier(grp[k][0])[1]}">${k}</span><span>${grp[k].map(r=>esc(r.t.name)+(r.t.mine?" (you)":"")).join(", ")}</span></div>`).join("")}</section>
+  <section class="pan mt"><h2>Standings</h2><div class="list">${al.map((r,i)=>`<div class="pr${r.t.mine?" me":""}" data-go="team-${r.ti}" role="link" tabindex="0"><span class="tag">${i+1}</span><div style="min-width:0"><div class="nm ell">${esc(r.t.name)}</div><div class="meta">Alive · ${f1(r.live)} live · ${f1(r.mean)} projected · ${r.t.players.length} rostered</div></div></div>`).join("")}${dead.map(r=>`<div class="pr dead"><span class="tag">✕</span><div style="min-width:0"><div class="nm ell">${esc(r.t.name)}${r.t.mine?" (you)":""}</div><div class="meta">Chopped</div></div></div>`).join("")}</div></section>`;}
+vLeague=(function(prev){return function(){const L=S.L;return L&&L.gl?vGuillotine(L):prev();};})(vLeague);
+vMatchup=(function(prev){return function(li){const L=S.leagues[li];return L&&L.gl?vGuillotine(L):prev(li);};})(vMatchup);
+const _rl20=refreshLive;refreshLive=async function(){if(S.mode==="live"&&S.L&&S.L.gl){try{const mu=await sj(`${API}/league/${S.L.id}/matchups/${S.week}`);S.L.glMu=(mu||[]).filter(m=>(m.starters||[]).some(x=>x&&x!=="0")||m.points).map(m=>({rid:m.roster_id,pts:m.points||0,st:m.starters||[],pp:m.players_points||{}}));S.L._sum=null;chopCheck();render();}catch(e){}return;}return _rl20();};
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
