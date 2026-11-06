@@ -2406,6 +2406,13 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
       const score=started+(brk?25:0)+(stW>=3?10:0)-(t.bid?Math.max(0,t.bid-started/3)*.2:0);
       S2.adds.push({pid,name:hxName(pid),pos:hxPos(pid),s:x.season,wk:t.wk,lg:x.name,before:+before.toFixed(1),after:+aft.toFixed(1),started:+started.toFixed(1),stW,brk,bid:t.bid,score});
       if(t.bid)S2.faab+=t.bid;S2.tx++;}}
+    // drops: what each dropped player did afterward, and who benefited
+    {const adds=x.tx.filter(t=>t.type==="waiver"||t.type==="free_agent"||t.type==="trade").flatMap(t=>Object.entries(t.adds).map(([pid,rid])=>({pid,rid,wk:t.wk,ts:t.ts||0})));
+     for(const t of x.tx.filter(t=>t.type==="waiver"||t.type==="free_agent")){for(const [pid,rid] of Object.entries(t.drops||{})){const u=x.rid2u[rid];if(!u||!hxPos(pid))continue;
+       const before=ppgBefore(x,pid,t.wk);let after=0,g=0,else_=0,elseW=0,mine=0;const by=new Map();
+       for(let w=t.wk;w<=x.weeks.length;w++){const v=(x.PP[pid]||{})[w];if(v!=null&&v>0){after+=v;g++;}for(const m of (x.weeks[w-1]||[])){if(m.st.includes(pid)){const pts=+m.pp[pid]||0;if(+m.rid===+rid)mine+=pts;else{else_+=pts;elseW++;by.set(m.rid,(by.get(m.rid)||0)+pts);}}}}
+       const next=adds.filter(a=>a.pid===pid&&(a.ts>(t.ts||0)||a.wk>t.wk)).sort((a,b)=>a.ts-b.ts||a.wk-b.wk)[0];const top=[...by.entries()].sort((a,b)=>b[1]-a[1])[0];
+       const S2=mgr(u);(S2.drops=S2.drops||[]).push({pid,name:hxName(pid),pos:hxPos(pid),s:x.season,wk:t.wk,lg:x.chain,before:+before.toFixed(1),after:+after.toFixed(1),g,ppg:g?after/g:0,elsePts:+else_.toFixed(1),elseW,back:mine>0,by:next&&+next.rid!==+rid?(x.uname[x.rid2u[next.rid]]||""):next?"you (re-added)":"",byWk:next?next.wk:null,beneficiary:top?(x.uname[x.rid2u[top[0]]]||""):""});}}}
     for(const t of x.tx.filter(t=>t.type==="trade"))for(const rid of t.rids){const u=x.rid2u[rid];if(u)mgr(u).tx++;}}
   // drafts: value over expected at slot
   for(const x of LSs){for(const d of x.drafts){if(d.season!==x.season)continue;const vals=d.picks.filter(p=>!p.kp&&p.pid).map(p=>({...p,v:prodAfter(x.chain,p.pid,d.season,1).pts}));if(vals.length<6)continue;
@@ -4233,7 +4240,7 @@ function stTiles(D){const {m,d,k,S:sc}=D,T=m.trades||[],A=m.adds||[],Dr=m.drafts
   const out=[];const H=Object.keys(m.h2h||{}).length;
   if(!D.gl&&six.length){const av=six.reduce((a,b)=>a+b,0)/six.length,best=["lineup","waivers","trading","drafting","clutch","scoring"].filter(x=>k[x]!=null).sort((a,b)=>k[b]-k[a])[0];out.push(stTile("skills","Skills",SKG(Math.round(av)),`${ordn(Math.round(av))}`,`average percentile · best: ${({lineup:"Lineups",waivers:"Waivers",trading:"Trading",drafting:"Drafting",clutch:"Clutch",scoring:"Scoring"})[best]}`,`<div class="stminirad">${chRadar(["lineup","waivers","trading","drafting","clutch","scoring"].map(x=>({n:"",v:k[x]})))}</div>`));}
   if(T.length){let c=0;const cum=T.slice().sort((a,b)=>(a.ord||0)-(b.ord||0)).map(t=>(c+=t.net));out.push(stTile("trades","Trades",SKG(k.trading),String(T.length),`trades · avg ${GR(d.trAvg)} · won ${pcx(d.trWin)}`,cum.length>1?spark(cum,120,28):""));}
-  if(A.length){const yrs=grp(A,a=>a.s).sort((a,b)=>a[0]-b[0]).map(([,xs])=>xs.reduce((s,x)=>s+x.started,0));out.push(stTile("waivers","Waivers & FAAB",SKG(k.waivers),String(A.length),`pickups · ${pcx(A.filter(a=>a.stW>=3).length/A.length)} became starters`,yrs.length>1?spark(yrs,120,28):""));}
+  if(A.length){const yrs=grp(A,a=>a.s).sort((a,b)=>a[0]-b[0]).map(([,xs])=>xs.reduce((s,x)=>s+x.started,0));out.push(stTile("waivers","Waivers & FAAB",SKG(k.waivers),String(A.length),`pickups · ${pcx(A.filter(a=>a.stW>=3).length/A.length)} became starters${(m.drops||[]).filter(x=>x.elsePts>=25).length?` · ${(m.drops||[]).filter(x=>x.elsePts>=25).length} costly drop${(m.drops||[]).filter(x=>x.elsePts>=25).length===1?"":"s"}`:""}`,yrs.length>1?spark(yrs,120,28):""));}
   if(Dr.length)out.push(stTile("drafts","Drafts",SKG(k.drafting),sgnN(d.drVoe),`pts per pick vs the slot · ${Dr.length} picks`,spark(Dr.slice().sort((a,b)=>a.s-b.s||a.no-b.no).map(x=>x.voe),120,28)));
   if(!D.gl&&sc.length){const ef=sc.slice(-17).map(x=>x.bn!=null?x.v/Math.max(1,x.v+x.bn)*100:null).filter(v=>v!=null);
     out.push(stTile("lineups","Lineups",SKG(k.lineup),pcx(d.opt),`of your best lineup · ${f1(d.benchPg)}/wk benched`,ef.length>1?spark(ef,120,28):""));
@@ -4249,7 +4256,7 @@ vStats=(function(prev){return function(){const h=prev();if(HX.st!=="ready"||!HX.
 
 /* ---------- popups ---------- */
 function stOpen(key){if(key==="skills"){skillDetail();return;}const D=stData();if(!D)return;const name=(STC.find(x=>x[0]===key)||[])[1]||"";
-  const keys=STC.filter(([k])=>{const m=D.m;if(k==="trades")return (m.trades||[]).length;if(k==="waivers")return (m.adds||[]).length;if(k==="drafts")return (m.drafts||[]).length;if(["skills","lineups","scoring","clutch","luck"].includes(k))return !D.gl&&D.S.length;if(k==="rivals")return Object.keys(m.h2h||{}).length;return true;});
+  const keys=STC.filter(([k])=>{const m=D.m;if(k==="trades")return (m.trades||[]).length;if(k==="waivers")return (m.adds||[]).length||(m.drops||[]).length;if(k==="drafts")return (m.drafts||[]).length;if(["skills","lineups","scoring","clutch","luck"].includes(k))return !D.gl&&D.S.length;if(k==="rivals")return Object.keys(m.h2h||{}).length;return true;});
   let body="";try{body=(STB[key]||(()=>""))(D);}catch(e){console.error(e);body=`<p class="sub">Couldn’t build this breakdown.</p>`;}
   openSheet("My stats",`<div class="seg sm skseg">${keys.map(([k,n])=>`<button data-stp="${k}" class="${k===key?"on":""}">${n}</button>`).join("")}</div><div class="sdbody"><h2 class="sdt1">${name}</h2><div class="eyebrow">${esc(D.lbl)}</div>${body}</div>`);
   $("#sheet").classList.add("skpop");S._stKey=key;setTimeout(()=>{centerTabs($("#sheet"));try{tlPaint($("#sheetB"));}catch(_){}},30);}
@@ -4279,6 +4286,7 @@ STB.waivers=D=>{const {m,d}=D,A=m.adds.slice().sort((a,b)=>b.s-a.s||b.wk-a.wk),h
   const val=bids.filter(a=>a.started>0).sort((a,b)=>b.started/b.bid-a.started/a.bid).slice(0,5),miss=bids.filter(a=>a.stW===0).sort((a,b)=>b.bid-a.bid).slice(0,5);const Af=bySea(A);
   return sdHdr(SKG(D.k.waivers),D.k.waivers,D.rank(x=>x.d.adScore),ca!=null?`circle hit rate ${pcx(ca)}`:"",[[A.length,"Pickups",`${f1(A.length/Math.max(1,m.seasons.length))} a season`],[pcx(hit.length/A.length),"Hit rate","started 3+ weeks"],[f0(Math.round(pts)),"Points started","from pickups"],[brk.length,"Breakouts found"],spent?["$"+spent,"FAAB spent",ppd!=null?`${f1(ppd)} pts per $`:""]:null])
    +sdSec("Why this grade",sdWhy([`<b>${pcx(hit.length/A.length)}</b> of pickups became starters for 3+ weeks${ca!=null?` (circle average ${pcx(ca)})`:""}.`,`${f0(Math.round(pts))} points started from waivers and free agency.`,brk.length?`${brk.length} broke out after you added them: ${brk.slice(0,4).map(a=>esc(a.name)).join(", ")}${brk.length>4?"…":""}.`:null,spent?`$${spent} FAAB spent for ${f1(ppd)} started points per dollar; ${miss.length} paid add${miss.length===1?"":"s"} never started.`:null]))
+   +dropsSec(D)
    +sdSec("By position",sdTbl(["Pos","Adds","Hit rate","Pts started","PPG after"],byPos))+sdSec("By season",sdTbl(["Season","Adds","Hit rate","Pts started","FAAB"],byS))
    +sdSec("Best pickups",lst(A.slice().sort((a,b)=>b.started-a.started).slice(0,10).map(row),5,""))
    +(val.length?sdSec("Best value per FAAB dollar",val.map(a=>`<div class="lrow"><span>${pos(a.pos)} <b>${esc(a.name)}</b> <span class="sub">$${a.bid}</span></span><span class="num">${f1(a.started/a.bid)} <span class="sub">pts/$</span></span></div>`).join("")):"")
@@ -4346,6 +4354,14 @@ STB.activity=D=>{const {m,d}=D,T=m.trades||[],A=m.adds||[],ca=D.avg(x=>x.act);
   return sdHdr(SKG(D.k.activity),D.k.activity,D.rank(x=>x.act),ca!=null?`circle ${f1(ca)} a season`:"",[[f1(d.txPerS),"Moves per season"],[T.length,"Trades"],[A.length,"Pickups"],m.faab?["$"+m.faab,"FAAB spent"]:null])
    +sdSec("By season",sdTbl(["Season","Trades","Pickups","FAAB"],ys.map(y=>[y,T.filter(t=>t.season===y).length,A.filter(a=>a.s===y).length,"$"+A.filter(a=>a.s===y).reduce((s,a)=>s+(a.bid||0),0)])))
    +sdWhy(["Activity isn’t a skill on its own; it shows how hands-on you are compared with the managers in "+esc(D.lbl)+"."]);};
+
+/* ===== v43: drops that cost you ===== */
+function dropsSec(D){const X=(D.m.drops||[]).slice();if(!X.length)return "";const hurt=X.filter(x=>x.elsePts>=25).sort((a,b)=>b.elsePts-a.elsePts),tot=X.reduce((s,x)=>s+x.elsePts,0),clean=X.filter(x=>x.after<10).length,ca=D.avg(m=>m.drops&&m.drops.length?m.drops.reduce((s,x)=>s+x.elsePts,0)/m.drops.length:null),me=tot/X.length;
+  const row=x=>`<div class="sdtr"><div class="row sp"><span>${pos(x.pos)} <b>${esc(x.name)}</b> <span class="sub">dropped ${x.s} Wk ${x.wk}${D.lgN(x.lg)}</span></span><span class="num ${x.elsePts>=25?"bad":""}">${f1(x.elsePts)}</span></div><div class="sub" style="margin:2px 0 0">${x.by?`Picked up by ${esc(x.by)}${x.byWk?` (Wk ${x.byWk})`:""}`:"Never picked up"} · ${x.g} games, ${f1(x.ppg)} a game after the drop${x.beneficiary&&x.beneficiary!==x.by?` · most started by ${esc(x.beneficiary)}`:""}${x.elseW?` · started ${x.elseW} time${x.elseW===1?"":"s"} elsewhere`:""}</div></div>`;
+  const Xs=bySea(X).sort((a,b)=>b.elsePts-a.elsePts);
+  return sdSec("Drops that cost you",sdWhy([`<b>${X.length}</b> drop${X.length===1?"":"s"}; ${hurt.length} went on to score 25+ points in other teams’ starting lineups (${f1(tot)} in total).`,ca!=null?`Your drops gave away ${f1(me)} points each in other lineups; the circle average is ${f1(ca)}.`:null,`${clean} of your drops (${pcx(clean/X.length)}) scored under 10 points the rest of that season: good cuts.`])
+    +(hurt.length?hurt.slice(0,5).map(row).join(""):`<p class="sub">None of your drops hurt you.</p>`)+`<p class="sub">Number on the right: points the player scored in other managers’ starting lineups after you dropped him, that season.</p>`,`${hurt.length} hurt`)
+   +sdSec("All drops",seaChips(D,X)+lst(Xs.map(row),6,"No drops this season."),`${Xs.length}`);}
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
