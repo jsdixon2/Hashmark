@@ -1,0 +1,428 @@
+{
+ "ran": "2026-11-07T02:16Z",
+ "seasons": {
+  "2025-wk14": {
+   "fixtures_status": 200,
+   "n_fixtures": 12,
+   "sample_fixture": {
+    "fixtureId": "id1400003160574883",
+    "participant1Name": "Cleveland Browns",
+    "participant2Name": "Tennessee Titans",
+    "startTime": "2025-12-07T18:00:00.000Z",
+    "statusName": "Finished"
+   },
+   "hist_status": 404
+  },
+  "2025-wk18": {
+   "fixtures_status": 200,
+   "n_fixtures": 15,
+   "sample_fixture": {
+    "fixtureId": "id1400003160575139",
+    "participant1Name": "San Francisco 49ers",
+    "participant2Name": "Seattle Seahawks",
+    "startTime": "2026-01-04T01:00:00.000Z",
+    "statusName": "Finished"
+   },
+   "hist_status": 404
+  },
+  "2026-wk1": {
+   "fixtures_status": 200,
+   "n_fixtures": 15,
+   "sample_fixture": {
+    "fixtureId": "id1400003171515752",
+    "participant1Name": "Seattle Seahawks",
+    "participant2Name": "New England Patriots",
+    "startTime": "2026-09-10T00:20:00.000Z",
+    "statusName": "Finished"
+   },
+   "hist_status": 200,
+   "books": {
+    "caesars": {
+     "prop_outcomes": 1263,
+     "players": 31,
+     "snapshots": 50101,
+     "first_snapshot": "2026-08-31T00:34:19.281Z",
+     "markets": {
+      "Over Under Player Receiving Yards (incl. overtime)": 547,
+      "Over Under Player Rush Yards (incl. overtime)": 305,
+      "Over Under Player Pass Yards (incl. overtime)": 208,
+      "Over Under Player Receptions (incl. overtime)": 98,
+      "Player To Score TD (incl. overtime)": 31,
+      "Player To Score First TD (incl. overtime)": 31,
+      "Over Under Player TD (incl. overtime)": 31,
+      "Over Under Player TD Passes (incl. overtime)": 8,
+      "Over Under Player Interceptions (incl. overtime)": 4
+     }
+    },
+    "draftkings": {
+     "prop_outcomes": 1488,
+     "players": 31,
+     "snapshots": 109232,
+     "first_snapshot": "2026-08-31T00:31:48.588Z",
+     "markets": {
+      "Over Under Player Receiving Yards (incl. overtime)": 540,
+      "Over Under Player Rush Yards (incl. overtime)": 294,
+      "Over Under Player Pass Yards (incl. overtime)": 248,
+      "Player Rush Yards (incl. overtime)": 122,
+      "Player To Score TD (incl. overtime)": 91,
+      "Player Pass Yards (incl. overtime)": 59,
+      "Player To Score TD First Half (incl. overtime)": 31,
+      "Player To Score TD Second Half (incl. overtime)": 31,
+      "Player To Score First TD (incl. overtime)": 30,
+      "Player To Score TD First Quarter (incl. overtime)": 30,
+      "Over Under Player TD Passes (incl. overtime)": 8,
+      "Over Under Player Interceptions (incl. overtime)": 4
+     }
+    },
+    "fanduel": {
+     "prop_outcomes": 1588,
+     "players": 43,
+     "snapshots": 131269,
+     "first_snapshot": "2026-08-31T00:27:16.241Z",
+     "markets": {
+      "Over Under Player Receiving Yards (incl. overtime)": 702,
+      "Over Under Player Rush Yards (incl. overtime)": 348,
+      "Over Under Player Pass Yards (incl. overtime)": 206,
+      "Over Under Player Receptions (incl. overtime)": 113,
+      "Player To Score TD (incl. overtime)": 62,
+      "Player To Score First TD (incl. overtime)": 31,
+      "Player To Score TD First Half (incl. overtime)": 31,
+      "Player To Score TD Second Half (incl. overtime)": 31,
+      "Player To Score Second TD (incl. overtime)": 23,
+      "Player To Score Third TD (incl. overtime)": 21,
+      "Player Sacks (incl. overtime)": 12,
+      "Over Under Player TD Passes (incl. overtime)": 8
+     }
+    }
+   }
+  },
+  "2026-wk2": {
+   "fixtures_status": 200,
+   "n_fixtures": 15,
+   "sample_fixture": {
+    "fixtureId": "id1400003171466824",
+    "participant1Name": "Buffalo Bills",
+    "participant2Name": "Detroit Lions",
+    "startTime": "2026-09-18T00:15:00.000Z",
+    "statusName": "Finished"
+   },
+   "hist_status": 200,
+   "books": {
+    "caesars": {
+     "prop_outcomes": 1669,
+     "players": 29,
+     "snapshots": 59491,
+     "first_snapshot": "2026-09-14T12:19:23.554Z",
+     "markets": {
+      "Over Under Player Receiving Yards (incl. overtime)": 714,
+      "Over Under Player Pass Yards (incl. overtime)": 361,
+      "Over Under Player Rush Yards (incl. overtime)": 299,
+      "Over Under Player Receptions (incl. overtime)": 114,
+      "Player To Score TD (incl. overtime)": 27,
+      "Player To Score First TD (incl. overtime)": 27,
+      "Over Under Player TD (incl. overtime)": 27,
+      "Over Under Player Rush Attempts (incl. overtime)": 22,
+      "Over Under Player Kicking Points (incl. overtime)": 18,
+      "Over Under Player Pass Completions (incl. overtime)": 16,
+      "Over Under Player Pass Attempts (incl. overtime)": 14,
+      "Over Under Player TD Passes (incl. overtime)": 10
+     }
+    },
+    "draftkings": {
+     "prop_outcomes": 2301,
+     "players": 44,
+     "snapshots": 273746,
+     "first_snapshot": "2026-09-14T11:26:51.414Z",
+     "markets": {
+      "Over Under Player Receiving Yards (incl. overtime)": 793,
+      "Over Under Player Pass Yards (incl. overtime)": 294,
+      "Over Under Player Rush Yards (incl. overtime)": 274,
+      "Over Under Player Receptions (incl. overtime)": 133,
+      "Player Rush Yards (incl. overtime)": 101,
+      "Over Under Player Tackles + Assists (incl. overtime)": 101,
+      "Player To Score TD (incl. overtime)": 91,
+      "Over Under Player Pass Attempts (incl. overtime)": 56,
+      "Player Pass Yards (incl. overtime)": 49,
+      "Over Under Player Rush Attempts (incl. overtime)": 42,
+      "Over Under Player Pass Completions (incl. overtime)": 41,
+      "Player Rush Attempts (incl. overtime)": 41
+     }
+    },
+    "fanduel": {
+     "prop_outcomes": 1740,
+     "players": 38,
+     "snapshots": 220839,
+     "first_snapshot": "2026-09-14T22:11:56.052Z",
+     "markets": {
+      "Over Under Player Receiving Yards (incl. overtime)": 785,
+      "Over Under Player Pass Yards (incl. overtime)": 336,
+      "Over Under Player Rush Yards (incl. overtime)": 308,
+      "Over Under Player Receptions (incl. overtime)": 90,
+      "Player To Score TD (incl. overtime)": 58,
+      "Player To Score First TD (incl. overtime)": 27,
+      "Player To Score TD First Quarter (incl. overtime)": 27,
+      "Player To Score TD First Half (incl. overtime)": 27,
+      "Player To Score TD Second Half (incl. overtime)": 27,
+      "Player To Score Second TD (incl. overtime)": 18,
+      "Player To Score Third TD (incl. overtime)": 18,
+      "Player Sacks (incl. overtime)": 11
+     }
+    }
+   }
+  },
+  "2026-wk3": {
+   "fixtures_status": 200,
+   "n_fixtures": 15,
+   "sample_fixture": {
+    "fixtureId": "id1400003171515808",
+    "participant1Name": "Green Bay Packers",
+    "participant2Name": "Atlanta Falcons",
+    "startTime": "2026-09-25T00:15:00.000Z",
+    "statusName": "Finished"
+   },
+   "hist_status": 200,
+   "books": {
+    "caesars": {
+     "prop_outcomes": 1483,
+     "players": 26,
+     "snapshots": 67636,
+     "first_snapshot": "2026-09-21T03:09:59.028Z",
+     "markets": {
+      "Over Under Player Receiving Yards (incl. overtime)": 532,
+      "Over Under Player Rush Yards (incl. overtime)": 356,
+      "Over Under Player Pass Yards (incl. overtime)": 280,
+      "Over Under Player Receptions (incl. overtime)": 107,
+      "Over Under Player Rush Attempts (incl. overtime)": 28,
+      "Over Under Player Kicking Points (incl. overtime)": 26,
+      "Player To Score TD (incl. overtime)": 24,
+      "Player To Score First TD (incl. overtime)": 24,
+      "Over Under Player TD (incl. overtime)": 24,
+      "Over Under Player Pass Attempts (incl. overtime)": 22,
+      "Over Under Player Pass Completions (incl. overtime)": 18,
+      "Over Under Player Longest Rush Yards (incl. overtime)": 14
+     }
+    },
+    "draftkings": {
+     "prop_outcomes": 2363,
+     "players": 46,
+     "snapshots": 273794,
+     "first_snapshot": "2026-09-21T04:20:39.552Z",
+     "markets": {
+      "Over Under Player Receiving Yards (incl. overtime)": 666,
+      "Over Under Player Rush Yards (incl. overtime)": 304,
+      "Over Under Player Pass Yards (incl. overtime)": 232,
+      "Over Under Player Tackles + Assists (incl. overtime)": 146,
+      "Over Under Player Receptions (incl. overtime)": 132,
+      "Player To Score TD (incl. overtime)": 100,
+      "Player Rush Yards (incl. overtime)": 100,
+      "Over Under Player Rush Attempts (incl. overtime)": 82,
+      "Over Under Player Pass Attempts (incl. overtime)": 72,
+      "Player Rush Attempts (incl. overtime)": 65,
+      "Player Assists (incl. overtime)": 57,
+      "Player Pass Yards (incl. overtime)": 49
+     }
+    },
+    "fanduel": {
+     "prop_outcomes": 1667,
+     "players": 45,
+     "snapshots": 218164,
+     "first_snapshot": "2026-09-21T02:52:46.922Z",
+     "markets": {
+      "Over Under Player Receiving Yards (incl. overtime)": 659,
+      "Over Under Player Rush Yards (incl. overtime)": 384,
+      "Over Under Player Pass Yards (incl. overtime)": 303,
+      "Over Under Player Receptions (incl. overtime)": 95,
+      "Player To Score TD (incl. overtime)": 64,
+      "Player To Score First TD (incl. overtime)": 25,
+      "Player To Score TD Second Half (incl. overtime)": 25,
+      "Player To Score TD First Quarter (incl. overtime)": 24,
+      "Player To Score TD First Half (incl. overtime)": 24,
+      "Player To Score Third TD (incl. overtime)": 23,
+      "Player To Score Second TD (incl. overtime)": 21,
+      "Player Sacks (incl. overtime)": 11
+     }
+    }
+   }
+  },
+  "2026-wk9": {
+   "fixtures_status": 200,
+   "n_fixtures": 12,
+   "sample_fixture": {
+    "fixtureId": "id1400003171515954",
+    "participant1Name": "Buffalo Bills",
+    "participant2Name": "Baltimore Ravens",
+    "startTime": "2026-11-01T18:00:00.000Z",
+    "statusName": "Finished"
+   },
+   "hist_status": 200,
+   "books": {
+    "caesars": {
+     "prop_outcomes": 485,
+     "players": 42,
+     "snapshots": 10087,
+     "first_snapshot": "2026-10-26T12:52:14.757Z",
+     "markets": {
+      "Over Under Player Receiving Yards (incl. overtime)": 140,
+      "Player To Score TD (incl. overtime)": 64,
+      "Player Rush Yards (incl. overtime)": 51,
+      "Over Under Player Receptions (incl. overtime)": 38,
+      "Player Pass Yards (incl. overtime)": 38,
+      "Over Under Player Rush Yards (incl. overtime)": 38,
+      "Player To Score First TD (incl. overtime)": 28,
+      "Over Under Player Tackles + Assists (incl. overtime)": 24,
+      "Over Under Player Pass Yards (incl. overtime)": 22,
+      "Over Under Player Pass Attempts (incl. overtime)": 8,
+      "Over Under Player Pass Completions (incl. overtime)": 8,
+      "Over Under Player Longest Pass Completion (incl. overtime)": 8
+     }
+    },
+    "draftkings": {
+     "prop_outcomes": 2399,
+     "players": 53,
+     "snapshots": 423570,
+     "first_snapshot": "2026-10-26T07:43:24.751Z",
+     "markets": {
+      "Over Under Player Receiving Yards (incl. overtime)": 825,
+      "Over Under Player Tackles + Assists (incl. overtime)": 193,
+      "Over Under Player Rush Yards (incl. overtime)": 188,
+      "Over Under Player Pass Yards (incl. overtime)": 174,
+      "Over Under Player Receptions (incl. overtime)": 145,
+      "Player To Score TD (incl. overtime)": 116,
+      "Player Rush Yards (incl. overtime)": 112,
+      "Player Assists (incl. overtime)": 76,
+      "Player Pass Yards (incl. overtime)": 67,
+      "Over Under Player Rush Attempts (incl. overtime)": 65,
+      "Over Under Player Longest Rush Yards (incl. overtime)": 46,
+      "Over Under Player Pass Attempts (incl. overtime)": 44
+     }
+    },
+    "fanduel": {
+     "prop_outcomes": 1478,
+     "players": 45,
+     "snapshots": 105695,
+     "first_snapshot": "2026-10-28T00:22:44.772Z",
+     "markets": {
+      "Over Under Player Receiving Yards (incl. overtime)": 717,
+      "Over Under Player Rush Yards (incl. overtime)": 233,
+      "Over Under Player Pass Yards (incl. overtime)": 192,
+      "Over Under Player Receptions (incl. overtime)": 111,
+      "Player To Score TD (incl. overtime)": 73,
+      "Player To Score First TD (incl. overtime)": 27,
+      "Player To Score Second TD (incl. overtime)": 27,
+      "Player To Score TD First Half (incl. overtime)": 27,
+      "Player To Score TD Second Half (incl. overtime)": 27,
+      "Player To Score Third TD (incl. overtime)": 24,
+      "Player Sacks (incl. overtime)": 12,
+      "Over Under Player TD Passes (incl. overtime)": 8
+     }
+    }
+   }
+  }
+ },
+ "n_markets": 19196,
+ "prop_market_names": [
+  "Over Under Player Assists (incl. overtime)",
+  "Over Under Player Extra Points (incl. overtime)",
+  "Over Under Player Field Goals",
+  "Over Under Player Field Goals (incl. overtime)",
+  "Over Under Player Interceptions",
+  "Over Under Player Interceptions (incl. overtime)",
+  "Over Under Player Interceptions Thrown (incl. overtime)",
+  "Over Under Player Kicking Points",
+  "Over Under Player Kicking Points (incl. overtime)",
+  "Over Under Player Longest Pass Completion (incl. overtime)",
+  "Over Under Player Longest Reception (incl. overtime)",
+  "Over Under Player Longest Rush Yards (incl. overtime)",
+  "Over Under Player Pass Attempts",
+  "Over Under Player Pass Attempts (incl. overtime)",
+  "Over Under Player Pass Completions",
+  "Over Under Player Pass Completions (incl. overtime)",
+  "Over Under Player Pass Yards",
+  "Over Under Player Pass Yards (incl. overtime)",
+  "Over Under Player Receiving Yards",
+  "Over Under Player Receiving Yards (incl. overtime)",
+  "Over Under Player Receptions",
+  "Over Under Player Receptions (incl. overtime)",
+  "Over Under Player Rush + Receiving Yards (incl. overtime)",
+  "Over Under Player Rush Attempts",
+  "Over Under Player Rush Attempts (incl. overtime)",
+  "Over Under Player Rush TD",
+  "Over Under Player Rush TD (incl. overtime)",
+  "Over Under Player Rush Yards",
+  "Over Under Player Rush Yards (incl. overtime)",
+  "Over Under Player Sacks",
+  "Over Under Player Sacks (incl. overtime)",
+  "Over Under Player TD",
+  "Over Under Player TD (incl. overtime)",
+  "Over Under Player TD Passes",
+  "Over Under Player TD Passes (incl. overtime)",
+  "Over Under Player Tackles + Assists",
+  "Over Under Player Tackles + Assists (incl. overtime)",
+  "Player Assists (incl. overtime)",
+  "Player Extra Points (incl. overtime)",
+  "Player Field Goals (incl. overtime)",
+  "Player First Point (incl. overtime)",
+  "Player Interceptions (incl. overtime)",
+  "Player Interceptions Thrown (incl. overtime)",
+  "Player Kicking Points (incl. overtime)",
+  "Player Longest Pass Completion (incl. overtime)",
+  "Player Longest Reception (incl. overtime)",
+  "Player Longest Rush Yards (incl. overtime)",
+  "Player Pass Attempts (incl. overtime)",
+  "Player Pass Completions (incl. overtime)",
+  "Player Pass Yards (incl. overtime)",
+  "Player Pass Yards in Both Halves",
+  "Player Receiving Yards (incl. overtime)",
+  "Player Receiving Yards in Both Halves",
+  "Player Receptions (incl. overtime)",
+  "Player Rush + Receiving Yards (incl. overtime)",
+  "Player Rush Attempts (incl. overtime)",
+  "Player Rush TD (incl. overtime)",
+  "Player Rush Yards (incl. overtime)",
+  "Player Rush Yards in Both Halves",
+  "Player Sacks (incl. overtime)",
+  "Player TD Passes (incl. overtime)",
+  "Player Tackles + Assists (incl. overtime)",
+  "Player To Score First TD (incl. overtime)",
+  "Player To Score Last TD (incl. overtime)",
+  "Player To Score Second TD (incl. overtime)",
+  "Player To Score TD",
+  "Player To Score TD (incl. overtime)",
+  "Player To Score TD First Half (incl. overtime)",
+  "Player To Score TD First Quarter (incl. overtime)",
+  "Player To Score TD Second Half (incl. overtime)",
+  "Player To Score Third TD (incl. overtime)"
+ ],
+ "errors": [
+  {
+   "path": "historical-odds",
+   "q": {
+    "fixtureId": "id1400003160574883",
+    "bookmakers": "draftkings,fanduel,caesars"
+   },
+   "status": 404,
+   "body": {
+    "error": {
+     "message": "No historical odds found.",
+     "code": "NOT_FOUND",
+     "details": "Please check the provided filters and try again."
+    }
+   }
+  },
+  {
+   "path": "historical-odds",
+   "q": {
+    "fixtureId": "id1400003160575139",
+    "bookmakers": "draftkings,fanduel,caesars"
+   },
+   "status": 404,
+   "body": {
+    "error": {
+     "message": "No historical odds found.",
+     "code": "NOT_FOUND",
+     "details": "Please check the provided filters and try again."
+    }
+   }
+  }
+ ]
+}
