@@ -3,7 +3,7 @@ on:
   schedule: [{cron: "*/30 * * * *"}]
   workflow_dispatch: {}
 permissions: {contents: write}
-concurrency: {group: data-commit, cancel-in-progress: false}
+concurrency: {group: data-news, cancel-in-progress: false}
 jobs:
   news:
     runs-on: ubuntu-latest

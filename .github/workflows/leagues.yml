@@ -5,7 +5,7 @@ on:
   schedule: [{cron: "23 11 * * 2"}]
   workflow_dispatch: {}
 permissions: {contents: write}
-concurrency: {group: data-commit, cancel-in-progress: false}
+concurrency: {group: data-leagues, cancel-in-progress: false}
 jobs:
   archive:
     runs-on: ubuntu-latest

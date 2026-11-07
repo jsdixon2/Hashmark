@@ -1,7 +1,7 @@
 name: refresh-data
 on: {schedule: [{cron: "0 9,15 * * *"}], workflow_dispatch: {}}
 permissions: {contents: write}
-concurrency: {group: data-commit, cancel-in-progress: false}
+concurrency: {group: data-data, cancel-in-progress: false}
 jobs:
   build:
     runs-on: ubuntu-latest
