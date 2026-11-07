@@ -2320,7 +2320,7 @@ async function loadLeagueSeason(l){const season=+l.season,cur=+S.season,past=sea
   const txs=await poolRun(wk.map(w=>()=>hxGet(`/league/${l.league_id}/transactions/${w}`)),6);
   const dr=(drafts||[]).filter(d=>d.status==="complete");const picks=[];
   for(const d of dr){const p=await hxGet(`/draft/${d.draft_id}/picks`).catch(()=>[]);HX.done++;picks.push({type:d.type,season:+d.season,s2r:d.slot_to_roster_id||{},do:d.draft_order||null,start:d.start_time||null,rounds:(d.settings||{}).rounds,picks:(p||[]).map(x=>({pid:x.player_id,rid:x.roster_id,round:x.round,slot:x.draft_slot,no:x.pick_no,kp:!!x.is_keeper}))});}
-  const LS={id:l.league_id,prev:l.previous_league_id||null,name:l.name,season,type:st.type||0,size:l.total_rosters||rosters.length,pws,rpos:l.roster_positions||[],
+  const LS={id:l.league_id,prev:l.previous_league_id||null,name:l.name,season,type:st.type||0,size:l.total_rosters||rosters.length,pws,rpos:l.roster_positions||[],sc:l.scoring_settings||null,
     users:(users||[]).map(u=>({uid:u.user_id,name:u.display_name,team:(u.metadata&&u.metadata.team_name)||u.display_name})),
     rosters:(rosters||[]).map(r=>({rid:r.roster_id,uid:r.owner_id,co:r.co_owners||[]})),
     weeks:(mus||[]).map(a=>(a||[]).map(m=>({rid:m.roster_id,mid:m.matchup_id,pts:+m.points||0,st:(m.starters||[]).filter(x=>x&&x!=="0"),pp:m.players_points||{}}))),
@@ -2355,7 +2355,7 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
         for(const [me,op] of [[a,b],[b,a]]){const u=rid2u[me.rid],o=rid2u[op.rid],S2=mgr(u);S2.names.add(uname[u]||"");
           const ha=hist[me.rid]||[],hb=hist[op.rid]||[],la=avgx(all),ls=sdv(all)||25;
           const ma=ha.length>=2?(avgx(ha)*ha.length+la*2)/(ha.length+2):la,mb=hb.length>=2?(avgx(hb)*hb.length+la*2)/(hb.length+2):la,sa=ha.length>=3?Math.max(12,sdv(ha)):ls,sb=hb.length>=3?Math.max(12,sdv(hb)):ls;
-          const p=phi((ma-mb)/Math.sqrt(sa*sa+sb*sb)),won=me.pts>op.pts,tie=me.pts===op.pts;
+          const p=(typeof hxPre==="function"?hxPre(x,w,me,op):null)??phi((ma-mb)/Math.sqrt(sa*sa+sb*sb)),won=me.pts>op.pts,tie=me.pts===op.pts;
           S2.g++;won?S2.w++:tie?S2.t++:S2.l++;S2.pf+=me.pts;S2.pa+=op.pts;S2.scores.push({v:me.pts,s:x.season,w,lg:x.chain,p,won,op:o,opp:op.pts});
           S2.ap+=all.filter(v=>v<me.pts).length/Math.max(1,all.length-1);S2.wp.push(p);
           const bk=Math.min(4,Math.floor(p*5));S2.wbuck[bk][0]++;if(won)S2.wbuck[bk][1]++;
@@ -4545,6 +4545,30 @@ ssCard=function(x,close){const ln=p=>esc(p.name.replace(/\s+(Jr\.?|Sr\.?|II|III|
   return `<div class="ssc"><div class="row sp"><div class="sst">${close?"Close call: keep":"Start"} <b data-go="player-${x.a.id}">${ln(x.a)}</b> over <b data-go="player-${x.b.id}">${ln(x.b)}</b></div><span class="cf ${x.conf[1]}">${x.conf[0]} · ${Math.round(x.pw*100)}%</span></div>
    ${bar(x.a,x.A,true)}${bar(x.b,x.B,false)}
    ${x.why.length?`<ul class="why">${x.why.map(w=>`<li><b>${ln(w.who)}:</b> ${esc(w.t)}</li>`).join("")}</ul>`:""}${x.against&&x.pw<.7?`<p class="sub" style="margin:4px 0 0">${x.against.who===x.b?`In ${ln(x.b)}’s favor`:`Working against ${ln(x.a)}`}: ${esc(/^(Sleeper|Team|Usage|Wind)/.test(x.against.t)&&!/^(Team|Usage|Wind)/.test(x.against.t)?x.against.t:x.against.t.charAt(0).toLowerCase()+x.against.t.slice(1))}.</p>`:""}<p class="sub" style="margin:4px 0 0">${Math.round(x.pw*100)}% = how often ${ln(x.a)} outscores ${ln(x.b)} in matchups like this; bars show each player’s likely range.</p></div>`;};
+
+/* ===== v47: win-odds engine — fitted on real Sleeper matchups (2021–24), tested on 2025–26 =====
+   WP: each team's weekly spread = k·projection + c; the projected margin is scaled by b (projections run slightly wide).
+   PO: playoff simulation adds uncertainty in each team's true strength (u) and pulls strengths toward the league mean (sh). */
+const WP={k:.16,c:5,b:1.01},PO={u:.04,sh:.5};
+winProb=function(pa,pb){const sd=Math.sqrt((pa*WP.k+WP.c)**2+(pb*WP.k+WP.c)**2)||1;return 1/(1+Math.exp(-1.7*WP.b*(pa-pb)/sd));};
+simLeague=function(L,N=2500){const n=L.teams.length;const raw=L.teams.map(t=>lineup(t.players,L.slots).pts);const mean=raw.reduce((s,x)=>s+x,0)/Math.max(1,n);const str=raw.map(x=>x*(1-PO.sh)+mean*PO.sh);
+  const wks=L.future&&L.future.length?L.future:[...Array(L.remWeeks||6)].map(()=>null);
+  const po=Array(n).fill(0),top=Array(n).fill(0);
+  for(let it=0;it<N;it++){const w=L.teams.map(t=>t.w+.5*t.t),pf=L.teams.map(t=>t.pf),s=str.map(x=>x*(1+PO.u*gauss()));
+    for(const wk of wks){for(const [x,y] of (wk||randPairs(n))){const sx=s[x]+gauss()*(s[x]*WP.k+WP.c),sy=s[y]+gauss()*(s[y]*WP.k+WP.c);pf[x]+=sx;pf[y]+=sy;if(sx>sy)w[x]++;else w[y]++;}}
+    const ord=[...Array(n).keys()].sort((a,b)=>w[b]-w[a]||pf[b]-pf[a]);ord.slice(0,L.pteams).forEach(i=>po[i]++);top[ord[0]]++;}
+  return L.teams.map((t,i)=>({po:po[i]/N,top:top[i]/N,str:raw[i]}));};
+/* My stats pregame chance: Sleeper's archived projection for each starter that week (2021 on), corrected by the projection engine */
+let SPA=null,SPAP=null;
+async function loadSPA(){if(SPA||SPAP)return SPAP;SPAP=(async()=>{try{if(typeof DecompressionStream==="undefined")return null;const r=await fetch("bt/sleeper_proj.json.gz",{cache:"force-cache"});if(!r.ok)return null;const buf=new Uint8Array(await r.arrayBuffer());
+  const txt=buf[0]===0x1f&&buf[1]===0x8b?await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"))).text():new TextDecoder().decode(buf);const j=JSON.parse(txt);SPA=j&&j.w||null;}catch(e){SPA=null;}return SPA;})();return SPAP;}
+function spaPts(st,sc){if(!st)return null;const rec=sc&&sc.rec!=null?+sc.rec:1;let b=rec>=.75?st.pts_ppr:rec>=.25?st.pts_half_ppr:st.pts_std;if(b==null)b=st.pts_ppr||0;
+  if(sc){if(sc.pass_td!=null&&st.pass_td!=null)b+=(sc.pass_td-4)*st.pass_td;if(sc.pass_int!=null&&st.pass_int!=null)b+=(sc.pass_int+1)*st.pass_int;}return b;}
+function spaTeam(season,w,ids,sc){const P=SPA&&SPA[season+"-"+w];if(!P||!ids||!ids.length)return null;let t=0,k=0;
+  for(const id of ids){const st=P[id];if(!st)continue;k++;let v=spaPts(st,sc);const pos=hxPos(id),C=PJC[pos];if(C)v=Math.max(0,C[0]+(C[1]+C[2]+C[3]+C[4]+C[5])*v+(w<=2?0:C[8]+C[9]));t+=v;}
+  return k/ids.length>=.85?t:null;}
+function hxPre(x,w,me,op){try{const a=spaTeam(x.season,w,me.st,x.sc),b=spaTeam(x.season,w,op.st,x.sc);return a!=null&&b!=null?winProb(a,b):null;}catch(e){return null;}}
+hxLoad=(function(prev){return async function(force){try{await loadSPA();}catch(e){}return prev(force);};})(hxLoad);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
