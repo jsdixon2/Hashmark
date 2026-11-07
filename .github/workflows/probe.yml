@@ -1,0 +1,32 @@
+name: probe
+on: workflow_dispatch
+permissions: {contents: write}
+concurrency: {group: data-probe, cancel-in-progress: false}
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          python3 - <<'PY'
+          import json, urllib.request, collections
+          def g(u): return json.load(urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "hashmark"}), timeout=60))
+          out = {}
+          P = g("https://api.sleeper.app/v1/players/nfl")
+          for kind, u in (("proj", "https://api.sleeper.app/v1/projections/nfl/regular/2026/10"), ("stats", "https://api.sleeper.app/v1/stats/nfl/regular/2026/8"),
+                          ("proj_pos", "https://api.sleeper.app/v1/projections/nfl/regular/2026/10?season_type=regular&position[]=DL&position[]=LB&position[]=DB")):
+              try: j = g(u)
+              except Exception as e: out[kind] = str(e); continue
+              rows = j if isinstance(j, list) else [dict(player_id=k, stats=v) for k, v in j.items()]
+              pc = collections.Counter(); ex = {}
+              for r in rows:
+                  pid = str(r.get("player_id")); pos = (P.get(pid) or {}).get("position"); pc[pos] += 1
+                  if pos in ("LB", "DB", "DL", "DE", "DT", "CB", "S") and pos not in ex: ex[pos] = r.get("stats") or r
+              out[kind] = {"n": len(rows), "pos": pc.most_common(), "examples": ex}
+          lb = [v for v in P.values() if v.get("position") in ("LB", "CB", "S", "DE", "DT", "DB", "DL")][:3]
+          out["meta_idp"] = [{k: v.get(k) for k in ("position", "fantasy_positions", "team", "full_name")} for v in lb]
+          json.dump(out, open("bt/probe_idp.json", "w"), indent=1)
+          PY
+          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
+          git add bt/probe_idp.json; git commit -m "probe" || true
+          for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
