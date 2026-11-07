@@ -2326,7 +2326,7 @@ async function loadLeagueSeason(l){const season=+l.season,cur=+S.season,past=sea
   const mus=await poolRun(wk.map(w=>()=>hxGet(`/league/${l.league_id}/matchups/${w}`)),6);
   const txs=await poolRun(wk.map(w=>()=>hxGet(`/league/${l.league_id}/transactions/${w}`)),6);
   const dr=(drafts||[]).filter(d=>d.status==="complete");const picks=[];
-  for(const d of dr){const p=await hxGet(`/draft/${d.draft_id}/picks`).catch(()=>[]);HX.done++;picks.push({type:d.type,season:+d.season,s2r:d.slot_to_roster_id||{},do:d.draft_order||null,start:d.start_time||null,rounds:(d.settings||{}).rounds,picks:(p||[]).map(x=>({pid:x.player_id,rid:x.roster_id,round:x.round,slot:x.draft_slot,no:x.pick_no,kp:!!x.is_keeper}))});}
+  for(const d of dr){const p=await hxGet(`/draft/${d.draft_id}/picks`).catch(()=>[]);HX.done++;picks.push({type:d.type,season:+d.season,s2r:d.slot_to_roster_id||{},do:d.draft_order||null,start:d.start_time||null,rounds:(d.settings||{}).rounds,picks:(p||[]).map(x=>({pid:x.player_id,rid:x.roster_id,round:x.round,slot:x.draft_slot,no:x.pick_no,kp:!!x.is_keeper,amt:+((x.metadata||{}).amount)||0}))});}
   const LS={id:l.league_id,prev:l.previous_league_id||null,name:l.name,season,type:st.type||0,size:l.total_rosters||rosters.length,pws,rpos:l.roster_positions||[],sc:l.scoring_settings||null,
     users:(users||[]).map(u=>({uid:u.user_id,name:u.display_name,team:(u.metadata&&u.metadata.team_name)||u.display_name})),
     rosters:(rosters||[]).map(r=>({rid:r.roster_id,uid:r.owner_id,co:r.co_owners||[]})),
@@ -2406,7 +2406,7 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
     let v=+S.season===seasonOfTrade||type===2?ppg*remain*.9:0;if(type===2){const cl=(AGE_CLIFF[p.pos]||29)-(p.age||27);const yrs=Math.max(0,Math.min(3,cl+1));for(let k=1;k<=yrs;k++)v+=ppg*14*Math.pow(.62,k);}return v;};
   const PICKEV={1:150,2:70,3:32,4:14,5:6};
   // trades
-  const TR=[];for(const x of LSs){for(const t of (typeof mergeTrades==="function"?mergeTrades(x.tx):x.tx.filter(t=>t.type==="trade"))){if(t.one){HXONE.push({x,t});continue;}const sides=t.rids.map(rid=>{const u=x.rid2u[rid];
+  const TR=[];for(const x of LSs){for(const t of (typeof mergeTrades==="function"?mergeTrades(x.tx,x):x.tx.filter(t=>t.type==="trade"))){if(t.one){HXONE.push({x,t});continue;}const sides=t.rids.map(rid=>{const u=x.rid2u[rid];
       const recP=Object.entries(t.adds).filter(([,r])=>r===rid).map(([p])=>p),gaveP=Object.entries(t.adds).filter(([,r])=>r!==rid&&t.rids.includes(r)).map(([p])=>p).filter(p=>t.drops[p]===rid||t.drops[p]==null);
       const recK=t.dp.filter(p=>p.to===rid),gaveK=t.dp.filter(p=>p.from===rid);
       const fb=t.fb.reduce((s,b)=>s+(b.to===rid?b.amt:b.from===rid?-b.amt:0),0);
@@ -2425,7 +2425,7 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
       const st=sh(inST+Math.max(0,kST)+8,outST+Math.max(0,-kST)+8),rz=sh(inRZ+30,outRZ+30);
       // value drift: cumulative net production by week since trade (this season)
       const drift=[];let cum=0;for(let w=t.wk;w<=x.weeks.length;w++){for(const p of sd.recP)cum+=(x.PP[p]||{})[w]||0;for(const p of sd.gaveP)cum-=(x.PP[p]||{})[w]||0;drift.push(+cum.toFixed(1));}
-      TR.push({id:t.id,lg:x.name,chain:x.chain,season:x.season,wk:t.wk,ts:t.ts,u:sd.u,partner:op.map(o=>x.uname[o.u]||"").join(", "),rec:sd.recP.map(hxName),gave:sd.gaveP.map(hxName),recK:sd.recK.map((k,i)=>({...k,real:kin[i]})),gaveK:sd.gaveK.map((k,i)=>({...k,real:kout[i]})),fb:sd.fb,st:(typeof dayOne==="function"?dayOne(x,t,sd):null)??(typeof hvDay1==="function"?hvDay1(x,t,sd):null)??st,st4:st,rz,net:inRZ-outRZ,stNet:inST-outST,drift,type:x.type,inRZ,outRZ,ord:t.ts||(x.season*1e6+t.wk)});
+      TR.push({id:t.id,lg:x.name,chain:x.chain,season:x.season,wk:t.wk,ts:t.ts,u:sd.u,partner:op.map(o=>x.uname[o.u]||"").join(", "),rec:sd.recP.map(hxName),gave:sd.gaveP.map(hxName),recK:sd.recK.map((k,i)=>({...k,real:kin[i]})),gaveK:sd.gaveK.map((k,i)=>({...k,real:kout[i]})),fb:sd.fb,st:(typeof dayOne==="function"?dayOne(x,t,sd):null)??(typeof hvDay1==="function"?hvDay1(x,t,sd):null)??st,st4:st,rz,recon:!!t.recon,net:inRZ-outRZ,stNet:inST-outST,drift,type:x.type,inRZ,outRZ,ord:t.ts||(x.season*1e6+t.wk)});
       mgr(sd.u).trades.push(TR[TR.length-1]);}}}
   // picks flipped before their draft: the realized value is what the pick was traded for
   {const kk=k=>k.season+"-"+k.round+"-"+k.orig;const byU=new Map();for(const t of TR){const a=byU.get(t.chain+"|"+t.u)||[];a.push(t);byU.set(t.chain+"|"+t.u,a);}
@@ -2450,7 +2450,7 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
     for(const t of x.tx.filter(t=>t.type==="trade"))for(const rid of t.rids){const u=x.rid2u[rid];if(u)mgr(u).tx++;}}
   // drafts: value over expected at slot
   for(const x of LSs){for(const d of x.drafts){if(d.season!==x.season)continue;const vals=d.picks.filter(p=>!p.kp&&p.pid).map(p=>({...p,v:prodAfter(x.chain,p.pid,d.season,1).pts}));if(vals.length<6)continue;
-      vals.sort((a,b)=>a.no-b.no);vals.forEach((p,i)=>{const nb=vals.slice(Math.max(0,i-6),i+7).map(q=>q.v);p.exp=avgx(nb);});
+      if(d.type==="auction"&&vals.some(p=>p.amt>0))vals.sort((a,b)=>b.amt-a.amt||a.no-b.no);else vals.sort((a,b)=>a.no-b.no);vals.forEach((p,i)=>{const nb=vals.slice(Math.max(0,i-6),i+7).map(q=>q.v);p.exp=avgx(nb);});
       vals.forEach(p=>{const u=x.rid2u[p.rid];if(!u)return;mgr(u).drafts.push({name:hxName(p.pid),pid:p.pid,pos:hxPos(p.pid),no:p.no,round:p.round,s:d.season,lg:x.name,v:+p.v.toFixed(1),exp:+p.exp.toFixed(1),voe:p.v-p.exp,type:d.type});});}}
   // per-manager derived metrics
   for(const m of Object.values(M)){const g=Math.max(1,m.g),sc=m.scores.map(x=>x.v);
@@ -2591,7 +2591,7 @@ function vStats(){const D=HX.data;
   <section class="pan mt"><div class="row sp"><h2>Wheel’n’Deal</h2><span class="tag">${wnd==null?"No trades":wnd+" / 100"}</span></div>
    ${tr.length?`<div class="hxk">${KP(tr.length,"Trades")}${KP(stG,"Day-one grade","first 4 weeks")}${KP(rzG,"Realized grade","to date, repriced weekly")}${KP(m0.d.wine,"Aged like wine","lost early, won late")}</div>
    <div class="trl mt">${lst(tr.map(t=>{const a=GR(t.st),b=GR(t.rz),tag=t.st<.444&&t.rz>=.556?"Aged like wine":t.st>=.556&&t.rz<.444?"Spoiled milk":t.rz>=.7?"Fleece":t.rz<.306?"Got fleeced":"";
-     return `<div class="tri"><div class="row sp"><span class="sub ell">${t.season} · ${esc(t.lg)} · with ${esc(t.partner)}</span>${tag?`<span class="pill">${tag}</span>`:""}</div><div class="trg"><span class="grd ${grCls(a)}">${a}</span><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span class="grd ${grCls(b)}">${b}</span><span class="trt"><b>Got</b> ${t.rec.map(esc).concat(t.recK.map(k=>pkLab(k,t))).concat(t.fb>0?[`$${t.fb} FAAB`]:[]).join(", ")||"nothing"}<br><span class="sub"><b>Gave</b> ${t.gave.map(esc).concat(t.gaveK.map(k=>pkLab(k,t))).concat(t.fb<0?[`$${-t.fb} FAAB`]:[]).join(", ")||"nothing"}</span></span>${spark(t.drift.length>1?t.drift:[0,0],70,26)}</div></div>`;}),12,"")}</div>
+     return `<div class="tri"><div class="row sp"><span class="sub ell">${t.season} · ${esc(t.lg)} · with ${esc(t.partner)}</span>${tag?`<span class="pill">${tag}</span>`:""}</div><div class="trg"><span class="grd ${grCls(a)}">${a}</span><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span class="grd ${grCls(b)}">${b}</span><span class="trt"><b>Got</b> ${t.rec.map(esc).concat(t.recK.map(k=>pkLab(k,t))).concat(t.fb>0?[`$${t.fb} FAAB`]:[]).join(", ")||"nothing"}<br><span class="sub"><b>Gave</b> ${t.gave.map(esc).concat(t.gaveK.map(k=>pkLab(k,t))).concat(t.fb<0?[`$${-t.fb} FAAB`]:[]).join(", ")||"nothing"}${t.recon?` <span class="sub">(other half rebuilt from the draft board)</span>`:""}</span></span>${spark(t.drift.length>1?t.drift:[0,0],70,26)}</div></div>`;}),12,"")}</div>
    <p class="sub mt">Day-one grade uses the calculator’s logic with what was known that week: redraft grades the change in championship odds (rest of that season plus the playoff bracket, from each team’s roster and points per game that week); dynasty uses that week’s consensus values plus the lineup change for contenders; keeper adds the change in each team’s keeper group under your keeper rules. Deals before 2020 without enough data use the first four weeks. Realized grade adds everything since, in this league’s scoring, plus today’s projection for players still producing; picks are priced by round until they’re made, then by the player drafted. Sparkline: net points gained since the trade.</p>`:`<p class="sub">No trades on record. The Trade Lab can fix that.</p>`}</section>
   <section class="pan mt"><div class="row sp"><h2>Waiver wire report</h2><span class="tag">${m.adds.length} adds</span></div>
    ${m.adds.length?`<div class="hxk">${KP(pcx(hit),"Hit rate","started 3+ weeks")}${KP(brk.length,"Pre-breakout finds","added before they popped")}${KP(Math.round(m.adds.reduce((s,a)=>s+a.started,0)),"Points started","from pickups")}${KP(m0.d.adN&&m0.faab?"$"+m0.faab:"–","FAAB spent",m0.faab?f1(m.adds.reduce((s,a)=>s+a.started,0)/Math.max(1,m0.faab))+" pts per $":"")}</div>
@@ -4302,7 +4302,7 @@ document.addEventListener("click",e=>{let b;if((b=e.target.closest("[data-stc]")
 const STB={};
 STB.trades=D=>{const {m,d}=D,T=m.trades.slice().sort((a,b)=>(b.ord||0)-(a.ord||0)),won=T.filter(t=>t.rz>.52).length,lost=T.filter(t=>t.rz<.48).length,net=T.reduce((s,t)=>s+t.net,0),stAvg=T.reduce((s,t)=>s+t.st,0)/T.length,ca=D.avg(x=>x.d.trAvg),flips=T.flatMap(t=>t.recK.filter(k=>k.flip));
   const kin=T.flatMap(t=>t.recK),kout=T.flatMap(t=>t.gaveK),used=kin.filter(k=>k.real&&k.real.real);
-  const row=t=>`<div class="sdtr"><div class="row sp"><span class="sub ell" style="margin:0">${t.season} · Wk ${t.wk}${D.lgN(t.chain)} · with ${esc(t.partner)}</span><span class="sdgr"><span class="grd ${grCls(GR(t.st))}">${GR(t.st)}</span>→<span class="grd ${grCls(GR(t.rz))}">${GR(t.rz)}</span></span></div><div class="sdtx"><b>Got</b> ${t.rec.map(esc).concat(t.recK.map(k=>pkLab(k,t))).concat(t.fb>0?[`$${t.fb} FAAB`]:[]).join(", ")||"nothing"}</div><div class="sdtx sub"><b>Gave</b> ${t.gave.map(esc).concat(t.gaveK.map(k=>pkLab(k,t))).concat(t.fb<0?[`$${-t.fb} FAAB`]:[]).join(", ")||"nothing"}</div><div class="sdtx"><span class="${t.net>=0?"good":"bad"}">${sgnN(t.net,0)} pts</span> <span class="sub">net to date · ${t.rz>=.7&&t.net>=50?"fleece":t.rz<.306&&t.net<=-50?"got fleeced":t.st<.444&&t.rz>=.556?"aged like wine":t.st>=.556&&t.rz<.444?"spoiled milk":t.rz>.52?"won":t.rz<.48?"lost":"even"}</span></div></div>`;
+  const row=t=>`<div class="sdtr"><div class="row sp"><span class="sub ell" style="margin:0">${t.season} · Wk ${t.wk}${D.lgN(t.chain)} · with ${esc(t.partner)}</span><span class="sdgr"><span class="grd ${grCls(GR(t.st))}">${GR(t.st)}</span>→<span class="grd ${grCls(GR(t.rz))}">${GR(t.rz)}</span></span></div><div class="sdtx"><b>Got</b> ${t.rec.map(esc).concat(t.recK.map(k=>pkLab(k,t))).concat(t.fb>0?[`$${t.fb} FAAB`]:[]).join(", ")||"nothing"}</div><div class="sdtx sub"><b>Gave</b> ${t.gave.map(esc).concat(t.gaveK.map(k=>pkLab(k,t))).concat(t.fb<0?[`$${-t.fb} FAAB`]:[]).join(", ")||"nothing"}${t.recon?` <span class="sub">(other half rebuilt from the draft board)</span>`:""}</div><div class="sdtx"><span class="${t.net>=0?"good":"bad"}">${sgnN(t.net,0)} pts</span> <span class="sub">net to date · ${t.rz>=.7&&t.net>=50?"fleece":t.rz<.306&&t.net<=-50?"got fleeced":t.st<.444&&t.rz>=.556?"aged like wine":t.st>=.556&&t.rz<.444?"spoiled milk":t.rz>.52?"won":t.rz<.48?"lost":"even"}</span></div></div>`;
   const byP=grp(T,t=>t.partner).map(([p,xs])=>({p,n:xs.length,w:xs.filter(t=>t.rz>.52).length,l:xs.filter(t=>t.rz<.48).length,g:xs.reduce((s,t)=>s+t.rz,0)/xs.length,net:xs.reduce((s,t)=>s+t.net,0)})).sort((a,b)=>b.n-a.n||b.net-a.net);
   const byS=grp(T,t=>t.season).sort((a,b)=>b[0]-a[0]).map(([s,xs])=>[s,xs.length,GR(xs.reduce((a,t)=>a+t.rz,0)/xs.length),`${xs.filter(t=>t.rz>.52).length}-${xs.filter(t=>t.rz<.48).length}`,sgnN(xs.reduce((a,t)=>a+t.net,0),0)]);
   const best=T.slice().sort((a,b)=>b.rz-a.rz).slice(0,3),worst=T.slice().sort((a,b)=>a.rz-b.rz).slice(0,3);const Tf=bySea(T);
@@ -5068,6 +5068,26 @@ function oneSidedSec(D){try{const me=S.mode==="live"?S.uid:"demo-me",rows=[];for
     const op=t.rids.filter(z=>z!==r).map(z=>{const u=x.rid2u&&x.rid2u[z];const us=x.users.find(q=>q.uid===u);return us?us.name:"another team";}).join(", ");
     rows.push(`<li>${x.season} · Wk ${t.wk} · ${esc(x.name)}: ${got.length?`got ${esc(got.join(", "))}`:""}${got.length&&gave.length?"; ":""}${gave.length?`sent ${esc(gave.join(", "))}`:""} ${got.length&&!gave.length?"from":"to"} ${esc(op)}, with nothing coming back in Sleeper’s records.</li>`);}
   if(!rows.length)return "";return sdSec("Not graded",`<p class="sub">Sleeper shows these as one-way moves, usually the other half of a deal made in the draft room, a commissioner move or a side deal. They’re left out of your grades, best and worst trades and averages.</p><ul class="why">${rows.join("")}</ul>`,`${rows.length}`);}catch(e){return "";}}
+
+/* ===== v60: draft-board trades. Sleeper often records only one half of a deal made in the draft room (or none of it).
+   For every completed draft, the pick each team actually made is compared with who should have owned it from recorded trades;
+   any pick that changed hands off the record is an "unrecorded move". A one-way trade between two teams is completed with the
+   unrecorded moves that went the other way between the same teams in that draft. ===== */
+const UNREC=new Map();
+function finalOwner2(chain,season,round,orig){let o=+orig,best=-1;for(const x of HXLS||[]){if(x.chain!==chain)continue;for(const t of x.tx)if(t.type==="trade")for(const p of t.dp)if(+p.season===+season&&+p.round===+round&&+p.orig===+orig){const k=t.ts||x.season*1e3+t.wk;if(k>=best){best=k;o=+p.to;}}}return o;}
+function unrecMoves(chain){if(UNREC.has(chain))return UNREC.get(chain);const out=[];
+  for(const x of HXLS||[]){if(x.chain!==chain)continue;for(const d of x.drafts||[]){if(d.season!==x.season||!d.s2r||!Object.keys(d.s2r).length)continue;
+    for(const p of d.picks){if(p.kp||p.slot==null)continue;const orig=d.s2r[p.slot];if(orig==null)continue;const own=finalOwner2(chain,d.season,p.round,orig);
+      if(+own!==+p.rid)out.push({season:d.season,round:p.round,orig:+orig,from:+own,to:+p.rid,pid:p.pid,no:p.no,ts:d.start||null,unrec:true,used:false});}}}
+  UNREC.set(chain,out);return out;}
+analyze=(function(prev){return function(uid,LSs){UNREC.clear();return prev(uid,LSs);};})(analyze);
+mergeTrades=(function(prev){return function(txs,x){const T=prev(txs);if(!x||!HXLS)return T;const U=unrecMoves(x.chain);
+  for(const t of T){if(!t.one||t.rids.length!==2)continue;const [a,b]=t.rids;
+    const gotOnly=r=>!t.dp.some(p=>p.from===r)&&!Object.entries(t.adds).some(([p,v])=>v!==r&&t.drops[p]===r)&&!t.fb.some(f=>f.from===r&&f.amt>0);
+    for(const r of [a,b]){if(!gotOnly(r))continue;const o=r===a?b:a,seas=new Set(t.dp.map(p=>+p.season));if(!seas.size)seas.add(+x.season);
+      const m=U.filter(u=>!u.used&&u.from===r&&u.to===o&&seas.has(+u.season));if(m.length){m.forEach(u=>{u.used=true;t.dp.push({season:u.season,round:u.round,orig:u.orig,from:u.from,to:u.to,unrec:true});});t.recon=true;}}
+    t.one=tradeSideEmpty(t);}
+  return T;};})(mergeTrades);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
