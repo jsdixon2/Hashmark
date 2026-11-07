@@ -1,0 +1,24 @@
+name: nflverse-pull
+on:
+  push:
+    paths: ["scripts/build_nfl.py", ".github/workflows/nfl.yml"]
+  schedule: [{cron: "7 13 * * 2"}]
+  workflow_dispatch: {}
+permissions: {contents: write}
+concurrency: {group: data-commit, cancel-in-progress: false}
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -q pandas pyarrow
+      - run: python3 scripts/build_nfl.py
+      - run: |
+          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
+          git add bt/nfl
+          git diff --staged --quiet && exit 0
+          git commit -m "nflverse weekly pull"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep 5; done
