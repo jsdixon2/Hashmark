@@ -1,0 +1,19 @@
+name: idp-data
+on:
+  push:
+    paths: ["scripts/fetch_idp.py", ".github/workflows/idp.yml"]
+  schedule: [{cron: "41 10 * * 2"}]
+  workflow_dispatch: {}
+permissions: {contents: write}
+concurrency: {group: data-idp, cancel-in-progress: false}
+jobs:
+  idp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 scripts/fetch_idp.py
+      - run: |
+          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
+          git add bt/idp; git commit -m "backtest archive: IDP stats" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done

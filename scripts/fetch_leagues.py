@@ -68,7 +68,7 @@ def league_pack(lg):
         dr = {"type": d.get("type"), "season": d.get("season"), "rounds": (d.get("settings") or {}).get("rounds"),
               "picks": [[p.get("round"), p.get("pick_no"), p.get("player_id"), p.get("roster_id"), p.get("is_keeper")] for p in picks]}
     sc = lg.get("scoring_settings") or {}
-    keep_sc = {k: sc[k] for k in ("rec", "bonus_rec_te", "pass_td", "pass_int", "pass_yd", "rush_yd", "rec_yd", "rush_td", "rec_td", "fum_lost") if k in sc}
+    keep_sc = {k: sc[k] for k in sc if k in ("rec", "bonus_rec_te", "bonus_rec_rb", "bonus_rec_wr", "pass_td", "pass_int", "pass_yd", "rush_yd", "rec_yd", "rush_td", "rec_td", "fum_lost", "rush_att", "pass_att") or k.startswith("idp_")}
     return {"id": hid(lid), "season": int(lg.get("season")), "status": lg.get("status"), "type": st.get("type"), "n": st.get("num_teams") or len(rosters),
             "pws": pws, "pteams": st.get("playoff_teams"), "lws": st.get("last_scored_leg") or st.get("leg"), "pos": lg.get("roster_positions"),
             "sc": keep_sc, "guillotine": 1 if (st.get("type") == 3 or "guillotine" in (lg.get("name") or "").lower() or "chopped" in (lg.get("name") or "").lower()) else 0,
