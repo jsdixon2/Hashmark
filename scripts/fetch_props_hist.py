@@ -118,19 +118,34 @@ def main():
                 per.setdefault(pid, {}).setdefault("td", []).append(p)
         players = {pid: {k: round(statistics.median(v), 3) for k, v in st.items()} for pid, st in per.items()}
         old["games"][f["fixtureId"]] = {"start": start, "home": f.get("participant1Abbr"), "away": f.get("participant2Abbr"),
-                                        "homeName": f.get("participant1Name"), "awayName": f.get("participant2Name"), "p": players}
+                                        "homeName": f.get("participant1Name"), "awayName": f.get("participant2Name"), "hid": f.get("participant1Id"), "aid": f.get("participant2Id"), "p": players}
         print(f["startTime"][:10], f.get("participant2Abbr"), "@", f.get("participant1Abbr"), len(players), "players")
-    # player names
+    # player names: by id list, then by team (participant) as a fallback
+    teams = {}
+    for f in fixtures:
+        for k in ("participant1Id", "participant2Id"):
+            if f.get(k): teams[f[k]] = 1
+    def absorb(r):
+        n = 0
+        if isinstance(r, dict): r = r.get("players") or r.get("data") or []
+        if isinstance(r, list):
+            for x in r:
+                if isinstance(x, dict) and x.get("playerName") and x.get("playerId") is not None:
+                    old["names"][str(x["playerId"])] = x["playerName"]; n += 1
+        return n
     need = sorted({pid for g in old["games"].values() for pid in g["p"] if pid not in old["names"]})
-    for i in range(0, len(need), 80):
-        chunk = need[i:i + 80]
+    for i in range(0, len(need), 50):
+        chunk = need[i:i + 50]; got = 0
         for b in (0, 1):
-            r = call("players", base=b, playerIds=",".join(chunk))
-            if isinstance(r, list) and r:
-                for x in r:
-                    if x.get("playerName"): old["names"][str(x["playerId"])] = x["playerName"]
-                break
+            got = absorb(call("players", base=b, playerIds=",".join(chunk)))
+            if got: break
         time.sleep(1.2)
+        if not got and i == 0: print("  name lookup by id returned nothing; trying by team"); break
+    if len([pid for g in old["games"].values() for pid in g["p"] if pid not in old["names"]]) > 50:
+        for tid in teams:
+            for b in (0, 1):
+                if absorb(call("players", base=b, participantId=tid)): break
+            time.sleep(1.2)
     old["built"] = now.strftime("%Y-%m-%dT%H:%MZ")
     os.makedirs("bt", exist_ok=True)
     with gzip.open(OUT, "wt") as fh:
