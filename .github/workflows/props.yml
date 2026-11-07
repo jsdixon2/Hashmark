@@ -1,20 +1,22 @@
-name: oddspapi-probe
+name: props-archive
 on:
   push:
-    paths: ["scripts/probe_oddspapi.py", ".github/workflows/probe.yml"]
+    paths: ["scripts/fetch_props_hist.py", ".github/workflows/props.yml"]
+  schedule: [{cron: "41 10 * * 2"}]
   workflow_dispatch: {}
 permissions: {contents: write}
 concurrency: {group: data-commit, cancel-in-progress: false}
 jobs:
-  probe:
+  archive:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
-      - run: python3 scripts/probe_oddspapi.py
+      - run: python3 scripts/fetch_props_hist.py
         env: {ODDSPAPI_KEY: "${{ secrets.ODDSPAPI_KEY }}"}
       - run: |
           git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
-          git add bt/oddspapi_sample.json
+          git add bt/
           git diff --staged --quiet && exit 0
-          git commit -m "OddsPapi sample"
+          git commit -m "backtest archive: closing player props"
           for i in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep 5; done
