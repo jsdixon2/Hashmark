@@ -54,6 +54,29 @@ def main():
     os.makedirs("bt", exist_ok=True)
     with gzip.open(OUT, "wt") as f:
         json.dump(out, f, separators=(",", ":"))
+    # Sleeper's own final stat lines (exact Sleeper scoring) for the same weeks
+    SO = "bt/sleeper_stats.json.gz"
+    st = json.load(gzip.open(SO, "rt")) if os.path.exists(SO) else {"w": {}}
+    for key in sorted(out["w"]):
+        season, wk = map(int, key.split("-"))
+        if key in st["w"] and not (season == cur_season and wk >= cur_week - 1): continue
+        if season == cur_season and wk >= cur_week: continue
+        j = get(f"{API}/stats/nfl/regular/{season}/{wk}")
+        if j is None: continue
+        rows = j if isinstance(j, list) else [dict(player_id=k, stats=v) for k, v in j.items()]
+        keep = {}
+        for r in rows:
+            s_ = r.get("stats") or r; pid = str(r.get("player_id") or "")
+            if pid and (s_.get("gp") or 0) > 0:
+                keep[pid] = {k: round(s_[k], 2) for k in KEEP if isinstance(s_.get(k), (int, float))}
+        st["w"][key] = keep; time.sleep(0.4)
+    with gzip.open(SO, "wt") as f:
+        json.dump(st, f, separators=(",", ":"))
+    # weekly snapshot of Sleeper's trending adds and drops (what managers are chasing)
+    os.makedirs("bt/trending", exist_ok=True)
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    tr = {k: get(f"{API}/players/nfl/trending/{k}?lookback_hours=168&limit=300") for k in ("add", "drop")}
+    json.dump({"season": cur_season, "week": cur_week, **tr}, open(f"bt/trending/{day}.json", "w"), separators=(",", ":"))
 
 
 if __name__ == "__main__":

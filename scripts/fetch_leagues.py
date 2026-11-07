@@ -51,6 +51,22 @@ def league_pack(lg):
             rows.append([t.get("roster_id"), t.get("matchup_id"), round(float(t.get("points") or 0), 2), [s for s in (t.get("starters") or []) if s and s != "0"]])
         if rows and any(r[2] for r in rows): weeks[w] = rows
     br = get(f"/league/{lid}/winners_bracket") or []
+    # transactions: trades (players, picks, FAAB), waiver claims with bids, free-agent adds and drops
+    tx = []
+    for w in range(1, last + 1):
+        for t in get(f"/league/{lid}/transactions/{w}") or []:
+            if t.get("status") != "complete": continue
+            tx.append([t.get("type"), w, t.get("roster_ids") or [], t.get("adds") or {}, t.get("drops") or {},
+                       [[p.get("season"), p.get("round"), p.get("roster_id"), p.get("previous_owner_id"), p.get("owner_id")] for p in (t.get("draft_picks") or [])],
+                       [[b.get("sender"), b.get("receiver"), b.get("amount")] for b in (t.get("waiver_budget") or [])],
+                       (t.get("settings") or {}).get("waiver_bid"), t.get("status_updated") or t.get("created")])
+    # the league's draft (startup or rookie): every pick with the player taken
+    dr = None
+    if lg.get("draft_id"):
+        d = get(f"/draft/{lg['draft_id']}") or {}
+        picks = get(f"/draft/{lg['draft_id']}/picks") or []
+        dr = {"type": d.get("type"), "season": d.get("season"), "rounds": (d.get("settings") or {}).get("rounds"),
+              "picks": [[p.get("round"), p.get("pick_no"), p.get("player_id"), p.get("roster_id"), p.get("is_keeper")] for p in picks]}
     sc = lg.get("scoring_settings") or {}
     keep_sc = {k: sc[k] for k in ("rec", "bonus_rec_te", "pass_td", "pass_int", "pass_yd", "rush_yd", "rec_yd", "rush_td", "rec_td", "fum_lost") if k in sc}
     return {"id": hid(lid), "season": int(lg.get("season")), "status": lg.get("status"), "type": st.get("type"), "n": st.get("num_teams") or len(rosters),
@@ -58,7 +74,7 @@ def league_pack(lg):
             "sc": keep_sc, "guillotine": 1 if (st.get("type") == 3 or "guillotine" in (lg.get("name") or "").lower() or "chopped" in (lg.get("name") or "").lower()) else 0,
             "rost": [[r.get("roster_id"), (r.get("settings") or {}).get("wins"), (r.get("settings") or {}).get("losses"), (r.get("settings") or {}).get("ties"),
                       (r.get("settings") or {}).get("fpts")] for r in rosters],
-            "weeks": weeks, "bracket": [[b.get("r"), b.get("m"), b.get("t1"), b.get("t2"), b.get("w"), b.get("l"), b.get("p")] for b in br]}
+            "weeks": weeks, "tx": tx, "draft": dr, "bracket": [[b.get("r"), b.get("m"), b.get("t1"), b.get("t2"), b.get("w"), b.get("l"), b.get("p")] for b in br]}
 
 
 def main():
@@ -69,7 +85,7 @@ def main():
     q, seen_users = deque([u["user_id"]]), {u["user_id"]}
     added = refreshed = 0
     walked = set()
-    live = {k for k, v in old["leagues"].items() if v.get("status") == "in_season"}
+    live = {k for k, v in old["leagues"].items() if v.get("status") == "in_season" or "tx" not in v}
     cap_new = max(0, MAX_LEAGUES - len(old["leagues"])) + int(os.environ.get("GROW", "120"))
     while q and (added < cap_new or refreshed < len(live)):
         uid = q.popleft()
@@ -78,7 +94,7 @@ def main():
                 lid = lg.get("league_id")
                 if not lid: continue
                 h = hid(lid)
-                if h in live and h not in old.get("_ref", set()):
+                if (h in live or (h in old["leagues"] and "tx" not in old["leagues"][h])) and h not in old.get("_ref", set()):
                     old.setdefault("_ref", set()).add(h); pk = league_pack(lg)
                     if pk and pk["weeks"]: old["leagues"][h] = pk
                     refreshed += 1

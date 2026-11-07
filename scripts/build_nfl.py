@@ -3,7 +3,8 @@
 Past seasons are written once; the current season is rebuilt every run. Everything is reduced to what the models use
 (QB/RB/WR/TE/K focus, gsis ids), so the repo stays small.
 
-datasets: injuries, snaps, depth, ngs, pfr, pbp_team, pbp_player, ftn_team, combine, draft_picks, players, schedules"""
+datasets: injuries, snaps, depth, ngs, pfr, pbp_team, pbp_player, ftn_team, combine, draft_picks, players, schedules,
+contracts (OverTheCap via nflverse), ecr (FantasyPros consensus history via DynastyProcess)"""
 import io, os, sys, time, traceback, urllib.request
 from datetime import datetime, timezone
 import pandas as pd
@@ -173,6 +174,31 @@ def pbp(y):
             save(m.groupby(g + ["posteam"])[flags].mean().reset_index().rename(columns={"posteam": "team"}), "ftn_team", y)
 
 
+def ecr():
+    """FantasyPros expert consensus history (weekly, rest-of-season, redraft, dynasty, rookie), via DynastyProcess, 2019 on."""
+    b = None
+    for u in ("https://raw.githubusercontent.com/dynastyprocess/data/master/files/db_fpecr.parquet", "https://github.com/dynastyprocess/data/raw/master/files/db_fpecr.parquet"):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "hashmark-build"}), timeout=300) as r: b = r.read(); break
+        except Exception: continue
+    if not b: LOG.append("ecr: unavailable"); return
+    d = pd.read_parquet(io.BytesIO(b))
+    d = keep(d[d.pos.isin(["QB", "RB", "WR", "TE", "K", "DST"])], ["scrape_date", "ecr_type", "id", "pos", "team", "ecr", "sd", "best", "worst", "player_owned_avg"])
+    ids = keep(pd.read_parquet(io.BytesIO(b)), ["id", "player", "sportsdata_id"]).drop_duplicates("id")
+    save(ids, "ecr_players")
+    d["m"] = pd.to_datetime(d.scrape_date, errors="coerce").dt.strftime("%Y-%m")
+    cur = NOW.strftime("%Y-%m")
+    for m, q in d.groupby("m"):  # one file per month; only the current month is rewritten
+        if m >= cur or not os.path.exists(f"{OUT}/ecr/{m}.csv.gz"): save(q.drop(columns=["m"]), "ecr", m)
+
+
+def contracts():
+    c = read("contracts/historical_contracts.parquet")
+    if c is None: return
+    c = c[c.position.isin(SKILL)] if "position" in c else c
+    save(keep(c, ["player", "position", "team", "is_active", "year_signed", "years", "value", "apy", "guaranteed", "apy_cap_pct", "inflated_value", "inflated_apy", "gsis_id", "otc_id", "draft_year", "draft_round", "draft_overall", "date_of_birth", "college"]), "contracts")
+
+
 def singles():
     c = read("combine/combine.csv")
     if c is not None: save(c, "combine")
@@ -186,7 +212,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     pl = players()
     pmap = dict(zip(pl.pfr_id, pl.gsis_id)) if pl is not None else {}
-    run(singles); run(ngs)
+    run(singles); run(ngs); run(ecr); run(contracts)
     for y in range(FIRST, CUR + 1):
         for fn, args in ((injuries, (y,)), (snaps, (y, pmap)), (depth, (y,)), (pfr, (y, pmap)), (pbp, (y,))):
             run(fn, *args)
