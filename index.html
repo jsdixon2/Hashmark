@@ -2327,7 +2327,7 @@ async function loadLeagueSeason(l){const season=+l.season,cur=+S.season,past=sea
   const txs=await poolRun(wk.map(w=>()=>hxGet(`/league/${l.league_id}/transactions/${w}`)),6);
   const dr=(drafts||[]).filter(d=>d.status==="complete");const picks=[];
   for(const d of dr){const p=await hxGet(`/draft/${d.draft_id}/picks`).catch(()=>[]);HX.done++;picks.push({type:d.type,season:+d.season,s2r:d.slot_to_roster_id||{},do:d.draft_order||null,start:d.start_time||null,rounds:(d.settings||{}).rounds,picks:(p||[]).map(x=>({pid:x.player_id,rid:x.roster_id,round:x.round,slot:x.draft_slot,no:x.pick_no,kp:!!x.is_keeper,amt:+((x.metadata||{}).amount)||0}))});}
-  const LS={id:l.league_id,prev:l.previous_league_id||null,name:l.name,season,type:st.type||0,med:!!st.league_average_match,size:l.total_rosters||rosters.length,pws,rpos:l.roster_positions||[],sc:l.scoring_settings||null,
+  const LS={id:l.league_id,prev:l.previous_league_id||null,name:l.name,season,type:st.type||0,med:!!st.league_average_match,prt:+st.playoff_round_type||0,size:l.total_rosters||rosters.length,pws,rpos:l.roster_positions||[],sc:l.scoring_settings||null,
     users:(users||[]).map(u=>({uid:u.user_id,name:u.display_name,team:(u.metadata&&u.metadata.team_name)||u.display_name})),
     rosters:(rosters||[]).map(r=>({rid:r.roster_id,uid:r.owner_id,co:r.co_owners||[]})),
     weeks:(mus||[]).map(a=>(a||[]).map(m=>({rid:m.roster_id,mid:m.matchup_id,pts:+m.points||0,st:(m.starters||[]).filter(x=>x&&x!=="0"),pp:m.players_points||{}}))),
@@ -2389,7 +2389,9 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
       S2.seasons.push({s:x.season,lg:x.name,chain:x.chain,type:x.type,size:x.size,w:t.w,l:t.l,pf:t.pf,pa:t.pa,g:t.g,rank:i+1,final:FIN.get(+t.rid)||null,champ:won,ru:rn,po:poR.has(t.rid),live:!x.complete});});
     x.rid2u=rid2u;x.uname=uname;}
   // playoff games (winners bracket + playoff-week scores)
-  for(const x of LSs){if(x.gl||!x.bracket||!x.bracket.length||!x.rid2u)continue;for(const b of x.bracket){if(b.w==null||typeof b.t1!=="number"||typeof b.t2!=="number")continue;const wk=x.weeks[(x.pws||15)+b.r-2]||[];const sc=rid=>{const m=wk.find(q=>+q.rid===+rid);return m?m.pts:null;};
+  for(const x of LSs){if(x.gl||!x.bracket||!x.bracket.length||!x.rid2u)continue;for(const b of x.bracket){if(b.w==null||typeof b.t1!=="number"||typeof b.t2!=="number")continue;/* playoff round → its week(s): Sleeper round types 0 = one week per round, 1 = two-week championship round, 2 = two weeks every round */
+      const R=Math.max(...x.bracket.map(z=>z.r||1)),P0=(x.pws||15)-1,prt=x.prt||0,wks=prt===2?[P0+2*(b.r-1),P0+2*(b.r-1)+1]:prt===1&&b.r===R?[P0+b.r-1,P0+b.r]:[P0+b.r-1];
+      const sc=rid=>{let t=0,n=0;for(const i of wks){const m=(x.weeks[i]||[]).find(q=>+q.rid===+rid);if(m){t+=m.pts;n++;}}return n?t:null;};
       for(const [me,op] of [[b.t1,b.t2],[b.t2,b.t1]]){const u=x.rid2u[me];if(!u)continue;const S2=mgr(u);(S2.poG=S2.poG||[]).push({s:x.season,lg:x.chain,r:b.r,won:+b.w===+me,v:sc(me),opp:sc(op),op:x.rid2u[op],p:b.p||null,last:b.p===1});}}}
   // draft-pick realization lookup per chain
   const usersOf=x=>new Set(x.rosters.map(r=>(r.co||[]).includes(uid)?uid:r.uid).filter(Boolean));
@@ -4924,16 +4926,17 @@ teamStatus=(function(prev){return function(L,ti){const r=prev(L,ti);if(r&&!r.dyn
             weighted by how many players each team keeps and whether it is contending or rebuilding. */
 function rng(seed){let s=seed>>>0||1;return ()=>{s^=s<<13;s>>>=0;s^=s>>>17;s^=s<<5;s>>>=0;return s/4294967296;};}
 function gaussR(r){let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
-function bracketWin(seeds,s,r,rounds){let alive=seeds.slice();const n=alive.length;let size=1;while(size<n)size*=2;
+function bracketWin(seeds,s,r,prt){let alive=seeds.slice();const n=alive.length;let size=1;while(size<n)size*=2;
   const byes=size-n;let rd=alive.slice(byes),adv=alive.slice(0,byes);
-  const game=(x,y)=>{const sx=s[x]+gaussR(r)*(s[x]*WP.k+WP.c),sy=s[y]+gaussR(r)*(s[y]*WP.k+WP.c);return sx>sy?x:y;};
-  while(true){const nx=[];for(let i=0;i<rd.length/2;i++)nx.push(game(rd[i],rd[rd.length-1-i]));const pool=adv.concat(nx);adv=[];if(pool.length===1)return pool[0];rd=pool;}}
+  let ri=0,R=0;for(let z=size;z>1;z/=2)R++;const nW=()=>prt===2?2:prt===1&&ri===R-1?2:1;
+  const game=(x,y)=>{let sx=0,sy=0;for(let k=nW();k>0;k--){sx+=s[x]+gaussR(r)*(s[x]*WP.k+WP.c);sy+=s[y]+gaussR(r)*(s[y]*WP.k+WP.c);}return sx>sy?x:y;};
+  while(true){const nx=[];for(let i=0;i<rd.length/2;i++)nx.push(game(rd[i],rd[rd.length-1-i]));ri++;const pool=adv.concat(nx);adv=[];if(pool.length===1)return pool[0];rd=pool;}}
 function simTitle(L,str,N=3000,seed=7){const n=L.teams.length,mean=str.reduce((a,x)=>a+x,0)/Math.max(1,n),st=str.map(x=>x*(1-PO.sh)+mean*PO.sh);
   const wks=L.future&&L.future.length?L.future:[...Array(L.remWeeks||0)].map(()=>null),P=Math.min(n,L.pteams||6),r=rng(seed),po=Array(n).fill(0),ch=Array(n).fill(0);
   for(let it=0;it<N;it++){const w=L.teams.map(t=>t.w+.5*t.t),pf=L.teams.map(t=>t.pf),s=st.map(x=>x*(1+PO.u*gaussR(r)));
     for(const wk of wks){const prs=wk||(()=>{const o=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(r()*(i+1));[o[i],o[j]]=[o[j],o[i]];}const p=[];for(let i=0;i+1<n;i+=2)p.push([o[i],o[i+1]]);return p;})();
       for(const [x,y] of prs){const sx=s[x]+gaussR(r)*(s[x]*WP.k+WP.c),sy=s[y]+gaussR(r)*(s[y]*WP.k+WP.c);pf[x]+=sx;pf[y]+=sy;if(sx>sy)w[x]++;else w[y]++;}}
-    const ord=[...Array(n).keys()].sort((a,b)=>w[b]-w[a]||pf[b]-pf[a]),seeds=ord.slice(0,P);seeds.forEach(i=>po[i]++);ch[bracketWin(seeds,s,r)]++;}
+    const ord=[...Array(n).keys()].sort((a,b)=>w[b]-w[a]||pf[b]-pf[a]),seeds=ord.slice(0,P);seeds.forEach(i=>po[i]++);ch[bracketWin(seeds,s,r,L.prt!=null?L.prt:+((L.lset||{}).playoff_round_type)||0)]++;}
   return {po:po.map(x=>x/N),ch:ch.map(x=>x/N)};}
 const strOf=(L,ids)=>lpts(ids,L);
 function titleBase(L){const k=(L._ctx&&L._ctx.k)+"|tb";if(L._tb&&L._tb.k===k)return L._tb.v;const v={str:L.teams.map(t=>strOf(L,t.players))};v.sim=simTitle(L,v.str);L._tb={k,v};return v;}
@@ -5038,7 +5041,7 @@ function dayOne(x,t,sd){try{if(x.gl)return null;const ty=+x.type||0,w=Math.max(1
   const rec=hxRecords(x,w),pws=x.pws||15,rem=Math.max(0,pws-w),me=rec.idx[sd.rid],gp=rec.played,wpct=gp?(rec.W[me]+.5*rec.T[me])/gp:.5;
   if(ty===0){if(rem>0&&rec.fut.length&&me!=null){const key=x.id+"|tb|"+w,teams=x.rosters.map((_,i)=>({w:rec.W[i],t:rec.T[i],pf:rec.PF[i]}));
       const str=HXC[key+"s"]||(HXC[key+"s"]=x.rosters.map(r=>hxLU(hxRoster(x,w,r.rid).filter(id=>!(S2[r.rid]&&S2[r.rid].got.includes(id))).concat(S2[r.rid]?S2[r.rid].gave:[]),slots,f)));
-      const PL2={teams,future:rec.fut,pteams:hxPteams(x),remWeeks:rec.fut.length},base=HXC[key]||(HXC[key]=simTitle(PL2,str,1200,11)),s2=str.slice();rids.forEach(r=>{const i=rec.idx[r];if(i!=null)s2[i]=str[i]+g[r];});
+      const PL2={teams,future:rec.fut,pteams:hxPteams(x),remWeeks:rec.fut.length,prt:x.prt||0},base=HXC[key]||(HXC[key]=simTitle(PL2,str,1200,11)),s2=str.slice();rids.forEach(r=>{const i=rec.idx[r];if(i!=null)s2[i]=str[i]+g[r];});
       const af=simTitle(PL2,s2,1200,11);return shareFromTitle(af.ch[me]-base.ch[me]);}
     return wpShare(redraftWP(d,pct||0));}
   if(ty===2){if(pct==null)return null;const wc=gp<2?.5:wpct>=.6?.78:wpct<=.35?.25:.5,wf=.6*wc*Math.min(1,rem/10);return wpShare(sigm(logit(pvTable(pct))+wf*RDZ.a*Math.tanh(d/RDZ.tau)));}
