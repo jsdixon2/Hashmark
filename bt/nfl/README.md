@@ -1,6 +1,6 @@
 # nflverse pull for Hashmark
 
-Built 2026-11-07 13:35 UTC for seasons 2016-2026. Source: nflverse (CC-BY 4.0; FTN charting data via nflverse, attribution required).
+Built 2026-11-07 15:22 UTC for seasons 2016-2026. Source: nflverse (CC-BY 4.0; FTN charting data via nflverse, attribution required).
 
 - players: 24867 rows
 - combine: 8968 rows
@@ -8,7 +8,7 @@ Built 2026-11-07 13:35 UTC for seasons 2016-2026. Source: nflverse (CC-BY 4.0; F
 - schedules: 3033 rows
 - ngs/2026: 1059 rows
 - ecr_players: 4998 rows
-- ecr/2026-11: 3790 rows
+- ecr/2026-11: 5411 rows
 - contracts: 18966 rows
 - pbp_team/2016: 534 rows
 - pbp_player/2016: 5264 rows
