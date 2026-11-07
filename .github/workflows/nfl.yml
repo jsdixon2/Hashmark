@@ -19,7 +19,7 @@ jobs:
       - run: python3 scripts/build_hv.py
       - run: |
           git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
-          git add bt/nfl bt/hv.json.gz
+          git add bt/nfl bt/hv.json.gz bt/idp/ecr.json
           git diff --staged --quiet && exit 0
           git commit -m "nflverse weekly pull"
           for i in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep 5; done

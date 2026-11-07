@@ -39,3 +39,15 @@ for s in keep:
 out = {"ids": idl, "d": keep, "t": T, "src": "FantasyPros consensus (ECR) history via DynastyProcess"}
 with gzip.open(f"{ROOT}/bt/hv.json.gz", "wt") as f: json.dump(out, f, separators=(",", ":"))
 print(len(keep), "dates", keep[0], "->", keep[-1], len(idl), "players", os.path.getsize(f"{ROOT}/bt/hv.json.gz"), "bytes")
+
+# current FantasyPros IDP ranks (dynasty + redraft, by position) for the app's IDP values
+last = files[-1] if files else None
+if last:
+    q = pd.read_csv(last, dtype={"id": str}); q = q[q.pos.isin(["DL", "LB", "DB"]) & q.ecr_type.isin(["dp", "rp"])]
+    if len(q):
+        q["sid"] = q.id.astype(str).str.replace(r"\.0$", "", regex=True).map(fp2s); q = q.dropna(subset=["sid"])
+        o = {"src": "FantasyPros consensus IDP ranks via DynastyProcess"}
+        for t in ("dp", "rp"):
+            x = q[q.ecr_type == t]; dt = x.scrape_date.max(); x = x[x.scrape_date == dt].sort_values("ecr")
+            o[t] = {"date": dt, **{p: x[x.pos == p].drop_duplicates("sid").sid.tolist()[:150] for p in ("DL", "LB", "DB")}}
+        os.makedirs(f"{ROOT}/bt/idp", exist_ok=True); json.dump(o, open(f"{ROOT}/bt/idp/ecr.json", "w"), separators=(",", ":")); print("idp ecr", {t: o[t]["date"] for t in ("dp", "rp")})

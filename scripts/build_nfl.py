@@ -183,7 +183,7 @@ def ecr():
         except Exception: continue
     if not b: LOG.append("ecr: unavailable"); return
     d = pd.read_parquet(io.BytesIO(b))
-    d = keep(d[d.pos.isin(["QB", "RB", "WR", "TE", "K", "DST"])], ["scrape_date", "ecr_type", "id", "pos", "team", "ecr", "sd", "best", "worst", "player_owned_avg"])
+    d = keep(d[d.pos.isin(["QB", "RB", "WR", "TE", "K", "DST", "DL", "LB", "DB"])], ["scrape_date", "ecr_type", "id", "pos", "team", "ecr", "sd", "best", "worst", "player_owned_avg"])
     ids = keep(pd.read_parquet(io.BytesIO(b)), ["id", "player", "sportsdata_id"]).drop_duplicates("id")
     save(ids, "ecr_players")
     d["m"] = pd.to_datetime(d.scrape_date, errors="coerce").dt.strftime("%Y-%m")
