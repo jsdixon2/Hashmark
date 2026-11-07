@@ -1588,7 +1588,7 @@ function vPrep(){const t=S.fmt.type||"",mode=S.pmode||"win",me=myTeam(),own=new 
   ${dev?`<section class="pan mt"><div class="row sp"><h2>Devy watch</h2><button class="btn ghost" data-go="devy">Full board</button></div><div class="list mt">${DEVY.slice(0,5).map((d,i)=>`<div class="pr"><b>${i+1}</b><div><div class="nm">${esc(d[0])}</div><div class="meta">${esc(d[1])} · ${esc(d[2])}</div></div></div>`).join("")}</div></section>`:""}
   ${kp?`<section class="pan mt"><h2>Likely to hit free agency</h2><p class="sub">Estimated keep chance from value rank; not a Sleeper figure.</p><div class="list mt">${fa.map(p=>prow(p,keep(p)+"% kept","est.")).join("")}</div></section>`:""}
   <section class="pan mt"><h2>Overall board</h2><div class="list mt">${ps.map((p,i)=>`<div class="pr" data-go="player-${p.id}"><b>${i+1}</b><div><div class="nm">${esc(p.name)}</div><div class="meta">${pos(p.pos)} ${esc(p.team)} · age ${p.age??"–"} · risk ${p.risk}${neutral(p)?` · ${f1(neutral(p).ppg)} neutral PPG`:""}</div></div><span class="pill ${p.brk>.5?"hot":""}">${pc(p.brk)} breakout</span></div>`).join("")}</div></section>${LEGAL}`;}
-function vLegal(){return `<h1>Legal and data</h1><section class="pan mt"><h2>Sleeper</h2><p>Hashmark is an independent, unofficial companion app. It is not made, endorsed or sponsored by Sleeper. League, roster, matchup, transaction and player data come from Sleeper’s public read-only API (docs.sleeper.com). Sleeper asks apps to stay under 1,000 calls a minute and to fetch the player database no more than once a day; Hashmark caches it for 24 hours on your device.</p><h2>Login</h2><p>Sleeper has no sign-in for third-party apps, so Hashmark only asks for your public username. Never enter your Sleeper password anywhere in this app. It cannot change lineups or make claims.</p><h2>Privacy</h2><p>Your username and cached data stay in your browser. There is no Hashmark server, analytics or ad tracking.</p><h2>Other data</h2><p>Snapshot stats, news links and devy boards are linked to their publishers and shown as summaries only. Check each source’s terms before adding feeds. Open options: nflverse (CC-BY 4.0) and CollegeFootballData (free key).</p></section>`;}
+function vLegal(){return `<h1>Legal and data</h1><section class="pan mt"><h2>Sleeper</h2><p>Hashmark is an independent, unofficial companion app. It is not made, endorsed or sponsored by Sleeper. League, roster, matchup, transaction and player data come from Sleeper’s public read-only API (docs.sleeper.com). Sleeper asks apps to stay under 1,000 calls a minute and to fetch the player database no more than once a day; Hashmark caches it for 24 hours on your device.</p><h2>Login</h2><p>Sleeper has no sign-in for third-party apps, so Hashmark only asks for your public username. Never enter your Sleeper password anywhere in this app. It cannot change lineups or make claims.</p><h2>Privacy</h2><p>Your username and cached data stay in your browser. There is no Hashmark server, analytics or ad tracking.</p><h2>Other data</h2><p>Snapshot stats, news links and devy boards are linked to their publishers and shown as summaries only. Check each source’s terms before adding feeds. Open options: nflverse (CC-BY 4.0) and CollegeFootballData (free key).</p><p class="mt">Hashmark’s models are fitted and tested on nflverse play-by-play, player and contract data (CC-BY 4.0, contracts from OverTheCap), FTN charting (CC-BY-SA 4.0), ffopportunity expected points, DynastyProcess value history and FantasyPros consensus rank history (via DynastyProcess), sportsbook player props, and anonymous public Sleeper leagues (league IDs hashed; no names stored). Day-one grades on past trades use the FantasyPros consensus ranks from the week of the deal.</p></section>`;}
 document.addEventListener("pointerdown",e=>{if(e.target.closest("button,.tap,.pr,[data-go]")&&navigator.vibrate)navigator.vibrate(6);},{passive:true});
 document.addEventListener("click",e=>{const w=e.target.closest("[data-wtab]");if(w){S.wtab=w.dataset.wtab;render();}const m=e.target.closest("[data-pmode]");if(m){S.pmode=m.dataset.pmode;render();}});
 loadNV();
@@ -2306,7 +2306,7 @@ async function hxLoad(force){if(HX.st==="loading")return;if(HX.st==="ready"&&!fo
     const lgs=[];lists.forEach(a=>(a||[]).forEach(l=>{if(l&&l.status!=="pre_draft"&&(l.sport||"nfl")==="nfl")lgs.push(l);}));
     HX.tot+=lgs.length;const seasons=await poolRun(lgs.map(l=>()=>loadLeagueSeason(l)),3);
     const played=x=>x&&(x.weeks||[]).some(wk=>(wk||[]).some(m=>m.pts>0));HX.skipped=seasons.filter(x=>x&&!played(x)).length;
-    HX.data=analyze(uid,seasons.filter(played));HX.key=hxKey();HX.st="ready";}
+    try{await loadHV();}catch(e){}HX.data=analyze(uid,seasons.filter(played));HX.key=hxKey();HX.st="ready";}
   catch(e){console.error(e);HX.err=e.message||"Couldn’t read your history.";HX.st="error";}
   rerenderStats();}
 const hxKey=()=>S.mode+"|"+(S.uid||"demo")+"|"+S.season+"|"+S.week;
@@ -2417,7 +2417,7 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
       const st=sh(inST+Math.max(0,kST),outST+Math.max(0,-kST)),rz=sh(inRZ,outRZ);
       // value drift: cumulative net production by week since trade (this season)
       const drift=[];let cum=0;for(let w=t.wk;w<=x.weeks.length;w++){for(const p of sd.recP)cum+=(x.PP[p]||{})[w]||0;for(const p of sd.gaveP)cum-=(x.PP[p]||{})[w]||0;drift.push(+cum.toFixed(1));}
-      TR.push({id:t.id,lg:x.name,chain:x.chain,season:x.season,wk:t.wk,ts:t.ts,u:sd.u,partner:op.map(o=>x.uname[o.u]||"").join(", "),rec:sd.recP.map(hxName),gave:sd.gaveP.map(hxName),recK:sd.recK.map((k,i)=>({...k,real:kin[i]})),gaveK:sd.gaveK.map((k,i)=>({...k,real:kout[i]})),fb:sd.fb,st,rz,net:inRZ-outRZ,stNet:inST-outST,drift,type:x.type,inRZ,outRZ,ord:t.ts||(x.season*1e6+t.wk)});
+      TR.push({id:t.id,lg:x.name,chain:x.chain,season:x.season,wk:t.wk,ts:t.ts,u:sd.u,partner:op.map(o=>x.uname[o.u]||"").join(", "),rec:sd.recP.map(hxName),gave:sd.gaveP.map(hxName),recK:sd.recK.map((k,i)=>({...k,real:kin[i]})),gaveK:sd.gaveK.map((k,i)=>({...k,real:kout[i]})),fb:sd.fb,st:(typeof hvDay1==="function"?hvDay1(x,t,sd):null)??st,st4:st,rz,net:inRZ-outRZ,stNet:inST-outST,drift,type:x.type,inRZ,outRZ,ord:t.ts||(x.season*1e6+t.wk)});
       mgr(sd.u).trades.push(TR[TR.length-1]);}}}
   // picks flipped before their draft: the realized value is what the pick was traded for
   {const kk=k=>k.season+"-"+k.round+"-"+k.orig;const byU=new Map();for(const t of TR){const a=byU.get(t.chain+"|"+t.u)||[];a.push(t);byU.set(t.chain+"|"+t.u,a);}
@@ -2583,7 +2583,7 @@ function vStats(){const D=HX.data;
    ${tr.length?`<div class="hxk">${KP(tr.length,"Trades")}${KP(stG,"Day-one grade","first 4 weeks")}${KP(rzG,"Realized grade","to date, repriced weekly")}${KP(m0.d.wine,"Aged like wine","lost early, won late")}</div>
    <div class="trl mt">${lst(tr.map(t=>{const a=GR(t.st),b=GR(t.rz),tag=t.st<.46&&t.rz>.56?"Aged like wine":t.st>.56&&t.rz<.44?"Spoiled milk":t.rz>=.7?"Fleece":t.rz<.36?"Got fleeced":"";
      return `<div class="tri"><div class="row sp"><span class="sub ell">${t.season} · ${esc(t.lg)} · with ${esc(t.partner)}</span>${tag?`<span class="pill">${tag}</span>`:""}</div><div class="trg"><span class="grd ${grCls(a)}">${a}</span><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span class="grd ${grCls(b)}">${b}</span><span class="trt"><b>Got</b> ${t.rec.map(esc).concat(t.recK.map(k=>pkLab(k,t))).join(", ")||"nothing"}${t.fb>0?` +$${t.fb}`:""}<br><span class="sub"><b>Gave</b> ${t.gave.map(esc).concat(t.gaveK.map(k=>pkLab(k,t))).join(", ")||"nothing"}${t.fb<0?` +$${-t.fb}`:""}</span></span>${spark(t.drift.length>1?t.drift:[0,0],70,26)}</div></div>`;}),12,"")}</div>
-   <p class="sub mt">Day-one grade uses the first four weeks after the deal. Realized grade adds everything since, in this league’s scoring, plus today’s projection for players still producing; picks are priced by round until they’re made, then by the player drafted. Sparkline: net points gained since the trade.</p>`:`<p class="sub">No trades on record. The Trade Lab can fix that.</p>`}</section>
+   <p class="sub mt">Day-one grade is Hashmark’s odds on the day of the deal, from that week’s consensus values (FantasyPros via DynastyProcess) with the calculator’s consolidation and pick math; deals before 2020 use the first four weeks. Realized grade adds everything since, in this league’s scoring, plus today’s projection for players still producing; picks are priced by round until they’re made, then by the player drafted. Sparkline: net points gained since the trade.</p>`:`<p class="sub">No trades on record. The Trade Lab can fix that.</p>`}</section>
   <section class="pan mt"><div class="row sp"><h2>Waiver wire report</h2><span class="tag">${m.adds.length} adds</span></div>
    ${m.adds.length?`<div class="hxk">${KP(pcx(hit),"Hit rate","started 3+ weeks")}${KP(brk.length,"Pre-breakout finds","added before they popped")}${KP(Math.round(m.adds.reduce((s,a)=>s+a.started,0)),"Points started","from pickups")}${KP(m0.d.adN&&m0.faab?"$"+m0.faab:"–","FAAB spent",m0.faab?f1(m.adds.reduce((s,a)=>s+a.started,0)/Math.max(1,m0.faab))+" pts per $":"")}</div>
    ${chScatter(m.adds.filter(a=>a.before||a.after).slice(0,120).map(a=>({x:a.before,y:a.after,r:a.stW>=3?5:3,c:a.brk?"sd hi":"sd",t:`${a.name}: ${a.before} → ${a.after} ppg`})),{xl:"PPG before you added him",yl:"PPG after"})}
@@ -3374,9 +3374,9 @@ function vFinder(){const fd=finder(),L=S.L,mi=mineIdx(L);
 
 /* ----- calculator ----- */
 function calcInit(){const L=S.L;if(!S.calc||S.calc.lid!==L.id){const mi=mineIdx(L);S.calc={lid:L.id,sides:[mi,null],assets:[]};}return S.calc;}
-const pickVal=(L,y,r,orig)=>{if(S.fmt.type==="redraft")return 0;const base={1:5200,2:2100,3:900,4:420}[r]||200;let f=Math.pow(.92,Math.max(0,y-(+S.season+1)));
-  if(y===+S.season+1){try{const o=oddsFor(L),n=L.teams.length,ti=L.teams.findIndex(t=>t.id==orig);const rk=L.teams.map((_,i)=>i).sort((a,b)=>o[b].str-o[a].str).indexOf(ti);f*=rk>=n*2/3?.8:rk<n/3?1.25:1;}catch(e){}}
-  return Math.round(base*f*(S.fmt.type==="keeper"?.6:1)*(S.fmt.qb==="sf"?1.08:1));};
+const pickVal=(L,y,r,orig)=>{if(S.fmt.type==="redraft")return 0;const m=S.fmt.qb==="sf"?"sf":"1q";let base=PKB[m][r]||200,f=Math.pow(.93,Math.max(0,y-(+S.season+1)));
+  if(y<=+S.season+1){try{const o=oddsFor(L),n=L.teams.length,ti=L.teams.findIndex(t=>t.id==orig);const rk=L.teams.map((_,i)=>i).sort((a,b)=>(o[a].po-o[b].po)||(o[a].str-o[b].str)).indexOf(ti);const slot=rk<n/3?0:rk>=n*2/3?2:1;if(r===1)base=PKSLOT[m][slot];else f*=slot===0?1.08:slot===2?.93:1;}catch(e){}}
+  return Math.round(base*f*(S.fmt.type==="keeper"?.6:1));};
 function assetVal(a,L,to){if(a.k==="k"){const v=pickVal(L,a.y,a.r,a.orig);if(to==null)return v;const st=leagueCtx(L)[to].ts.st;return Math.round(v*(st==="rebuilding"?1.15:st==="contender"?.85:1));}
   const p=PL[a.id];if(!p)return 0;return to==null?p.val:implied(L,to,p,false);}
 const assetName=(a,L)=>a.k==="k"?`${a.y} Round ${a.r}${a.orig!=L.teams[a.from].id?` (${(L.teams.find(t=>t.id==a.orig)||{}).name||"other"})`:""}`:(PL[a.id]||{}).name||"Player";
@@ -3400,7 +3400,7 @@ function vCalc(){const L=S.L,K=calcInit(),R=calcEval(),multi=K.sides.filter(x=>x
     return `<div class="cside"><div class="row sp"><button class="cth" data-cteam="${i}"><b class="ell">${esc(t.name)}${t.mine?" (you)":""}</b><span class="sub">${recOf(t)} · ${statusLbl(c)} ▾</span></button>${i>1?`<button class="x" data-crmteam="${i}" aria-label="Remove team">×</button>`:""}</div>
     <div class="eyebrow mt">Sends</div>${out.map(a=>{const ix=K.assets.indexOf(a);return `<div class="crow"><span class="ell">${a.k==="p"?pos(PL[a.id].pos)+" ":""}<b>${esc(assetName(a,L))}</b></span><span class="sub num">${f0(assetVal(a,L,null))}</span>${multi?`<button class="cdest" data-cdest="${ix}">→ ${esc(tshort(L.teams[a.to]))}</button>`:""}<button class="x" data-crm="${ix}" aria-label="Remove">×</button></div>`;}).join("")||`<p class="sub">Nothing yet.</p>`}
     <button class="btn ghost sm" data-cadd="${ti}">+ Add player${S.fmt.type!=="redraft"?" or pick":""}</button></div>`;};
-  const res=R?`<section class="pan mt"><div class="row sp"><h2>Result</h2><span class="tag">Grades ${info("grade")}</span></div><div class="cres">${R.map(r=>`<div class="cgr"><div class="grd g${r.g[0]}">${r.g}</div><div style="min-width:0"><b class="ell">${esc(r.t.name)}</b><div class="sub">${r.pct>=.02?`Wins by ${f0(Math.round(r.net))} (${Math.round(r.pct*100)}%)`:r.pct>-.02?"Fair, within 2%":`Loses ${f0(Math.round(-r.net))} (${Math.round(-r.pct*100)}%)`}</div><div class="sub num">Gets ${f0(Math.round(r.mIn))} · sends ${f0(Math.round(r.mOut))} market</div></div></div>`).join("")}</div>
+  const res=R?`<section class="pan mt"><div class="row sp"><h2>Result</h2><span class="tag">Grades ${info("grade")}</span></div><div class="cres">${R.map(r=>`<div class="cgr"><div class="grd g${r.g[0]}">${r.g}</div><div style="min-width:0"><b class="ell">${esc(r.t.name)}</b><div class="sub">${r.pct>=.03?`Wins by ${f0(Math.round(r.net))} (${Math.round(r.pct*100)}%)`:r.pct>-.03?"Even, within 3%":`Loses ${f0(Math.round(-r.net))} (${Math.round(-r.pct*100)}%)`}</div><div class="sub">Comes out ahead ${Math.round((r.wp??.5)*100)}% of the time</div><div class="sub num">Gets ${f0(Math.round(r.mIn))} · sends ${f0(Math.round(r.mOut))} market</div></div></div>`).join("")}</div>
     <div class="eyebrow mt">What changes ${info("cons")}</div><ul class="why">${calcInsights(R).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
     <p class="sub">Grades use value to each team ${info("impl")}: their lineup now${S.fmt.type!=="redraft"?" plus the next three seasons":""}, after the consolidation adjustment.</p></section>`:`<p class="sub mt">Add players to both sides to grade the trade.</p>`;
   return `<div class="cgrid">${K.sides.map(side).join("")}</div><div class="row mt" style="gap:8px">${K.sides.length<4?`<button class="btn ghost sm" data-caddteam>+ Add team</button>`:""}${K.assets.length?`<button class="btn ghost sm" data-cclear>Clear</button>`:""}</div>${res}`;}
@@ -4624,6 +4624,89 @@ blendFor=function(p,set,modelRank){const parts=[];const anyMk=set.some(([k])=>k!
 /* rookie picks: halfway between market pricing and what picks at that slot have produced (2012–23 classes) */
 const PKV2={"1q":{"pk-27-1e":4401,"pk-27-1m":3772,"pk-27-1l":3274,"pk-27-2":2025,"pk-27-3":951,"pk-28-1":3517,"pk-28-2":1731},sf:{"pk-27-1e":5060,"pk-27-1m":3722,"pk-27-1l":3271,"pk-27-2":1990,"pk-27-3":931,"pk-28-1":3688,"pk-28-2":1702}};
 valueEngine=(function(prev){return function(){const r=prev();try{const T=PKV2[S.fmt.qb==="sf"?"sf":"1q"];if(S.fmt.type==="dynasty")for(const id in T)PKV[id]=T[id];}catch(e){}return r;};})(valueEngine);
+
+/* ===== v50: trade engine — fitted on 7,656 real Sleeper trades (2021–24) against which side actually came out ahead
+   (points above replacement over the following seasons; picks by what that round has produced).
+   consolidation: side value = (Σ .75^i · v_i^1.3)^(1/1.3), best asset first  — studs win trades
+   win odds:      P = .5 + .21·tanh(gap/.25)  (gap = value difference / larger side)
+   picks:         engine-3 values on the new scale, 3rd+ round ×1.5, slot from projected finish (was inverted) */
+const TC={d:.75,g:1.3};
+function effV(vs){const v=vs.filter(x=>x>0).sort((a,b)=>b-a);let s=0;for(let i=0;i<v.length;i++)s+=Math.pow(TC.d,i)*Math.pow(v[i],TC.g);return s>0?Math.pow(s,1/TC.g):0;}
+const tradeWP=pct=>.5+.21*Math.tanh(pct/.25);
+const wpShare=wp=>Math.max(0,Math.min(1,.5+(wp-.5)*1.25));
+const tradeGrade=wp=>wp>=.66?"A+":wp>=.61?"A":wp>=.545?"B+":wp>.455?"B":wp>.4?"C":wp>.345?"D":"F";
+/* market-only value: what the other manager sees on the sites he uses */
+function mktVal(p){if(!p)return 0;const s=p.vsrc;if(S.fmt.type==="redraft"||!s||!s.parts)return p.val;const m=s.parts.filter(x=>x.k!=="model"&&!x.rd);if(!m.length)return p.val;
+  const w=m.reduce((a,x)=>a+x.w,0)||1,v=m.reduce((a,x)=>a+x.v*x.w,0)/w;return S.fmt.type==="keeper"?.5*v+.5*(p.vS||p.val):v;}
+/* contenders see a 3-season window (1st/2nd-round picks worth ~25% less to them), rebuilders a longer one */
+assetVal=function(a,L,to){if(a.k==="k"){const v=pickVal(L,a.y,a.r,a.orig);if(to==null||a.r>2)return v;const st=leagueCtx(L)[to].ts.st;return Math.round(v*(st==="rebuilding"?1.1:st==="contender"?.75:1));}
+  const p=PL[a.id];if(!p)return 0;return to==null?p.val:implied(L,to,p,false);};
+calcEval=function(){const L=S.L,K=S.calc,sides=K.sides.filter(x=>x!=null);if(sides.length<2||!K.assets.length)return null;
+  return sides.map(ti=>{const inA=K.assets.filter(a=>a.to===ti),outA=K.assets.filter(a=>a.from===ti);const inV=inA.map(a=>assetVal(a,L,ti)),outV=outA.map(a=>{if(a.k==="k")return assetVal(a,L,ti);const p=PL[a.id];return p?implied(L,ti,p,true):0;});
+    const mIn=inA.reduce((s,a)=>s+assetVal(a,L,null),0),mOut=outA.reduce((s,a)=>s+assetVal(a,L,null),0);const eIn=effV(inV),eOut=effV(outV),raw=inV.reduce((s,v)=>s+v,0)-outV.reduce((s,v)=>s+v,0);
+    const net=eIn-eOut,pct=net/Math.max(1,eIn,eOut),wp=tradeWP(pct),g=tradeGrade(wp);
+    const t=L.teams[ti],ids=t.players.filter(id=>!outA.some(a=>a.k==="p"&&a.id===id)).concat(inA.filter(a=>a.k==="p").map(a=>a.id));const d=lpts(ids,L)-lpts(t.players,L);
+    return {ti,t,inA,outA,mIn,mOut,eIn,eOut,net,pct,wp,g,cons:Math.round(net-raw),lu:d};});};
+Object.assign(DEFS,{grade:["Trade grade","A+ to F for each side from how often trades like it actually come out ahead, measured on 7,656 real Sleeper trades. A+ ≈ wins 66%+ of the time, A ≈ 61%, B+ ≈ 55%, B is even, and the C–F grades mirror them. Even a big value edge loses sometimes; injuries and breakouts happen."],
+  cons:["Consolidation adjustment","The best player in a deal carries a premium: in real trades the side that got the best piece won far more often than raw totals said. Pieces count in order of value, each one about 25% less than the one before, with stars weighted up, so three quarters are worth well under a dollar."]});
+/* finder: deals the market calls fair to the other manager (they give up 15% or less) where Hashmark has you ahead by 10%+.
+   In 2023–24 real trades, deals that fit this rule came out ahead 66% of the time (846 cases). */
+finder=function(){const L=S.L;if(!L||L.rip)return [];const key=(L._ctx&&L._ctx.k)+"|fd3"+S.asTi;if(L._fd&&L._fd.k===key)return L._fd.v;
+  const C=leagueCtx(L),mi=mineIdx(L),me=C[mi],rd=S.fmt.type==="redraft",ny=+S.season+1;
+  const okP=p=>p&&POSI.hasOwnProperty(p.pos)&&p.val>=250&&!(lostSeason(p)&&S.fmt.type!=="dynasty");
+  const P=id=>({k:"p",id,p:PL[id]});
+  const picksFor=ti=>{if(rd)return [];const pk=picksOf(L,ti);if(!pk)return [];const t=L.teams[ti];return pk.own.filter(o=>o.y<=ny+1&&o.r<=3).map(o=>{const orig=o.from?((L.teams.find(x=>x.name===o.from)||t).id):t.id;return {k:"k",id:`${o.y}-${o.r}-${orig}`,y:o.y,r:o.r,orig};}).slice(0,5);};
+  const M=a=>a.k==="k"?pickVal(L,a.y,a.r,a.orig):mktVal(a.p),H=a=>a.k==="k"?pickVal(L,a.y,a.r,a.orig):a.p.val;
+  const V=(ti,a,inc)=>a.k==="k"?assetVal(a,L,ti):implied(L,ti,a.p,!inc);
+  const mine=me.t.players.map(id=>PL[id]).filter(okP).sort((a,b)=>b.val-a.val).slice(0,14).map(p=>P(p.id)),myPk=picksFor(mi);
+  const out=[];
+  for(const c of C){if(c.ti===mi)continue;const theirs=c.t.players.map(id=>PL[id]).filter(okP).sort((a,b)=>b.val-a.val).slice(0,14).map(p=>P(p.id)),thPk=picksFor(c.ti);const found=[];
+    const ev=(send,get,type)=>{const hIn=effV(get.map(H)),hOut=effV(send.map(H)),pct=(hIn-hOut)/Math.max(1,hIn,hOut);if(pct<.1)return;
+      const mIn=effV(get.map(M)),mOut=effV(send.map(M)),mg=(mOut-mIn)/Math.max(1,mIn,mOut);if(mg<-.15)return;
+      const gMe=effV(get.map(a=>V(mi,a,true)))-effV(send.map(a=>V(mi,a,false)));if(gMe<=0)return;
+      const gThem=effV(send.map(a=>V(c.ti,a,true)))-effV(get.map(a=>V(c.ti,a,false))),wp=tradeWP(pct);
+      found.push({c,send,get,gMe,gThem,type,mIn,mOut,mg,pct,wp,sc:wp+(gThem>0?.04:0)+Math.min(0,mg)*.25});};
+    for(const q of mine)for(const p of theirs)ev([q],[p],"1for1");
+    for(let i=0;i<mine.length;i++)for(let j=i+1;j<Math.min(mine.length,12);j++)for(const p of theirs){if(p.p.val<=Math.max(mine[i].p.val,mine[j].p.val))continue;ev([mine[i],mine[j]],[p],"2for1");}
+    for(const q of mine)for(let i=0;i<theirs.length;i++)for(let j=i+1;j<Math.min(theirs.length,12);j++){if(q.p.val<=Math.max(theirs[i].p.val,theirs[j].p.val))continue;ev([q],[theirs[i],theirs[j]],"1for2");}
+    for(const q of mine)for(const k of myPk)for(const p of theirs){if(p.p.val<=q.p.val)continue;ev([q,k],[p],"picks");}
+    for(const q of mine)for(const p of theirs)for(const k of thPk){if(q.p.val<=p.p.val)continue;ev([q],[p,k],"picks");}
+    for(const k of myPk)for(const p of theirs)ev([k],[p],"picks");
+    for(const q of mine)for(const k of thPk)ev([q],[k],"picks");
+    const byT={};found.sort((a,b)=>b.sc-a.sc).forEach(x=>{(byT[x.type]=byT[x.type]||[]).push(x);});
+    const used=new Set();for(const t of Object.keys(byT)){let n=0;for(const x of byT[t]){const sig=x.send.concat(x.get).map(a=>a.id).sort().join(",");if(used.has(sig))continue;const uses=[...x.send,...x.get].filter(a=>a.k==="p").map(a=>a.id);if(out.filter(o=>o.c===c&&uses.some(u=>[...o.send,...o.get].some(a=>a.id===u))).length>=2)continue;used.add(sig);out.push(x);if(++n>=3)break;}}}
+  out.sort((a,b)=>b.sc-a.sc);out.forEach(x=>x.title=`${x.send.map(a=>a.k==="p"?a.p.name:`${a.y} ${ordn(a.r)}`).join(" + ")} for ${x.get.map(a=>a.k==="p"?a.p.name:`${a.y} ${ordn(a.r)}`).join(" + ")}`);
+  L._fd={k:key,v:out};return out;};
+vFinder=function(){const L=S.L,mi=mineIdx(L),all=finder();const t=S.fdT||"all";let xs;if(t==="all"){const q={};all.forEach(x=>(q[x.type]=q[x.type]||[]).push(x));xs=[];const ks=Object.keys(q);for(let i=0;xs.length<all.length;i++)for(const k of ks)if(q[k][i])xs.push(q[k][i]);}else xs=all.filter(x=>x.type===t);
+  const off=xs.length?((S.fdOff||0)%xs.length):0;xs=xs.slice(off).concat(xs.slice(0,off));
+  const cnt=k=>k==="all"?all.length:all.filter(x=>x.type===k).length;
+  const an=(a,ti)=>a.k==="p"?`<button class="flnk" data-go="player-${a.id}">${pos(a.p.pos)} <span class="ell">${esc(a.p.name)}</span></button><span class="sub num">${f0(a.p.val)}</span>`:`<div class="flnk"><span class="pk${a.r==1?" r1":""}">R${a.r}</span> <span>${a.y} Round ${a.r}${a.orig!=L.teams[ti].id?` <span class="sub">(${esc((L.teams.find(t=>t.id==a.orig)||{}).name||"")})</span>`:""}</span></div><span class="sub num">${f0(pickVal(L,a.y,a.r,a.orig))}</span>`;
+  const enc=(a,f,to)=>[a.k==="k"?"k:"+a.id:a.id,f,to];
+  const card=x=>`<div class="scard"><div class="row sp"><b class="ell">${esc(x.c.t.name)}</b><span class="tag">${fdLbl[x.type]}</span></div>
+    <div class="fx"><div><span class="eyebrow">You send</span>${x.send.map(a=>`<div class="fxa">${an(a,mi)}</div>`).join("")}</div><div><span class="eyebrow">You get</span>${x.get.map(a=>`<div class="fxa">${an(a,x.c.ti)}</div>`).join("")}</div></div>
+    <p class="sub">Hashmark: you come out ahead <b class="good">${Math.round(x.wp*100)}%</b> of the time (+${Math.round(x.pct*100)}% in value). Market: ${x.mg>=.03?`${esc(x.c.t.name)} gains ${Math.round(x.mg*100)}%`:x.mg>-.03?`even for ${esc(x.c.t.name)}`:`${esc(x.c.t.name)} gives up ${Math.round(-x.mg*100)}%`}${x.gThem>0?", and it fills a need for them":""} (${recOf(x.c.t)}, ${statusLbl(x.c).toLowerCase()}).</p>
+    <button class="btn ghost sm" data-build='${esc(JSON.stringify({a:x.send.map(a=>enc(a,mi,x.c.ti)),b:x.get.map(a=>enc(a,x.c.ti,mi))}))}' data-bt="${x.c.ti}">Open in calculator</button></div>`;
+  return `<p class="sub">Deals the market calls fair to the other manager (they give up 15% or less) where Hashmark has you ahead by 10% or more. In 2023–24 real Sleeper dynasty and keeper trades, deals that fit this rule came out ahead 66% of the time. Includes consolidation (2-for-1), depth (1-for-2)${S.fmt.type!=="redraft"?" and draft-pick":""} deals.</p>
+  <div class="seg sm mt">${FDT.filter(([k])=>k==="all"||cnt(k)).map(([k,n])=>`<button data-fdt="${k}" class="${t===k?"on":""}">${n} <span class="sub">${cnt(k)}</span></button>`).join("")}</div>
+  <div class="mt">${lst(xs.map(card),6,"No edge trades of this kind right now. Try another filter or Trade partners.")}</div>
+  ${xs.length>6?`<button class="btn ghost seemore" data-fdref>Show different ideas</button>`:""}`;};
+/* pick values on the engine-3 scale; next year's 1st priced by projected finish (weak team = early pick). The old code had this backwards. */
+const PKB={"1q":{1:3772,2:2025,3:1427,4:630,5:300},sf:{1:3722,2:1990,3:1397,4:615,5:300}},PKSLOT={"1q":[4401,3772,3274],sf:[5060,3722,3271]};
+/* day-one grades for past trades: consensus values on the day of the deal (FantasyPros ECR history via DynastyProcess) */
+let HV=null,HVP=null;
+async function loadHV(){if(HV||HVP)return HVP;HVP=(async()=>{try{if(typeof DecompressionStream==="undefined")return null;const r=await fetch("bt/hv.json.gz",{cache:"force-cache"});if(!r.ok)return null;const buf=new Uint8Array(await r.arrayBuffer());
+  const txt=buf[0]===0x1f&&buf[1]===0x8b?await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"))).text():new TextDecoder().decode(buf);const j=JSON.parse(txt);
+  if(j&&j.d&&j.t){j.ms=j.d.map(d=>Date.parse(d+"T12:00:00Z"));j.rk={};HV=j;}}catch(e){HV=null;}return HV;})();return HVP;}
+function hvRank(type,di,pid){const k=type+di;let m=HV.rk[k];if(!m){m=new Map();(HV.t[type][di]||[]).forEach((ix,i)=>m.set(HV.ids[ix],i+1));HV.rk[k]=m;}return m.get(String(pid));}
+const curveA=(A,rank)=>{if(rank<=1)return A[0][1];for(let i=1;i<A.length;i++){const [r1,v1]=A[i-1],[r2,v2]=A[i];if(rank<=r2){const t=(Math.log(rank)-Math.log(r1))/(Math.log(r2)-Math.log(r1));return Math.exp(Math.log(v1)+t*(Math.log(v2)-Math.log(v1)));}}return 5;};
+function hvDay1(x,t,sd){try{if(!HV)return null;const ts=t.ts||(Date.parse(`${x.season}-09-04T12:00:00Z`)+Math.max(0,(t.wk||1)-1)*6048e5);if(ts<HV.ms[0])return null;
+  let di=0;for(let i=0;i<HV.ms.length;i++)if(HV.ms[i]<=ts)di=i;else break;
+  const sf=(x.rpos||[]).filter(p=>p==="QB"||p==="SUPER_FLEX").length>=2,ty=+x.type||0,A=sf?VANS:VAN1;
+  const val=pid=>{const r=hvRank(sf?"rsf":"ro",di,pid),d=hvRank(sf?"dsf":"do",di,pid);const vr=curveA(A,r||400),vd=curveA(A,d||400);
+    return ty===0?vr:ty===1?.5*(.7*vd+.3*vr)+.5*vr:(sf?.75*vd+.25*vr:.7*vd+.3*vr);};
+  const pv=k=>ty===0?0:(PKB[sf?"sf":"1q"][Math.min(5,+k.round||5)]||200)*Math.pow(.93,Math.max(0,(+k.season||0)-(+x.season+1)))*(ty===1?.6:1);
+  const vin=sd.recP.map(val).concat(sd.recK.map(pv)),vout=sd.gaveP.map(val).concat(sd.gaveK.map(pv));const a=effV(vin),b=effV(vout);if(a+b<60)return null;
+  return wpShare(tradeWP((a-b)/Math.max(1,a,b)));}catch(e){return null;}}
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
