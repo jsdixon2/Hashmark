@@ -40,8 +40,8 @@ def main():
                 names[str(m.get("marketId"))] = m.get("marketName")
         out["n_markets"] = len(names)
         out["prop_market_names"] = sorted({n for n in names.values() if n and "Player" in n})[:80]
-        windows = {"2022": ("2022-10-02", "2022-10-11"), "2023": ("2023-10-01", "2023-10-10"), "2024": ("2024-10-06", "2024-10-15"),
-                   "2025": ("2025-10-05", "2025-10-14"), "2026": ("2026-10-04", "2026-10-13")}
+        windows = {"2025-wk14": ("2025-12-07", "2025-12-09"), "2025-wk18": ("2026-01-04", "2026-01-06"), "2026-wk1": ("2026-09-10", "2026-09-15"),
+                   "2026-wk2": ("2026-09-17", "2026-09-22"), "2026-wk3": ("2026-09-24", "2026-09-29"), "2026-wk9": ("2026-11-01", "2026-11-03")}
         for season, (a, b) in windows.items():
             time.sleep(1.5)
             st, fx = call("fixtures", sportId=14, tournamentId=31, **{"from": a, "to": b})
