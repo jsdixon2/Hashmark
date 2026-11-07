@@ -3168,7 +3168,7 @@ document.addEventListener("click",e=>{if(e.target.closest("[data-palclose]"))clo
 /* ===== v25: market value engine, status accuracy, Trade Lab rebuild, GM tabs, labels ===== */
 /* ---------- definitions shown behind every ⓘ ---------- */
 const DEFS={
-  mv:["Market value","What the trade market pays for this player, on a 0–10,000 scale where higher is better. #1 overall ≈ 10,000, #12 ≈ 7,000, #50 ≈ 4,000, #150 ≈ 1,500, and every NFL-rostered player is worth at least 200. It blends Dynasty Dealer and FantasyCalc (values from real trades), DynastyProcess, FantasyPros expert ranks and our own projection model, adjusted to this league’s format."],
+  mv:["Market value","Hashmark’s value for this player on a 0–10,000 scale, built to predict what he will actually produce. #1 overall = 10,000, #12 ≈ 7,700, #50 ≈ 3,800, #100 ≈ 1,700, #150 ≈ 800: each step matches the points above replacement that players at that rank have produced over the next two seasons, so two values add up honestly in a trade. In dynasty it blends the dynasty market (Dynasty Dealer and FantasyCalc from real trades, DynastyProcess, RosterAudit, FantasyPros) at 60%, this-season consensus at 25% and Hashmark’s production model (usage, measured aging) at 15%; superflex 60/20/20. In tests on 2023–24 that blend picked the better player in close trades 62–63% of the time, against 52–55% for the market alone."],
   yv:["Value to you","Market value adjusted for your roster. A player who would start for you and fill a thin spot is worth more to you than the market says; a player stuck on your bench is worth less. Range: half to 1.6× market."],
   conf:["Confidence","How much the value could move. High: sources agree, healthy, secure role. Medium: one open question. Low: sources disagree, an injury with no clear timeline, or an unproven role."],
   risk:["Risk","0–100, lower is safer. Combines injury history, age, role security, scoring volatility and team situation, ranked against every fantasy-relevant player at the position."],
@@ -3263,11 +3263,11 @@ function valueEngine(){const ps=Object.values(PL).filter(p=>POSI.hasOwnProperty(
   const today=new Date().toISOString().slice(0,10);let st=ty==="redraft"?null:vemaLoad();if(st&&st.d!==today)st={d:today,base:st.cur||{},cur:{}};if(!st&&ty!=="redraft")st={d:today,base:{},cur:{}};
   for(const p of ps){const L=has?blendFor(p,dyn,p._mr):null,R=has?blendFor(p,ros,p._rr):null;
     let vl=L?L.v:curve(p._mr),vs=R?R.v:curve(p._rr);const ic=injClass(p);p.ic=ic;
-    if(ic&&ic.c!=="min"){vl*=1-(1-ic.long)*.35;}
+    {const st=String(p.inj||"");if(/\bout\b|\bir\b|doubt|\bpup\b|\bsus/i.test(st))vl*=.87;else if(/quest/i.test(st))vl*=.9;if(ic&&ic.c==="unc")vl*=.9;}
     if(ic&&(ic.c==="min"||ic.c==="maj")&&p.inj&&ABS.test(p.inj))vs*=ic.c==="maj"?.35:.8;
-    let v=ty==="dynasty"?vl*.85+vs*.15:ty==="keeper"?vl*.5+vs*.5:vs;
+    let v=ty==="dynasty"?vl:ty==="keeper"?vl*.5+vs*.5:vs;
     const rank=ty==="redraft"?p._rr:(L&&L.parts.length?Math.round(L.parts.reduce((s,x)=>s+x.r*x.w,0)/L.parts.reduce((s,x)=>s+x.w,0)):p._mr);
-    v*=fmtMult(p,rank);if(p.team&&p.team!=="FA")v=Math.max(200,v);
+    v*=fmtMult(p,rank);if(p.team&&p.team!=="FA")v=Math.max(60,v);
     const cause=ty==="redraft"?null:drasticCause(p);p.vcause=cause;
     if(st){const b=st.base[p.id];if(b&&!cause&&Math.abs(v-b)/b>.03)v=b*.5+v*.5;st.cur[p.id]=Math.round(v);}
     p.val=Math.round(v);p.vS=Math.round(vs*fmtMult(p,rank));p.vL=Math.round(vl*fmtMult(p,rank));p.vsrc=L;p.vsrcR=R;
@@ -4588,6 +4588,42 @@ teamWeek=(function(prev){return function(L,ti,ls){const r=prev(L,ti,ls);try{let 
   if(ls&&ls.starters&&L.allSlots)L.allSlots.forEach((s,k)=>{if(KDEF[s]){const id=ls.starters[k];if(id&&id!=="0")kd+=kdPts(L,id,ls);}});
   const rows=r.rows.filter(x=>x.p),left=rows.length?rows.filter(x=>!(gameOf(x.p)||{}).final).length/rows.length:1,cal=lgCal(L)*left;
   r.kd=kd;r.cal=cal;r.proj=r.proj+kd+cal;}catch(e){}return r;};})(teamWeek);
+
+/* ===== v49: value engine — fitted on 2020–24 dynasty markets vs what players produced (points above replacement, next 2–4 seasons) =====
+   dynasty value = 60% dynasty market + 15% Hashmark production model + 25% redraft consensus (superflex: 60 / 20 / 20)
+   value curve   = what each consensus rank actually produced, so 2-for-1 math adds up
+   age curves    = measured year-over-year change, 2012–2025 */
+AGE.QB=[[22,.87],[23,.95],[24,.98],[25,.97],[32,.97],[33,.93],[34,.9],[35,.85],[36,.78],[37,.7],[38,.6],[39,.5],[40,.4]];
+AGE.RB=[[21,.82],[22,.88],[23,.96],[24,1],[25,.96],[26,.92],[27,.85],[28,.77],[29,.69],[30,.54],[31,.46],[32,.38],[33,.3]];
+AGE.WR=[[21,.73],[22,.85],[23,.96],[24,.97],[25,1],[26,.93],[27,.89],[28,.82],[29,.74],[30,.65],[31,.58],[32,.48],[33,.41],[34,.35],[35,.3]];
+AGE.TE=[[21,.65],[22,.73],[23,.9],[24,.95],[25,1],[26,.95],[27,.91],[28,.86],[29,.8],[30,.72],[31,.66],[32,.58],[33,.5],[34,.42],[35,.35]];
+Object.assign(AGE_CLIFF,{QB:34,RB:27,WR:28,TE:29});
+const VAN1=[[1,10000],[2,9713],[3,9455],[6,8778],[12,7677],[18,6782],[24,6028],[36,4819],[50,3762],[75,2476],[100,1664],[150,782],[200,381],[300,98],[450,14],[600,5]];
+const VANS=[[1,10000],[2,9766],[3,9548],[6,8960],[12,7959],[18,7114],[24,6382],[36,5178],[50,4093],[75,2732],[100,1849],[150,870],[200,421],[300,103],[450,14],[600,5]];
+curve=function(rank){const A=S.fmt&&S.fmt.qb==="sf"?VANS:VAN1;if(rank<=1)return A[0][1];for(let i=1;i<A.length;i++){const [r1,v1]=A[i-1],[r2,v2]=A[i];if(rank<=r2){const t=(Math.log(rank)-Math.log(r1))/(Math.log(r2)-Math.log(r1));return Math.exp(Math.log(v1)+t*(Math.log(v2)-Math.log(v1)));}}return 5;};
+/* Hashmark production model: this season (or last) with expected points blended in, measured aging, 2–3 future seasons */
+const HMV={"1q":{xw:.5,disc:.75,yrs:3},sf:{xw:.5,disc:.65,yrs:2}},ROOKPPG={QB:9,RB:8,WR:6,TE:4.5};
+function hmModelVal(p){const sf=S.fmt.qb==="sf",P=HMV[sf?"sf":"1q"],R=repl(p.pos);const h=(p.hist||[]).filter(x=>x.gp>=3);const cur=+S.season||new Date().getFullYear();
+  let ppg=null;if((p.g||0)>=3&&p.ppg!=null)ppg=p.ppg;else{const ly=h.filter(x=>x.yr<cur).slice(-1)[0];if(ly)ppg=ly.ppg;}
+  const x=p.adv&&p.adv.xfp!=null&&(p.adv.g||0)>=3?p.adv.xfp*(p.adv.fp&&p.ppg?Math.max(.6,Math.min(1.6,p.ppg/p.adv.fp)):1):null;
+  if(ppg==null)ppg=ROOKPPG[p.pos]||6;else if(x!=null)ppg=(1-P.xw)*ppg+P.xw*x;
+  const a=p.age||26,am=ageMult(p.pos,a),base=ppg/Math.max(.3,am);let v=Math.max(0,ppg-R)*17;
+  for(let y=1;y<=P.yrs;y++)v+=Math.max(0,base*ageMult(p.pos,a+y)-R)*17*Math.pow(P.disc,y);return v;}
+valueEngine=(function(prev){return function(){try{if(S.fmt.type!=="redraft")for(const p of Object.values(PL))if(POSI.hasOwnProperty(p.pos)){p.raw=hmModelVal(p);p.val=p.raw;}}catch(e){console.error(e);}return prev();};})(valueEngine);
+/* source weights: market and redraft groups keep their internal split, then get the fitted group shares */
+const VW={"1q":{mk:.6,model:.15,rd:.25},sf:{mk:.6,model:.2,rd:.2}};
+srcSets=(function(prev){return function(){const o=prev(),sf=S.fmt.qb==="sf",W=VW[sf?"sf":"1q"];
+  const mk=o.dyn.filter(([k])=>k!=="model"),mt=mk.reduce((s,x)=>s+x[1],0)||1;const rd=o.ros.filter(([k])=>k!=="model"),rt=rd.reduce((s,x)=>s+x[1],0)||1;
+  const dyn=[...mk.map(([k,w])=>[k,w/mt*W.mk]),...rd.map(([k,w])=>["rd:"+k,w/rt*W.rd]),["model",W.model]];return {dyn,ros:o.ros};};})(srcSets);
+blendFor=function(p,set,modelRank){const parts=[];const anyMk=set.some(([k])=>k!=="model"&&!k.startsWith("rd:")&&srcRank(k)[p.id]!=null);
+  for(const [k0,w] of set){const rdk=k0.startsWith("rd:"),k=rdk?k0.slice(3):k0;let r=null;if(k==="model")r=modelRank;else{const m=srcRank(k);r=m[p.id]??null;if(r==null&&rdk&&anyMk&&Object.keys(m).length)r=450;}if(r==null)continue;
+    if(k==="dd"&&S.fmt.qb!=="sf"&&p.pos==="QB")continue;parts.push({k,w,r,v:curve(r),rd:rdk});}
+  if(!parts.length)return null;const W=parts.reduce((s,x)=>s+x.w,0);const v=parts.reduce((s,x)=>s+x.v*x.w,0)/W;
+  const ext=parts.filter(x=>x.k!=="model"&&!x.rd);let cv=null;if(ext.length>=2){const m=ext.reduce((s,x)=>s+x.v,0)/ext.length;cv=Math.sqrt(ext.reduce((s,x)=>s+(x.v-m)**2,0)/ext.length)/Math.max(1,m);}
+  return {v,parts,cv,n:ext.length};};
+/* rookie picks: halfway between market pricing and what picks at that slot have produced (2012–23 classes) */
+const PKV2={"1q":{"pk-27-1e":4401,"pk-27-1m":3772,"pk-27-1l":3274,"pk-27-2":2025,"pk-27-3":951,"pk-28-1":3517,"pk-28-2":1731},sf:{"pk-27-1e":5060,"pk-27-1m":3722,"pk-27-1l":3271,"pk-27-2":1990,"pk-27-3":931,"pk-28-1":3688,"pk-28-2":1702}};
+valueEngine=(function(prev){return function(){const r=prev();try{const T=PKV2[S.fmt.qb==="sf"?"sf":"1q"];if(S.fmt.type==="dynasty")for(const id in T)PKV[id]=T[id];}catch(e){}return r;};})(valueEngine);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
