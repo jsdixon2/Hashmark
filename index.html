@@ -1011,6 +1011,7 @@ html.fitpg,html.fitpg body{overflow:hidden;overscroll-behavior:none}
 .pos.K,.pos.DEF{color:#0B0C10!important}.pos.K{background:#B8C2CC!important}.pos.DEF{background:#9BE38A!important}
 :root:not([data-theme="dark"]) .pos.K{background:#5B6773!important;color:#fff!important}:root:not([data-theme="dark"]) .pos.DEF{background:#2F8A3B!important;color:#fff!important}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pos.K{background:#B8C2CC!important;color:#0B0C10!important}:root:not([data-theme="light"]) .pos.DEF{background:#9BE38A!important;color:#0B0C10!important}}
+.tmt{display:inline-block;margin-left:6px;font:600 .74em/1.2 var(--fd);color:var(--muted);letter-spacing:.03em;white-space:nowrap;vertical-align:baseline;text-decoration:none}
 </style>
 </head>
 <body>
@@ -4891,6 +4892,19 @@ freeAgents=(function(prev){return function(){return prev().filter(p=>!relStatus(
 /* tell the user when one of their own players was released */
 leagueDigest=(function(prev){return function(L){const v=prev(L);try{if(!L||L.rip)return v;const me=L.teams[mineIdx(L)];if(!me)return v;
   for(const id of me.players){const p=PL[id],r=relStatus(p);if(r&&!v.mv.some(m=>m.id===id))v.mv.unshift({pr:90,id,k:"Released",t:`${p.name} was released`,s:`${r.src||"News"}: “${r.t}”. He has no NFL team right now, so he won’t score until someone signs him.`,go:"player-"+id});}}catch(e){}return v;};})(leagueDigest);
+
+/* ===== v55: NFL team (and age in dynasty/keeper) next to player names wherever a name is shown without them =====
+   runs on every rendered player link; skips rows that already show the team */
+const TM_SKIP="INPUT,SELECT,OPTION,TEXTAREA,SCRIPT,STYLE";
+function tmLabel(p){const t=(relStatus&&relStatus(p))?"FA":(p.team||"FA");const a=S.fmt&&S.fmt.type!=="redraft"&&p.age?Math.floor(p.age):null;return {t,a};}
+function tmTagEl(el){if(el.dataset.tm)return;el.dataset.tm="1";const id=el.dataset.go.slice(7),p=PL[id];if(!p||!p.name)return;
+  const {t,a}=tmLabel(p),txt=el.textContent||"";if(new RegExp("(^|[^A-Z])"+t+"([^A-Z]|$)").test(txt.replace(p.name,"")))return;
+  const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement&&!n.parentElement.closest(TM_SKIP)&&n.nodeValue.includes(p.name)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_SKIP});
+  const n=w.nextNode();if(!n)return;const i=n.nodeValue.indexOf(p.name)+p.name.length,rest=n.splitText(i);
+  const s=document.createElement("span");s.className="tmt";const narrow=(el.getBoundingClientRect().width||999)<230;s.textContent=t+(a&&!narrow&&!/\bage\b|\byrs?\b/i.test(txt)?` · ${a}`:"");rest.parentNode.insertBefore(s,rest);}
+function tmScan(root){try{if(!root||!root.querySelectorAll)return;if(root.matches&&root.matches('[data-go^="player-"]'))tmTagEl(root);root.querySelectorAll('[data-go^="player-"]').forEach(tmTagEl);}catch(e){}}
+new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.nodeType===1)tmScan(n);}).observe(document.documentElement,{childList:true,subtree:true});
+document.addEventListener("DOMContentLoaded",()=>tmScan(document.body));
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
