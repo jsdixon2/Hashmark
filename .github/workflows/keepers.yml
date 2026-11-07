@@ -1,0 +1,19 @@
+name: keeper-archive
+on:
+  push:
+    paths: ["scripts/fetch_keepers.py", ".github/workflows/keepers.yml"]
+  workflow_dispatch: {}
+permissions: {contents: write}
+concurrency: {group: data-keepers, cancel-in-progress: false}
+jobs:
+  keepers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 scripts/fetch_keepers.py
+        env: {MAX_PAIRS: "450", TIME_LIMIT_MIN: "300"}
+      - run: |
+          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
+          git add bt/keepers.json.gz; git commit -m "backtest archive: keeper leagues" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
