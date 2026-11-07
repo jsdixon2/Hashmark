@@ -1789,7 +1789,7 @@ function buyScore(g){let s=0;const w=[];
   if(g.con){s+=(g.pNow-.5)*1.2;if(g.pNow>=.8)w.push(`Top ${Math.max(1,Math.round((1-g.pNow)*100))}% rest-of-season outlook for a team in contention`);if(g.young&&g.pNow<.45){s-=.6;w.push("Unlikely to help a contender this season");}}
   if(g.reb){if(g.pLong>=.8)w.push("Top-tier long-term value");if(g.young||(g.p.age!=null&&g.p.age<=25)){s+=.8;w.push("Young enough to grow with a rebuild");}if(g.past){s-=1.6;w.push("Past the age cliff, a poor fit for a rebuild");}else if(g.near)s-=.6;}
   else if(g.dyn&&g.past&&!g.con)s-=.8;
-  if(g.con&&g.p.age!=null&&g.p.age>=g.cliff+2)s-=.6;
+  if(g.con&&g.dyn&&g.p.age!=null&&g.p.age>=g.cliff+2)s-=.6;
   s+=(g.stab-.5)*.9;if(g.inj)s-=g.con?.8:.2;
   return {s,why:w};}
 function sellScore(g,isStarter){let s=0;const w=[];
@@ -1807,8 +1807,8 @@ function tradeSignals(L){const ti=mineIdx(L),me=L.teams[ti],ts=teamStatus(L,ti),
   sells.sort((a,b)=>b.s-a.s);buys.sort((a,b)=>b.s-a.s);const pay=sells.slice(0,6);
   buys.forEach(b=>{b.pay=pay.filter(x=>x.p.val>0&&b.p.val>0&&Math.abs(x.p.val/b.p.val-1)<=.3).sort((x,y)=>Math.abs(x.p.val/b.p.val-1)-Math.abs(y.p.val/b.p.val-1))[0]||null;});
   return {ts,sells:sells.slice(0,4),buys:buys.slice(0,5),pre:buys.filter(b=>b.g.pre).slice(0,3)};}
-function signalsPanel(L){let G;try{G=tradeSignals(L);}catch(e){return "";}const ts=G.ts,lab={contender:"Contender",rebuilding:"Rebuilding",balanced:"Balanced"}[ts.st];
-  const note=!ts.dyn?"Redraft league: only this season counts, so age and long-term value are ignored.":ts.st==="contender"?"Weights this season at about 78% and the future at 22%. Age matters little until a player passes his cliff.":ts.st==="rebuilding"?"Weights the future at about 75%. Older players past their position’s cliff are sell candidates, and young risers are targets.":"Weights this season and the future about evenly.";
+function signalsPanel(L){let G;try{G=tradeSignals(L);}catch(e){return "";}const ts=G.ts,lab={contender:"Contender",rebuilding:"Rebuilding",balanced:"Balanced",out:"Out of the race"}[ts.st];
+  const note=!ts.dyn?(ts.st==="out"?"Redraft league and your playoff odds are slim: only this season counts, so there’s no rebuilding. Age, picks and long-term value are ignored.":"Redraft league: only this season counts, so age and long-term value are ignored."):ts.st==="contender"?"Weights this season at about 78% and the future at 22%. Age matters little until a player passes his cliff.":ts.st==="rebuilding"?"Weights the future at about 75%. Older players past their position’s cliff are sell candidates, and young risers are targets.":"Weights this season and the future about evenly.";
   const str=x=>x.s>=1.9?"Strong":"Moderate";
   const own=p=>{const o=ownerOf(p);return o==="avail"||o==null?"Free agent. Claim on waivers.":"Owned by "+o+".";};
   const row=(x,buy)=>`<div class="sgi"><div class="sgh">${pos(x.p.pos)}<b>${esc(x.p.name)}</b><span class="sub">${esc(x.p.team)}${x.p.age?" · age "+x.p.age:""}</span><span class="tag">${str(x)}</span></div>${x.why.slice(0,3).map(w=>`<div class="sgw">${esc(w)}</div>`).join("")}<div class="sgo sub">${buy?own(x.p)+(x.pay?(x.pay.p?" Offer "+esc(x.pay.p.name)+". "+esc(x.pay.why)+".":" "+esc(x.pay.why)+"."):""):"Value "+f0(x.p.val)+"."}</div></div>`;
@@ -3328,7 +3328,7 @@ playerTabs=(function(prev){return function(id){let h=prev(id);const p=PL[id];if(
 const lst=(rows,n,empty)=>rows.length?`<div class="lmore${rows.length>n?" clip":""}">${rows.map((r,i)=>i<n?r:r.replace(/^(\s*<\w+)/,"$1 data-hid")).join("")}</div>${rows.length>n?`<button class="btn ghost seemore" data-more>See all ${rows.length}</button>`:""}`:`<p class="sub">${empty}</p>`;
 document.addEventListener("click",e=>{const b=e.target.closest("[data-more]");if(!b)return;const l=b.previousElementSibling;if(l){l.classList.remove("clip");b.remove();}},true);
 const tshort=t=>t.mine?"you":t.name.length<=14?t.name:"…"+t.name.slice(-12).trim();
-const statusLbl=c=>c.ts.st==="contender"?"Contender":c.ts.st==="rebuilding"?"Rebuilding":"Middle";
+const statusLbl=c=>c.ts.st==="contender"?"Contender":c.ts.st==="rebuilding"?"Rebuilding":c.ts.st==="out"?"Out of the race":"Middle";
 function sig(){const L=S.L;if(!L)return {buys:[],sells:[],pre:[]};try{return tradeSignals(L);}catch(e){console.error(e);return {buys:[],sells:[],pre:[]};}}
 vTrade=function(){const L=S.L;if(!L)return `<div class="empty">No league loaded.</div>`;const G=sig(),C=leagueCtx(L),me=C[mineIdx(L)];const n=(S.calc&&S.calc.lid===L.id)?S.calc.assets.length:0;
   const parts=partners().slice(0,1)[0];let fd=[];try{fd=finder();}catch(e){}
@@ -3358,7 +3358,7 @@ function vPre(){const G=sig(),L=S.L;let wv=[];try{wv=leagueDigest(L).tr.filter(x
   <section class="pan mt"><div class="row sp"><h2>On waivers</h2></div>${lst(wv.map(p=>row(p,`Free agent · ${p.team}`)),5,"No waiver breakout candidates.")}</section>`;}
 function partners(){const L=S.L;if(!L)return [];const C=leagueCtx(L),mi=mineIdx(L),me=C[mi];
   return C.filter(c=>c.ti!==mi).map(c=>{let s=0;const give=[],get=[];for(const ps of ["QB","RB","WR","TE"]){if((me.depth[ps]||0)>=2&&(c.nd[ps]||0)<-.5){s+=1;give.push(ps);}if((c.depth[ps]||0)>=2&&(me.nd[ps]||0)<-.5){s+=1;get.push(ps);}}
-    if(me.ts.st!==c.ts.st&&me.ts.st!=="balanced"&&c.ts.st!=="balanced"){s+=1;}
+    if(S.fmt.type!=="redraft"&&me.ts.st!==c.ts.st&&me.ts.st!=="balanced"&&c.ts.st!=="balanced"){s+=1;}
     const line=[get.length?`has spare ${get.join("/")}`:"",give.length?`needs ${give.join("/")}`:""].filter(Boolean).join(", ")||(s?"opposite timelines":"no clear fit");
     return {c,s,give,get,line};}).sort((a,b)=>b.s-a.s);}
 function vPartners(){const L=S.L,ps=partners(),mi=mineIdx(L);
@@ -4905,6 +4905,10 @@ function tmTagEl(el){if(el.dataset.tm)return;el.dataset.tm="1";const id=el.datas
 function tmScan(root){try{if(!root||!root.querySelectorAll)return;if(root.matches&&root.matches('[data-go^="player-"]'))tmTagEl(root);root.querySelectorAll('[data-go^="player-"]').forEach(tmTagEl);}catch(e){}}
 new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.nodeType===1)tmScan(n);}).observe(document.documentElement,{childList:true,subtree:true});
 document.addEventListener("DOMContentLoaded",()=>tmScan(document.body));
+
+/* ===== v56: no rebuild logic in redraft — a redraft team with no playoff path is "out of the race", never "rebuilding";
+   only this season counts (no future value, age, picks or youth premiums) ===== */
+teamStatus=(function(prev){return function(L,ti){const r=prev(L,ti);if(r&&!r.dyn){if(r.st==="rebuilding")r.st="out";r.wNow=1;}return r;};})(teamStatus);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
