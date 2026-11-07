@@ -3854,7 +3854,7 @@ startSit=function(){const L=S.L;if(!L||L.rip)return "";let R;try{R=ssRecs(L);}ca
    ${sw.length?`<p class="sub" style="margin:2px 0 8px">Hashmark recommends ${sw.length} change${sw.length===1?"":"s"}. Moving players who already played isn’t possible, so they’re left out.</p>${sw.map(x=>ssCard(x,false)).join("")}`:`<p class="sub" style="margin:2px 0 8px"><b class="good">Your lineup is already Hashmark’s best lineup.</b></p>`}
    ${cl.length?`<div class="eyebrow mt">Closest calls</div>${cl.map(x=>ssCard(x,true)).join("")}`:""}
    <p class="sub mt">Dot: Hashmark projection. Bar: likely range. Percent: chance the first player outscores the second.</p></section>`;};
-DEFS.ss=["Hashmark Start/Sit","Each player’s projection starts from Sleeper’s weekly projection in your scoring, then adjusts for recent form, usage trends (targets, snaps, expected points), the opponent’s defense against his position, his team’s implied points, weather, sportsbook player lines and practice or injury status. The percentage is the chance the recommended player outscores the other, from both players’ projections and how much each one’s scoring usually swings."];
+DEFS.ss=["Hashmark Start/Sit","Each projection starts from Sleeper’s weekly projection in your scoring. Hashmark then corrects it with weights fitted on 2021–24 results and tested on 2025–26: Sleeper’s known bias by position and level, season production, usage (expected points), the opponent and the team’s implied total. Sportsbook lines get 20%, then weather and injury or practice status. The percentage is how often the recommended player outscores the other in matchups like this; in testing, those percentages landed within about 2 points of what happened. Bars show the likely range: the real score falls inside it 80% of the time."];
 
 /* traffic-light data colors: green good, yellow middling, red bad */
 const TLF=".bar>i,.pbar>i,.ht>i,.mb>i,.hvb>i,.tsb .bar>i";
@@ -4500,6 +4500,51 @@ document.addEventListener("change",e=>{const s=e.target.closest&&e.target.closes
   const n=stLgName();const parts=s.innerHTML.split("<i>·</i>").filter(p=>p.replace(/<[^>]+>/g,"").trim()!==n&&!/^All leagues$/.test(p.replace(/<[^>]+>/g,"").trim()));
   parts.push(`<b class="hslg">${esc(n)}</b>`);s.innerHTML=parts.join("<i>·</i>");};})();
 document.addEventListener("click",e=>{if(e.target.closest("[data-hxs]")&&window.hsumUpdate)setTimeout(hsumUpdate,30);},true);
+
+/* ===== v46: projection engine — weights fitted on 2021–24 Sleeper projections vs real scores, tested on 2025–26 =====
+   coefficient order: [intercept, Sleeper projection, PPG, last-3 PPG, season xFP, last-3 xFP, matchup term, implied-total term, has PPG, has xFP]
+   ranges: error quantile = a·projection + b, by position (5th, 10th, 90th, 95th percentiles) */
+const PJC={"QB":[4.057,0.452,-0.12,0.227,0.151,-0.096,0.004,0.359,0.454,0.454],"RB":[0.866,0.879,0.091,0.078,-0.16,0.012,0.047,0.144,0.224,0.224],"WR":[0.576,0.758,0.025,0.093,0.085,-0.032,0.018,-0.011,0.569,-0.527],"TE":[0.292,0.781,0.037,-0.051,-0.124,0.174,0.055,0.022,0.73,0.73]};
+const PJQ={"QB":{"05":[-0.241,-7.01],"1":[-0.131,-6.63],"9":[0.166,6.74],"95":[0.164,9.68]},"RB":{"05":[-0.59,-2.21],"1":[-0.461,-2.46],"9":[0.356,5.12],"95":[0.428,7.68]},"WR":{"05":[-0.651,-2.19],"1":[-0.501,-2.56],"9":[0.491,4.43],"95":[0.558,7.18]},"TE":{"05":[-0.701,-1.59],"1":[-0.541,-1.8],"9":[0.614,2.53],"95":[0.865,3.85]}};
+const PJ_PROPS=.2;
+function pjRange(pos,m){const Q=PJQ[pos]||PJQ.WR,q=k=>Math.max(0,m+Q[k][0]*m+Q[k][1]);return {lo:q("1"),hi:q("9"),lo90:q("05"),hi90:q("95")};}
+hmProj=function(p){if(!p)return null;const g=gameOf(p);if(g&&g.bye)return {m:0,sd:0,lo:0,hi:0,lo90:0,hi90:0,f:[{t:"On bye",v:-99}],bye:true};
+  if(p.inj&&OUTRX.test(p.inj))return {m:0,sd:0,lo:0,hi:0,lo90:0,hi90:0,f:[{t:`${statusWord(p.inj).replace(/^is /,"")}`,v:-99}],out:true};
+  const C=PJC[p.pos];const F=[],add=(v,t)=>{if(t)F.push({t,v});};const a=p.adv||{};
+  const base=p.proj!=null?p.proj:rosPPG(p);if(!C)return {m:base,sd:Math.max(2.5,base*.45),...pjRange("WR",base),f:F,base};
+  // features (league scoring); expected points are PPR, scaled by how this league scores the player
+  const lg=(p.log||[]).map(x=>x.pts),n=lg.length,ppg=n>=2?(p.ppg!=null?p.ppg:lg.reduce((s,x)=>s+x,0)/n):null,l3=n>=3?lg.slice(-3).reduce((s,x)=>s+x,0)/3:null;
+  const sc=a.fp&&ppg!=null?Math.max(.6,Math.min(1.6,ppg/a.fp)):1,xs=a.xfp!=null&&(a.g||0)>=2?a.xfp*sc:null,x3=a.xfp3!=null&&(a.g||0)>=3?a.xfp3*sc:null;
+  const mu=matchup(p),rk=mu&&!mu.bye&&mu.rank!=null?mu.rank:null,imp=mu&&!mu.bye&&mu.imp!=null?mu.imp:null;
+  const v=(x)=>x==null?base:x;
+  const parts={prod:C[2]*(v(ppg)-base)+C[3]*(v(l3)-base),use:C[4]*(v(xs)-base)+C[5]*(v(x3)-base),mat:rk!=null?C[6]*base*(16.5-rk)/16:0,imp:imp!=null?C[7]*base*(imp-22.5)/22.5:0};
+  let m=C[0]+C[1]*base+C[2]*v(ppg)+C[3]*v(l3)+C[4]*v(xs)+C[5]*v(x3)+parts.mat+parts.imp+C[8]*(ppg!=null)+C[9]*(xs!=null);
+  m=Math.max(0,m);
+  // explain what moved it, in points
+  const pt=x=>`${x>0?"+":"−"}${f1(Math.abs(x))}`;
+  if(Math.abs(parts.use)>=.4)add(parts.use/Math.max(5,base),`Usage is worth ${f1(v(x3)??v(xs))} a game by expected points (${pt(parts.use)})`);
+  if(Math.abs(parts.prod)>=.4)add(parts.prod/Math.max(5,base),`${ppg!=null?`Averaging ${f1(ppg)} this season`:"Season production"}${l3!=null?`, ${f1(l3)} over his last 3`:""} (${pt(parts.prod)})`);
+  if(rk!=null&&Math.abs(parts.mat)>=.3)add(parts.mat/Math.max(5,base),`${mu.home?"vs":"at"} ${mu.opp}, #${rk<=16?rk+" softest":(33-rk)+" toughest"} defense against ${p.pos}s (${pt(parts.mat)})`);
+  if(imp!=null&&Math.abs(parts.imp)>=.3)add(parts.imp/Math.max(5,base),`Team implied for ${f1(imp)} points (${pt(parts.imp)})`);
+  const reg=m-base-parts.prod-parts.use-parts.mat-parts.imp;if(Math.abs(reg)>=.6)add(reg/Math.max(5,base),`Sleeper’s ${p.pos} projections at this level have run ${reg<0?"high":"low"} by about ${f1(Math.abs(reg))} on average; corrected (${pt(reg)})`);
+  // betting market (props), weather, availability
+  const pr=typeof propsOf==="function"?propsOf(p):null;if(pr){const s2=(S.L&&S.L.scoring)||{rec:1,rec_yd:.1,rush_yd:.1,pass_yd:.04,rec_td:6,rush_td:6,pass_td:4};let mk=0,k=0;
+    if(pr.rec!=null){mk+=pr.rec*(s2.rec_yd??.1)+(pr.rec/11.5)*(s2.rec??1);k++;}if(pr.rush!=null){mk+=pr.rush*(s2.rush_yd??.1);k++;}if(pr.pass!=null){mk+=pr.pass*(s2.pass_yd??.04)+1.6*(s2.pass_td??4);k++;}if(pr.atd!=null)mk+=pr.atd*6;
+    if(k){const d=mk-m;m=m*(1-PJ_PROPS)+mk*PJ_PROPS;if(Math.abs(d)>=1.5)add(d*PJ_PROPS/Math.max(5,base),`Sportsbooks imply about ${f1(mk)} points${pr.atd!=null?` (${Math.round(pr.atd*100)}% to score)`:""}`);}
+    else if(pr.atd!=null&&pr.atd>=.45)add(.08,`${Math.round(pr.atd*100)}% anytime-TD odds`);}
+  const w=mu&&mu.g;if(w&&w.w!=null&&p.pos!=="RB"&&(w.w>=15||(w.g||0)>=25)){m*=.94;add(-.06,`Wind ${w.w} mph at kickoff`);}if(w&&w.pop>=60&&p.pos!=="RB"){m*=.97;add(-.03,`${w.pop}% chance of rain`);}
+  if(p.inj){const s=p.inj.toLowerCase();if(/doubt/.test(s)){m*=.35;add(-.6,"Listed doubtful");}else if(/quest/.test(s)){m*=.88;add(-.12,"Listed questionable");}}
+  const pr2=String(p.prac||"").toUpperCase();if(/DNP|DID NOT/.test(pr2)){m*=.9;add(-.1,"Did not practice");}else if(/LIMITED/.test(pr2)){m*=.97;add(-.03,"Limited in practice");}
+  m=Math.max(0,m);const R=pjRange(p.pos,m);
+  return {m,sd:Math.max(1.5,(R.hi-R.lo)/2.563),...R,f:F,base};};
+/* matchup projections use the same engine (finished games keep the real score) */
+wkProj=function(p){if(!p)return 0;const g=gameOf(p);if(g&&g.bye)return 0;if(g&&g.final)return p.last??0;if(p.inj&&OUTRX.test(p.inj))return 0;try{const h=hmProj(p);if(h)return h.m;}catch(e){}return p.proj!=null?p.proj:p.ros;};
+/* start/sit card: bars show the 10th–90th percentile range */
+ssCard=function(x,close){const ln=p=>esc(p.name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/,"").split(" ").slice(-1)[0]);const lo=P=>P.lo??Math.max(0,P.m-P.sd),hi=P=>P.hi??P.m+P.sd;const mx=Math.max(hi(x.A),hi(x.B),1);
+  const bar=(p,P,win)=>`<div class="ssb"><span class="ssn ell">${pos(p.pos)} ${esc(p.name)}</span><span class="ssrg" title="Likely range ${f1(lo(P))}–${f1(hi(P))} (80% of outcomes)"><i class="rng" style="left:${(lo(P)/mx*100).toFixed(1)}%;width:${((Math.min(mx,hi(P))-lo(P))/mx*100).toFixed(1)}%"></i><i class="pt${win?" w":""}" style="left:${(P.m/mx*100).toFixed(1)}%"></i></span><b class="num${win?" good":""}">${f1(P.m)}</b></div>`;
+  return `<div class="ssc"><div class="row sp"><div class="sst">${close?"Close call: keep":"Start"} <b data-go="player-${x.a.id}">${ln(x.a)}</b> over <b data-go="player-${x.b.id}">${ln(x.b)}</b></div><span class="cf ${x.conf[1]}">${x.conf[0]} · ${Math.round(x.pw*100)}%</span></div>
+   ${bar(x.a,x.A,true)}${bar(x.b,x.B,false)}
+   ${x.why.length?`<ul class="why">${x.why.map(w=>`<li><b>${ln(w.who)}:</b> ${esc(w.t)}</li>`).join("")}</ul>`:""}${x.against&&x.pw<.7?`<p class="sub" style="margin:4px 0 0">${x.against.who===x.b?`In ${ln(x.b)}’s favor`:`Working against ${ln(x.a)}`}: ${esc(/^(Sleeper|Team|Usage|Wind)/.test(x.against.t)&&!/^(Team|Usage|Wind)/.test(x.against.t)?x.against.t:x.against.t.charAt(0).toLowerCase()+x.against.t.slice(1))}.</p>`:""}<p class="sub" style="margin:4px 0 0">${Math.round(x.pw*100)}% = how often ${ln(x.a)} outscores ${ln(x.b)} in matchups like this; bars show each player’s likely range.</p></div>`;};
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
