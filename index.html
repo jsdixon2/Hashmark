@@ -1269,7 +1269,7 @@ async function loadLeague(l,week){
   const [rosters,users,mu]=await Promise.all([sj(`${API}/league/${l.league_id}/rosters`),sj(`${API}/league/${l.league_id}/users`),sj(`${API}/league/${l.league_id}/matchups/${week}`).catch(()=>[])]);
   const ps=(l.settings&&l.settings.playoff_week_start)||15;const fw=[];for(let w=week+1;w<ps&&fw.length<10;w++)fw.push(w);
   const fut=await Promise.all(fw.map(w=>sj(`${API}/league/${l.league_id}/matchups/${w}`).catch(()=>[])));const tp=await sj(`${API}/league/${l.league_id}/traded_picks`).catch(()=>[]);
-  const teams=rosters.map(r=>{const us=users.find(x=>x.user_id===r.owner_id);const s=r.settings||{};return {id:r.roster_id,name:(us&&us.metadata&&us.metadata.team_name)||(us&&us.display_name)||("Team "+r.roster_id),owner:us?us.display_name:"",mine:r.owner_id===LIVE.u.user_id,players:(r.players||[]).filter(Boolean),ir:(r.reserve||[]).filter(Boolean),taxi:(r.taxi||[]).filter(Boolean),w:s.wins||0,l:s.losses||0,t:s.ties||0,pf:(s.fpts||0)+(s.fpts_decimal||0)/100,wp:s.waiver_position,fu:s.waiver_budget_used||0,div:s.division||0,ck:Object.keys(s).filter(k=>/chop|elim|guillotin/i.test(k)&&s[k]).map(k=>k+":"+s[k]).join(",")};});
+  const teams=rosters.map(r=>{const us=users.find(x=>x.user_id===r.owner_id);const s=r.settings||{};return {id:r.roster_id,name:(us&&us.metadata&&us.metadata.team_name)||(us&&us.display_name)||("Team "+r.roster_id),owner:[us?us.display_name:"",...(r.co_owners||[]).map(c=>{const x=users.find(u=>u.user_id===c);return x?x.display_name:"";})].filter(Boolean).join(" & "),mine:r.owner_id===LIVE.u.user_id||(r.co_owners||[]).includes(LIVE.u.user_id),co:(r.co_owners||[]).length>0,players:(r.players||[]).filter(Boolean),ir:(r.reserve||[]).filter(Boolean),taxi:(r.taxi||[]).filter(Boolean),w:s.wins||0,l:s.losses||0,t:s.ties||0,pf:(s.fpts||0)+(s.fpts_decimal||0)/100,wp:s.waiver_position,fu:s.waiver_budget_used||0,div:s.division||0,ck:Object.keys(s).filter(k=>/chop|elim|guillotin/i.test(k)&&s[k]).map(k=>k+":"+s[k]).join(",")};});
   const idx=id=>teams.findIndex(t=>t.id===id);
   const pairs=arr=>{const g={};for(const m of arr||[]){if(m.matchup_id==null)continue;(g[m.matchup_id]=g[m.matchup_id]||[]).push(m);}return Object.values(g).filter(x=>x.length===2);};
   const slots=(l.roster_positions||[]).filter(s=>ELIG[s]);const allSlots=(l.roster_positions||[]).filter(s=>!["BN","IR","TAXI"].includes(s));const sc=l.scoring_settings||{};
@@ -2353,7 +2353,7 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
   for(const x of LSs){x.PP={};x.weeks.forEach((wk,i)=>wk.forEach(m=>{for(const [pid,v] of Object.entries(m.pp)){(x.PP[pid]=x.PP[pid]||{})[i+1]=+v||0;}}));}
   const M={};// manager stats keyed by uid
   const mgr=u=>M[u]=M[u]||{uid:u,names:new Set(),seasons:[],g:0,w:0,l:0,t:0,pf:0,pa:0,scores:[],ap:0,apg:0,opt:0,act:0,bench:0,dog:[0,0],hdog:[0,0],fav:[0,0],close:[0,0],bounce:[0,0],wp:[],h2h:{},tx:0,faab:0,adds:[],trades:[],drafts:[],titles:0,runner:0,po:0,finishes:[],pickBad:0,weeksN:0,wbuck:[[0,0],[0,0],[0,0],[0,0],[0,0]],bestWeek:null,worstWeek:null,bigWin:null,badLoss:null,benchWorst:null};
-  for(const x of LSs){const slots=slotsOf(x.rpos),rid2u={},uname={};x.rosters.forEach(r=>rid2u[r.rid]=r.uid||("rid"+r.rid));x.users.forEach(u=>uname[u.uid]=u.name);
+  for(const x of LSs){const slots=slotsOf(x.rpos),rid2u={},uname={};x.rosters.forEach(r=>rid2u[r.rid]=((r.co||[]).includes(uid)?uid:r.uid)||("rid"+r.rid));x.users.forEach(u=>uname[u.uid]=u.name);
     if(x.gl){glSeason(x,rid2u,uname,mgr);x.rid2u=rid2u;x.uname=uname;continue;}
     const reg=x.weeks.slice(0,x.pws-1),hist={};
     reg.forEach((wk,wi)=>{const w=wi+1,byM={};wk.forEach(m=>{if(m.mid!=null)(byM[m.mid]=byM[m.mid]||[]).push(m);});const all=wk.map(m=>m.pts).filter(v=>v>0);if(!all.length)return;
@@ -2388,7 +2388,7 @@ function analyze(uid,LSs){LSs.sort((a,b)=>a.season-b.season);
   for(const x of LSs){if(x.gl||!x.bracket||!x.bracket.length||!x.rid2u)continue;for(const b of x.bracket){if(b.w==null||typeof b.t1!=="number"||typeof b.t2!=="number")continue;const wk=x.weeks[(x.pws||15)+b.r-2]||[];const sc=rid=>{const m=wk.find(q=>+q.rid===+rid);return m?m.pts:null;};
       for(const [me,op] of [[b.t1,b.t2],[b.t2,b.t1]]){const u=x.rid2u[me];if(!u)continue;const S2=mgr(u);(S2.poG=S2.poG||[]).push({s:x.season,lg:x.chain,r:b.r,won:+b.w===+me,v:sc(me),opp:sc(op),op:x.rid2u[op],p:b.p||null,last:b.p===1});}}}
   // draft-pick realization lookup per chain
-  const usersOf=x=>new Set(x.rosters.map(r=>r.uid).filter(Boolean));
+  const usersOf=x=>new Set(x.rosters.map(r=>(r.co||[]).includes(uid)?uid:r.uid).filter(Boolean));
   const related=chain=>{const mine=LSs.filter(x=>x.chain===chain);const U=new Set(mine.flatMap(x=>[...usersOf(x)]));return new Set(LSs.filter(x=>{if(x.chain===chain)return true;const u=[...usersOf(x)];return u.length&&u.filter(v=>U.has(v)).length/u.length>=.6;}).map(x=>x.chain));};
   const finalOwner=(chain,season,round,orig)=>{let o=orig;const xs=[];for(const x of LSs){if(x.chain!==chain)continue;for(const t of x.tx)if(t.type==="trade")for(const p of t.dp)if(p.season===season&&p.round===round&&+p.orig===+orig)xs.push([t.ts||x.season*1e3+t.wk,p.to]);}xs.sort((a,b)=>a[0]-b[0]);if(xs.length)o=xs[xs.length-1][1];return o;};
   const PKC=new Map();
@@ -2570,7 +2570,7 @@ function vStats(){const D=HX.data;
   const bucket=[0,1,2,3,4].map(i=>{const xs=m.scores.filter(x=>Math.min(4,Math.floor(x.p*5))===i);return {n:xs.length,r:xs.length?xs.filter(x=>x.won).length/xs.length:null,e:xs.length?avgx(xs.map(x=>x.p)):null};});
   const wnd=m0.d.wnd,stG=tr.length?GR(avgx(tr.map(t=>t.st))):"–",rzG=tr.length?GR(avgx(tr.map(t=>t.rz))):"–";
   const hit=rate(m.adds,a=>a.stW>=3),brk=m.adds.filter(a=>a.brk);
-  const lgRows=Object.values(D.M).filter(x=>x.g>=8&&D.LS.some(L=>D.curChains.includes(L.chain)&&L.season===+S.season&&L.rosters.some(r=>r.uid===x.uid)));
+  const lgRows=Object.values(D.M).filter(x=>x.g>=8&&D.LS.some(L=>D.curChains.includes(L.chain)&&L.season===+S.season&&L.rosters.some(r=>r.uid===x.uid||(r.co||[]).includes(x.uid))));
   const KP=(v,l,s)=>`<div><b class="num">${v}</b><span>${l}</span>${s?`<em>${s}</em>`:""}</div>`;
   return `<div class="topline"><div class="eyebrow">Manager analytics · ${m0.seasons.length} league-season${m0.seasons.length===1?"":"s"}</div><h1>My stats</h1></div>
   ${chains.length>1?`<div class="seg hxseg"><button data-hxs="all" class="${sc==="all"?"on":""}">All leagues</button>${chains.map(c=>`<button data-hxs="${esc(c)}" class="${sc===c?"on":""}">${esc(D.chainName[c])}</button>`).join("")}</div>`:""}
