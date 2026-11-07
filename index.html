@@ -4994,7 +4994,7 @@ function keeperCard(L,t){if(S.fmt.type!=="keeper")return "";startsLoad(L);const 
     <div class="mt">${kp.reg.map(row).join("")}${kp.tx.length?`<div class="eyebrow mt">Taxi keepers</div>${kp.tx.map(row).join("")}`:""}</div>
     ${warn.length?`<ul class="why mt">${warn.join("")}</ul>`:""}${lost.length?`<p class="sub mt">Started this season, so only keepable in a regular spot: ${lost.join(", ")}.</p>`:""}
     <p class="sub mt">Players below the keeper line (${f0(kp.line)} value, the best player nobody keeps) only count for this season in trades.</p></section>`;}
-document.addEventListener("change",e=>{const s=e.target.closest&&e.target.closest("[data-keepcfg]");if(!s||!S.L)return;const c=keepCfg(S.L);c[s.dataset.keepcfg]=+s.value;keepSave(S.L,c);render();});
+document.addEventListener("change",e=>{const s=e.target.closest&&e.target.closest("[data-keepcfg]");if(!s||!S.L||s.dataset.keepcfg==="cost")return;const c=keepCfg(S.L);c[s.dataset.keepcfg]=+s.value;keepSave(S.L,c);render();});
 Object.assign(DEFS,{grade:["Trade grade","Redraft: graded on how the deal moves each team’s championship odds, from a simulation of the rest of the season and the playoff bracket with both lineups before and after (A+ = +5 points or more, A = +3, B+ = +1.2, B = about even, then C, D, F mirror them). Keeper: this season’s lineup change plus the change in each team’s keeper group next year, weighted by how many players the league keeps and whether the team is contending or rebuilding. Dynasty: value over the next seasons with this season’s lineup counted more for contenders; A+ ≈ wins 66%+ of the time, A ≈ 61%, B+ ≈ 55%, B is even."]});
 
 calcInsights=(function(prev){return function(R){const o=prev(R);return R&&R.some(r=>r.title)?o.filter(x=>!/consolidation adjustment|On market value alone/.test(x)):o;};})(calcInsights);
@@ -5047,10 +5047,11 @@ function dayOne(x,t,sd){try{if(x.gl)return null;const ty=+x.type||0,w=Math.max(1
   if(ty===2){if(pct==null)return null;const wc=gp<2?.5:wpct>=.6?.78:wpct<=.35?.25:.5,wf=.6*wc*Math.min(1,rem/10);return wpShare(sigm(logit(pvTable(pct))+wf*RDZ.a*Math.tanh(d/RDZ.tau)));}
   /* keeper: keeper group change with the league's keeper rules (taxi keepers: 1st/2nd-year players not started before the deal) */
   const c=hxKeepCfg(x),K=c.reg+c.tx;let wpK=null,pk=0;
-  if(valD){const n=x.rosters.length*K,line=curveA(A,n+1),cur=+S.season||x.season,P=kdLive();
+  if(valD){const n=x.rosters.length*K,T=x.rosters.length,dK=(x.drafts||[]).find(d=>d.season===x.season),lastR=(dK&&Math.max(...dK.picks.map(p=>p.round)))||16,dr={};(dK?dK.picks:[]).forEach(p=>{if(p.pid)dr[p.pid]=p.round;});
+    const off=c.cost==="round-1"?1:c.cost==="round-2"?2:0,rv=r=>curveA(A,n+(Math.max(1,r)-.5)*T),costOf=id=>(c.cost&&c.cost!=="none"&&dr[id])?rv(dr[id]-off):rv(lastR),cur=+S.season||x.season,P=kdLive();
     const started=new Set();for(let i=0;i<Math.min(w-1,x.weeks.length);i++)for(const m of x.weeks[i])(m.st||[]).forEach(id=>started.add(id));
     const elig=id=>{const m=P&&P[id];if(!m||m.years_exp==null)return false;const y=m.years_exp-(cur-x.season);return y>=0&&y<=1&&!started.has(id);};
-    const plan=ids=>{const pl=ids.filter(id=>["QB","RB","WR","TE"].includes(hxPos(id))).sort((a,b)=>valD(b)-valD(a)),tx=c.tx?pl.filter(elig).slice(0,c.tx):[],reg=pl.filter(id=>!tx.includes(id)).slice(0,c.reg);return [...reg,...tx].reduce((s,id)=>s+Math.max(0,valD(id)-line),0);};
+    const sur=id=>Math.max(0,valD(id)-costOf(id)),plan=ids=>{const pl=ids.filter(id=>["QB","RB","WR","TE"].includes(hxPos(id))).sort((a,b)=>sur(b)-sur(a)),tx=c.tx?pl.filter(elig).slice(0,c.tx):[],reg=pl.filter(id=>!tx.includes(id)).slice(0,c.reg);return [...reg,...tx].reduce((s,id)=>s+sur(id),0);};
     const dk={};rids.forEach(r=>dk[r]=plan(post[r])-plan(pre[r]));const dd=dk[sd.rid]-rids.filter(r=>r!==sd.rid).reduce((s,r)=>s+dk[r],0)/(rids.length-1);
     const sc=Math.max(1,...[...sd.recP,...sd.gaveP].map(valD));pk=Math.max(-1,Math.min(1,dd/sc));}
   const cap=(x.rpos||[]).filter(s=>s!=="IR"&&s!=="TAXI").length||16,st=gp<2?"balanced":wpct>=.6?"contender":wpct<=.35?"rebuilding":"balanced";
@@ -5143,6 +5144,28 @@ function hxStash(x,rid,id,st){if(st&&st.includes(id))return false;
   if(x.season===+S.season){const L=(S.leagues||[]).find(l=>l.id===x.id),t=L&&L.teams.find(t=>+t.id===+rid);if(t&&((t.ir||[]).includes(id)||(t.taxi||[]).includes(id)))return true;}
   if(!x.txs)return false;if(!x._sb){x._sb={};for(const wk of x.weeks)for(const m of wk)for(const s of m.st||[])(x._sb[m.rid]=x._sb[m.rid]||new Set()).add(s);}
   if(x._sb[rid]&&x._sb[rid].has(id))return false;const P=kdLive(),m=P&&P[id];if(!m||m.years_exp==null)return false;const y=m.years_exp-((+S.season||x.season)-x.season);return y>=0&&y<=2;}
+/* ===== v63: keeper costs. A keeper's worth = his long-term value minus what the draft pick he uses up would have bought.
+   Cost rules (per league, saved on this device): no cost (keepers effectively replace the last picks) · the round he was drafted ·
+   one or two rounds earlier than that. Undrafted pickups cost the last round. Pick values come from this league's own value list:
+   with T teams keeping K each, a round-r pick buys roughly the player ranked T·K + (r − ½)·T. ===== */
+function draftRounds(L){if(L._drP||S.mode!=="live")return L._dr||null;L._drP=(async()=>{try{const ds=await sj(`${API}/league/${L.id}/drafts`);const d=(ds||[]).find(d=>+d.season===+S.season)||(ds||[])[0];
+  if(d){const pk=await sj(`${API}/draft/${d.draft_id}/picks`);const m={};(pk||[]).forEach(p=>{if(p.player_id)m[p.player_id]=+p.round;});L._dr={m,rounds:+((d.settings||{}).rounds)||null};L._kp=null;try{render();}catch(e){}}}catch(e){}})();return L._dr||null;}
+const KCOST={none:"No cost",round:"Round drafted","round-1":"One round earlier","round-2":"Two rounds earlier"};
+function roundVal(L,r){const c=keepCfg(L),k=(L._ctx&&L._ctx.k)+"|rv";if(!L._rv||L._rv.k!==k){L._rv={k,v:Object.values(PL).filter(p=>POSI.hasOwnProperty(p.pos)&&!lostSeason(p)).map(p=>p.vL||p.val).sort((a,b)=>b-a)};}
+  const n=L.teams.length,i=Math.round(n*(c.reg+c.tx)+(Math.max(1,r)-.5)*n);return L._rv.v[Math.min(L._rv.v.length-1,i)]||0;}
+function lastRound(L){const d=draftRounds(L);return (d&&d.rounds)||+(L.lset&&L.lset.draft_rounds)||Math.max(1,(rosterCap(L)||16)-(keepCfg(L).reg+keepCfg(L).tx));}
+function keepCost(L,p){const c=keepCfg(L),cs=c.cost||"none",lr=lastRound(L);if(cs==="none")return roundVal(L,lr);const d=draftRounds(L),r0=d&&d.m[p.id];const off=cs==="round-1"?1:cs==="round-2"?2:0;
+  return roundVal(L,r0?Math.max(1,r0-off):lr);}
+keepPlan=function(L,ids){const c=keepCfg(L),sur=p=>Math.max(0,(p.vL||p.val)-keepCost(L,p));
+  const pl=ids.map(id=>PL[id]).filter(p=>p&&POSI.hasOwnProperty(p.pos)&&!lostSeason(p)).sort((a,b)=>sur(b)-sur(a));
+  const tx=c.tx?pl.filter(p=>taxiKeepElig(L,p.id)).slice(0,c.tx):[],txS=new Set(tx.map(p=>p.id)),reg=pl.filter(p=>!txS.has(p.id)).slice(0,c.reg);
+  return {reg,tx,line:roundVal(L,lastRound(L)),val:reg.reduce((s,p)=>s+sur(p),0)+tx.reduce((s,p)=>s+sur(p),0),cost:p=>keepCost(L,p)};};
+keeperCard=(function(prev){return function(L,t){let h=prev(L,t);if(!h)return h;draftRounds(L);const c=keepCfg(L);
+  const sel=`<select data-keepcfg="cost">${Object.entries(KCOST).map(([k,v])=>`<option value="${k}"${(c.cost||"none")===k?" selected":""}>${v}</option>`).join("")}</select>`;
+  h=h.replace(/<p class="sub mt">Players below the keeper line[^<]*<\/p>/,`<p class="sub mt">Keeper cost: ${sel}. A keeper is worth his value minus what that pick would have bought; players who wouldn’t make the list only count for this season in trades.</p>`);return h;};})(keeperCard);
+/* the keeper-rules select saves text values too */
+document.addEventListener("change",e=>{const s=e.target.closest&&e.target.closest('[data-keepcfg="cost"]');if(!s||!S.L)return;const c=keepCfg(S.L);c.cost=s.value;keepSave(S.L,c);render();},true);
+
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
