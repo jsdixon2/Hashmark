@@ -979,6 +979,23 @@ main{box-sizing:border-box;min-height:100vh;min-height:100lvh;min-height:max(100
 .sdt td,.sdt th{font-size:12.5px;white-space:nowrap}.sdt td:first-child{white-space:normal}
 .stsea{margin:2px 0 6px!important}
 .sheet .skseg{background:var(--panel)!important;box-shadow:0 6px 10px -6px rgba(0,0,0,.35)}
+/* ===== v44: skills popup ===== */
+.sheet.skpop .card{height:min(80vh,880px);max-height:min(80vh,880px)!important;overscroll-behavior:contain}
+.skstk{position:sticky;top:-12px;z-index:3;background:var(--panel);margin:0 -16px 8px;padding:8px 0 10px;box-shadow:0 6px 10px -6px rgba(0,0,0,.35)}
+.skstk .skseg{position:static!important;margin:0!important;padding:0 16px!important;box-shadow:none!important;background:none!important}
+.skstk .sksub2{margin-top:8px!important;padding-top:8px!important;border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.skstk .sksub2 button{font-size:12.5px!important;padding:5px 11px!important;min-height:0!important}
+@media (min-width:900px){.skstk{margin:0 -20px 8px}.skstk .skseg{padding:0 20px!important}}
+.skgl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:600px){.skgl{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.skgi{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:5px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--ink) 3%,transparent)}
+.skgi b{font:700 14px var(--fd)}.skgi .sub{margin:0;font-size:12px}
+.skbar{display:block;height:5px;border-radius:9px;background:color-mix(in srgb,var(--ink) 10%,transparent);overflow:hidden}.skbar>i{display:block;height:100%;border-radius:9px}
+.skrad{max-width:300px;margin:0 auto}
+.skbr .skbn{display:inline-block;min-width:22px;color:var(--muted)}.skbr.me{background:color-mix(in srgb,var(--acc) 10%,transparent);border-radius:10px;padding-left:8px;padding-right:8px}
+.hxk .sktx{display:block;font:800 17px/1.2 var(--fd);letter-spacing:0;text-transform:none;color:var(--ink);margin:0;overflow-wrap:break-word;padding-top:4px}
+.skstk .skseg{flex-wrap:nowrap!important;overflow-x:auto!important;scrollbar-width:none}
+.skgap{text-align:center;color:var(--muted);line-height:1;padding:2px 0}
 </style>
 </head>
 <body>
@@ -4362,6 +4379,85 @@ function dropsSec(D){const X=(D.m.drops||[]).slice();if(!X.length)return "";cons
   return sdSec("Drops that cost you",sdWhy([`<b>${X.length}</b> drop${X.length===1?"":"s"}; ${hurt.length} went on to score 25+ points in other teams’ starting lineups (${f1(tot)} in total).`,ca!=null?`Your drops gave away ${f1(me)} points each in other lineups; the circle average is ${f1(ca)}.`:null,`${clean} of your drops (${pcx(clean/X.length)}) scored under 10 points the rest of that season: good cuts.`])
     +(hurt.length?hurt.slice(0,5).map(row).join(""):`<p class="sub">None of your drops hurt you.</p>`)+`<p class="sub">Number on the right: points the player scored in other managers’ starting lineups after you dropped him, that season.</p>`,`${hurt.length} hurt`)
    +sdSec("All drops",seaChips(D,X)+lst(Xs.map(row),6,"No drops this season."),`${Xs.length}`);}
+
+/* ===== v44: Skills joins the My stats popup family — category chips on top, skill chips below, fixed height, deeper skill pages ===== */
+const SKN={lineup:"Lineups",waivers:"Waivers",trading:"Trading",drafting:"Drafting",clutch:"Clutch",scoring:"Scoring",consistency:"Consistency",luck:"Luck",activity:"Activity"};
+const SKHOW={lineup:"Points you scored divided by what your best possible lineup would have scored, every regular-season week.",
+  waivers:"Each pickup earns the points he scored in your lineup, +25 if he broke out, +10 if he started 3 or more weeks, minus a charge for FAAB spent beyond what he returned. The grade uses your average pickup.",
+  trading:"The average realized grade of your trades: what you got against what you gave, re-scored with what the players and picks actually did afterward.",
+  drafting:"Points each pick scored minus what that draft slot usually returns in these leagues, averaged across every pick.",
+  clutch:"Your win rate as an underdog (under a 40% pregame win chance), pulled toward average when there are only a few of those games.",
+  scoring:"Your points a game minus what your opponents averaged, so high-scoring leagues don’t inflate it.",
+  consistency:"How tightly your weekly scores cluster around your average. A smaller spread ranks higher.",
+  luck:"Actual wins minus all-play wins (what your scores would win against every team each week), per game.",
+  activity:"Transactions a season. It shows how hands-on you are and isn’t graded."};
+const skCol=g=>/^A/.test(g)?"g":/^B|C\+/.test(g)?"y":!g||g==="–"?"":"r";
+function stKeys(D){const m=D.m;return STC.filter(([k])=>{if(k==="trades")return (m.trades||[]).length;if(k==="waivers")return (m.adds||[]).length;if(k==="drafts")return (m.drafts||[]).length;if(["skills","lineups","scoring","clutch","luck"].includes(k))return !D.gl&&D.S.length;if(k==="rivals")return Object.keys(m.h2h||{}).length;return true;});}
+
+/* where you rank among the managers in these leagues */
+function skBoard(kk,C){const {m,M}=C,pool=Object.values(M).filter(x=>x.g>=8),act=kk==="activity";
+  const xs=pool.map(x=>({x,v:act?x.d.txPerS:(x.sk||{})[kk]})).filter(o=>o.v!=null&&isFinite(o.v)).sort((a,b)=>b.v-a.v);if(xs.length<3)return "";
+  const me=o=>o.x===m||o.x.uid===m.uid,i=xs.findIndex(me);const show=xs.slice(0,5).map((o,j)=>[j,o]);if(i>=5)show.push([i,xs[i]]);
+  const row=([j,o])=>`<div class="lrow skbr${me(o)?" me":""}"><span class="ell"><b class="num skbn">${j+1}</b>${esc(o.x.name||"Manager")}${me(o)&&!/^you$/i.test(o.x.name||"")?` <span class="sub">(you)</span>`:""}</span><span class="row" style="gap:8px">${act?`<span class="num">${f1(o.v)}</span><span class="sub">a season</span>`:`<span class="sub">${ordn(o.v)}</span><i class="skd ${skCol(SKG(o.v))}">${SKG(o.v)}</i>`}</span></div>`;
+  return sdSec("Where you rank",show.map((r,n)=>(n===5&&i>5?`<div class="skgap">⋯</div>`:"")+row(r)).join("")+`<p class="sub">${i>=0?`You’re #${i+1} of ${xs.length} managers with 8+ games in ${esc(C.lbl)}.`:`Ranked among ${xs.length} managers with 8+ games.`}</p>`);}
+
+/* each skill, season by season */
+function skSeasons(kk,C){const {m}=C,S=(m.scores||[]).filter(x=>!x.live),bs=xs=>grp(xs,x=>x.s??x.season).sort((a,b)=>b[0]-a[0]);
+  let head=[],rows=[],note="",fmt=v=>f1(v);const ok=(v,ref,lowGood)=>v==null||ref==null?0:(lowGood?ref-v:v-ref)>Math.abs(ref)*.03?1:(lowGood?v-ref:ref-v)>Math.abs(ref)*.03?-1:0;
+  if(kk==="lineup"){const all=S.filter(x=>x.bn!=null),ref=all.length?all.reduce((t,x)=>t+x.bn,0)/all.length:null;head=["Season","G","Efficiency","Bench/wk","Perfect","Flipped losses"];
+    rows=bs(all).map(([s,xs])=>{const v=xs.reduce((t,x)=>t+x.v,0),o=xs.reduce((t,x)=>t+x.v+x.bn,0),b=xs.reduce((t,x)=>t+x.bn,0)/xs.length;return {s,val:b,ok:ok(b,ref,1),c:[s,xs.length,pcx(o?v/o:null),f1(b),xs.filter(x=>x.bn<.5).length,xs.filter(x=>!x.won&&x.ow&&x.v!==x.opp).length]};});
+    note="Points left on your bench each week. Green seasons beat your usual mark, red ones trail it.";}
+  else if(kk==="waivers"){const A=m.adds||[],g=bs(A),ref=g.length?A.reduce((t,x)=>t+x.started,0)/g.length:null;head=["Season","Pickups","Became starters","Pts started","FAAB","Best pickup"];
+    rows=g.map(([s,xs])=>{const p=xs.reduce((t,x)=>t+x.started,0),b=xs.slice().sort((a,c)=>c.started-a.started)[0];return {s,val:p,ok:ok(p,ref),c:[s,xs.length,pcx(xs.filter(x=>x.stW>=3).length/xs.length),f0(Math.round(p)),xs.some(x=>x.bid)?"$"+xs.reduce((t,x)=>t+(x.bid||0),0):"–",b&&b.started>0?esc(b.name):"–"]};});
+    fmt=v=>f0(Math.round(v));note="Points your pickups scored in your lineup each season.";}
+  else if(kk==="trading"){const T=m.trades||[];head=["Season","Trades","Avg grade","W-L","Net pts"];
+    rows=bs(T).map(([s,xs])=>{const a=xs.reduce((t,x)=>t+x.rz,0)/xs.length;return {s,val:a*100,ok:a>=.55?1:a>=.45?0:-1,c:[s,xs.length,`<span class="grd ${grCls(GR(a))}">${GR(a)}</span>`,`${xs.filter(t=>t.rz>.52).length}-${xs.filter(t=>t.rz<.48).length}`,sgnN(xs.reduce((t,x)=>t+x.net,0),0)]};});
+    fmt=v=>GR(v/100);note="Average realized grade of the trades you made each season.";}
+  else if(kk==="drafting"){const Dr=m.drafts||[];head=["Season","Picks","Vs slot / pick","Beat slot","Best pick"];
+    rows=bs(Dr).map(([s,xs])=>{const a=xs.reduce((t,x)=>t+x.voe,0)/xs.length,b=xs.slice().sort((p,q)=>q.voe-p.voe)[0];return {s,val:a,ok:a>3?1:a>-3?0:-1,c:[s,xs.length,sgnN(a),`${xs.filter(x=>x.voe>0).length} of ${xs.length}`,b?`${esc(b.name)} <span class="sub">R${b.round}</span>`:"–"]};});
+    fmt=v=>sgnN(v,0);note="Points per pick above or below what that slot usually returns.";}
+  else if(kk==="clutch"){const ref=m.d.clutch;head=["Season","As underdog","Close games","After a loss"];
+    rows=bs(S).map(([s,xs])=>{const dg=xs.filter(x=>x.p<.4),cl=xs.filter(x=>Math.abs(x.v-x.opp)<7);const r=dg.length?dg.filter(x=>x.won).length/dg.length:null;
+      let bb=[0,0];xs.slice().sort((a,b)=>a.w-b.w).forEach((x,i,a)=>{const p=a[i-1];if(p&&p.lg===x.lg&&p.w===x.w-1&&!p.won){bb[0]++;if(x.won)bb[1]++;}});
+      return {s,val:r==null?0:r*100,ok:r==null?0:ok(r,ref),c:[s,`${dg.filter(x=>x.won).length}-${dg.filter(x=>!x.won).length}`,`${cl.filter(x=>x.won).length}-${cl.filter(x=>!x.won).length}`,bb[0]?`${bb[1]} of ${bb[0]}`:"–"]};});
+    fmt=v=>Math.round(v)+"%";note="Win rate as an underdog each season.";}
+  else if(kk==="scoring"){head=["Season","G","PPG","Opp PPG","High","Top weeks","Low weeks"];
+    rows=bs(S).map(([s,xs])=>{const p=xs.reduce((t,x)=>t+x.v,0)/xs.length,o=xs.reduce((t,x)=>t+x.opp,0)/xs.length;return {s,val:p-o,ok:p-o>3?1:p-o>-3?0:-1,c:[s,xs.length,f1(p),f1(o),f1(Math.max(...xs.map(x=>x.v))),xs.filter(x=>x.top).length,xs.filter(x=>x.low).length]};});
+    fmt=v=>sgnN(v,0);note="Points a game above or below what your opponents averaged.";}
+  else if(kk==="consistency"){const sd=xs=>{const a=xs.reduce((t,x)=>t+x.v,0)/xs.length;return {a,s:Math.sqrt(xs.reduce((t,x)=>t+(x.v-a)**2,0)/xs.length)};},all=S.length>2?sd(S):null,ref=all?all.s/all.a:null;head=["Season","Average","Spread","Boom weeks","Bust weeks"];
+    rows=bs(S).filter(([,xs])=>xs.length>2).map(([s,xs])=>{const q=sd(xs);return {s,val:q.s,ok:ok(q.s/q.a,ref,1),c:[s,f1(q.a),"±"+f1(q.s),xs.filter(x=>x.v>q.a+q.s).length,xs.filter(x=>x.v<q.a-q.s).length]};});
+    fmt=v=>"±"+Math.round(v);note="Typical swing from your average each season. Shorter bars mean steadier scoring.";}
+  else if(kk==="luck"){head=["Season","W-L","Expected W","Luck"];
+    rows=bs(S).map(([s,xs])=>{const w=xs.filter(x=>x.won).length,e=xs.reduce((t,x)=>t+x.p,0);return {s,val:w-e,ok:w-e>=.5?1:w-e>-.5?0:-1,c:[s,`${w}-${xs.length-w}`,f1(e),`<span class="${w-e>=0?"good":"bad"}">${sgnN(w-e)}</span>`]};});
+    fmt=v=>sgnN(v);note="Wins above or below what each game’s pregame odds expected.";}
+  else if(kk==="activity"){const A=m.adds||[],T=m.trades||[],Dp=m.drops||[],ys=[...new Set([...A.map(x=>x.s),...T.map(x=>x.season),...Dp.map(x=>x.s)])].sort((a,b)=>b-a);
+    const tot=ys.map(y=>A.filter(x=>x.s===y).length+T.filter(x=>x.season===y).length),ref=tot.length?tot.reduce((a,b)=>a+b,0)/tot.length:null;head=["Season","Pickups","Trades","Drops"];
+    rows=ys.map((y,i)=>({s:y,val:tot[i],ok:0,c:[y,A.filter(x=>x.s===y).length,T.filter(x=>x.season===y).length,Dp.filter(x=>x.s===y).length||"–"]}));fmt=v=>String(Math.round(v));note="Pickups plus trades each season.";}
+  if(!rows.length)return "";const ch=rows.slice().reverse(),cl=r=>kk==="activity"?"cb n":r.ok>0?"cb hi":r.ok<0?"cb":"cb mid";
+  const chart=ch.length>1?chBars(ch.map(r=>r.val),ch.map(r=>"’"+String(r.s).slice(2)),{h:120,top:v=>fmt(v),cls:(v,i)=>cl(ch[i])})+`<p class="sub">${note}</p>`:"";
+  return sdSec("Season by season",chart+sdTbl(head,rows.map(r=>r.c)));}
+
+/* overview: the whole profile in one header, the shape, every grade at a glance */
+function skOverview(C,old){const {m,M}=C,k=m.sk||{},six=["lineup","waivers","trading","drafting","clutch","scoring"],have=six.filter(x=>k[x]!=null);if(!have.length)return old;
+  const av=have.reduce((s,x)=>s+k[x],0)/have.length,srt=have.slice().sort((a,b)=>k[b]-k[a]),best=srt[0],worst=srt[srt.length-1];
+  const pool=Object.values(M).filter(x=>x.g>=8&&x.sk),pav=x=>{const v=six.map(y=>x.sk[y]).filter(v=>v!=null);return v.length>=3?v.reduce((a,b)=>a+b,0)/v.length:null;};
+  const xs=pool.map(x=>({x,v:pav(x)})).filter(o=>o.v!=null).sort((a,b)=>b.v-a.v),i=xs.findIndex(o=>o.x===m||o.x.uid===m.uid);
+  const hdr=sdHdr(SKG(Math.round(av)),Math.round(av),i>=0?{r:i+1,n:xs.length}:null,"average of six skills",[[`<strong class="sktx">${esc(m.label||"–")}</strong>`,"Manager type"],[ordn(Math.round(av)),"Average percentile"],[`<strong class="sktx">${SKN[best]}</strong>`,"Strongest",`${SKG(k[best])} · ${ordn(k[best])}`],[`<strong class="sktx">${SKN[worst]}</strong>`,"Needs work",`${SKG(k[worst])} · ${ordn(k[worst])}`]]);
+  const gl=["lineup","waivers","trading","drafting","clutch","scoring","consistency","luck","activity"].map(x=>{const v=k[x],g=SKG(v),c=skCol(g);
+    return `<button class="skgi" data-skj="${x}"><span class="row sp"><b>${SKN[x]}</b>${v!=null?`<i class="skd ${c}">${g}</i>`:""}</span><span class="sub">${v!=null?ordn(v)+" percentile":x==="activity"?f1(m.d.txPerS)+" moves a season":"not enough data"}</span><i class="skbar"><i style="width:${v??0}%;background:var(--tl-${c||"y"})"></i></i></button>`;}).join("");
+  const rad=chRadar([["Lineups","lineup"],["Waivers","waivers"],["Trading","trading"],["Drafting","drafting"],["Clutch","clutch"],["Scoring","scoring"]].map(([n,kk])=>({n,v:k[kk]})));
+  return hdr+sdSec("Every grade",`<div class="skgl">${gl}</div><p class="sub">Tap a skill for its full breakdown.</p>`)+sdSec("Skill shape",`<div class="skrad">${rad}</div>`)+`<div class="sdsec">${old.replace(/^<div class="eyebrow">[^<]*<\/div>/,"")}</div>`;}
+
+skillDetail=(function(prev){return function(focus){if(route()!=="stats")return prev(focus);
+  const C=skillCtx(),D=stData();if(!C||!D)return prev(focus);
+  const os=openSheet;let cap="";openSheet=(t,h)=>{cap=h;};try{prev(focus);}finally{openSheet=os;}
+  const SEC=window._SKS;if(!SEC||!cap)return;
+  if(!SEC._v44){SEC.ov=skOverview(C,SEC.ov);for(const kk of Object.keys(SKN))if(SEC[kk])SEC[kk]=SEC[kk].replace(/<\/div>$/,"")+`<div class="sdsec"><h3>How it’s graded</h3><p class="sub" style="margin:0">${SKHOW[kk]}</p></div>`+skSeasons(kk,C)+skBoard(kk,C)+`</div>`;SEC._v44=1;}
+  const j=cap.indexOf('<div id="skbody">'),sub=cap.slice(0,j).replace('class="seg sm skseg"','class="seg sm skseg sksub2"'),f=focus&&SEC[focus]?focus:"ov";
+  const top=`<div class="seg sm skseg">${stKeys(D).map(([k,n])=>`<button data-stp="${k}" class="${k==="skills"?"on":""}">${n}</button>`).join("")}</div>`;
+  os("My stats",`<div class="skstk">${top}${sub}</div><div class="sdbody"><h2 class="sdt1">Skills</h2><div class="eyebrow">${esc(D.lbl)}</div><div id="skbody">${SEC[f]}</div></div>`);
+  $("#sheet").classList.add("skpop");S._stKey="skills";setTimeout(()=>{centerTabs($("#sheet"));try{tlPaint($("#sheetB"));}catch(_){}},30);};})(skillDetail);
+document.addEventListener("click",e=>{const b=e.target.closest("[data-skj]");if(!b)return;e.stopPropagation();const t=document.querySelector(`#sheet [data-skt="${b.dataset.skj}"]`);if(t)t.click();},true);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
