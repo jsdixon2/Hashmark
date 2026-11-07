@@ -14,7 +14,7 @@ jobs:
         env: {ODDSPAPI_KEY: "${{ secrets.ODDSPAPI_KEY }}"}
       - run: |
           git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
-          git add bt/oddspapi_probe.json
+          git add bt/oddspapi_sample.json
           git diff --staged --quiet && exit 0
-          git commit -m "OddsPapi coverage probe"
+          git commit -m "OddsPapi sample"
           for i in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep 5; done
