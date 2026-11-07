@@ -4877,6 +4877,21 @@ function kdGroups(L,t){try{const all=kdList(L,t),out=[];const has=s=>(L.rpos||[]
 /* weekly projection without Sleeper starters (future weeks, other teams): add the best K and D/ST */
 teamWeek=(function(prev){return function(L,ti,ls){const r=prev(L,ti,ls);try{if(!(ls&&ls.starters&&ls.starters.length)){const k=kdLineup(L,L.teams[ti]),add=k.reduce((s,x)=>s+(x.m?x.m.wk:0),0);r.kdRows=k;r.kd=(r.kd||0)+add;r.proj+=add;}}catch(e){}return r;};})(teamWeek);
 
+/* ===== v54: released / unsigned players and players with no role this week are never suggested as adds =====
+   release = recent news naming the player with released / cut / waived, and no later signing or claim;
+   no role  = no Sleeper projection this week (and not on a bye) */
+const RX_REL=/\b(release[sd]?|cut|cuts|waive[sd]?|waiving)\b/i,RX_SIGN=/\b(sign(s|ed|ing)?|claim(s|ed)?|re-?sign(s|ed)?|agree(s|d)? to|join(s|ed)?|land(s|ed)? with|work(s|ed)? out|visit(s|ed)?|hire[sd]?)\b/i;
+function relStatus(p){if(!p)return null;const k=p.id+"|"+(NW.built||0)+"|"+((NW.items||[]).length);if(p._rel&&p._rel.k===k)return p._rel.v;const n=nrm(p.name);let rel=null,sign=0;
+  if(n&&n.split(" ").length>=2)for(const it of (NW.items||[])){if(!it.ts||Date.now()-it.ts>30*864e5)continue;const t=nrm(it.t||"");if(!t.includes(n))continue;
+    const e=n.replace(/[-]/g,"\\-"),relHit=new RegExp("\\b(release[sd]?|cuts?|waive[sd]?)\\s+(qb|rb|wr|te|k|lb|cb|s|de|dt|dl|db|edge|fb)?\\s*"+e+"\\b").test(t)||new RegExp("\\b"+e+"\\b[^,;:]{0,30}\\b(released|cut|waived)\\b").test(t);
+    if(relHit){if(!rel||it.ts>rel.ts)rel=it;}else if(RX_SIGN.test(it.t)||(it.k||[]).includes("trade"))sign=Math.max(sign,it.ts);}
+  const v=rel&&rel.ts>sign?{ts:rel.ts,t:rel.t,src:rel.src}:null;p._rel={k,v};return v;}
+function noRole(p){if(!p)return true;if(S.mode!=="live")return false;const g=gameOf(p);if(g&&g.bye)return !(p.g>0);return !(p.proj!=null&&p.proj>.3);}
+freeAgents=(function(prev){return function(){return prev().filter(p=>!relStatus(p)&&!noRole(p));};})(freeAgents);
+/* tell the user when one of their own players was released */
+leagueDigest=(function(prev){return function(L){const v=prev(L);try{if(!L||L.rip)return v;const me=L.teams[mineIdx(L)];if(!me)return v;
+  for(const id of me.players){const p=PL[id],r=relStatus(p);if(r&&!v.mv.some(m=>m.id===id))v.mv.unshift({pr:90,id,k:"Released",t:`${p.name} was released`,s:`${r.src||"News"}: “${r.t}”. He has no NFL team right now, so he won’t score until someone signs him.`,go:"player-"+id});}}catch(e){}return v;};})(leagueDigest);
+
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
