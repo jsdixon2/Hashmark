@@ -141,6 +141,21 @@ def main():
             if got: break
         time.sleep(1.2)
         if not got and i == 0: print("  name lookup by id returned nothing; trying by team"); break
+    # names ride along on live odds (/odds lists playerName); harvest them from upcoming games
+    up = [f for f in fixtures if datetime.fromisoformat(f["startTime"].replace("Z", "+00:00")) > now]
+    nx = call("fixtures", sportId=14, tournamentId=31, **{"from": now.strftime("%Y-%m-%d"), "to": (now + timedelta(days=9)).strftime("%Y-%m-%d")}) or []
+    up += [f for f in nx if isinstance(f, dict)]
+    for f in {f["fixtureId"]: f for f in up}.values():
+        o = call("odds", fixtureId=f["fixtureId"])
+        if isinstance(o, dict):
+            for bk in (o.get("bookmakerOdds") or {}).values():
+                for mk in (bk.get("markets") or {}).values():
+                    for oc in (mk.get("outcomes") or {}).values():
+                        for pid, pr in (oc.get("players") or {}).items():
+                            if pid != "0" and isinstance(pr, dict) and pr.get("playerName"): old["names"][str(pid)] = pr["playerName"]
+        time.sleep(1.5)
+    print("named after odds harvest:", len(old["names"]))
+    r = call("players", base=0, playerIds=",".join(need[:3])); print("players probe:", str(r)[:300])
     if len([pid for g in old["games"].values() for pid in g["p"] if pid not in old["names"]]) > 50:
         for tid in teams:
             for b in (0, 1):
