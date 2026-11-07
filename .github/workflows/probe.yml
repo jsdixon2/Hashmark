@@ -1,0 +1,20 @@
+name: oddspapi-probe
+on:
+  push:
+    paths: ["scripts/probe_oddspapi.py", ".github/workflows/probe.yml"]
+  workflow_dispatch: {}
+permissions: {contents: write}
+concurrency: {group: data-commit, cancel-in-progress: false}
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 scripts/probe_oddspapi.py
+        env: {ODDSPAPI_KEY: "${{ secrets.ODDSPAPI_KEY }}"}
+      - run: |
+          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
+          git add bt/oddspapi_probe.json
+          git diff --staged --quiet && exit 0
+          git commit -m "OddsPapi coverage probe"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep 5; done
