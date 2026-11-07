@@ -4961,7 +4961,8 @@ function keepPlan(L,ids){const c=keepCfg(L),line=keepLine(L),pl=ids.map(id=>PL[i
   const tx=c.tx?pl.filter(p=>taxiKeepElig(L,p.id)).slice(0,c.tx):[],txS=new Set(tx.map(p=>p.id)),reg=pl.filter(p=>!txS.has(p.id)).slice(0,c.reg);
   const sur=p=>Math.max(0,(p.vL||p.val)-line);return {reg,tx,line,val:reg.reduce((s,p)=>s+sur(p),0)+tx.reduce((s,p)=>s+sur(p),0)};}
 function keepWeight(L,c){const k=keepCfg(L),cap=rosterCap(L)||(L.rpos||[]).length||16,f=Math.min(1,(k.reg+k.tx)/cap);const st=c&&c.ts?c.ts.st:"balanced";
-  return Math.max(.12,Math.min(.85,f*1.15*(st==="contender"?.75:st==="rebuilding"?1.3:1)));}
+  /* fitted on 1,657 real keeper-league trades: next season counts ~25% at 1 keeper in 10 roster spots, ~35% at 2 in 10, levelling off near 38% */
+  return Math.max(.1,Math.min(.6,.38*(1-Math.exp(-f/.09))*(st==="contender"?.75:st==="rebuilding"?1.3:1)));}
 /* ---- calculator ---- */
 calcEval=(function(prev){return function(){const R=prev();if(!R)return R;const L=S.L,K=S.calc,ty=S.fmt.type;
   const postOf=r=>{const t=r.t,outIds=r.outA.filter(a=>a.k==="p").map(a=>a.id),inIds=r.inA.filter(a=>a.k==="p").map(a=>a.id);return t.players.filter(id=>!outIds.includes(id)&&!(r.drops||[]).includes(id)).concat(inIds.filter(id=>(r.placed||{})[id]!=="taxi"));};
@@ -5055,7 +5056,7 @@ function dayOne(x,t,sd){try{if(x.gl)return null;const ty=+x.type||0,w=Math.max(1
     const dk={};rids.forEach(r=>dk[r]=plan(post[r])-plan(pre[r]));const dd=dk[sd.rid]-rids.filter(r=>r!==sd.rid).reduce((s,r)=>s+dk[r],0)/(rids.length-1);
     const sc=Math.max(1,...[...sd.recP,...sd.gaveP].map(valD));pk=Math.max(-1,Math.min(1,dd/sc));}
   const cap=(x.rpos||[]).filter(s=>s!=="IR"&&s!=="TAXI").length||16,st=gp<2?"balanced":wpct>=.6?"contender":wpct<=.35?"rebuilding":"balanced";
-  const wf=Math.max(.12,Math.min(.85,Math.min(1,K/cap)*1.15*(st==="contender"?.75:st==="rebuilding"?1.3:1)));
+  const wf=Math.max(.1,Math.min(.6,.38*(1-Math.exp(-Math.min(1,K/cap)/.09))*(st==="contender"?.75:st==="rebuilding"?1.3:1)));
   const zNow=RDZ.a*Math.tanh(d/RDZ.tau)+RDZ.b*Math.tanh((pct||0)/.25),zKeep=valD?logit(pvTable(pk)):0;
   return wpShare(sigm((1-wf)*zNow+wf*zKeep));}catch(e){console.error(e);return null;}}
 
