@@ -996,6 +996,15 @@ main{box-sizing:border-box;min-height:100vh;min-height:100lvh;min-height:max(100
 .hxk .sktx{display:block;font:800 17px/1.2 var(--fd);letter-spacing:0;text-transform:none;color:var(--ink);margin:0;overflow-wrap:break-word;padding-top:4px}
 .skstk .skseg{flex-wrap:nowrap!important;overflow-x:auto!important;scrollbar-width:none}
 .skgap{text-align:center;color:var(--muted);line-height:1;padding:2px 0}
+/* ===== v45 ===== */
+html.fitpg,html.fitpg body{overflow:hidden;overscroll-behavior:none}
+.sklg{display:flex;align-items:center;gap:10px;padding:0 16px 8px;margin:0;font:650 13px var(--fb);color:var(--ink);position:relative}
+.sklgk{font:700 10.5px var(--fd);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.sklg>b,.sklgs{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--accs);color:var(--ink);border:1px solid color-mix(in srgb,var(--acc) 35%,transparent);font:700 13px var(--fd);max-width:70%;position:relative;cursor:pointer}
+.sklgs b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sklgs svg{width:14px;height:14px;flex:none;color:var(--acc)}
+.sklgs select{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;font-size:16px}
+@media (min-width:900px){.sklg{padding:0 20px 8px}}
+.hsum .hslg{font-weight:750;color:var(--acc)}
 </style>
 </head>
 <body>
@@ -4458,6 +4467,39 @@ skillDetail=(function(prev){return function(focus){if(route()!=="stats")return p
   os("My stats",`<div class="skstk">${top}${sub}</div><div class="sdbody"><h2 class="sdt1">Skills</h2><div class="eyebrow">${esc(D.lbl)}</div><div id="skbody">${SEC[f]}</div></div>`);
   $("#sheet").classList.add("skpop");S._stKey="skills";setTimeout(()=>{centerTabs($("#sheet"));try{tlPaint($("#sheetB"));}catch(_){}},30);};})(skillDetail);
 document.addEventListener("click",e=>{const b=e.target.closest("[data-skj]");if(!b)return;e.stopPropagation();const t=document.querySelector(`#sheet [data-skt="${b.dataset.skj}"]`);if(t)t.click();},true);
+
+/* ===== v45: short pages don't scroll; My stats popups always show (and switch) the league ===== */
+/* short pages keep their full-screen height for the iOS dock, but can't be dragged when nothing is below */
+(function(){let raf=0;const chk=()=>{raf=0;const m=document.querySelector("main"),h=document.documentElement;if(!m)return;
+  if(window.innerWidth>=1100){h.classList.remove("fitpg");return;}
+  let bot=0;for(const el of m.children){if(!el.offsetParent&&getComputedStyle(el).position!=="fixed")continue;const r=el.getBoundingClientRect();if(r.height)bot=Math.max(bot,r.bottom+window.scrollY);}
+  const pb=parseFloat(getComputedStyle(m).paddingBottom)||0,fits=bot+pb<=window.innerHeight+1;
+  if(fits!==h.classList.contains("fitpg")){h.classList.toggle("fitpg",fits);if(fits&&window.scrollY)window.scrollTo(0,0);}};
+  const q=()=>{if(!raf)raf=requestAnimationFrame(chk);};window._fitChk=q;
+  try{new MutationObserver(q).observe(document.querySelector("main"),{childList:true,subtree:true});}catch(e){}
+  try{const ro=new ResizeObserver(q);ro.observe(document.querySelector("main"));}catch(e){}
+  window.addEventListener("resize",q);window.addEventListener("load",q);document.addEventListener("toggle",q,true);document.addEventListener("click",()=>setTimeout(q,60),true);q();})();
+render=(function(prev){return function(){const r=prev.apply(this,arguments);window._fitChk&&window._fitChk();return r;};})(render);
+
+/* which league a My stats view covers */
+function stLgName(){const sc=statsScope();return sc==="all"?"All leagues":((HX.data&&HX.data.chainName&&HX.data.chainName[sc])||"This league");}
+function stChains(){const G=HX.data;if(!G||!G.me)return [];return [...new Set(G.me.seasons.map(s=>s.chain))];}
+function stLgRow(){const cs=stChains(),sc=statsScope(),G=HX.data;const lab=`<span class="sklgk">League</span>`;
+  if(cs.length<2)return `<div class="sklg">${lab}<b>${esc(stLgName())}</b></div>`;
+  return `<label class="sklg">${lab}<span class="sklgs"><b>${esc(stLgName())}</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg><select data-stlg aria-label="League">${["all",...cs].map(c=>`<option value="${esc(c)}"${c===sc?" selected":""}>${esc(c==="all"?"All leagues":G.chainName[c])}</option>`).join("")}</select></span></label>`;}
+/* category popups: league row + category chips pinned together */
+stOpen=(function(prev){return function(key){prev(key);if(key==="skills")return;const b=$("#sheetB"),seg=b&&b.querySelector(":scope > .skseg");if(!seg)return;
+  const w=document.createElement("div");w.className="skstk";w.innerHTML=stLgRow();seg.parentNode.insertBefore(w,seg);w.appendChild(seg);centerTabs($("#sheet"));};})(stOpen);
+/* skills popup: same league row on top of its two chip rows */
+skillDetail=(function(prev){return function(focus){prev(focus);const w=document.querySelector("#sheetB .skstk");if(w&&!w.querySelector(".sklg"))w.insertAdjacentHTML("afterbegin",stLgRow());};})(skillDetail);
+document.addEventListener("change",e=>{const s=e.target.closest&&e.target.closest("[data-stlg]");if(!s)return;
+  const key=S._stKey,sk=document.querySelector("#sheet [data-skt].on"),f=sk&&sk.dataset.skt!=="ov"?sk.dataset.skt:null;
+  S.hxScope=s.value;S.stSea=null;render();if(key==="skills")skillDetail(f);else stOpen(key);const c=$("#sheet .card");if(c)c.scrollTop=0;});
+/* collapsed page header on My stats names the league */
+(function(){const prev=window.hsumUpdate;if(!prev)return;window.hsumUpdate=function(){prev();if(route()!=="stats"||!stChains().length)return;const s=document.querySelector(".hsum .ell");if(!s)return;
+  const n=stLgName();const parts=s.innerHTML.split("<i>·</i>").filter(p=>p.replace(/<[^>]+>/g,"").trim()!==n&&!/^All leagues$/.test(p.replace(/<[^>]+>/g,"").trim()));
+  parts.push(`<b class="hslg">${esc(n)}</b>`);s.innerHTML=parts.join("<i>·</i>");};})();
+document.addEventListener("click",e=>{if(e.target.closest("[data-hxs]")&&window.hsumUpdate)setTimeout(hsumUpdate,30);},true);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
