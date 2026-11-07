@@ -14,6 +14,7 @@ jobs:
       - uses: actions/checkout@v5
       - run: python3 scripts/fetch_leagues.py
         env: {MAX_LEAGUES: "700"}
+      - run: python3 scripts/build_calib.py
       - run: |
           git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
           git add bt/

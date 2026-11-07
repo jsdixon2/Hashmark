@@ -67,29 +67,40 @@ def main():
     u = get(f"/user/{SEED}")
     if not u: print("seed user not found"); return
     q, seen_users = deque([u["user_id"]]), {u["user_id"]}
-    added = 0
-    while q and len(old["leagues"]) < MAX_LEAGUES:
+    added = refreshed = 0
+    walked = set()
+    live = {k for k, v in old["leagues"].items() if v.get("status") == "in_season"}
+    cap_new = max(0, MAX_LEAGUES - len(old["leagues"])) + int(os.environ.get("GROW", "120"))
+    while q and (added < cap_new or refreshed < len(live)):
         uid = q.popleft()
         for s in SEASONS:
             for lg in get(f"/user/{uid}/leagues/nfl/{s}") or []:
                 lid = lg.get("league_id")
-                if not lid or hid(lid) in done: continue
-                done.add(hid(lid))
-                # leaguemates feed the crawl
-                for m in get(f"/league/{lid}/users") or []:
-                    if m.get("user_id") and m["user_id"] not in seen_users and len(seen_users) < 20000:
-                        seen_users.add(m["user_id"]); q.append(m["user_id"])
+                if not lid: continue
+                h = hid(lid)
+                if h in live and h not in old.get("_ref", set()):
+                    old.setdefault("_ref", set()).add(h); pk = league_pack(lg)
+                    if pk and pk["weeks"]: old["leagues"][h] = pk
+                    refreshed += 1
+                # leaguemates feed the crawl (also through leagues already saved, so later runs reach the same circle)
+                if h not in walked:
+                    walked.add(h)
+                    for m in get(f"/league/{lid}/users") or []:
+                        if m.get("user_id") and m["user_id"] not in seen_users and len(seen_users) < 20000:
+                            seen_users.add(m["user_id"]); q.append(m["user_id"])
+                if h in done or added >= cap_new: continue
+                done.add(h)
                 pk = league_pack(lg)
                 if pk and pk["weeks"]:
                     old["leagues"][pk["id"]] = pk; added += 1
                     if added % 25 == 0: print(f"{len(old['leagues'])} leagues, {CALLS[0]} calls")
-                if len(old["leagues"]) >= MAX_LEAGUES: break
-            if len(old["leagues"]) >= MAX_LEAGUES: break
-    old["seen"] = sorted(done)
+                if added >= cap_new and refreshed >= len(live): break
+            if added >= cap_new and refreshed >= len(live): break
+    old.pop("_ref", None); old["seen"] = sorted(done)
     old["built"] = time.strftime("%Y-%m-%dT%H:%MZ", time.gmtime())
     os.makedirs("bt", exist_ok=True)
     with gzip.open(OUT, "wt") as f: json.dump(old, f, separators=(",", ":"))
-    print(f"saved {len(old['leagues'])} league-seasons ({added} new), {CALLS[0]} API calls")
+    print(f"saved {len(old['leagues'])} league-seasons ({added} new, {refreshed} in-season refreshed), {CALLS[0]} API calls")
 
 
 if __name__ == "__main__":
