@@ -42,6 +42,8 @@ def opt(players, val, slots):
     return tot
 res = collections.defaultdict(list); nteam = 0; REC = []; MGR = []
 SRC = os.environ.get("SRC", "keepers")
+ADDH = {k: float(v) for k, v in (x.split(":") for x in os.environ.get("ADDH", "").split(",") if x)}
+TAG = os.environ.get("TAG", "")
 if SRC == "keepers": LG = [pr["s"] for pr in json.load(gzip.open(f"{H}/keepers.json.gz", "rt"))["pairs"].values()]
 else: LG = list(json.load(gzip.open(f"{H}/rosters.json.gz", "rt"))["leagues"].values())
 NL = collections.Counter()
@@ -92,6 +94,9 @@ def run(lg):
             ks4 = list(range(w, w + 4))
             for mode in ("hybinj",):
                 V = {p: vec(s, w, p, mode) for p in set(mine) | set(avail)}
+                for p in avail:  # optional haircut on wire players' outlook (ADDH="WR:1.5,RB:0"), points per game
+                    h = ADDH.get(posd.get(p), 0.0)
+                    if h: V[p] = [max(0.0, x - h) if x > 0 else 0.0 for x in V[p]]
                 VV = lambda p: V[p] if p in V else V.setdefault(p, vec(s, w, p, mode))
                 tot = lambda ps: sum(opt(ps, lambda p, i=i: VV(p)[i], slots) for i in range(4) if w + i <= 17)
                 base = tot(mine)
@@ -126,6 +131,6 @@ if __name__ == "__main__":
             RA += r_; MA += m_; nteam += n_
             if i % 100 == 0: print(i, len(RA), flush=True)
     REC, MGR = RA, MA
-    pickle.dump((REC, MGR), open(B + f"/e9_exact2_{SRC}.pkl", "wb"))
+    pickle.dump((REC, MGR), open(B + f"/e9_exact2_{SRC}{TAG}.pkl", "wb"))
     out = {"teams_weeks": nteam}
     print(json.dumps(out, indent=1))
