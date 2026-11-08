@@ -6,6 +6,23 @@ Newest session at the top.
 
 ---
 
+## 2026-11-08, night: v69, trade ideas and targets never empty (on main)
+- **Owner's report:** a redraft league showed 0 trade ideas and "No pre-breakout trade targets". Their guidance: ideas
+  don't need to be win-win, just not egregious for the other team; targets don't need to be breakout candidates.
+- **Redraft:** `rdFinder` is a new search for 1-for-1, 2-for-1 and 1-for-2 trades with roster-limit drops.
+  - **Your side:** starting lineup gain of 0.5 pts/wk or more.
+  - **Their side:** starting lineup loss of 1.5 pts/wk at most.
+  - **Market:** they give up 15% or less.
+  - **Title odds** (top 24 candidates): yours must not fall, and theirs may fall by 3 points at most.
+  - It replaces the v51/v57 redraft pipeline, whose win-probability filter required you to gain far more than them.
+- **Keeper/dynasty:** reruns v68 with the other side's test relaxed to `okForThem`. `fitOf` is tagged with the team and
+  `fitsPlan` is swapped during the call. Ideas that also fit their plan get +0.15 score.
+- **Targets:** `targetsAll`, shown on the Pre-breakout page. Order: breakout candidates, then buy-low, then players who
+  add 1+ pts/wk to your lineup with value at most 1.1× your best player (or players 24 and under when rebuilding).
+- **QA (demo):** redraft 4 ideas (was 0), dynasty 14-15, 8 targets per scenario, no errors.
+
+---
+
 ## 2026-11-08, evening: trade finder fits both teams (v68, on main)
 - **Owner's report** (screenshots):
   - Rebuilding at 1-7 in a league with picks, but offered trades like sending Marvin Harrison Jr. (young) plus a 3rd for

@@ -5438,6 +5438,67 @@ vFinder=function(){const L=S.L,mi=mineIdx(L),all=finder(),rd=S.fmt.type==="redra
   <div class="mt">${lst(xs.map(card),6,rd?"No trades that improve both starting lineups right now. Try another filter or Trade partners.":"No trades that fit both teams right now. Try another filter, or set your plan above.")}</div>
   ${xs.length>6?`<button class="btn ghost seemore" data-fdref>Show different ideas</button>`:""}`;};
 
+/* ===== v69: trade ideas never come up empty — not egregious for the other side instead of strictly win-win;
+   trade targets go beyond breakout candidates =====
+   Redraft: own search. Your projected starting lineup must gain 0.5+ pts/wk and (when the season sim is available) your
+   championship odds must not fall; their lineup may lose at most 1.5 pts/wk and their title odds at most 3 points;
+   the market (rest-of-season value) says they give up 15% or less.
+   Keeper/dynasty: your side still has to fit your plan; their side only has to avoid an egregious result
+   (contender's lineup down no more than 1 pt/wk; rebuilder takes on no ageing veteran unless a pick comes with him). */
+function okForThem(st,f){if(st==="contender")return f.lu>=-1;if(st==="rebuilding")return !f.vets.length||f.pk>0;return true;}
+fitWhy=(function(prev){return function(st,f,you){if(st==="contender"&&f.lu<.3)return Math.abs(f.lu)<.3?`${you?"your":"their"} starting lineup about even`:`${you?"your":"their"} starting lineup ${f1(f.lu)} pts/week`;return prev(st,f,you);};})(fitWhy);
+const fitsPlan0=fitsPlan;
+finder=(function(prev){return function(){const L=S.L;if(!L||L.rip)return [];
+  if(S.fmt.type==="redraft")return rdFinder(L);
+  const k=(L._ctx&&L._ctx.k)+"|fd9|"+planGet(L)+"|"+S.asTi;if(L._fd9&&L._fd9.k===k)return L._fd9.v;
+  const mi=mineIdx(L);let me;try{me=leagueCtx(L)[mi];}catch(e){}
+  /* run v68's search with the other side's test relaxed: v68 checks fitsPlan(me) first, then fitsPlan(them) */
+  const fo=fitOf;fitOf=function(L2,ti,...r){const f=fo(L2,ti,...r);f.ti=ti;return f;};fitsPlan=function(st,f){return f.ti===mi?fitsPlan0(st,f):okForThem(st,f);};
+  let v;try{L._fd8=null;v=prev();}finally{fitsPlan=fitsPlan0;fitOf=fo;}
+  v.forEach(x=>{x.themFit=fitsPlan0(x.c.ts.st,x.fTh);x.sc+=x.themFit?.15:0;});v.sort((a,b)=>b.sc-a.sc);
+  L._fd9={k,v};return v;};})(finder);
+function rdFinder(L){const k=(L._ctx&&L._ctx.k)+"|rdf|"+S.asTi;if(L._rdf&&L._rdf.k===k)return L._rdf.v;
+  const C=leagueCtx(L),mi=mineIdx(L),me=L.teams[mi];
+  const okP=p=>p&&POSI.hasOwnProperty(p.pos)&&!isIDP(p)&&p.val>=150&&!lostSeason(p);
+  const P=id=>({k:"p",id,p:PL[id]}),top=t=>t.players.map(id=>PL[id]).filter(okP).sort((a,b)=>b.val-a.val).slice(0,14).map(p=>P(p.id));
+  const base=lpts(me.players,L),mine=top(me),cand=[];
+  for(const c of C){if(c.ti===mi)continue;const th=c.t,thB=lpts(th.players,L),theirs=top(th),found=[];
+    const ev=(send,get,type)=>{const mIn=effV(get.map(a=>a.p.val)),mOut=effV(send.map(a=>a.p.val));if(!mIn||!mOut)return;const mg=(mOut-mIn)/Math.max(mIn,mOut);if(mg<-.15||mg>.3)return;
+      const sI=send.map(a=>a.id),gI=get.map(a=>a.id);let ra={drops:[]},rb={drops:[]};try{ra=rosterAfter(L,mi,gI,sI);rb=rosterAfter(L,c.ti,sI,gI);}catch(e){}
+      const myAfter=me.players.filter(id=>!sI.includes(id)&&!ra.drops.includes(id)).concat(gI),thAfter=th.players.filter(id=>!gI.includes(id)&&!rb.drops.includes(id)).concat(sI);
+      const gMe=lpts(myAfter,L)-base;if(gMe<.5)return;const gTh=lpts(thAfter,L)-thB;if(gTh<-1.5)return;
+      found.push({c,send,get,type,mIn,mOut,mg,lw:gMe,gMe,gThem:gTh,drops:ra.drops,tdrops:rb.drops,ch:{[mi]:myAfter,[c.ti]:thAfter},sc:gMe+.25*Math.max(0,gTh)+.5*Math.min(0,gTh)});};
+    for(const q of mine)for(const p of theirs)ev([q],[p],"1for1");
+    for(let i=0;i<mine.length;i++)for(let j=i+1;j<Math.min(mine.length,12);j++)for(const p of theirs){if(p.p.val<=Math.max(mine[i].p.val,mine[j].p.val))continue;ev([mine[i],mine[j]],[p],"2for1");}
+    for(const q of mine)for(let i=0;i<theirs.length;i++)for(let j=i+1;j<Math.min(theirs.length,12);j++){if(q.p.val<=Math.max(theirs[i].p.val,theirs[j].p.val))continue;ev([q],[theirs[i],theirs[j]],"1for2");}
+    const used=new Set();found.sort((a,b)=>b.sc-a.sc);let m=0;for(const x of found){const ids=[...x.send,...x.get].map(a=>a.id);if(ids.some(id=>used.has(id)))continue;ids.forEach(id=>used.add(id));cand.push(x);if(++m>=4)break;}}
+  cand.sort((a,b)=>b.sc-a.sc);let out=cand.slice(0,24);
+  if(titleOK(L)){const kept=[];for(const x of out){try{const T=titleWith(L,x.ch);x.tt={pre:T.base.ch[mi],post:T.after.ch[mi],d:T.after.ch[mi]-T.base.ch[mi],td:T.after.ch[x.c.ti]-T.base.ch[x.c.ti]};}catch(e){}
+      if(x.tt&&(x.tt.d<-.0005||x.tt.td<-.03))continue;if(x.tt)x.sc=x.tt.d*100+x.lw*.2+(x.tt.td>0?.3:0);kept.push(x);}out=kept.sort((a,b)=>b.sc-a.sc);}
+  const nm=a=>a.p.name;out.forEach(x=>x.title=x.name=`${x.send.map(nm).join(" + ")} for ${x.get.map(nm).join(" + ")}`);
+  L._rdf={k,v:out};return out;}
+/* card and intro text: honest about the other side */
+vFinder=(function(prev){return function(){let h=prev();const rd=S.fmt.type==="redraft";
+  h=h.replace(/theirs <b>\+([\-0-9.]+)<\/b>/g,(m,v)=>`theirs <b>${+v>=0?"+":""}${v}</b>`);
+  if(rd)h=h.replace("Trades that raise your championship odds and improve both starting lineups.","Trades that raise your championship odds and lift your starting lineup without gutting theirs (they lose 1.5 pts/week at most and the market calls it fair).").replace("No trades that improve both starting lineups right now.","No trades that help you without hurting them badly right now.");
+  else h=h.replace("Trades that fit both teams’ plans: a contender’s starting lineup gets better, a rebuilder gets younger or adds picks and takes on no ageing veterans, you come out ahead in value to your roster, they lose no more than a sliver of theirs, and the market calls it fair (within 15–20%).","Trades that fit your plan (a contender’s lineup gets better; a rebuilder gets younger or adds picks and takes on no ageing veterans), that don’t hurt the other team badly, and that the market calls fair (within 15–20%). Ideas that fit their plan too come first.");
+  return h;};})(vFinder);
+/* trade targets: breakout candidates first, then buy-low, then the players who'd add most to your lineup at a fair price */
+function targetsAll(L){const k=(L._ctx&&L._ctx.k)+"|tga|"+planGet(L);if(L._tga&&L._tga.k===k)return L._tga.v;const G=sig(),mi=mineIdx(L),me=L.teams[mi],out=[],seen=new Set();let ts={st:"balanced"};try{ts=leagueCtx(L)[mi].ts;}catch(e){}
+  const add=(p,c,why,kind,m)=>{if(!p||seen.has(p.id))return;seen.add(p.id);out.push({p,c,why,kind,m});};
+  for(const x of G.pre)add(x.p,x.c,x.why[0]||"",'brk',`${PCT(x.p.brk)}%`);
+  for(const x of G.buys)add(x.p,x.c,x.why[0]||"Worth more to you than to their owner","buy","Buy low");
+  const base=lpts(me.players,L),myTop=Math.max(1,...me.players.map(id=>PL[id]?PL[id].val:0)),C=leagueCtx(L),reb=ts.st==="rebuilding"&&S.fmt.type!=="redraft",fit=[];
+  for(const c of C){if(c.ti===mi)continue;for(const id of c.t.players){const p=PL[id];if(!p||!POSI.hasOwnProperty(p.pos)||isIDP(p)||seen.has(id)||p.val>myTop*1.1||lostSeason(p))continue;
+      if(reb){if(p.age==null||p.age>24)continue;fit.push({p,c,s:p.val*(1+(p.brk||0)),why:`${Math.floor(p.age)} years old, long-term value ${f0(p.val)}`,m:`Age ${Math.floor(p.age)}`});}
+      else{const g=lpts(me.players.concat(id),L)-base;if(g<1)continue;fit.push({p,c,s:g/Math.sqrt(Math.max(200,p.val)),why:`+${f1(g)} pts/week in your starting lineup`,m:`+${f1(g)}`});}}}
+  fit.sort((a,b)=>b.s-a.s).slice(0,8).forEach(x=>add(x.p,x.c,x.why,"fit",x.m));
+  L._tga={k,v:out};return out;}
+vPre=(function(prev){return function(){const L=S.L;let h=prev();if(!L)return h;let T=[];try{T=targetsAll(L);}catch(e){console.error(e);return h;}
+  const row=x=>`<button class="tsr" data-go="player-${x.p.id}">${pos(x.p.pos)}<span class="tsn"><b class="ell">${esc(x.p.name)}</b><span class="sub ell">${esc(x.c.t.name)} · ${esc(x.why)}</span></span><span class="tsb">${x.kind==="brk"?`<span class="bar"><i style="width:${Math.min(100,PCT(x.p.brk)/.75)}%"></i></span>`:""}<b class="num">${esc(x.m)}</b></span></button>`;
+  const i=h.indexOf('<section class="pan mt">');const rest=i>=0?h.slice(i):"";
+  return `<section class="pan"><div class="row sp"><h2>Trade targets</h2><span class="tag">Breakout odds ${info("brk")}</span></div><p class="sub">Breakout candidates first, then buy-low players, then the ones who’d add most to ${S.fmt.type!=="redraft"&&(()=>{try{return leagueCtx(L)[mineIdx(L)].ts.st==="rebuilding";}catch(e){return false;}})()?"your rebuild (young players)":"your starting lineup at a fair price"}.</p>${lst(T.map(row),6,"No trade targets on other rosters right now.")}</section>${rest}`;};})(vPre);
+
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

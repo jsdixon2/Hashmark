@@ -47,6 +47,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    that fit raised their real lineup 80% vs 44%; rebuilders gained dynasty market value 1 yr later 73% vs 40%; both sides
    benefited 48% (fit both + fair) vs 19%. Caveat: rebuilders' NEXT-season production favours veterans; two seasons out,
    player-only fits +58 pts vs +25 (n=103) - the rebuild rule is backed by market value more than near-term production.
+4b. v69: owner asked for ideas that are "not egregious" for the other side rather than strictly win-win, and targets
+   beyond breakouts. Redraft has its own search (`rdFinder`): your lineup +0.5 pts/wk, title odds not down; theirs at
+   most -1.5 pts/wk and -3 title pts; market: they give up 15% or less. Keeper/dynasty: your side must fit your plan;
+   theirs only `okForThem` (contender lineup >= -1, rebuilder no ageing vet unless with a pick); full fits rank first.
+   Trade targets (`targetsAll`): breakout -> buy-low -> lineup upgrades at fair price (young players when rebuilding).
 6a. Live games (v66): in-game projection = points so far + pregame projection × share of game left (ESPN scoreboard
    clock, fallback kickoff time); win odds narrow with the share of lineup points left (`gameState`, `lineupLeft`).
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
