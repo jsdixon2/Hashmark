@@ -1,0 +1,51 @@
+# Hashmark — working notes for Claude
+
+Sleeper-connected fantasy football PWA. The whole app is one file, `index.html`, served by GitHub Pages from `main`.
+Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actions (`.github/workflows/`).
+
+## How the owner works
+- Rebuild the analytics engines one at a time to *dominate* (not just beat) public benchmarks; measure on real outcomes,
+  give a breakdown of weaknesses and fixes, then **stop and wait for "go"** before building each engine.
+- Pull as much free, legal data as helps accuracy. Never scrape sportsbooks or KeepTradeCut directly.
+- Never ask for API keys in chat. Keys live in repo secrets: CFBD_API_KEY, ROSTERAUDIT_KEY, ODDS_API_KEY,
+  APISPORTS_KEY, HIGHLIGHTLY_KEY, MSF_KEY, ODDSPAPI_KEY.
+- Repo is public: archives store numbers only (hashed league ids; no usernames, team or league names).
+- No real player photos or NFL logos.
+- Design: black/greys, rounded, Apple-like mobile UI; no repetition; clear, concise, data-driven.
+
+## Code conventions
+- Changes are layered blocks inserted before `/* ===== boot ===== */`, newest last (v50 … v64). Sources kept in `.build/vNN.js`.
+- Wrapper pattern: `fn=(function(prev){return function(...a){... prev(...a) ...}})(fn)`.
+- In-place edits via small Python scripts with exact-match counts asserted.
+- Syntax check: extract all inline `<script>` blocks into one file and run `node --check`.
+- QA: `python3 -m http.server 8765` in the repo, then Playwright (Chromium is preinstalled in the cloud sessions);
+  the demo league ("Open demo league") works offline.
+- Pushing: `git pull --rebase && git push` (workflows commit data to `main` often).
+
+## Engine status (see the "Hashmark analytics engine review" doc for the original audit)
+1. Projections — done (weights fitted on Sleeper projections vs results).
+2. Win odds / playoff odds — done (fitted on 44k Sleeper matchups).
+3. Value engine — done (fitted on 2020-24 dynasty markets vs production; measured age curves; pick values).
+4. Trades — done. Grades from 7,656 real trades; redraft graded on championship odds; keeper leagues blend this season
+   with next season's keeper value (weight fitted on 1,657 keeper trades: ~25% at 1 keeper per 10 roster spots,
+   ~35% at 2, levelling near 38%; contender ×0.75, rebuilder ×1.3); keeper pick costs; IDP kept out of trade ideas.
+5. Waivers / FAAB / buy-sell / usage risers — done (v64). Adds ranked by 4-week lineup lift with best drop; fitted
+   rate `wvRate` (coefficients `WVC`); FAAB bid tables `FAABQ` + league calibration `faabLeague`; trending top 100;
+   buy/sell from fitted rate vs season pace; Hot streaks tab; weekly track record (localStorage `hm_tags_<league>`).
+6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
+   last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
+   defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
+   streaming view for QB/TE/DST/K; schedule strength in expected points incl. fantasy playoffs; prediction log.
+   Target: Brier ≤ 0.218 (current power rank 0.230, Vegas 0.218).
+7. College prospect (devy) score — untested, hand-set weights; fit on 2015-23 classes incl. draft capital.
+8. Confidence labels + live model report card.
+
+## Open items
+- `roster-archive` workflow (`scripts/fetch_rosters.py`) is building `bt/rosters.json.gz` (exact weekly rosters,
+  any league type). When it lands: `SRC=rosters python3 backtest/e9_exact.py` then `python3 backtest/e9_an.py backtest/e9_exact_rosters.pkl`
+  to re-test waiver advice on redraft leagues and report it.
+- Retest IDP trade grades with a few more weeks of 2026 data (owner asked); if still below offense, keep IDP out of trade ideas.
+
+## Owner's leagues
+Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
+experience and not have started in a lineup that season; no keeper pick cost. Co-manages one team with another owner.

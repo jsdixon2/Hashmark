@@ -1,2 +1,6 @@
 __pycache__/
 .build/
+backtest/dl/
+backtest/*.pkl
+backtest/*.json
+__pycache__/
