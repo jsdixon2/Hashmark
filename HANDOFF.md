@@ -35,8 +35,31 @@ Newest session at the top.
     lineup gains 18.7 pts/wk.
   - At 7-1 (contender) you get Ashton Jeanty for Zay Flowers plus Derrick Henry with a rebuilder.
   - The override works, and no page errors.
-- **Not yet done:** backtest the new rule on the 7,656 real trades (`backtest/e7_*`). The old card claim ("66% came out
-  ahead") was removed because it described the old rule.
+- **Tested** (`backtest/e11_trades.py` builds the panel, `e11_an.py` analyses it): 3,413 real in-season (weeks 2-13),
+  2-team, offense-only trades in dynasty and keeper leagues, 2022-25, with exact rosters.
+  - **Plans:** each side's plan at the time comes from its record and points-for rank. This approximates the app, which
+    also uses playoff odds.
+  - **Rule replicated:** projected lineup gain from Sleeper's weekly projections, ages from birthdates, market value
+    from FantasyPros dynasty ECR history.
+  - **Results:**
+
+    | Check | Fits the rule | Doesn't fit |
+    |---|---|---|
+    | Contender: real rest-of-season starting lineup improved | 80.0% (+4.3 pts/wk) | 43.6% (−0.2) |
+    | Rebuilder: dynasty market value 1 year later improved | 72.9% (+27%) | 39.7% (−15%) |
+    | Rebuilders who took on ageing veterans (value 1 yr later) | — | 43% benefited, −12% |
+    | Both sides benefited, whole trade (fit both + fair market) | 47.9% | 19.1% |
+    | Contender ↔ rebuilder trades, both benefited | 63.2% | 30.3% |
+
+  - **By season:** the same in 2022, 2023 and 2024.
+  - **Thresholds:** a lineup gain of ≥1–3 pts/wk is only slightly better than ≥0.3. An age margin of 0–3 years changes
+    little.
+  - **Caveat:**
+    - NEXT-season production favours veterans: rebuilders who fit got −84 pts net, against +37 for those who didn't.
+      Most of that is picks, whose players this test doesn't count. Player-only trades: +11 vs +57.
+    - TWO seasons out, player-only trades that fit: +58 vs +25 (n=103, small).
+    - So the rebuild rule is backed mainly by market value (resale), not near-term points.
+  - **App text:** the finder page now quotes the 80%/44% and 73%/40% results.
 
 ---
 

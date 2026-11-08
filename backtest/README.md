@@ -13,4 +13,6 @@ Scripts that fit and test Hashmark's engines against real outcomes. They read th
 | e9_team.py, e9_team3.py, e9_exact.py, e9_an.py | Waivers | Team-level test: suggested add/drop vs real lineup points (e9_exact uses exact weekly rosters: `SRC=keepers` or `SRC=rosters`) |
 | e9_exact2.py → e9_fix.py | Waivers (v65) | e9_exact with the top 3 add/drop pairs per add position logged (4 cores, ~6 min); e9_fix fits the drop penalty on one season, tests on the other, and measures the shipped rule (`e9_fix.json`) |
 | e9_faab.py, e9_lgfaab.py | FAAB | Winning-bid tables by demand and season phase (`FAABQ`, `FAABP` in index.html); league calibration |
+| e9_wr.py, e9_wrfix.py | Waivers (v67) | WR rate variants with receiving-role features; wire-outlook haircut comparison (with e9_exact2 ADDH runs) |
+| e11_trades.py → e11_an.py | Trade finder (v68) | 3,413 real in-season dynasty/keeper trades: does fitting both teams' plans predict that both benefited? |
 | e10_dvp.py | NFL teams (engine 6) | How much defense-vs-position actually predicts |

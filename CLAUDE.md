@@ -42,7 +42,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    po<=.15 or win%<=.3 after 4 games; contender if po>=.5 with win%>=.45, or win%>=.65), user can set Contend/Rebuild
    (localStorage `hm_plan_<league>`). Contender side: starting lineup +0.3 pts/wk or more; rebuilder side: no players at
    age cliff-1+, and 1.5+ years younger or adds a pick. Market within -15%/+20%; you gain value to your roster, they lose
-   at most 8% of theirs. Redraft: their lineup must improve too. Card explains the fit for each side. Not backtested yet.
+   at most 8% of theirs. Redraft: their lineup must improve too. Card explains the fit for each side.
+   Tested (`backtest/e11_trades.py` + `e11_an.py`, 3,413 real in-season dynasty/keeper trades 2022-25): contender sides
+   that fit raised their real lineup 80% vs 44%; rebuilders gained dynasty market value 1 yr later 73% vs 40%; both sides
+   benefited 48% (fit both + fair) vs 19%. Caveat: rebuilders' NEXT-season production favours veterans; two seasons out,
+   player-only fits +58 pts vs +25 (n=103) - the rebuild rule is backed by market value more than near-term production.
 6a. Live games (v66): in-game projection = points so far + pregame projection × share of game left (ESPN scoreboard
    clock, fallback kickoff time); win odds narrow with the share of lineup points left (`gameState`, `lineupLeft`).
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
