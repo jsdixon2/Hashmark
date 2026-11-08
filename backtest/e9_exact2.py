@@ -73,6 +73,15 @@ def run(lg):
             def realized(add, drop):
                 new = [p for p in mine if p != drop] + [add]
                 return sum(opt(new, lambda p: actual(s, k, p, key), slots) for k in ks) - base_act
+            def setlineup(ps, k):  # lineup a manager would set before week k: best by our expected points, scored on actual
+                pool = sorted(ps, key=lambda p: -VV(p)[k - w]); used = []
+                for sl in sorted(slots, key=lambda x: len(ELIG[x])):
+                    for p in pool:
+                        if p not in used and posd.get(p) in ELIG[sl]: used.append(p); break
+                return sum(actual(s, k, p, key) for p in used)
+            def realized_set(add, drop):
+                new = [p for p in mine if p != drop] + [add]
+                return sum(setlineup(new, k) - setlineup(mine, k) for k in ks)
             def worst_bench(val):
                 st = set(); pool = sorted(mine, key=lambda p: -val(p)); used = set()
                 for sl in sorted(slots, key=lambda x: len(ELIG[x])):
@@ -99,14 +108,14 @@ def run(lg):
                     if len(lst) < 3 and all(pr_[1] != x[1] for x in lst): lst.append(pr_)
                 for ap, lst in byp.items():
                     for k_, (g, a, d, dc) in enumerate(lst):
-                        REC.append(dict(s=s, w=w, lg=lg["id"], t=lg.get("type"), rid=rid, k=k_, g=g, a=a, d=d, dcost=dc, r3=realized(a, d), apos=ap, dpos=posd.get(d), dval=sum(V[d]), aval=sum(V[a]), nslot=len(slots), nros=len(mine)))
+                        REC.append(dict(s=s, w=w, lg=lg["id"], t=lg.get("type"), rid=rid, k=k_, g=g, a=a, d=d, dcost=dc, r3=realized(a, d), r3s=realized_set(a, d), apos=ap, dpos=posd.get(d), dval=sum(V[d]), aval=sum(V[a]), nslot=len(slots), nros=len(mine)))
             for t in tx:
                 if t[1] != w or t[0] not in ("waiver", "free_agent") or len(t[3] or {}) != 1: continue
                 (ad, rr), = (t[3] or {}).items()
                 if rr != rid or posd.get(str(ad)) not in OFF or str(ad) in mine: continue
                 dr = [str(x) for x in (t[4] or {}) if str(x) in mine]
                 new = [p for p in mine if p not in dr] + [str(ad)]
-                MGR.append(dict(s=s, w=w, lg=lg["id"], rid=rid, typ=t[0], bid=t[7], r3=sum(opt(new, lambda p: actual(s, k, p, key), slots) for k in ks) - base_act,
+                MGR.append(dict(s=s, w=w, lg=lg["id"], rid=rid, typ=t[0], bid=t[7], r3s=sum(setlineup(new, k) - setlineup(mine, k) for k in ks), r3=sum(opt(new, lambda p: actual(s, k, p, key), slots) for k in ks) - base_act,
                                 g=tot(dr and [p for p in mine if p not in dr] + [str(ad)] or mine + [str(ad)]) - base if True else 0, a=str(ad)))
     return list(REC), list(MGR), nteam
 if __name__ == "__main__":
