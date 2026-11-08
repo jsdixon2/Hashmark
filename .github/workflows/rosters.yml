@@ -1,0 +1,24 @@
+name: roster-archive
+on:
+  push:
+    paths: ["scripts/fetch_rosters.py", ".github/workflows/rosters.yml"]
+  workflow_dispatch: {}
+permissions: {contents: write}
+concurrency: {group: data-rosters, cancel-in-progress: false}
+jobs:
+  rosters:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v5
+      - name: How deep does Sleeper's trending list go?
+        run: |
+          for n in 50 100 200 300 500 1000; do
+            curl -s "https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=24&limit=$n" | python3 -c "import json,sys;d=json.load(sys.stdin);print('limit',$n,'->',len(d),'entries; smallest count',min([x['count'] for x in d] or [0]))"
+          done
+      - run: PYTHONPATH=scripts python3 scripts/fetch_rosters.py
+        env: {MAX_LEAGUES: "900", TIME_LIMIT_MIN: "300"}
+      - run: |
+          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
+          git add bt/rosters.json.gz; git commit -m "backtest archive: weekly rosters" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
