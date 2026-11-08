@@ -76,7 +76,7 @@ def run(lg):
                 new = [p for p in mine if p != drop] + [add]
                 return sum(opt(new, lambda p: actual(s, k, p, key), slots) for k in ks) - base_act
             def setlineup(ps, k):  # lineup a manager would set before week k: best by our expected points, scored on actual
-                pool = sorted(ps, key=lambda p: -VV(p)[k - w]); used = []
+                pool = sorted(ps, key=lambda p: -(V0[p] if p in V0 else VV(p))[k - w]); used = []
                 for sl in sorted(slots, key=lambda x: len(ELIG[x])):
                     for p in pool:
                         if p not in used and posd.get(p) in ELIG[sl]: used.append(p); break
@@ -94,6 +94,7 @@ def run(lg):
             ks4 = list(range(w, w + 4))
             for mode in ("hybinj",):
                 V = {p: vec(s, w, p, mode) for p in set(mine) | set(avail)}
+                V0 = {p: list(V[p]) for p in V}  # unadjusted outlook: what the lineup is set by
                 for p in avail:  # optional haircut on wire players' outlook (ADDH="WR:1.5,RB:0"), points per game
                     h = ADDH.get(posd.get(p), 0.0)
                     if h: V[p] = [max(0.0, x - h) if x > 0 else 0.0 for x in V[p]]
