@@ -5520,6 +5520,11 @@ alertsFor=function(W){const out=[];const taken=new Set();const lp=typeof livePts
     const wp=wkProj(p);const b=best(r.slot,wp+2);if(b)out.push({lvl:"warn",msg:`Start ${b.name} over ${p.name}`,fix:`+${f1(wkProj(b)-wp)} projected points`,id:b.id});}
   const rank={bad:0,warn:1,info:2};return out.sort((a,b)=>rank[a.lvl]-rank[b.lvl]);};
 
+/* ===== v71: finished players fold into one "locked in" line instead of filling "Needs attention" ===== */
+alertsFor=(function(prev){return function(W){const a=prev(W),done=a.filter(x=>x.lvl==="info"&&/ (has played|played Thursday)$/.test(x.msg)),rest=a.filter(x=>!done.includes(x));
+  if(done.length<=1)return a;const pts=done.reduce((s,x)=>{const m=/^([\d.]+) points banked/.exec(x.fix);return s+(m?+m[1]:0);},0);
+  return rest.concat([{lvl:"info",msg:`${done.length} starters have played`,fix:pts>0?`${f1(pts)} points banked`:"Locked in",id:null}]);};})(alertsFor);
+
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

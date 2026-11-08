@@ -20,6 +20,10 @@ Newest session at the top.
   - It stays when neither player has kicked off.
   - No page errors.
 
+- **v71:** v70 made every finished starter an info alert. The matchup page lists info alerts under "Needs attention", so
+  the list grew to the whole lineup. Two or more finished starters now fold into one line ("N starters have played ·
+  X points banked").
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)

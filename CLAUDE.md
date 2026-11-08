@@ -57,6 +57,7 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 6b. v70: no start/sit advice for locked players. `locked(p)` = his game has kicked off (`gameState` from v66, else schedule
    final flag / 4-hour kickoff window). `alertsFor` (feeds matchup "Needs attention", home moves, start/sit) skips locked
    starters (finished ones show "has played · X points banked") and never suggests a locked bench player.
+   v71: 2+ finished starters fold into one line ("N starters have played · X points banked").
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
