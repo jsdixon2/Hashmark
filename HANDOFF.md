@@ -6,6 +6,40 @@ Newest session at the top.
 
 ---
 
+## 2026-11-08, evening: trade finder fits both teams (v68, on main)
+- **Owner's report** (screenshots):
+  - Rebuilding at 1-7 in a league with picks, but offered trades like sending Marvin Harrison Jr. (young) plus a 3rd for
+    Jaylen Warren, and Makai Lemon for Stefon Diggs plus a 2nd.
+  - The cards read "championship odds go – → ▲ –".
+  - A calculator trade graded A+ against F.
+- **Causes:**
+  1. Team status came from playoff odds plus lineup-strength rank, so a 1-7 team with a strong roster on paper could
+     land in "balanced" or "contender". There was no way to set it.
+  2. The keeper/dynasty finder (v50/v51) required YOU to gain 10% or more in raw value, while the other side only had to
+     look fair on the market. Their fit wasn't required, so ideas were lopsided "edges".
+  3. In keeper/dynasty, `x.title` held the trade's name as text, but the card read `x.title.pre`/`.post` as
+     championship odds, which gave the dashes. In redraft the GM tile showed the odds object as text.
+- **Fix (`.build/v68.js`):**
+  - `teamStatus` wrapper adds record-based status plus your own override, `planBar()` (Auto / Contend / Rebuild), and
+    `fitOf` / `fitsPlan` / `fitWhy`.
+  - A new keeper/dynasty finder applies the same enumeration with these rules:
+    - **Market:** within −15% / +20%.
+    - **Value:** you gain value to your roster (implied value); they lose at most 8% of theirs.
+    - **Contender side:** starting lineup improves by 0.3 pts/wk or more.
+    - **Rebuilder side:** no players at their position's age cliff minus 1 or older, and at least 1.5 years younger on
+      average (a pick counts as 21.5) or adds a pick.
+  - **Redraft:** the other team's lineup gain must be greater than 0.
+  - **Cards:** say why the trade works "For you" and "For them".
+- **QA (demo league, records set by hand):**
+  - At 1-7 (auto rebuilding) you get ideas like Amon-Ra St. Brown for Drake Maye plus a 2028 1st with a contender whose
+    lineup gains 18.7 pts/wk.
+  - At 7-1 (contender) you get Ashton Jeanty for Zay Flowers plus Derrick Henry with a rebuilder.
+  - The override works, and no page errors.
+- **Not yet done:** backtest the new rule on the 7,656 real trades (`backtest/e7_*`). The old card claim ("66% came out
+  ahead") was removed because it described the old rule.
+
+---
+
 ## 2026-11-08, later: live in-game projections (v66, on main) and the WR investigation (not shipped)
 
 ### v66: live projections and win odds (on `main`, commit 45cbfef)

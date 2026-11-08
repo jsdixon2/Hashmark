@@ -38,6 +38,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    managers' claims +7.6 / 66% / 17%. No position correction: position effects flip between seasons. See HANDOFF.md.
    v67: free agents' outlook trimmed 1.5 pts/game when picking (`WV_FAH`, winner's-curse guard). With lineups set before
    games (`r3s`), redraft shown moves +8.8 / 25% hurt (v65 +7.2 / 32%); keeper +7.3 / 25%; dynasty +4.3 / 34%.
+4a. Trade finder (v68): ideas must fit BOTH teams' plans. Plan from record + playoff odds (dynasty/keeper: rebuilding if
+   po<=.15 or win%<=.3 after 4 games; contender if po>=.5 with win%>=.45, or win%>=.65), user can set Contend/Rebuild
+   (localStorage `hm_plan_<league>`). Contender side: starting lineup +0.3 pts/wk or more; rebuilder side: no players at
+   age cliff-1+, and 1.5+ years younger or adds a pick. Market within -15%/+20%; you gain value to your roster, they lose
+   at most 8% of theirs. Redraft: their lineup must improve too. Card explains the fit for each side. Not backtested yet.
 6a. Live games (v66): in-game projection = points so far + pregame projection × share of game left (ESPN scoreboard
    clock, fallback kickoff time); win odds narrow with the share of lineup points left (`gameState`, `lineupLeft`).
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a

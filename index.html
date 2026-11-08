@@ -5365,6 +5365,79 @@ const WV_FAH=1.5;
 wvVec=(function(prev){return function(p,L){const o=prev(p,L);if(!S._wvH||!p||S._wvH.has(p.id))return o;return o.map(x=>x>0?Math.max(0,x-WV_FAH):0);};})(wvVec);
 wireRecs=(function(prev){return function(L,n=6){if(S._wvH)return prev(L,n);S._wvH=new Set((L&&L.teams||[]).flatMap(t=>t.players||[]));try{return prev(L,n);}finally{S._wvH=null;}};})(wireRecs);
 
+/* ===== v68: trade ideas that make sense for both teams, personalised to your own plan =====
+   Your plan (contend / middle / rebuild) comes from your record and playoff odds, not just roster strength, and you can set it.
+   Keeper and dynasty: an idea is only shown when it is fair on the market (within 15-20%) AND fits both teams:
+     you come out ahead in value to your roster and they give up no more than 8% of theirs;
+     a contender's starting lineup must get better; a rebuilder takes on no ageing veterans and must get younger or add picks. Redraft: both starting lineups must get better. */
+const PLANK=L=>"hm_plan_"+L.id;
+const planGet=L=>{try{return localStorage.getItem(PLANK(L))||"auto";}catch(e){return "auto";}};
+const planSet=(L,v)=>{try{v==="auto"?localStorage.removeItem(PLANK(L)):localStorage.setItem(PLANK(L),v);}catch(e){}};
+const PLANW={contender:.78,balanced:.5,rebuilding:.25};
+teamStatus=(function(prev){return function(L,ti){const r=prev(L,ti);try{if(!r||!r.dyn)return r;const t=L.teams[ti],gp=(t.w||0)+(t.l||0)+(t.t||0),wp=gp?((t.w||0)+.5*(t.t||0))/gp:.5;
+  let st=r.st;if(gp>=4){if(r.po<=.15||wp<=.3)st="rebuilding";else if((r.po>=.5&&wp>=.45)||wp>=.65)st="contender";else st="balanced";}
+  r.auto=st;if(t.mine){const o=planGet(L);if(o!=="auto"&&PLANW[o])st=o;r.set=o!=="auto";}r.st=st;r.wNow=PLANW[st];}catch(e){}return r;};})(teamStatus);
+/* the drop-down on the trade pages */
+function planBar(L){if(!L||S.fmt.type==="redraft")return "";const mi=mineIdx(L);let ts;try{ts=teamStatus(L,mi);}catch(e){return "";}const cur=planGet(L),lab={contender:"contending",balanced:"in the middle",rebuilding:"rebuilding"};
+  return `<div class="row sp mt" style="gap:8px;flex-wrap:wrap"><span class="sub">Your plan in ${esc(L.name)} (${recOf(L.teams[mi])}): <b>${lab[ts.st]}</b>${cur==="auto"?" (auto)":""}</span>
+    <div class="seg sm">${[["auto","Auto"],["contender","Contend"],["rebuilding","Rebuild"]].map(([k,n])=>`<button data-plan="${k}" class="${cur===k?"on":""}">${n}</button>`).join("")}</div></div>`;}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-plan]");if(!b||!S.L)return;planSet(S.L,b.dataset.plan);const L=S.L;
+  for(const k of ["_ctx","_fd","_fd4","_fdT","_fd8","_yv","_odds","_sum"])L[k]=null;render();},true);
+/* how a package fits a team: lineup change this season, average age, picks, ageing veterans */
+function fitOf(L,ti,inc,out){const t=L.teams[ti],iP=inc.filter(a=>a.k==="p").map(a=>a.id),oP=out.filter(a=>a.k==="p").map(a=>a.id);
+  const lu=lpts(t.players.filter(id=>!oP.includes(id)).concat(iP),L)-lpts(t.players,L);
+  const ageOf=xs=>{const a=xs.map(x=>x.k==="k"?21.5:(PL[x.id]&&PL[x.id].age)||26);return a.length?a.reduce((s,v)=>s+v,0)/a.length:null;};
+  const vets=inc.filter(a=>a.k==="p"&&a.p.age!=null&&a.p.age>=(AGE_CLIFF[a.p.pos]||29)-1);
+  return {lu,ageIn:ageOf(inc),ageOut:ageOf(out),pk:inc.filter(a=>a.k==="k").length,vets};}
+function fitsPlan(st,f){if(st==="contender")return f.lu>=.3;if(st==="rebuilding")return !f.vets.length&&(f.pk>0||(f.ageIn!=null&&f.ageOut!=null&&f.ageIn<=f.ageOut-1.5));return true;}
+function fitWhy(st,f,you){const s=you?"your":"their";if(st==="contender")return `+${f1(f.lu)} pts/week in ${s} starting lineup`;
+  if(st==="rebuilding"){const p=[];if(f.ageIn!=null&&f.ageOut!=null&&f.ageIn<f.ageOut-.4)p.push(`${you?"you get":"they get"} younger (${f1(f.ageIn)} vs ${f1(f.ageOut)} avg age)`);if(f.pk)p.push(`${you?"you add":"they add"} ${f.pk>1?f.pk+" picks":"a pick"}`);return p.join(" and ")||"long-term value";}
+  return f.lu>.3?`+${f1(f.lu)} pts/week in ${s} lineup`:"more value for "+(you?"your":"their")+" roster";}
+const planLbl=st=>st==="contender"?"contending":st==="rebuilding"?"rebuilding":"in the middle";
+finder=(function(prev){return function(){const L=S.L;if(!L||L.rip)return [];
+  if(S.fmt.type==="redraft"){const v=prev();return v.filter(x=>(x.gThem||0)>0).map(x=>{if(x.title&&typeof x.title==="object")x.tt=x.title;const nm=a=>a.k==="p"?a.p.name:`${a.y} ${ordn(a.r)}`;x.title=x.name=`${x.send.map(nm).join(" + ")} for ${x.get.map(nm).join(" + ")}`;return x;});}
+  const key=(L._ctx&&L._ctx.k)+"|fd8|"+planGet(L)+"|"+S.asTi;if(L._fd8&&L._fd8.k===key)return L._fd8.v;
+  const C=leagueCtx(L),mi=mineIdx(L),me=C[mi],ny=+S.season+1;
+  const okP=p=>p&&POSI.hasOwnProperty(p.pos)&&!isIDP(p)&&p.val>=250&&!(lostSeason(p)&&S.fmt.type!=="dynasty");
+  const P=id=>({k:"p",id,p:PL[id]});
+  const picksFor=ti=>{const pk=picksOf(L,ti);if(!pk)return [];const t=L.teams[ti];return pk.own.filter(o=>o.y<=ny+1&&o.r<=3).map(o=>{const orig=o.from?((L.teams.find(x=>x.name===o.from)||t).id):t.id;return {k:"k",id:`${o.y}-${o.r}-${orig}`,y:o.y,r:o.r,orig};}).slice(0,5);};
+  const M=a=>a.k==="k"?pickVal(L,a.y,a.r,a.orig):mktVal(a.p);
+  const V=(ti,a,inc)=>a.k==="k"?assetVal(a,L,ti):implied(L,ti,a.p,!inc);
+  const mine=me.t.players.map(id=>PL[id]).filter(okP).sort((a,b)=>b.val-a.val).slice(0,14).map(p=>P(p.id)),myPk=picksFor(mi),out=[];
+  for(const c of C){if(c.ti===mi)continue;const theirs=c.t.players.map(id=>PL[id]).filter(okP).sort((a,b)=>b.val-a.val).slice(0,14).map(p=>P(p.id)),thPk=picksFor(c.ti),found=[];
+    const ev=(send,get,type)=>{const mIn=effV(get.map(M)),mOut=effV(send.map(M));if(!mIn||!mOut)return;const mg=(mOut-mIn)/Math.max(mIn,mOut);if(mg<-.15||mg>.2)return;
+      const vMe=effV(get.map(a=>V(mi,a,true)))-effV(send.map(a=>V(mi,a,false))),vTh=effV(send.map(a=>V(c.ti,a,true)))-effV(get.map(a=>V(c.ti,a,false)));if(vMe<=0)return;const bTh0=Math.max(1,effV(get.map(a=>V(c.ti,a,false))));if(vTh<-.08*bTh0)return;
+      const fMe=fitOf(L,mi,get,send);if(!fitsPlan(me.ts.st,fMe))return;const fTh=fitOf(L,c.ti,send,get);if(!fitsPlan(c.ts.st,fTh))return;
+      const base=Math.max(1,effV(send.map(a=>V(mi,a,false)))),bTh=Math.max(1,effV(get.map(a=>V(c.ti,a,false))));
+      found.push({c,send,get,type,mIn,mOut,mg,gMe:vMe,gThem:vTh,pMe:vMe/base,pTh:vTh/bTh,fMe,fTh,sc:vMe/base+.5*Math.min(vMe/base,vTh/bTh)});};
+    for(const q of mine)for(const p of theirs)ev([q],[p],"1for1");
+    for(let i=0;i<mine.length;i++)for(let j=i+1;j<Math.min(mine.length,12);j++)for(const p of theirs){if(p.p.val<=Math.max(mine[i].p.val,mine[j].p.val))continue;ev([mine[i],mine[j]],[p],"2for1");}
+    for(const q of mine)for(let i=0;i<theirs.length;i++)for(let j=i+1;j<Math.min(theirs.length,12);j++){if(q.p.val<=Math.max(theirs[i].p.val,theirs[j].p.val))continue;ev([q],[theirs[i],theirs[j]],"1for2");}
+    for(const q of mine)for(const k of myPk)for(const p of theirs){if(p.p.val<=q.p.val)continue;ev([q,k],[p],"picks");}
+    for(const q of mine)for(const p of theirs)for(const k of thPk){if(q.p.val<=p.p.val)continue;ev([q],[p,k],"picks");}
+    for(const k of myPk)for(const p of theirs)ev([k],[p],"picks");
+    for(const q of mine)for(const k of thPk)ev([q],[k],"picks");
+    const byT={};found.sort((a,b)=>b.sc-a.sc).forEach(x=>{(byT[x.type]=byT[x.type]||[]).push(x);});
+    const used=new Set();for(const t of Object.keys(byT)){let n=0;for(const x of byT[t]){const sig=x.send.concat(x.get).map(a=>a.id).sort().join(",");if(used.has(sig))continue;const uses=[...x.send,...x.get].filter(a=>a.k==="p").map(a=>a.id);if(out.filter(o=>o.c===c&&uses.some(u=>[...o.send,...o.get].some(a=>a.id===u))).length>=2)continue;used.add(sig);out.push(x);if(++n>=3)break;}}}
+  out.sort((a,b)=>b.sc-a.sc);const nm=a=>a.k==="p"?a.p.name:`${a.y} ${ordn(a.r)}`;out.forEach(x=>x.title=x.name=`${x.send.map(nm).join(" + ")} for ${x.get.map(nm).join(" + ")}`);
+  L._fd8={k:key,v:out};return out;};})(finder);
+vFinder=function(){const L=S.L,mi=mineIdx(L),all=finder(),rd=S.fmt.type==="redraft",C=leagueCtx(L),me=C[mi];const t=S.fdT||"all";let xs;
+  if(t==="all"){const q={};all.forEach(x=>(q[x.type]=q[x.type]||[]).push(x));xs=[];const ks=Object.keys(q);for(let i=0;xs.length<all.length;i++)for(const k of ks)if(q[k][i])xs.push(q[k][i]);}else xs=all.filter(x=>x.type===t);
+  const off=xs.length?((S.fdOff||0)%xs.length):0;xs=xs.slice(off).concat(xs.slice(0,off));
+  const cnt=k=>k==="all"?all.length:all.filter(x=>x.type===k).length;
+  const an=(a,ti)=>a.k==="p"?`<button class="flnk" data-go="player-${a.id}">${pos(a.p.pos)} <span class="ell">${esc(a.p.name)}</span>${a.p.age?` <span class="sub">${Math.floor(a.p.age)}</span>`:""}</button><span class="sub num">${f0(a.p.val)}</span>`:`<div class="flnk"><span class="pk${a.r==1?" r1":""}">R${a.r}</span> <span>${a.y} Round ${a.r}${a.orig!=L.teams[ti].id?` <span class="sub">(${esc((L.teams.find(t=>t.id==a.orig)||{}).name||"")})</span>`:""}</span></div><span class="sub num">${f0(pickVal(L,a.y,a.r,a.orig))}</span>`;
+  const enc=(a,f,to)=>[a.k==="k"?"k:"+a.id:a.id,f,to];
+  const mkt=x=>Math.abs(x.mg)<.03?"even on the market":x.mg>0?`they get ${Math.round(x.mg*100)}% more on the market`:`you get ${Math.round(-x.mg*100)}% more on the market`;
+  const why=x=>rd?`<p class="sub">${x.tt?`Your championship odds ${pc(x.tt.pre)} → <b class="good">${pc(x.tt.post)}</b>; `:""}your lineup <b class="good">${(x.lw||0)>=0?"+":""}${f1(x.lw||0)}</b> pts/week, theirs <b>+${f1(x.gThem||0)}</b> (${recOf(x.c.t)}).${x.drops&&x.drops.length?` You’d drop ${x.drops.map(id=>esc(PL[id]?PL[id].name:"a bench player")).join(", ")} to make room.`:""}</p>`
+    :`<p class="sub"><b>For you</b> (${planLbl(me.ts.st)}): ${fitWhy(me.ts.st,x.fMe,true)}, <b class="good">+${Math.round(x.pMe*100)}%</b> value to your roster.<br><b>For ${esc(x.c.t.name)}</b> (${recOf(x.c.t)}, ${planLbl(x.c.ts.st)}): ${fitWhy(x.c.ts.st,x.fTh,false)}${x.pTh>=.02?`, +${Math.round(x.pTh*100)}% value to their roster`:""}. ${mkt(x)[0].toUpperCase()+mkt(x).slice(1)}.</p>`;
+  const card=x=>`<div class="scard"><div class="row sp"><b class="ell">${esc(x.c.t.name)}</b><span class="tag">${fdLbl[x.type]}</span></div>
+    <div class="fx"><div><span class="eyebrow">You send</span>${x.send.map(a=>`<div class="fxa">${an(a,mi)}</div>`).join("")}</div><div><span class="eyebrow">You get</span>${x.get.map(a=>`<div class="fxa">${an(a,x.c.ti)}</div>`).join("")}</div></div>
+    ${why(x)}<button class="btn ghost sm" data-build='${esc(JSON.stringify({a:x.send.map(a=>enc(a,mi,x.c.ti)),b:x.get.map(a=>enc(a,x.c.ti,mi))}))}' data-bt="${x.c.ti}">Open in calculator</button></div>`;
+  return `${planBar(L)}<p class="sub mt">${rd?"Trades that raise your championship odds and improve both starting lineups.":"Trades that fit both teams’ plans: a contender’s starting lineup gets better, a rebuilder gets younger or adds picks and takes on no ageing veterans, you come out ahead in value to your roster, they lose no more than a sliver of theirs, and the market calls it fair (within 15–20%)."} Includes consolidation (2-for-1), depth (1-for-2)${rd?"":" and draft-pick"} deals.</p>
+  <div class="seg sm mt">${FDT.filter(([k])=>k==="all"||cnt(k)).map(([k,n])=>`<button data-fdt="${k}" class="${t===k?"on":""}">${n} <span class="sub">${cnt(k)}</span></button>`).join("")}</div>
+  <div class="mt">${lst(xs.map(card),6,rd?"No trades that improve both starting lineups right now. Try another filter or Trade partners.":"No trades that fit both teams right now. Try another filter, or set your plan above.")}</div>
+  ${xs.length>6?`<button class="btn ghost seemore" data-fdref>Show different ideas</button>`:""}`;};
+
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
