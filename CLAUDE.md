@@ -36,6 +36,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    drop's own 4-week points (`WV_DROPW`); shown from g' ≥ 4, ≥ 6 in dynasty (`wvBar()`); "close call" flag when the drop
    projects ≥ 45% of the add. Redraft shown moves +10.8 real pts / 73% helped / 20% hurt (was +8.7 / 68% / 25%);
    managers' claims +7.6 / 66% / 17%. No position correction: position effects flip between seasons. See HANDOFF.md.
+   v67: free agents' outlook trimmed 1.5 pts/game when picking (`WV_FAH`, winner's-curse guard). With lineups set before
+   games (`r3s`), redraft shown moves +8.8 / 25% hurt (v65 +7.2 / 32%); keeper +7.3 / 25%; dynasty +4.3 / 34%.
+6a. Live games (v66): in-game projection = points so far + pregame projection × share of game left (ESPN scoreboard
+   clock, fallback kickoff time); win odds narrow with the share of lineup points left (`gameState`, `lineupLeft`).
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
@@ -47,7 +51,7 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 ## Open items
 - Done: `bt/rosters.json.gz` (900 leagues, exact weekly rosters). Waiver test 2024-25, 516 leagues / 62,616 team-weeks,
   and the v65 fixes from it (see engine 5 above and HANDOFF.md).
-- Waivers still to improve: hurt rate (20%) is above managers' own claims (17%); WR adds gain least (+6.0 vs 9-12);
+- Waivers still to improve: WR adds gain least (no WR-specific fix held across seasons, see HANDOFF.md);
   dynasty test can't replay the app's value-protected drops (no historical dynasty values in the archive).
 - Retest IDP trade grades with a few more weeks of 2026 data (owner asked); if still below offense, keep IDP out of trade ideas.
 

@@ -38,7 +38,18 @@ Newest session at the top.
   28→25, 39→34). Against simply raising v65's bar to the same number of moves, the change in gain was mixed (−0.2 to
   +0.4). Larger haircuts (3, or 3 at WR only) were inconsistent.
 - **Conclusion:** WR can't be fixed reliably with the free data available. The only defensible change is the 1.5
-  all-position haircut, which means fewer moves that backfire. Waiting on the owner's decision; not on `main`.
+  all-position haircut, which means fewer moves that backfire.
+- **Shipped as v67** after the owner said "go": `WV_FAH = 1.5`. `wireRecs` sets `S._wvH` to the league's rostered ids,
+  and the `wvVec` wrapper trims everyone else. Shown moves, both seasons, lineups set before games (hindsight in
+  brackets):
+
+  | League type | Before (v65) | After (v67) |
+  |---|---|---|
+  | Redraft | +7.2, 32% hurt (10.8 / 73% helped) | +8.8, 25% hurt (11.7 / 75%) |
+  | Keeper | +5.5, 33% hurt | +7.3, 25% hurt |
+  | Dynasty | +2.7, 40% hurt | +4.3, 34% hurt |
+
+  About 30% fewer moves are suggested.
 
 ---
 
