@@ -1,0 +1,11 @@
+name: probe
+on: {workflow_dispatch: {}}
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for n in 25 50 100 200 300 500 1000; do
+            curl -s "https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=24&limit=$n" | python3 -c "import json,sys;d=json.load(sys.stdin);print('limit',$n,'->',len(d),'entries; smallest count',min([x['count'] for x in d] or [0]))"
+          done
+          for h in 48 72 168; do curl -s "https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=$h&limit=1000" | python3 -c "import json,sys;d=json.load(sys.stdin);print('hours',$h,len(d),'smallest',min([x['count'] for x in d] or [0]))"; done
