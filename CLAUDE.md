@@ -41,9 +41,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 8. Confidence labels + live model report card.
 
 ## Open items
-- `roster-archive` workflow (`scripts/fetch_rosters.py`) is building `bt/rosters.json.gz` (exact weekly rosters,
-  any league type). When it lands: `SRC=rosters python3 backtest/e9_exact.py` then `python3 backtest/e9_an.py backtest/e9_exact_rosters.pkl`
-  to re-test waiver advice on redraft leagues and report it.
+- Done: `bt/rosters.json.gz` (900 leagues, exact weekly rosters). Waiver test 2024-25, 516 leagues / 62,616 team-weeks:
+  redraft rated 8+ → +10.1 lineup pts over 3 wks (71% helped) vs managers' claims +7.6; keeper 8+ → +9.8 vs +6.5;
+  dynasty 8+ → +6.8 vs +3.9 (deep benches leave less to gain).
 - Retest IDP trade grades with a few more weeks of 2026 data (owner asked); if still below offense, keep IDP out of trade ideas.
 
 ## Owner's leagues
