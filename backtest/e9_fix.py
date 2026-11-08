@@ -1,63 +1,52 @@
-"""Engine 5 fixes, fitted on 2024 and checked on 2025 (exact weekly rosters, e9_exact2 output).
-Weaknesses found in the redraft retest: (1) suggestions hurt the lineup more often than managers' own claims, mostly when
-the dropped player still had value; (2) WR and QB gains were overstated next to RB and TE; (3) dynasty suggestions were weak.
-Fix: score each add/drop pair by the real lineup gain we expect, r_hat = a[add pos]*g - b*drop_value (+ per league type),
-pick the best pair by r_hat, and only call it a move when r_hat clears a bar per league type."""
+"""Engine 5 fixes (v65), from the redraft retest on exact weekly rosters (input: e9_exact2 output, 516 leagues, 2024-25).
+
+Weaknesses in the retest and what the data said:
+ 1. Suggestions hurt the lineup more often than managers' own claims (28% vs 17%). Driver: the dropped player still
+    had value. Within the same rated lift, moves whose drop projects >=45% of the add's points hurt 33-41% of the time.
+    Fix: judge every add/drop pair by g' = g - DROP_W * (drop's own 4-week points). DROP_W fitted on one season and
+    tested on the other (0.20 from 2024, 0.30 from 2025): raises real gain and cuts the hurt rate at the same number of
+    moves in redraft, keeper and dynasty, both directions. App uses 0.25.
+ 2. WR (and QB) lifts looked overstated next to TE. Not stable: TE adds were best in 2024 (+13.5) and worst in 2025
+    (+4.4); a position correction fitted on 2024 made 2025 worse. No position correction shipped.
+ 3. Dynasty suggestions were weak. Fix: a higher bar to show a move in dynasty (g' >= 6), on top of item 1.
+    (The app also protects dynasty drops by long-term value, which this test can't replay, so dynasty here is a floor.)
+Picking a different pair with richer fitted models (ridge/boosting with position terms) made results worse; the only
+pair-choice change kept is the drop penalty."""
 import pickle, sys, os, json, numpy as np, pandas as pd
 B = os.path.dirname(os.path.abspath(__file__))
 R, M = pickle.load(open(sys.argv[1] if len(sys.argv) > 1 else B + "/e9_exact2_rosters.pkl", "rb"))
 R = pd.DataFrame(R); M = pd.DataFrame(M)
-TN = {0: "redraft", 1: "keeper", 2: "dynasty", 3: "other"}
-R["tn"] = R.t.map(TN)
-lt = R.drop_duplicates("lg").set_index("lg").tn; M["tn"] = M.lg.map(lt)
-POS = ["QB", "RB", "WR", "TE"]
-def feats(d):
-    X = pd.DataFrame(index=d.index)
-    for p in POS: X["g_" + p] = d.g * (d.apos == p)
-    X["dval"] = d.dval
-    for t in ["keeper", "dynasty", "other"]: X["t_" + t] = (d.tn == t).astype(float)
-    return X
-tr, te = R[R.s == 2024], R[R.s == 2025]
-from sklearn.linear_model import HuberRegressor
-X = feats(tr); m = HuberRegressor(alpha=1.0, max_iter=2000).fit(X, tr.r3)
-coef = dict(zip(X.columns, np.round(m.coef_, 4))); coef["_b"] = round(float(m.intercept_), 4)
-print("fitted on 2024:", json.dumps(coef))
-R["rh"] = m.predict(feats(R))
+R["tn"] = R.t.map({0: "redraft", 1: "keeper", 2: "dynasty", 3: "other"})
+M["tn"] = M.lg.map(R.drop_duplicates("lg").set_index("lg").tn)
 key = ["s", "w", "lg", "rid"]
-old = R.loc[R.groupby(key).g.idxmax()]          # current app: best pair by modelled lineup lift
-new = R.loc[R.groupby(key).rh.idxmax()]         # fixed: best pair by expected real gain
-def show(d, col, bar):
-    q = d[d[col] >= bar]; return dict(n=len(q), cover=round(len(q) / max(1, len(d)), 3), gain=round(q.r3.mean(), 2),
-                                      helped=round((q.r3 > 0).mean(), 3), hurt=round((q.r3 < 0).mean(), 3))
-# bar per league type fitted on 2024: lowest bar where shown moves hurt no more often than managers' own waiver claims
-bars = {}
-for t in ["redraft", "keeper", "dynasty", "other"]:
-    mh = (M[(M.tn == t) & (M.s == 2024) & (M.typ == "waiver")].r3 < 0).mean()
-    q = new[(new.s == 2024) & (new.tn == t)]
-    if not len(q): continue
-    for b in np.arange(0, 15.01, .25):
-        s_ = show(q, "rh", b)
-        if s_["n"] >= 30 and s_["hurt"] <= mh: bars[t] = round(float(b), 2); break
-    else: bars[t] = 15.0
-print("bars (2024):", bars)
-out = {"coef": coef, "bars": bars, "test2025": {}}
-for t in ["redraft", "keeper", "dynasty", "other"]:
-    o, n = old[(old.s == 2025) & (old.tn == t)], new[(new.s == 2025) & (new.tn == t)]
-    if not len(o): continue
-    mw = M[(M.tn == t) & (M.s == 2025) & (M.typ == "waiver")]
-    res = {"old (g>=4)": show(o, "g", 4), "old (g>=8)": show(o, "g", 8), "new (bar)": show(n, "rh", bars.get(t, 4)),
-           "managers' claims": dict(n=len(mw), gain=round(mw.r3.mean(), 2), helped=round((mw.r3 > 0).mean(), 3), hurt=round((mw.r3 < 0).mean(), 3))}
-    # same number of moves as the old 4+ rule, for a like-for-like check
-    k = res["old (g>=4)"]["n"]; nn = n.nlargest(k, "rh")
-    res["new (same count as old 4+)"] = dict(n=len(nn), gain=round(nn.r3.mean(), 2), helped=round((nn.r3 > 0).mean(), 3), hurt=round((nn.r3 < 0).mean(), 3))
-    out["test2025"][t] = res
-    print(f"\n2025 {t}"); [print(f"  {k_:28s}", v) for k_, v in res.items()]
-q = new[(new.s == 2025) & (new.rh >= new.tn.map(bars).fillna(4))]
-print("\n2025 new rule, by add position:", q.groupby("apos").r3.agg(["size", "mean", lambda x: (x < 0).mean()]).round(2).to_dict("index"))
-qo = old[(old.s == 2025) & (old.g >= 4)]
-print("2025 old rule, by add position:", qo.groupby("apos").r3.agg(["size", "mean", lambda x: (x < 0).mean()]).round(2).to_dict("index"))
-# tiers on r_hat: what each label delivered in 2025
-for t in ["redraft", "dynasty"]:
-    q = new[(new.s == 2025) & (new.tn == t)]
-    print(t, "2025 by r_hat:", q.groupby(pd.cut(q.rh, [-99, 0, 2, 4, 6, 8, 99])).r3.agg(["size", "mean", lambda x: (x < 0).mean()]).round(2).to_dict("index"))
-json.dump(out, open(B + "/e9_fix.json", "w"), indent=1)
+def f(q): return dict(n=int(len(q)), gain=round(float(q.r3.mean()), 2), helped=round(float((q.r3 > 0).mean()), 3), hurt=round(float((q.r3 < 0).mean()), 3))
+# 1. drop weight: fit on one season, test on the other, at the same number of moves as the old 4+ rule
+O = R.loc[R.groupby(key).g.idxmax()]
+cv = {}
+for trs, tes in [(2024, 2025), (2025, 2024)]:
+    t = O[O.s == trs]; k = (t.g >= 4).sum()
+    b = max(np.arange(0, 1.01, .05), key=lambda b: t.loc[(t.g - b * t.dval).nlargest(k).index].r3.mean())
+    cv[f"fit {trs} -> test {tes}"] = {"drop_w": round(float(b), 2)}
+    for tn in ["redraft", "keeper", "dynasty"]:
+        q = O[(O.s == tes) & (O.tn == tn)]; k = int((q.g >= 4).sum())
+        cv[f"fit {trs} -> test {tes}"][tn] = {"old": f(q[q.g >= 4]), "new": f(q.loc[(q.g - b * q.dval).nlargest(k).index])}
+print(json.dumps(cv, indent=1))
+# 2. shipped rule: pair chosen by g', shown when g' >= bar (4; 6 in dynasty), tiers 8 / 12 on g'
+DROP_W, BAR = .25, {"redraft": 4, "keeper": 4, "other": 4, "dynasty": 6}
+R["gp"] = R.g - DROP_W * R.dval
+P = R.loc[R.groupby(key).gp.idxmax()]
+final = {}
+for tn in ["redraft", "keeper", "dynasty", "other"]:
+    o, p = O[O.tn == tn], P[P.tn == tn]; m = M[(M.tn == tn) & (M.typ == "waiver")]; bar = BAR[tn]
+    final[tn] = {"old: shown (g>=4)": f(o[o.g >= 4]), "new: shown (g'>=%d)" % bar: f(p[p.gp >= bar]),
+                 "old Strong add (g>=12)": f(o[o.g >= 12]), "new Strong add (g'>=12)": f(p[p.gp >= 12]),
+                 "old Good+ (g>=8)": f(o[o.g >= 8]), "new Good+ (g'>=8)": f(p[p.gp >= 8]),
+                 "managers' waiver claims": f(m), "managers' free-agent adds": f(M[(M.tn == tn) & (M.typ == "free_agent")]),
+                 "by season, new shown": {int(s): f(p[(p.s == s) & (p.gp >= bar)]) for s in (2024, 2025)},
+                 "by season, old shown": {int(s): f(o[(o.s == s) & (o.g >= 4)]) for s in (2024, 2025)}}
+    print(f"\n{tn}"); [print(f"  {k:30s}", v) for k, v in final[tn].items()]
+pa = P[P.gp >= P.tn.map(BAR)]; oa = O[O.g >= 4]
+print("\nby add position, old:", oa.groupby("apos").r3.agg(["size", "mean"]).round(2).to_dict("index"))
+print("by add position, new:", pa.groupby("apos").r3.agg(["size", "mean"]).round(2).to_dict("index"))
+print("by season x add position (old shown):", oa.groupby(["s", "apos"]).r3.mean().round(2).unstack().to_dict("index"))
+json.dump({"drop_w": DROP_W, "bar": BAR, "crossval": cv, "final": final}, open(B + "/e9_fix.json", "w"), indent=1)

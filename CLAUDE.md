@@ -32,6 +32,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 5. Waivers / FAAB / buy-sell / usage risers — done (v64). Adds ranked by 4-week lineup lift with best drop; fitted
    rate `wvRate` (coefficients `WVC`); FAAB bid tables `FAABQ` + league calibration `faabLeague`; trending top 100;
    buy/sell from fitted rate vs season pace; Hot streaks tab; weekly track record (localStorage `hm_tags_<league>`).
+   v65 (from the redraft retest, `backtest/e9_exact2.py` + `e9_fix.py`): each add/drop pair scored g' = lift − 0.25 ×
+   drop's own 4-week points (`WV_DROPW`); shown from g' ≥ 4, ≥ 6 in dynasty (`wvBar()`); "close call" flag when the drop
+   projects ≥ 45% of the add. Redraft shown moves +10.8 real pts / 73% helped / 20% hurt (was +8.7 / 68% / 25%);
+   managers' claims +7.6 / 66% / 17%. No position correction: position effects flip between seasons. See HANDOFF.md.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
@@ -41,9 +45,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 8. Confidence labels + live model report card.
 
 ## Open items
-- Done: `bt/rosters.json.gz` (900 leagues, exact weekly rosters). Waiver test 2024-25, 516 leagues / 62,616 team-weeks:
-  redraft rated 8+ → +10.1 lineup pts over 3 wks (71% helped) vs managers' claims +7.6; keeper 8+ → +9.8 vs +6.5;
-  dynasty 8+ → +6.8 vs +3.9 (deep benches leave less to gain).
+- Done: `bt/rosters.json.gz` (900 leagues, exact weekly rosters). Waiver test 2024-25, 516 leagues / 62,616 team-weeks,
+  and the v65 fixes from it (see engine 5 above and HANDOFF.md).
+- Waivers still to improve: hurt rate (20%) is above managers' own claims (17%); WR adds gain least (+6.0 vs 9-12);
+  dynasty test can't replay the app's value-protected drops (no historical dynasty values in the archive).
 - Retest IDP trade grades with a few more weeks of 2026 data (owner asked); if still below offense, keep IDP out of trade ideas.
 
 ## Owner's leagues
