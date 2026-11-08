@@ -1143,7 +1143,7 @@ const SOURCES=[
 ["FF Beacon season stats: usage, team records, defense vs position (through Week 5)","https://ffbeacon.com/season/stats"],
 ["FF Beacon game-day weather: sportsbook lines, NWS forecasts, Sleeper projections","https://ffbeacon.com/season/weather"],
 ["FF Beacon game log: Jaxon Smith-Njigba","https://ffbeacon.com/players/jaxon-smith-njigba-9488"],
-["Sleeper public API (live mode)","https://docs.sleeper.com/"]
+["Sleeper public API (live mode)","https://docs.sleeper.com/"],["ESPN public scoreboard (game clock during live games)","https://www.espn.com/nfl/scoreboard"]
 ];
 const PICKS=[["pk-27-1e","2027 early 1st",.42],["pk-27-1m","2027 mid 1st",.33],["pk-27-1l","2027 late 1st",.26],["pk-27-2","2027 2nd",.13],["pk-27-3","2027 3rd",.055],["pk-28-1","2028 1st",.30],["pk-28-2","2028 2nd",.11]];
 
@@ -1384,7 +1384,7 @@ function vMatchup(li){const L=S.leagues[li];if(!L)return `<div class="empty">Tha
   const n=Math.max(A.rows.length,B.rows.length);const need=aA.filter(a=>a.lvl!=="info"),info=aA.filter(a=>a.lvl==="info");
   return `<section class="pan"><div class="mhd">${head(A)}${head(B,1)}</div>
     <div class="wp mt" role="img" aria-label="Win probability ${pc(wpA)}"><i style="width:${(wpA*100).toFixed(1)}%"></i><i style="width:${((1-wpA)*100).toFixed(1)}%"></i></div>
-        <p class="sub">Win probability from each lineup’s Week ${S.week} projection and how much fantasy scores swing week to week (calibrated on 44,000 real Sleeper matchups)${A.live!=null?"; live points shown above":""}.</p></section>
+        <p class="sub">Win probability from each lineup’s Week ${S.week} projection and how much fantasy scores swing week to week (calibrated on 44,000 real Sleeper matchups)${A.live!=null?"; during games each player counts his points so far plus his projection for the time left, and the odds tighten as games finish":""}.</p></section>
   <section class="grid2 mt"><div class="pan"><h2>Needs attention</h2>${need.map(a=>alertHtml(a,1)).join("")||`<p>Nothing flagged. Lineup looks set.</p>`}${info.map(a=>alertHtml(a,1)).join("")}${aB.length?`<h3 class="mt">Their problems</h3>${aB.map(a=>alertHtml(a,1)).join("")}`:""}</div>
     <div class="pan"><h2>Projected edge by position</h2><p class="sub">Your starters minus theirs, Week ${S.week} projection.</p>${posEdges(A,B)}</div></section>
   <section class="pan mt"><h2>Lineups</h2>${[...Array(n).keys()].map(k=>`<div class="slotrow">${cell(A.rows[k])}<span class="chip" style="justify-self:center">${slotLabel((A.rows[k]||B.rows[k]).slot)}</span>${cell(B.rows[k],1)}</div>`).join("")}${(A.kd||B.kd)?`<div class="slotrow"><span class="num"><b>${f1(A.kd||0)}</b></span><span class="chip" style="justify-self:center">K + DEF</span><span class="num" style="text-align:right"><b>${f1(B.kd||0)}</b></span></div>`:""}${Math.abs(A.cal||0)>=.5?`<p class="sub mt">Totals include a ${A.cal>0?"+":"−"}${f1(Math.abs(A.cal))} league-scoring adjustment per team: this league’s scoring has run ${A.cal>0?"above":"below"} projections this season (bonuses and custom points).</p>`:""}</section>
@@ -5318,6 +5318,44 @@ wireRecs=(function(prev){return function(L,n=6){const ti=mineIdx(L),t=L.teams[ti
   L._wr={k:K,v:out};return out.slice(0,n);};})(wireRecs);
 /* a drop who still projects close to the add is flagged: those moves hurt about 4 times in 10 */
 wvRow=(function(prev){return function(r,L){let h=prev(r,L);if(r.risky&&r.d)h=h.replace(/(Drop [^<]*<span class="sub">[^<]*<\/span>)/,`$1 <span class="warn">close call: he still projects ${f1(r.dv)} pts</span>`);return h;};})(wvRow);
+
+/* ===== v66: live in-game projections and win odds =====
+   During games a started player's projection = points so far + pregame projection × share of his game still to play
+   (game clock from ESPN's public scoreboard; if that can't be reached, estimated from kickoff time). Win probability
+   uses those live projections, and its spread narrows with the share of each lineup's projected points still to play. */
+const GCLK={t:0,m:{}};
+const gcAb=a=>({WSH:"WAS",LA:"LAR",JAC:"JAX"})[a]||a;
+async function loadGameClock(force){if(S.mode!=="live")return;const now=Date.now();if(!force&&now-GCLK.t<40000)return;GCLK.t=now;
+  try{const r=await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard",{cache:"no-store"});if(!r.ok)return;const j=await r.json(),m={};
+    for(const ev of j.events||[]){const c=(ev.competitions||[])[0];if(!c)continue;const s=c.status||ev.status||{},ty=s.type||{},st=ty.state,per=+s.period||0,clk=+s.clock||0;
+      if(!/^(pre|in|post)$/.test(st))continue;
+      const rem=st==="pre"?1:st==="post"?0:/HALFTIME/.test(ty.name||"")?.5:per>4?.03:Math.max(.02,1-((per-1)*900+(900-Math.min(900,clk)))/3600);
+      for(const x of c.competitors||[]){const ab=gcAb(x.team&&x.team.abbreviation);if(ab)m[ab]={st,rem,lbl:st==="in"?(/HALFTIME/.test(ty.name||"")?"Half":(per>4?"OT":"Q"+per)+" "+(s.displayClock||"")):"",at:now};}}
+    if(Object.keys(m).length)GCLK.m=m;}catch(e){}}
+function gcKick(g){if(!g.day)return NaN;const d=new Date(g.day+"T12:00:00Z"),y=d.getUTCFullYear(),nov1=new Date(Date.UTC(y,10,1)),fsn=1+((7-nov1.getUTCDay())%7),mar1=new Date(Date.UTC(y,2,1)),ssm=1+((7-mar1.getUTCDay())%7)+7;
+  const dst=d>=new Date(Date.UTC(y,2,ssm))&&d<new Date(Date.UTC(y,10,fsn));return Date.parse(`${g.day}T${(g.time||"13:00")}:00${dst?"-04:00":"-05:00"}`);}
+/* state of a team's game this week: pre / in / post, and the share of it still to play */
+function gameState(team){if(S.mode!=="live"||!team||team==="FA")return null;const e=GCLK.m[team];if(e&&Date.now()-e.at<15*60e3)return e;
+  if(typeof NFLS==="undefined"||!NFLS)return null;const al=t=>t==="LA"?"LAR":t;const g=NFLS.find(x=>x.wk===S.week&&(al(x.a)===team||al(x.h)===team));if(!g)return null;
+  if(g.final)return {st:"post",rem:0};const k=gcKick(g);if(!isFinite(k))return null;const h=(Date.now()-k)/3600e3;
+  if(h<0)return {st:"pre",rem:1};if(h>4.2)return {st:"post",rem:0,est:1};return {st:"in",rem:Math.max(.03,1-h/3.1),est:1,lbl:"live"};}
+/* points so far this week for every rostered player, from the leagues' live matchups */
+function livePtsMap(){const k=(S.leagues||[]).map(L=>L._mut||0).join(",");if(S._lpm&&S._lpm.k===k&&Date.now()-S._lpm.t<5000)return S._lpm.m;const m=new Map();
+  for(const L of S.leagues||[])for(const x of (L.matchups||[]).flat())for(const [id,v] of Object.entries(x.pp||{}))if(v!=null)m.set(id,Math.max(m.get(id)||0,+v||0));
+  S._lpm={k,t:Date.now(),m};return m;}
+const wkPre=wkProj;
+wkProj=function(p){const pre=wkPre(p);if(!p||S.mode!=="live")return pre;const gs=gameState(p.team);if(!gs||gs.st==="pre")return pre;const lp=livePtsMap();if(!lp.has(p.id))return pre;
+  const pts=lp.get(p.id);if(gs.st==="post")return pts;return pts+(gameOf(p)&&gameOf(p).final?0:pre)*gs.rem;};
+kdPts=(function(prev){return function(L,id,ls){const v=prev(L,id,ls);try{if(S.mode!=="live"||!ls||!ls.pp||ls.pp[id]==null)return v;const t=kdTeam(id),gs=t?gameState(t):null;if(!gs||gs.st==="pre")return v;
+  const pts=+ls.pp[id]||0;if(gs.st==="post")return pts;return pts+v*gs.rem;}catch(e){return v;}};})(kdPts);
+/* share of a lineup's pregame projection still to be played */
+function lineupLeft(W){let a=0,b=0;for(const r of W.rows||[]){if(!r.p)continue;const pre=Math.max(0,wkPre(r.p)),gs=gameState(r.p.team);a+=pre;b+=pre*(gs?gs.rem:1);}return a>0?b/a:1;}
+myMatchup=(function(prev){return function(L){const M=prev(L);if(!M||S.mode!=="live")return M;try{const ra=lineupLeft(M.A),rb=lineupLeft(M.B);M.left=[ra,rb];
+  if(ra>.999&&rb>.999)return M;const va=(M.A.proj*WP.k+WP.c)**2*ra,vb=(M.B.proj*WP.k+WP.c)**2*rb,sd=Math.sqrt(va+vb),d=M.A.proj-M.B.proj;
+  M.wpA=sd<.25?(d>0?1:d<0?0:.5):1/(1+Math.exp(-1.7*WP.b*d/sd));}catch(e){}return M;};})(myMatchup);
+gameTag=(function(prev){return function(p){try{const gs=p&&gameState(p.team);if(gs&&gs.st==="in"){const lp=livePtsMap();return `${gs.lbl||"live"}${lp.has(p.id)?`, ${f1(lp.get(p.id))} pts so far`:""}`;}}catch(e){}return prev(p);};})(gameTag);
+refreshLive=(function(prev){return async function(...a){await loadGameClock();const r=await prev(...a);for(const L of S.leagues||[]){L._mut=(L._mut||0)+1;L._sum=null;}return r;};})(refreshLive);
+setInterval(()=>{if(document.hidden||S.mode!=="live")return;if(!Object.values(GCLK.m).some(x=>x.st==="in")&&!liveSet().size)return;loadGameClock(true).then(()=>{for(const L of S.leagues||[])L._sum=null;if(!S.quiet)try{render();}catch(e){}});},60000);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
