@@ -84,6 +84,8 @@ def build(season, ids, light=False):
         s = g2s[r["player_id"]]; w = int(float(r["week"])); o = P[s]["wk"].setdefault(w, {})
         o.update(xfp=f(r.get("total_fantasy_points_exp")), afp=f(r.get("total_fantasy_points")), td=f(r.get("total_touchdown")), xtd=f(r.get("total_touchdown_exp")),
                  xrec=f(r.get("receptions_exp")), xryd=f(r.get("rec_yards_gained_exp")), xruyd=f(r.get("rush_yards_gained_exp")))
+        ra, rt = f(r.get("rush_attempt")), f(r.get("rush_attempt_team"))
+        if ra is not None and rt: o["cs"] = ra / rt  # share of the team's carries (waiver model input)
     if light:
         return P, {}
     # --- snap counts ---
@@ -229,7 +231,7 @@ def summarize(P, tm, season):
         rz = tot("rz"); gl = tot("gl")
         S = {"g": g, "team": team, "pos": next((o.get("pos") for o in reversed(L) if o.get("pos")), None), "fp": r2(fp), "xfp": r2(xfp), "fpoe": r2(None if fp is None or xfp is None else fp - xfp),
              "td": r2(td, 1), "xtd": r2(xtd, 1), "snap": r2(mean(col("snap")), 1), "snap3": r2(mean(col("snap", l3)), 1),
-             "ts": r2(mean(col("ts")), 3), "ts3": r2(mean(col("ts", l3)), 3), "as": r2(mean(col("as_")), 3), "wopr": r2(mean(col("wopr")), 3),
+             "ts": r2(mean(col("ts")), 3), "ts3": r2(mean(col("ts", l3)), 3), "cs": r2(mean(col("cs")), 3), "cs3": r2(mean(col("cs", l3)), 3), "as": r2(mean(col("as_")), 3), "wopr": r2(mean(col("wopr")), 3),
              "racr": r2(mean(col("racr"))), "adot": r2(tot("ay") / tg, 1) if tg else None,
              "epat": r2(tot("repa") / tg, 2) if tg else None, "epac": r2(tot("ruepa") / tot("car"), 2) if tot("car") else None,
              "epad": r2(tot("pepa") / tot("att"), 2) if tot("att") else None, "cpoe": r2(mean(col("cpoe")), 1), "qbr": r2(mean(col("qbr")), 1),
