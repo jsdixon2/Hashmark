@@ -6,6 +6,42 @@ Newest session at the top.
 
 ---
 
+## 2026-11-08, later: live in-game projections (v66, on main) and the WR investigation (not shipped)
+
+### v66: live projections and win odds (on `main`, commit 45cbfef)
+- **Problem the owner reported:** live points showed during games, but projections and win probability stayed at their
+  pregame values.
+- **Fix:** a started player's projection is now `points so far + pregame projection × share of his game left`, and a
+  finished game counts actual points. Kicker and DEF (`kdPts`) follow the same rule.
+- **Win probability:** uses the live projections. Each side's variance is scaled by the share of its lineup's pregame
+  projection still to play (`lineupLeft`), so the odds tighten as games finish and reach 100% or 0% once all are final.
+- **Game clock:** comes from ESPN's public scoreboard (`site.api.espn.com/.../nfl/scoreboard`), refreshed every 60 s
+  while games are on. If it can't be reached, the clock is estimated from kickoff time in `data/sched.json` (game ≈ 3.1 h).
+  ESPN couldn't be tested from the cloud sandbox, so the estimate is the safety net. Check in a real browser that the
+  scoreboard call succeeds.
+- **Code:** functions `gameState`, `livePtsMap`, `wkPre` (the old `wkProj`), `lineupLeft`. Wrappers on `wkProj`,
+  `kdPts`, `myMatchup`, `gameTag`, `refreshLive`. Source in `.build/v66.js`.
+- **QA:** a simulated live demo league. A mid-game player at 12 pts with 38% of his game left on a 16.5 projection
+  showed 18.3. Win odds went from 92% to 94% mid-game and to 100% at the end, with no page errors.
+
+### WR adds: what was tried (owner asked to optimize WR adds; explain before committing to main)
+- **New measure** (`r3s` in `e9_exact2.py`): lineups set by our projections before each game and scored on actual
+  points, the way a manager would play it. The old `r3` scored hindsight-best lineups.
+- **What the new measure shows:** on `r3s`, v65's shown moves gain +5.9 (2024) and +4.9 (2025), with 35% hurt. WR adds
+  are the weakest: +2.8 and 43% hurt.
+- **Receiving-role features** (air-yards share, WOPR, average depth of target, targets, TD luck; `e9_wr.py`): no
+  improvement. Rank correlation on the wire was 0.563–0.565 against 0.564 now; boosted trees were worse. The WR rate is
+  already calibrated (0.98 on the wire), so the player model isn't the problem.
+- **WR-only discount on the lift:** didn't hold across seasons (fitted on 2025, the best discount is none).
+- **Haircut on every wire player's outlook before choosing** (`ADDH` in `e9_exact2.py`, compared in `e9_wrfix.py`):
+  1.5 pts/game at all positions cut the hurt rate in all 6 season × league-type cells (30→26, 32→26, 39→34, 27→25,
+  28→25, 39→34). Against simply raising v65's bar to the same number of moves, the change in gain was mixed (−0.2 to
+  +0.4). Larger haircuts (3, or 3 at WR only) were inconsistent.
+- **Conclusion:** WR can't be fixed reliably with the free data available. The only defensible change is the 1.5
+  all-position haircut, which means fewer moves that backfire. Waiting on the owner's decision; not on `main`.
+
+---
+
 ## Session of 2026-11-08: redraft waiver retest and v65 fixes
 
 ### What the owner asked
