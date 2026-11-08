@@ -1577,16 +1577,16 @@ function freeAgents(){const own=new Set(S.L?S.L.teams.flatMap(t=>t.players):[]);
 function vWaivers(){const L=S.L,me=myTeam();if(S.mode==="live"&&!S.trend){S.trend={};loadTrend().then(()=>{if(S.L)S.L._wr=null;route()==="waivers"&&render();});}
   const fas=freeAgents().filter(p=>WV_OFF.has(p.pos)&&!isIDP(p)),nd=L&&me?needs(L,me).sort((a,b)=>a.d-b.d):[],need=nd[0]?nd[0].pos:null,tab=S.wtab||"best",T=S.trend||{};
   let recs=[];try{recs=L&&me?wireRecs(L,8):[];}catch(e){console.error(e);}
-  if(recs.length)tagRecord(L,"a",recs.filter(r=>r.g>=4).slice(0,5).map(r=>[r.p.id,+r.g.toFixed(1)]));
+  if(recs.length)tagRecord(L,"a",recs.filter(r=>r.g>=wvBar()).slice(0,5).map(r=>[r.p.id,+r.g.toFixed(1)]));
   const s4=p=>(p._v4&&p._v4.k===wvKey())?p._v4.v:(p._v4={k:wvKey(),v:wvVec(p,L).reduce((a,b)=>a+b,0)}).v;
   const list=tab==="trend"?fas.filter(p=>T[p.id]).sort((a,b)=>T[b.id]-T[a.id]):tab==="need"&&need?fas.filter(p=>p.pos===need).sort((a,b)=>s4(b)-s4(a)):fas.sort((a,b)=>s4(b)-s4(a));
   const ty=S.fmt.type,stash=ty!=="redraft"?fas.filter(p=>p.age&&p.age<=24&&p.brk!=null).sort((a,b)=>b.brk-a.brk)[0]:null;
-  const good=recs.filter(r=>r.g>=4);
+  const good=recs.filter(r=>r.g>=wvBar());
   const top=`<section class="pan mt"><div class="row sp"><h2>Best adds for your team</h2><span class="tag">Next 4 weeks</span></div>
     <p class="sub">Each add is judged by what it does to your best lineup over the next four weeks, with byes and injuries counted, and paired with the bench player you’d miss least.${wvFa(L)?" Bids come from thousands of real FAAB claims for players this in demand at this point of the season.":""}</p>
     <div class="list mt">${(good.length?good:recs.slice(0,3)).slice(0,5).map(r=>wvRow(r,L)).join("")||`<div class="empty">No free agent improves your lineup right now.</div>`}</div>
-    ${good.length?"":`<p class="sub mt">Nothing on the wire adds 4+ lineup points over the next month, so hold your ${wvFa(L)?"budget":"claim"}.</p>`}
-    <p class="sub mt">Tested on 2024–25 leagues: adds rated 8+ points gained 8.7 real lineup points over the next three weeks on average and helped 2 in 3 times, while picking the best available player by projection alone lost points once the drop was counted.</p></section>`;
+    ${good.length?"":`<p class="sub mt">Nothing on the wire adds ${wvBar()}+ lineup points over the next month, so hold your ${wvFa(L)?"budget":"claim"}.</p>`}
+    <p class="sub mt">Tested on 516 real Sleeper leagues (2024–25, exact weekly rosters): in redraft, moves shown here gained 10.8 real lineup points over the next three weeks and helped 73% of the time; managers’ own waiver claims gained 7.6 and helped 66%. A drop who still scores counts against the move.</p></section>`;
   const g=(t,p,w)=>p?`<div class="pr" data-go="player-${p.id}"><div><div class="nm">${t}</div><div class="meta">${esc(p.name)} · ${p.pos} ${esc(p.team)}</div></div><span class="sub">${w}</span></div>`:"";
   const guide=stash||need?`<section class="pan mt"><h2>Free agent guide</h2><div class="list mt">${need?g("Thinnest spot: "+need,fas.filter(p=>p.pos===need).sort((a,b)=>s4(b)-s4(a))[0],"Best available "+need):""}${stash?g("Stash",stash,`${PCT(stash.brk)}% breakout odds`):""}</div></section>`:"";
   return `<h1>Waiver wire</h1><p class="sub">${fas.length} unrostered players in ${esc(L?L.name:"this league")}. Sleeper runs the claims; tap through to place them there.</p>${top}${guide}
@@ -2211,7 +2211,7 @@ function leagueDigest(L){const key=S.week+"|"+(NW.built||0)+"|"+(S.upd||0)+"|"+O
   let v={mv:[],tr:[]};
   try{v=withLeague(L,()=>{const me=L.teams[mineIdx(L)],mv=[],tr=[],P=p=>({id:p.id,name:p.name,pos:p.pos,brk:p.brk,broke:p.broke,team:p.team,up:p._up});
     try{const M=myMatchup(L);if(M)alertsFor(M.A).filter(a=>a.lvl==="bad"||a.lvl==="warn").slice(0,3).forEach(a=>mv.push({pr:a.lvl==="bad"?100:80,k:a.lvl==="bad"?"Urgent":"Start/sit",t:a.msg,s:a.fix,go:"matchup-"+S.leagues.indexOf(L)}));}catch(e){}
-    try{const fa=freeAgents();let wr=[];try{wr=wireRecs(L,3).filter(r=>r.g>=4);}catch(e){}wr.slice(0,2).forEach((r,i)=>{if(!mv.some(m=>m.id===r.p.id))mv.push({pr:(r.g>=12?70:r.g>=8?62:56)-i*4,id:r.p.id,k:"Free agent",t:"Add "+r.p.name+(r.d?" for "+r.d.name:""),s:`+${f1(r.g)} points in your lineup over the next 4 weeks${r.bid?`; bid $${r.bid.bid} (wins about ${Math.round(r.bid.win*100)}%)`:""}.`,go:"player-"+r.p.id});});
+    try{const fa=freeAgents();let wr=[];try{wr=wireRecs(L,3).filter(r=>r.g>=wvBar());}catch(e){}wr.slice(0,2).forEach((r,i)=>{if(!mv.some(m=>m.id===r.p.id))mv.push({pr:(r.g>=12?70:r.g>=8?62:56)-i*4,id:r.p.id,k:"Free agent",t:"Add "+r.p.name+(r.d?" for "+r.d.name:""),s:`+${f1(r.g)} points in your lineup over the next 4 weeks${r.bid?`; bid $${r.bid.bid} (wins about ${Math.round(r.bid.win*100)}%)`:""}.`,go:"player-"+r.p.id});});
       fa.filter(p=>rosPPG(p)>=4&&p.brk!=null&&!p.broke).sort((a,b)=>b.brk-a.brk).slice(0,4).forEach(p=>tr.push(Object.assign(P(p),{tag:"Waivers"})));}catch(e){}
     try{const G=tradeSignals(L);G.sells.slice(0,2).forEach((x,i)=>mv.push({pr:55-i*6,k:"Sell high",t:x.p.name,s:x.why[0]||"",go:"player-"+x.p.id}));G.buys.slice(0,2).forEach((x,i)=>mv.push({pr:50-i*6,k:(wvGap(x.p)||0)>=1.5?"Buy low":x.g.ret.pct>=3?"Buy before return":"Trade target",t:x.p.name,s:x.why[0]||"",go:"player-"+x.p.id}));
       G.pre.slice(0,2).forEach((x,i)=>mv.push({pr:45-i*6,k:"Pre-breakout",t:x.p.name,s:x.why[0]||"",go:"player-"+x.p.id}));
@@ -3013,7 +3013,7 @@ function vTeamLand(){const L=S.L;if(!L)return `<div class="empty">No league load
   ${tile("roster","Roster",L.rip?"–":al.length?`${al.length} to fix`:"All set",L.rip?"Roster released":al[0]?esc(al[0].msg):"No lineup warnings","ros")}
   ${tile("tupd","Updates",String(tu),"stories for this matchup","news")}</div>`;}
 function vGMLand(){const L=S.L;if(!L)return `<div class="empty">No league loaded.</div>`;let G={buys:[],sells:[]},ms=[],wv=null,tr=[];try{G=tradeSignals(L);}catch(e){}try{ms=mergedMoves();}catch(e){}try{tr=allTrends();}catch(e){}
-  let wr=null;try{wr=wireRecs(L,1)[0]||null;wv=wr&&wr.g>=4?wr.p:null;}catch(e){}const urg=ms.filter(m=>m.pr>=80).length;
+  let wr=null;try{wr=wireRecs(L,1)[0]||null;wv=wr&&wr.g>=wvBar()?wr.p:null;}catch(e){}const urg=ms.filter(m=>m.pr>=80).length;
   return `<div class="tiles">${tile("moves","Moves",String(ms.length),urg?`${urg} urgent · ${esc(ms[0].t)}`:ms[0]?esc(ms[0].t):"Nothing pressing","moves")}
   ${tile("trade","Trade Lab",G.buys[0]?esc(G.buys[0].p.name):"–",G.buys.length?`${G.buys.length} targets · ${G.sells.length} sell candidates`:"No clear targets yet","trade")}
   ${tile("waivers","Waivers",wv?esc(wv.name):"–",wv?`${wv.pos} · +${f1(wr.g)} lineup pts next 4 wks${wr.bid?` · bid $${wr.bid.bid}`:""}`:"Nothing worth adding","waiv")}
@@ -5297,6 +5297,27 @@ function tagScore(L){const T=tagLog(L);if(!T)return null;const res={b:[0,0,0],s:
 function trackCard(L){const r=tagScore(L);const live=r&&(r.b[1]+r.s[1]+r.a[1])?[r.b[1]?`Buy tags: <b>${r.b[0]} of ${r.b[1]}</b> scored at or above their pace since (${r.b[2]>=0?"+":""}${f1(r.b[2]/r.b[1])} pts a game)`:null,r.s[1]?`Sell tags: <b>${r.s[0]} of ${r.s[1]}</b> fell below their pace (${r.s[2]>=0?"+":""}${f1(r.s[2]/r.s[1])})`:null,r.a[1]?`Suggested adds: <b>${f1(r.a[0]/r.a[1])}</b> pts a game since`:null].filter(Boolean):[];
   return `<section class="pan mt"><div class="row sp"><h2>Track record</h2><span class="tag">This league</span></div>${live.length?`<div class="list mt">${live.map(x=>`<div class="lrow"><span>${x}</span></div>`).join("")}</div>`:`<p class="sub">Hashmark logs its buy, sell and waiver calls in this league each week and checks them here once games are played.</p>`}
    <p class="sub mt">Tested on 2024–25 seasons it never saw: players tagged to rise beat their scoring pace 72% of the time (+2.9 pts a game); players tagged to fall dropped below it 79% of the time (−4.6). Hot streaks without more snaps, targets or carries cooled by 1.7 pts a game.</p></section>`;}
+
+/* ===== v65: engine 5 retest on 516 real leagues (exact weekly rosters, 2024-25) — drops that still score count against the move; higher bar in dynasty ===== */
+/* Each add/drop pair is judged by its lineup lift minus a quarter of the dropped player's own 4-week points (weight fitted on one
+   season and checked on the other, both ways). Moves show from 4+ (6+ in dynasty). Redraft: shown moves gained 10.8 real lineup
+   points over the next three weeks and helped 73% of the time (was 8.7 / 68%); managers' own waiver claims 7.6 / 66%. */
+const WV_DROPW=.25;
+function wvBar(){return S.fmt&&S.fmt.type==="dynasty"?6:4;}
+wireRecs=(function(prev){return function(L,n=6){const ti=mineIdx(L),t=L.teams[ti];if(!t)return [];const K="v65|"+wvKey()+"|"+t.players.join(",")+"|"+(S.fmt&&S.fmt.type);if(L._wr&&L._wr.k===K)return L._wr.v.slice(0,n);
+  const slots=wvSlots(L);if(!slots.length)return [];const act=startIds(L,t).filter(id=>PL[id]);const cap=rosterCap(L),open=cap?Math.max(0,cap-startIds(L,t).length):1;
+  const V={},vv=id=>V[id]||(V[id]=wvVec(PL[id],L)),sum4=id=>vv(id).reduce((a,b)=>a+b,0),tot=ids=>{let s=0;for(let i=0;i<4;i++)s+=wvOpt(ids,slots,id=>vv(id)[i]).t;return s;};
+  const base=tot(act),prot=wvProtected(L,t),bar=wvBar();
+  const drops=act.filter(id=>!prot(id)&&WV_OFF.has(PL[id].pos)&&!isIDP(PL[id])).map(id=>{const rest=act.filter(x=>x!==id);return {id,rest,cost:base-tot(rest),dv:sum4(id)};}).filter(d=>d.cost<=25).sort((a,b)=>(a.cost+WV_DROPW*a.dv)-(b.cost+WV_DROPW*b.dv)).slice(0,8);
+  const fas=freeAgents().filter(p=>WV_OFF.has(p.pos)&&!isIDP(p)),cand=fas.map(p=>({p,s:sum4(p.id)})).sort((a,b)=>b.s-a.s).slice(0,24);
+  const out=[];for(const {p,s} of cand){let best=null;
+    if(open>0){const g=tot(act.concat(p.id))-base;best={g,raw:g,dv:0,d:null};}
+    for(const d of drops){const raw=tot(d.rest.concat(p.id))-base,g=raw-WV_DROPW*d.dv;if(!best||g>best.g+.05)best={g,raw,dv:d.dv,d:PL[d.id]};}
+    if(best)out.push({p,g:best.g,raw:best.raw,dv:best.dv,d:best.d,w4:s,rate:wvRate(p),risky:!!best.d&&best.dv>=.45*Math.max(1,s)});}
+  out.sort((a,b)=>b.g-a.g);for(const r of out){r.bid=faabBid(L,r.p,r.g);r.tier=r.g>=12?"Strong add":r.g>=8?"Good add":r.g>=bar?"Worth a look":"Depth only";}
+  L._wr={k:K,v:out};return out.slice(0,n);};})(wireRecs);
+/* a drop who still projects close to the add is flagged: those moves hurt about 4 times in 10 */
+wvRow=(function(prev){return function(r,L){let h=prev(r,L);if(r.risky&&r.d)h=h.replace(/(Drop [^<]*<span class="sub">[^<]*<\/span>)/,`$1 <span class="warn">close call: he still projects ${f1(r.dv)} pts</span>`);return h;};})(wvRow);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
