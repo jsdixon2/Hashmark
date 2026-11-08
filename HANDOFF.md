@@ -6,6 +6,22 @@ Newest session at the top.
 
 ---
 
+## 2026-11-09: v70, start/sit advice respects locks (on main)
+- **Owner's report:** "Start Quentin Johnston over DeMario Douglas" appeared while both were LIVE.
+- **Cause:**
+  - `alertsFor` (Needs attention, home Urgent/Lineup moves, matchup card) had no lock check at all.
+  - `locked()` (used by the Start/Sit page) only saw games within 4 hours of kickoff in `data/sched.json`.
+- **Fix (`.build/v70.js`):**
+  - `locked` is wrapped to also use `gameState`, so a game counts as locked from kickoff to final.
+  - `alertsFor` is rewritten: locked starters get no swap advice (finished ones read "has played · X points banked" from
+    live points, and only Thursday games say "played Thursday"), and locked bench players are never suggested.
+- **QA (simulated live demo):**
+  - A pregame swap (Brissett over Rodgers) disappears once Brissett's game is final.
+  - It stays when neither player has kicked off.
+  - No page errors.
+
+---
+
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)
 - **Owner's report:** a redraft league showed 0 trade ideas and "No pre-breakout trade targets". Their guidance: ideas
   don't need to be win-win, just not egregious for the other team; targets don't need to be breakout candidates.

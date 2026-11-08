@@ -54,6 +54,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    Trade targets (`targetsAll`): breakout -> buy-low -> lineup upgrades at fair price (young players when rebuilding).
 6a. Live games (v66): in-game projection = points so far + pregame projection × share of game left (ESPN scoreboard
    clock, fallback kickoff time); win odds narrow with the share of lineup points left (`gameState`, `lineupLeft`).
+6b. v70: no start/sit advice for locked players. `locked(p)` = his game has kicked off (`gameState` from v66, else schedule
+   final flag / 4-hour kickoff window). `alertsFor` (feeds matchup "Needs attention", home moves, start/sit) skips locked
+   starters (finished ones show "has played · X points banked") and never suggests a locked bench player.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;

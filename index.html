@@ -5499,6 +5499,27 @@ vPre=(function(prev){return function(){const L=S.L;let h=prev();if(!L)return h;l
   const i=h.indexOf('<section class="pan mt">');const rest=i>=0?h.slice(i):"";
   return `<section class="pan"><div class="row sp"><h2>Trade targets</h2><span class="tag">Breakout odds ${info("brk")}</span></div><p class="sub">Breakout candidates first, then buy-low players, then the ones who’d add most to ${S.fmt.type!=="redraft"&&(()=>{try{return leagueCtx(L)[mineIdx(L)].ts.st==="rebuilding";}catch(e){return false;}})()?"your rebuild (young players)":"your starting lineup at a fair price"}.</p>${lst(T.map(row),6,"No trade targets on other rosters right now.")}</section>${rest}`;};})(vPre);
 
+/* ===== v70: no start/sit advice for locked players =====
+   A player is locked once his game has kicked off (Sleeper locks each player at his own kickoff), whether he is in the
+   lineup or on the bench. Game state comes from the live game clock (v66: ESPN scoreboard, else kickoff time), the
+   schedule's final flag, or the old 4-hour kickoff window. Lineup alerts never suggest moving a locked player in or out. */
+locked=(function(prev){return function(p){if(!p)return false;try{const gs=gameState(p.team);if(gs&&gs.st!=="pre")return true;}catch(e){}return prev(p);};})(locked);
+alertsFor=function(W){const out=[];const taken=new Set();const lp=typeof livePtsMap==="function"&&S.mode==="live"?livePtsMap():new Map();
+  const best=(slot,than)=>{const b=W.bench.filter(x=>x&&!taken.has(x.id)&&!locked(x)&&ELIG[slot].includes(x.pos)&&wkProj(x)>than).sort((a,c)=>wkProj(c)-wkProj(a))[0];if(b)taken.add(b.id);return b;};
+  const fix=b=>b?`Start ${b.name} (${f1(wkProj(b))} projected)`:"No eligible bench replacement that hasn’t played yet; check free agents";
+  for(const r of W.rows){const p=r.p,sl=slotLabel(r.slot);
+    if(!p){out.push({lvl:"bad",msg:`Empty ${sl} slot`,fix:fix(best(r.slot,0))});continue;}
+    const g=gameOf(p),gs=(()=>{try{return gameState(p.team);}catch(e){return null;}})();
+    if(g&&g.bye){out.push({lvl:"bad",msg:`${p.name} is on bye`,fix:fix(best(r.slot,0)),id:p.id});continue;}
+    if(locked(p)){const done=(g&&g.final)||(gs&&gs.st==="post"),pts=lp.has(p.id)?lp.get(p.id):(g&&g.final?p.last:null);
+      if(done)out.push({lvl:"info",msg:`${p.name} ${g&&g.thu?"played Thursday":"has played"}`,fix:pts!=null?`${f1(pts)} points banked`:"Locked in",id:p.id});
+      continue;}
+    if(p.inj&&OUTRX.test(p.inj)){out.push({lvl:"bad",msg:`${p.name} ${statusWord(p.inj)}`,fix:fix(best(r.slot,0)),id:p.id});continue;}
+    if(g&&g.thu)out.push({lvl:"warn",msg:`${p.name} plays Thursday`,fix:`Kickoff ${g.g.when}; his slot locks then`,id:p.id});
+    if(p.inj)out.push({lvl:"warn",msg:`${p.name}: ${p.inj.split(";")[0]}`,fix:"Check the inactive list before kickoff",id:p.id});
+    const wp=wkProj(p);const b=best(r.slot,wp+2);if(b)out.push({lvl:"warn",msg:`Start ${b.name} over ${p.name}`,fix:`+${f1(wkProj(b)-wp)} projected points`,id:b.id});}
+  const rank={bad:0,warn:1,info:2};return out.sort((a,b)=>rank[a.lvl]-rank[b.lvl]);};
+
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
