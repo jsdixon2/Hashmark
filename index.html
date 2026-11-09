@@ -1507,7 +1507,7 @@ function vPlayer(id){return vPlayer0(id)+nvPanel(id);}function vPlayer0(id){cons
     <div class="pan"><h2>Value breakdown</h2>
       <div class="lrow mt"><span>Points over a replacement ${p.pos}, rest of ${S.season}</span><span class="num">${f1(p.par)}</span></div>
       <div class="lrow"><span>Future seasons, age-curved${S.fmt.type==="dynasty"?"":" (off in redraft)"}</span><span class="num">${f1(p.fut)}</span></div>
-      <div class="bar mt"><i style="width:${(1-futPct)*100}%"></i></div><div class="row sp sub"><span>Win now ${pc(1-futPct)}</span><span>Future ${pc(futPct)}</span></div>
+      ${(p.par>0||p.fut>0)?`<div class="bar mt"><i style="width:${(1-futPct)*100}%"></i></div><div class="row sp sub"><span>Win now ${pc(1-futPct)}</span><span>Future ${pc(futPct)}</span></div>`:`<p class="sub mt">Not projected above a replacement ${p.pos}, now or in future seasons.</p>`}
       <p class="sub mt">Replacement level ${repl(p.pos)} pts/wk. Age multiplier (${esc(S.ageSrc)}) ${pc(ageMult(p.pos,p.age))} now, ${pc(ageMult(p.pos,(p.age||26)+1))} next year.</p></div></section>
   ${m?`<section class="pan mt"><div class="row sp"><h2>Week ${S.week} matchup</h2>${m.bye?"":`<span class="tag ${m.rank<=10?"good":m.rank>=23?"bad":"warn"}">Grade ${m.grade}</span>`}</div>${m.bye?`<p>On bye this week.</p>`:`
     <div class="grid4 mt"><div><div class="sub">Opponent</div><b>${m.home?"vs":"at"} ${m.opp}</b></div><div><div class="sub">${m.opp} allows to ${p.pos}s</div><b>${f1(m.allowed)} pts/g, #${m.rank}</b></div><div><div class="sub">Team implied total</div><b>${f1(m.imp)}</b></div><div><div class="sub">Line</div><b>${m.g.fav} −${m.g.sp}, O/U ${m.g.tot}</b></div></div>
@@ -2146,7 +2146,7 @@ function archetype(p){const c=p.rc,f=p._rf||{},n=(p.log||[]).length,R=repl(p.pos
   if(out)return [p.risk,"On the shelf",`Listed ${p.inj}; nothing until he’s cleared`];
   if(p.team==="FA")return [p.risk,"Unsigned","No NFL team right now"];
   const L=[];
-  if(c.health>=85)L.push([c.health,"Injury watch",f.miss?`Missed ${f.miss} of his team’s games${p.inj?", now "+p.inj:""}`:`${p.inj?p.inj+", ":""}one of the higher injury risks at ${p.pos}`]);
+  if(c.health>=85)L.push([c.health,"Injury watch",f.miss?`Listed out for ${f.miss} game${f.miss===1?"":"s"} this season${p.inj?", now "+p.inj:""}`:`${p.inj?p.inj+", ":""}one of the higher injury risks at ${p.pos}`]);
   if(c.role>=85)L.push([c.role,"Role in flux",f.snap!=null?`On the field for ${Math.round(f.snap)}% of snaps lately${p.dc>1?", listed "+ordn(p.dc)+" on the depth chart":""}`:"Depth chart and usage aren’t locked in"]);
   if(c.age>=85)L.push([c.age,"Age cliff",`${p.age} is ${p.age>=f.cl?"past":"near"} the ${p.pos} decline age of ${f.cl}`]);
   if(c.td>=88&&f.tdp!=null)L.push([c.td,"Touchdown-dependent",`${pct(f.tdp)} of his points come from touchdowns, which rarely hold`]);
@@ -5643,6 +5643,23 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 tmTagEl=(function(prev){return function(el){prev(el);try{if(!el.querySelector(".jt3"))return;const s=el.querySelector(".tmt");if(!s)return;const p=PL[el.dataset.go.slice(7)],a=p&&S.fmt&&S.fmt.type!=="redraft"&&p.age?Math.floor(p.age):null;if(a)s.textContent=String(a);else s.remove();}catch(e){}};})(tmTagEl);
 mxCell=(function(prev){return function(p,right,W){let h=prev(p,right,W);try{if(h.includes(` · ${esc(p.team)}</div>`))h=h.replace(` · ${esc(p.team)}</div>`," · Not started</div>");}catch(e){}return h;};})(mxCell);
 document.head.insertAdjacentHTML("beforeend",`<style>.mxc .mxv{white-space:nowrap}</style>`);
+
+/* ===== v77: "missed games" means games missed injured, not games a backup didn't play =====
+   Before: team games minus games played, so backups and newly signed players looked injury-prone (e.g. a backup QB
+   signed mid-season showed "Missed 8 of his team's games" and Health 95). Now: weeks listed Out/Doubtful on this
+   season's official injury reports (values.json injh, from nflverse); without that data, only gaps between a regular's
+   appearances count (snap share 50%+, or a QB starter), never weeks before his first game. */
+function missedInjured(p){const h=typeof VAL!=="undefined"&&VAL&&VAL.v&&VAL.v[p.id]&&VAL.v[p.id].injh;
+  if(Array.isArray(h)&&h.length===3)return h[2]||0;if(typeof VAL!=="undefined"&&VAL&&VAL.asof)return 0;  /* not on any report this season */
+  const lg=(p.log||[]).filter(x=>x.pts!=null&&x.wk!=null).sort((a,b)=>a.wk-b.wk);if(lg.length<2)return 0;
+  const sn=lg.map(x=>x.snap).filter(x=>x!=null),avg=sn.length?sn.reduce((s,x)=>s+x,0)/sn.length:null;
+  if(avg!=null&&avg<(p.pos==="QB"?85:50))return 0;
+  const played=new Set(lg.map(x=>x.wk)),first=lg[0].wk,last=lg[lg.length-1].wk;let miss=0,gaps=0;
+  for(let w=first+1;w<last;w++){if(played.has(w))continue;gaps++;const G=typeof NFLS!=="undefined"&&NFLS?NFLS:null;if(G){const al=t=>t==="LA"?"LAR":t;if(G.some(g=>g.wk===w&&(al(g.a)===p.team||al(g.h)===p.team)))miss++;}}
+  if(!(typeof NFLS!=="undefined"&&NFLS))miss=Math.max(0,gaps-1);return miss;}
+rawRisk=(function(prev){return function(p,tgMax){const o=prev(p,null),f=p._rf||{};
+  if(p.team!=="FA"){const miss=missedInjured(p),tg=Math.max(1,tgMax||(p.log||[]).length||1);if(miss>0){o.health+=Math.min(.45,miss/Math.max(tg,miss)*.9);f.miss=miss;}else delete f.miss;}
+  p._rf=f;return o;};})(rawRisk);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}

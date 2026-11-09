@@ -79,6 +79,19 @@ Newest session at the top.
   - **K/DEF:** the K + DEF total row is replaced by per-slot rows from `L.allSlots` with live starters, or `kdLineup`
     otherwise.
 
+- **v77 (owner: Joe Milton, a healthy backup QB signed 2 weeks ago, showed "Missed 8 of his team's games", Health 95,
+  Injury watch):**
+  - **Cause:** `rawRisk` counted every team game without a stat line as missed.
+  - **Fix:**
+    - `missedInjured(p)` uses `VAL.v[id].injh[2]`: weeks Out/Doubtful on nflverse's official injury reports this season,
+      built in `scripts/build_values.py`. It returns 0 when the player isn't on any report.
+    - Without values data, it counts only gaps between appearances, for regulars (snap share 50%+, or a QB starter).
+  - **Text:** "Listed out for N games this season".
+  - **Value breakdown:** shows "Not projected above a replacement QB, now or in future seasons" instead of a 100%/0%
+    split of zeros.
+  - **Test:** a backup QB went from Health 95 to 47 ("Role in flux: 9% of snaps"). A starter with 3 report weeks still
+    shows Injury watch.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)
