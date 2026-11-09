@@ -5880,7 +5880,7 @@ function tradeOpts(L,p,dir){const k=(L._ctx&&L._ctx.k)+"|to|"+p.id+"|"+dir+"|"+p
   for(const x of out){if(pick.length>=4)break;if(pick.includes(x))continue;if((perT[x.c.ti]||0)>=2)continue;const sig=x.send.concat(x.get).map(a=>a.id).sort().join();if(seen.has(sig))continue;seen.add(sig);pick.push(x);perT[x.c.ti]=(perT[x.c.ti]||0)+1;}
   pick.sort((a,b)=>b.sc-a.sc);L._to[k]=pick;return pick;}
 function optsHtml(L,opts){if(!opts.length)return `<p class="sub mt">No realistic trade built around him right now.</p>`;const mi=mineIdx(L),rd=S.fmt.type==="redraft";
-  const lbl={"1for1":"1-for-1","2for1":"2-for-1 · consolidate","1for2":"1-for-2 · add depth"};const nm=a=>esc(a.p.name);
+  const lbl={"1for1":"1-for-1","2for1":"2-for-1 · consolidate","1for2":"1-for-2 · add depth","2for2":"2-for-2","3for2":"3-for-2 · consolidate","2for3":"2-for-3 · add depth"};const nm=a=>esc(a.p.name);
   return `<div class="topt mt"><span class="eyebrow">Trade options</span>${opts.map(x=>{const enc=(a,f,to)=>[a.id,f,to];
     const mk=Math.abs(x.mg)<.03?"even market":x.mg>0?`market favors them ${Math.round(x.mg*100)}%`:`market favors you ${Math.round(-x.mg*100)}%`;
     return `<div class="tor"><div class="tot"><div><span class="pill">${lbl[x.type]}</span> <b>${esc(x.c.t.name)}</b> <span class="sub">${recOf(x.c.t)}</span></div>
@@ -5895,6 +5895,54 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .tor{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.tor:last-child{border-bottom:0}
 .tor .tot{flex:1;min-width:0}.tor .tot>div:first-child .sub{white-space:nowrap}.tor .pill{font-size:10px;padding:2px 7px}.tor .chip{flex:none}
 </style>`);
+
+/* ===== v87: bigger deals — 2-for-2, 3-for-2 and 2-for-3 in the trade finder and on Sell-high / Buy-low cards =====
+   Same rules as smaller deals (market fair to them, realism check, redraft lineup change / keeper-dynasty plan fit), with a
+   higher bar because bigger packages are harder to agree: redraft +1.5 pts/wk for you (vs +0.5), keeper/dynasty +5%
+   value to your roster. Search uses each side's top 7 players, market check first, cached lineup sums. */
+const BIG_LBL={"2for2":"2-for-2","3for2":"3-for-2 · consolidate","2for3":"2-for-3 · add depth"};
+FDT.push(["2for2","2-for-2"],["3for2","3-for-2"],["2for3","2-for-3"]);Object.assign(fdLbl,BIG_LBL);
+function dealEval(L,mi,c,send,get,type,big,LC){const rd=S.fmt.type==="redraft",C=leagueCtx(L),meC=C[mi],me=L.teams[mi],th=c.t;
+  const M=a=>a.k==="k"?pickVal(L,a.y,a.r,a.orig):rd?(a.p.val||0):mktVal(a.p);
+  const mIn=effV(get.map(M)),mOut=effV(send.map(M));if(!mIn||!mOut)return null;const mg=(mOut-mIn)/Math.max(mIn,mOut);if(mg<-.1||mg>.25)return null;
+  const lp=ids=>{const k=ids.slice().sort().join(",");if(LC&&LC.has(k))return LC.get(k);const v=lpts(ids,L);if(LC)LC.set(k,v);return v;};
+  const sI=send.filter(a=>a.k!=="k").map(a=>a.id),gI=get.filter(a=>a.k!=="k").map(a=>a.id);let ra={drops:[]},rb={drops:[]};try{ra=rosterAfter(L,mi,gI,sI);rb=rosterAfter(L,c.ti,sI,gI);}catch(e){}
+  const myA=me.players.filter(id=>!sI.includes(id)&&!ra.drops.includes(id)).concat(gI),thA=th.players.filter(id=>!gI.includes(id)&&!rb.drops.includes(id)).concat(sI);
+  const gMe=lp(myA)-lp(me.players),gTh=lp(thA)-lp(th.players);if(!realOK(L,c,get,mg,gTh))return null;
+  let sc,extra={};if(rd){if(gMe<(big?1.5:.3)||gTh<-1)return null;sc=gMe+.15*Math.max(0,gTh)+.5*Math.min(0,gTh);}
+  else{const V=(ti,a,inc)=>a.k==="k"?assetVal(a,L,ti):implied(L,ti,a.p,!inc);const base=Math.max(1,effV(send.map(a=>V(mi,a,false))));const vMe=effV(get.map(a=>V(mi,a,true)))-base;
+    if(vMe/base<(big?.05:0))return null;const fMe=fitOf(L,mi,get,send),fTh=fitOf(L,c.ti,send,get);if(!fitsPlan(meC.ts.st,fMe)||!okForThem(c.ts.st,fTh))return null;if(c.ts.st==="contender"&&gTh<-1)return null;if(meC.ts.st!=="rebuilding"&&gMe<-2)return null;
+    const vTh=effV(send.map(a=>V(c.ti,a,true)))-effV(get.map(a=>V(c.ti,a,false)));sc=vMe/base+(fitsPlan(c.ts.st,fTh)?.1:0);extra={fMe,fTh,gThem:vTh,pMe:vMe/base,pTh:vTh/Math.max(1,effV(get.map(a=>V(c.ti,a,false))))};}
+  return Object.assign({c,send,get,type,mg,mIn,mOut,gMe,gTh,lw:gMe,drops:ra.drops,tdrops:rb.drops,sc,big:true},rd?{gThem:gTh}:{},extra);}
+const combos=(a,k)=>{const o=[];const f=(s,i)=>{if(s.length===k){o.push(s.slice());return;}for(let j=i;j<a.length;j++){s.push(a[j]);f(s,j+1);s.pop();}};f([],0);return o;};
+function bigDeals(L){const k=(L._ctx&&L._ctx.k)+"|big|"+planGet(L)+"|"+S.fmt.type;if(L._big&&L._big.k===k)return L._big.v;const t0=Date.now();
+  const C=leagueCtx(L),mi=mineIdx(L),me=L.teams[mi],LC=new Map();const okP=q=>q&&POSI.hasOwnProperty(q.pos)&&!isIDP(q)&&(q.val||0)>=250&&!lostSeason(q),P=id=>({k:"p",id,p:PL[id]});
+  const top=t=>t.players.map(id=>PL[id]).filter(okP).sort((a,b)=>b.val-a.val).slice(0,7).map(q=>P(q.id));const mine=top(me),m2=combos(mine,2),m3=combos(mine,3),out=[];
+  for(const c of C){if(c.ti===mi)continue;const th=top(c.t),t2=combos(th,2),t3=combos(th,3),found=[];
+    for(const s of m2)for(const g of t2){const r=dealEval(L,mi,c,s,g,"2for2",1,LC);if(r)found.push(r);}
+    for(const s of m3)for(const g of t2){const r=dealEval(L,mi,c,s,g,"3for2",1,LC);if(r)found.push(r);}
+    for(const s of m2)for(const g of t3){const r=dealEval(L,mi,c,s,g,"2for3",1,LC);if(r)found.push(r);}
+    found.sort((a,b)=>b.sc-a.sc);const used=new Set();let n=0;for(const x of found){const sig=x.send.concat(x.get).map(a=>a.id).sort().join();if(used.has(sig))continue;
+      if(out.some(o=>o.c===c&&o.type===x.type))continue;used.add(sig);out.push(x);if(++n>=2)break;}}
+  out.sort((a,b)=>b.sc-a.sc);const nm=a=>a.p.name;out.forEach(x=>x.title=x.name=`${x.send.map(nm).join(" + ")} for ${x.get.map(nm).join(" + ")}`);
+  L._big={k,v:out,ms:Date.now()-t0};return out;}
+finder=(function(prev){return function(){const v=prev(),L=S.L;if(!L||L.rip)return v;let b=[];try{b=bigDeals(L);}catch(e){console.error(e);}
+  if(!b.length)return v;const all=v.concat(b);if(S.fmt.type==="redraft"&&titleOK(L)){const mi=mineIdx(L);for(const x of b){if(x.tt)continue;try{const sI=x.send.map(a=>a.id),gI=x.get.map(a=>a.id),me=L.teams[mi],th=x.c.t;
+    const T=titleWith(L,{[mi]:me.players.filter(id=>!sI.includes(id)&&!(x.drops||[]).includes(id)).concat(gI),[x.c.ti]:th.players.filter(id=>!gI.includes(id)&&!(x.tdrops||[]).includes(id)).concat(sI)});
+    x.tt={pre:T.base.ch[mi],post:T.after.ch[mi],d:T.after.ch[mi]-T.base.ch[mi],td:T.after.ch[x.c.ti]-T.base.ch[x.c.ti]};}catch(e){}}
+    return all.filter(x=>!x.big||!x.tt||x.tt.d>=-.0005);}return all;};})(finder);
+/* Sell-high / Buy-low options: add the best bigger deals around the player */
+tradeOpts=(function(prev){return function(L,p,dir){const base=prev(L,p,dir);const k=(L._ctx&&L._ctx.k)+"|tob|"+p.id+"|"+dir+"|"+planGet(L);L._tob=L._tob||{};if(L._tob[k])return L._tob[k];
+  const C=leagueCtx(L),mi=mineIdx(L),me=L.teams[mi],LC=new Map();const okP=q=>q&&POSI.hasOwnProperty(q.pos)&&!isIDP(q)&&(q.val||0)>=150&&!lostSeason(q),P=id=>({k:"p",id,p:PL[id]});
+  const top=(t,n)=>t.players.map(id=>PL[id]).filter(okP).sort((a,b)=>b.val-a.val).slice(0,n).map(q=>P(q.id));const X=P(p.id),owner=C.find(c=>c.t.players.includes(p.id));
+  const mine=top(me,8).filter(a=>a.id!==p.id),out=[];const teams=dir==="sell"?C.filter(c=>c.ti!==mi):owner&&owner.ti!==mi?[owner]:[];
+  for(const c of teams){const th=top(c.t,8).filter(a=>a.id!==p.id),t2=combos(th,2);
+    if(dir==="sell"){for(const m of mine)for(const g of t2){const r=dealEval(L,mi,c,[X,m],g,"2for2",1,LC);if(r)out.push(r);}
+      for(const ms of combos(mine,2))for(const g of t2){const r=dealEval(L,mi,c,[X,...ms],g,"3for2",1,LC);if(r)out.push(r);}}
+    else{for(const q of th)for(const ms of combos(mine,2)){const r=dealEval(L,mi,c,ms,[X,q],"2for2",1,LC);if(r)out.push(r);}
+      for(const q of th)for(const ms of combos(mine,3)){const r=dealEval(L,mi,c,ms,[X,q],"3for2",1,LC);if(r)out.push(r);}}}
+  out.sort((a,b)=>b.sc-a.sc);const add=[];for(const ty of ["2for2","3for2"]){const x=out.find(o=>o.type===ty);if(x)add.push(x);}
+  const all=base.slice(0,4-Math.min(2,add.length)).concat(add.slice(0,2));L._tob[k]=all;return all;};})(tradeOpts);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}

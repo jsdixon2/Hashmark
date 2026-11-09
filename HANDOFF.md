@@ -164,6 +164,13 @@ Newest session at the top.
   - **Cards:** the `sigCard` wrapper replaces "Build this trade" with the options list and drops "Best buyer" when
     options exist.
 
+- **v87 (owner: add larger deals, 2-for-2 and 3-for-2):**
+  - **`dealEval`:** a shared evaluator for multi-player deals, using the same rules as smaller ones plus a higher bar.
+  - **`bigDeals(L)`:** finds 2-for-2, 3-for-2 and 2-for-3 deals for the finder, with at most 2 per team. They're merged
+    into `finder()`, redraft title odds are computed for them, and new FDT tabs are added.
+  - **`tradeOpts` wrapper:** adds the best 2-for-2 / 3-for-2 deals around the card's player.
+  - **Speed (demo):** about 80 ms per run, with lineup sums cached per deal.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)

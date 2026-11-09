@@ -104,6 +104,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    of each type when available; same scoring as the finder; max 2 per team) with Build buttons. Realism (`realOK`, also
    filters finder): asking for a team's most valuable player needs the market to favour them 5%+ and their lineup not
    to drop; asking for their top player at a position needs their lineup not to drop more than 0.3 pts/wk.
+   v87: bigger deals (`bigDeals` in the finder; `tradeOpts` wrapper on cards): 2-for-2, 3-for-2, 2-for-3 from each side's
+   top 7, shared `dealEval`, higher bar (redraft +1.5 pts/wk; keeper/dynasty +5% value, and non-rebuilders' lineup
+   ≥ -2 pts/wk); redraft big deals must not lower your title odds. New finder filter tabs.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
