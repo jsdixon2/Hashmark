@@ -114,6 +114,14 @@ Newest session at the top.
   - `nflResult(team)` builds "W 27–24 @ CHI", falling back to sched.json `as`/`hs`.
   - Wrappers on `mxCell`/`kdCell` add it after "Final".
 
+- **v82 (owner: what is "151 points banked" with 145.2 live; rows misaligned when only one side has stats):**
+  - **Banked total:** it summed `livePtsMap` (max points across all the owner's leagues). The v70 `alertsFor` now
+    prefers `W.ls.pp` (this matchup, league scoring).
+  - **Wording:** "N of M starters finished · X pts scored".
+  - **Rows:** `.slotrow` stretches, cells are flex columns, and `.mxv` sits at `margin-top:auto`.
+  - **Bench:** `mxBench` puts the result and stat line in the meta under the name, with "Final", "LIVE", "proj" or "Bye"
+    under the score.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)

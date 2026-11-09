@@ -85,6 +85,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    K/DST via kdPts with no live data), green/red, grey within 0.5.
    v81: "Final · W 27–24 vs TB" (`nflResult`): scores/opponent/home from the ESPN scoreboard (GCLK.m pf/pa/opp/home),
    fallback sched.json as/hs.
+   v82: lineup rows align (names on one line, scores pinned to a shared bottom line); "N of M starters finished · X pts
+   scored" uses this matchup's own players_points (was max across leagues -> inflated); bench rows: short right column,
+   result + stats under the name.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;

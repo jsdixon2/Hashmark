@@ -5504,7 +5504,7 @@ vPre=(function(prev){return function(){const L=S.L;let h=prev();if(!L)return h;l
    lineup or on the bench. Game state comes from the live game clock (v66: ESPN scoreboard, else kickoff time), the
    schedule's final flag, or the old 4-hour kickoff window. Lineup alerts never suggest moving a locked player in or out. */
 locked=(function(prev){return function(p){if(!p)return false;try{const gs=gameState(p.team);if(gs&&gs.st!=="pre")return true;}catch(e){}return prev(p);};})(locked);
-alertsFor=function(W){const out=[];const taken=new Set();const lp=typeof livePtsMap==="function"&&S.mode==="live"?livePtsMap():new Map();
+alertsFor=function(W){const out=[];const taken=new Set();const lp=W&&W.ls&&W.ls.pp?new Map(Object.entries(W.ls.pp).map(([k,v])=>[k,+v||0])):typeof livePtsMap==="function"&&S.mode==="live"?livePtsMap():new Map();
   const best=(slot,than)=>{const b=W.bench.filter(x=>x&&!taken.has(x.id)&&!locked(x)&&ELIG[slot].includes(x.pos)&&wkProj(x)>than).sort((a,c)=>wkProj(c)-wkProj(a))[0];if(b)taken.add(b.id);return b;};
   const fix=b=>b?`Start ${b.name} (${f1(wkProj(b))} projected)`:"No eligible bench replacement that hasn’t played yet; check free agents";
   for(const r of W.rows){const p=r.p,sl=slotLabel(r.slot);
@@ -5512,7 +5512,7 @@ alertsFor=function(W){const out=[];const taken=new Set();const lp=typeof livePts
     const g=gameOf(p),gs=(()=>{try{return gameState(p.team);}catch(e){return null;}})();
     if(g&&g.bye){out.push({lvl:"bad",msg:`${p.name} is on bye`,fix:fix(best(r.slot,0)),id:p.id});continue;}
     if(locked(p)){const done=(g&&g.final)||(gs&&gs.st==="post"),pts=lp.has(p.id)?lp.get(p.id):(g&&g.final?p.last:null);
-      if(done)out.push({lvl:"info",msg:`${p.name} ${g&&g.thu?"played Thursday":"has played"}`,fix:pts!=null?`${f1(pts)} points banked`:"Locked in",id:p.id});
+      if(done)out.push({lvl:"info",msg:`${p.name} ${g&&g.thu?"played Thursday":"has played"}`,fix:pts!=null?`${f1(pts)} pts scored`:"Locked in",id:p.id});
       continue;}
     if(p.inj&&OUTRX.test(p.inj)){out.push({lvl:"bad",msg:`${p.name} ${statusWord(p.inj)}`,fix:fix(best(r.slot,0)),id:p.id});continue;}
     if(g&&g.thu)out.push({lvl:"warn",msg:`${p.name} plays Thursday`,fix:`Kickoff ${g.g.when}; his slot locks then`,id:p.id});
@@ -5522,8 +5522,8 @@ alertsFor=function(W){const out=[];const taken=new Set();const lp=typeof livePts
 
 /* ===== v71: finished players fold into one "locked in" line instead of filling "Needs attention" ===== */
 alertsFor=(function(prev){return function(W){const a=prev(W),done=a.filter(x=>x.lvl==="info"&&/ (has played|played Thursday)$/.test(x.msg)),rest=a.filter(x=>!done.includes(x));
-  if(done.length<=1)return a;const pts=done.reduce((s,x)=>{const m=/^([\d.]+) points banked/.exec(x.fix);return s+(m?+m[1]:0);},0);
-  return rest.concat([{lvl:"info",msg:`${done.length} starters have played`,fix:pts>0?`${f1(pts)} points banked`:"Locked in",id:null}]);};})(alertsFor);
+  if(done.length<=1)return a;const pts=done.reduce((s,x)=>{const m=/^(-?[\d.]+) pts scored/.exec(x.fix);return s+(m?+m[1]:0);},0);
+  return rest.concat([{lvl:"info",msg:`${done.length} of ${(W.rows||[]).filter(r=>r.p).length} starters finished`,fix:`${f1(pts)} pts scored`,id:null}]);};})(alertsFor);
 
 /* ===== v72: display honesty — no 0%/100% while games are on, live edge label, LIVE badge numbers only for this league's rosters ===== */
 myMatchup=(function(prev){return function(L){const M=prev(L);try{if(M&&M.left&&(M.left[0]>0||M.left[1]>0))M.wpA=Math.max(.001,Math.min(.999,M.wpA));}catch(e){}return M;};})(myMatchup);
@@ -5722,6 +5722,23 @@ function nflResult(team){if(!team)return "";let e=null;try{e=GCLK.m[team];}catch
 const finalTag=(h,team)=>{const r=nflResult(team);return r&&h.includes(" · Final</div>")?h.replace(" · Final</div>",` · Final · ${esc(r)}</div>`):h;};
 mxCell=(function(prev){return function(p,right,W){return finalTag(prev(p,right,W),p&&p.team);};})(mxCell);
 kdCell=(function(prev){return function(L,W,id,right){const h=prev(L,W,id,right);let t=null;try{const m=id&&kdMeta(id);t=m&&m.team;}catch(e){}return finalTag(h,t);};})(kdCell);
+
+/* ===== v82: matchup rows line up — names on the same line across both teams, scores pinned to a shared bottom line;
+   bench rows keep the right column short (score + Final/LIVE/proj) and put result and stats under the name ===== */
+mxBench=function(p,W){const m=mxState(p,W),v=m.k==="final"||m.k==="live"?f1(m.pts):f1(m.proj||0),lab=m.k==="final"?"Final":m.k==="live"?"LIVE":m.k==="bye"?"Bye":"proj";
+  let h=prow(p,v,lab);let r="";try{r=m.k==="final"?nflResult(p.team):m.k==="live"?(m.lbl||""):m.k==="pre"?gameTag(p):"";}catch(e){}
+  const extra=[r,m.k==="final"||m.k==="live"?statLine(p):""].filter(Boolean).map(esc).join(" · ");
+  if(extra)h=h.replace(/<div class="meta">([\s\S]*?)<\/div>/,(a,x)=>`<div class="meta">${x}${x.trim()?" · ":""}${extra}</div>`);return h;};
+document.head.insertAdjacentHTML("beforeend",`<style>
+.slotrow{align-items:stretch!important}
+.slotrow>.mxc,.slotrow>span.bad{display:flex!important;flex-direction:column;justify-content:flex-start}
+.slotrow>.mxc .mxv{margin-top:auto;padding-top:6px}
+.slotrow>span.bad{flex-direction:row!important;align-items:flex-start;gap:4px}
+.slotrow>span.bad[style*="right"]{justify-content:flex-end}
+.slotrow>.chip{align-self:center}
+.slotrow>.mxc[style*="right"]{align-items:flex-end}
+.slotrow>.mxc[style*="right"]>*{max-width:100%}
+</style>`);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
