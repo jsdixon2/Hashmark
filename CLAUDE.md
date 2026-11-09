@@ -78,6 +78,7 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    v77: risk "missed games" = weeks listed Out/Doubtful on this season's injury reports (`values.json` injh[2]), not team
    games minus games played (that branded backups / new signings injury-prone). Fallback without data: gaps between a
    regular's appearances only. Value breakdown hides the win-now/future split when both are 0.
+   v78: live lineup cells (players and K/DST) get a tinted card with a red edge, pulsing dot and red "LIVE" label.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;

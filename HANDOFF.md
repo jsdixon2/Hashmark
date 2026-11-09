@@ -92,6 +92,10 @@ Newest session at the top.
   - **Test:** a backup QB went from Health 95 to 47 ("Role in flux: 9% of snaps"). A starter with 3 report weeks still
     shows Injury watch.
 
+- **v78 (owner: the live indicator is hard to see):** the `mxLive()` wrapper on `mxCell`/`kdCell` adds class `mxlive`
+  (red-tinted card, 3px red edge on the outer side, extended with negative margins so names don't truncate) and a red
+  "LIVE" before the clock. The dot pulses, except with reduced motion. "proj" stays inline with its number.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)

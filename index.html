@@ -5661,6 +5661,20 @@ rawRisk=(function(prev){return function(p,tgMax){const o=prev(p,null),f=p._rf||{
   if(p.team!=="FA"){const miss=missedInjured(p),tg=Math.max(1,tgMax||(p.log||[]).length||1);if(miss>0){o.health+=Math.min(.45,miss/Math.max(tg,miss)*.9);f.miss=miss;}else delete f.miss;}
   p._rf=f;return o;};})(rawRisk);
 
+/* ===== v78: live players stand out on the matchup page — tinted cell with a red edge, pulsing dot, red LIVE label ===== */
+const mxLive=h=>h.includes('class="mxdot"')?h.replace('class="lnk mxc"','class="lnk mxc mxlive"').replace('<span class="mxdot"></span>','<span class="mxdot"></span><b class="mxlv">LIVE</b> · '):h;
+mxCell=(function(prev){return function(p,right,W){return mxLive(prev(p,right,W));};})(mxCell);
+kdCell=(function(prev){return function(L,W,id,right){return mxLive(prev(L,W,id,right));};})(kdCell);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.slotrow .mxc.mxlive{background:color-mix(in srgb,var(--bad,#e5484d) 12%,transparent);border-radius:12px;padding:6px 10px;margin:-6px -10px;width:calc(100% + 20px);box-shadow:inset 3px 0 0 var(--bad,#e5484d)}
+.slotrow .mxc.mxlive[style*="right"]{box-shadow:inset -3px 0 0 var(--bad,#e5484d)}
+.slotrow .lnk.mxc b.mxlv{display:inline!important;color:var(--bad,#e5484d);font-weight:800;letter-spacing:.04em}
+.mxc .mxdot{animation:mxpulse 1.6s ease-in-out infinite}
+.slotrow .lnk.mxc .mxv .sub,.slotrow .lnk.mxc .mxv .mxpj{display:inline!important}
+@keyframes mxpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.75)}}
+@media (prefers-reduced-motion:reduce){.mxc .mxdot{animation:none}}
+</style>`);
+
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
