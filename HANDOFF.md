@@ -32,6 +32,17 @@ Newest session at the top.
   - The "Projected edge by position" heading says "live projection" during games.
   - The `liveSet` wrapper keeps the LIVE badge number only for players rostered in `S.L`.
 
+- **v73 (owner: "limit grading and analysis context to what the user needs; add an info button"):**
+  - `CONDENSE` rules match long paragraphs by their opening words. `condense(root)` runs after `decorate`, moves the full
+    text into `DEFS["cx_<title>"]` (merged when two paragraphs share a title), and adds `info(k)` to the section's tag pill
+    or heading, never inside team-name headings or cards. When there's no heading it leaves a "Title ⓘ" line.
+  - Trade-finder cards are compact:
+    - Redraft: "Title odds a → b · lineup +x/wk · theirs ±y/wk · drop Z".
+    - Dynasty/keeper: "You · fit · +v% value / Them (rec, plan) · fit · +v% · market".
+  - Trends: "-2.3 pts/g ahead of his pace" now reads "usage says 2.3 pts/g below his pace".
+  - **Audit (all 22 pages in the demo):** no paragraph over 160 characters except the legal page, no horizontal
+    overflow, and no page errors.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)

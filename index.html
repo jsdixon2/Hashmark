@@ -3473,7 +3473,7 @@ function vGMTrends(){const L=S.L;if(!L)return "";let tr=[];try{tr=leagueDigest(L
   if(urS==="buy")us.sort((a,b)=>grp(a)-grp(b)||(b.gap||0)-(a.gap||0)||b.s-a.s);else if(urS==="avail"){us.splice(0,us.length,...us.filter(x=>ownerLbl(x.p).k==="avail"));}else if(urS==="mine"){us.splice(0,us.length,...us.filter(x=>ownerLbl(x.p).k==="mine"));}
   const urSeg=`<div class="seg sm urseg">${[["buy","Buy first"],["jump","Biggest jump"],["avail","Available"],["mine","Yours"],["hot","Hot streaks"]].map(([k,n])=>`<button data-urs="${k}" class="${urS===k?"on":""}">${n}</button>`).join("")}</div>`;
   const ur=urS==="hot"?hot.map(({p,l3})=>`<button class="tsr" data-go="player-${p.id}">${pos(p.pos)}<span class="tsn"><b class="ell">${esc(p.name)} ${tag(p.id)}</b><span class="sub ell">${esc(own(p.id))} · snaps and targets flat, likely to cool</span></span><span class="urv"><b class="num">${f1(p.ppg)}→${f1(l3)}</b><span class="sub">pts, season → last 3</span></span></button>`)
-   :us.map(({p,a,dt,ds,dc,gap})=>{const k=dt*2>=Math.max(ds,dc*1.5)?"t":dc*1.5>=ds?"c":"s";return `<button class="tsr" data-go="player-${p.id}">${pos(p.pos)}<span class="tsn"><b class="ell">${esc(p.name)} ${tag(p.id)}</b><span class="sub ell">${esc(own(p.id))}${gap!=null&&Math.abs(gap)>=1?` · ${gap>0?"+":""}${f1(gap)} pts/g ahead of his pace`:""}</span></span><span class="urv"><b class="num">${k==="t"?`${Math.round(a.ts*100)}→${Math.round(a.ts3*100)}%`:k==="c"?`${Math.round(a.cs*100)}→${Math.round(a.cs3*100)}%`:`${Math.round(a.snap)}→${Math.round(a.snap3)}%`}</b><span class="sub">${k==="t"?"target share":k==="c"?"carry share":"snap share"}</span></span></button>`;});
+   :us.map(({p,a,dt,ds,dc,gap})=>{const k=dt*2>=Math.max(ds,dc*1.5)?"t":dc*1.5>=ds?"c":"s";return `<button class="tsr" data-go="player-${p.id}">${pos(p.pos)}<span class="tsn"><b class="ell">${esc(p.name)} ${tag(p.id)}</b><span class="sub ell">${esc(own(p.id))}${gap!=null&&Math.abs(gap)>=1?` · usage says ${f1(Math.abs(gap))} pts/g ${gap>0?"above":"below"} his pace`:""}</span></span><span class="urv"><b class="num">${k==="t"?`${Math.round(a.ts*100)}→${Math.round(a.ts3*100)}%`:k==="c"?`${Math.round(a.cs*100)}→${Math.round(a.cs3*100)}%`:`${Math.round(a.snap)}→${Math.round(a.snap3)}%`}</b><span class="sub">${k==="t"?"target share":k==="c"?"carry share":"snap share"}</span></span></button>`;});
   return `<section class="pan"><div class="row sp"><h2>Breakout odds</h2><span class="tag">Higher is better ${info("brk")}</span></div>${lst(br,5,"No candidates right now.")}</section>
   <section class="pan mt"><div class="row sp"><h2>${urS==="hot"?"Hot streaks":"Usage risers"}</h2><span class="tag">Last 3 games vs season</span></div>${urSeg}${lst(ur,5,urS==="hot"?"No hot streaks without the usage to back them.":urS==="avail"?"No free agents with rising usage.":urS==="mine"?"None of your players have rising usage.":"No meaningful usage changes.")}<p class="sub mt">${urS==="hot"?"Tested on 2024–25: hot streaks without more snaps, targets or carries scored 1.7 fewer points a game over the next month than their season pace.":"Tested on 2024–25: rising snaps, targets or carries held their gains, while hot streaks without them faded. Sorted by the gap between what usage says he’ll score and his season pace."}</p></section>${trackCard(L)}
   <p class="sub mt"><span class="tt buy">Buy</span> only appears on other teams’ players and <span class="tt sell">Sell</span> only on yours. Details live in Trade Lab.</p>`;}
@@ -5427,9 +5427,9 @@ vFinder=function(){const L=S.L,mi=mineIdx(L),all=finder(),rd=S.fmt.type==="redra
   const cnt=k=>k==="all"?all.length:all.filter(x=>x.type===k).length;
   const an=(a,ti)=>a.k==="p"?`<button class="flnk" data-go="player-${a.id}">${pos(a.p.pos)} <span class="ell">${esc(a.p.name)}</span>${a.p.age?` <span class="sub">${Math.floor(a.p.age)}</span>`:""}</button><span class="sub num">${f0(a.p.val)}</span>`:`<div class="flnk"><span class="pk${a.r==1?" r1":""}">R${a.r}</span> <span>${a.y} Round ${a.r}${a.orig!=L.teams[ti].id?` <span class="sub">(${esc((L.teams.find(t=>t.id==a.orig)||{}).name||"")})</span>`:""}</span></div><span class="sub num">${f0(pickVal(L,a.y,a.r,a.orig))}</span>`;
   const enc=(a,f,to)=>[a.k==="k"?"k:"+a.id:a.id,f,to];
-  const mkt=x=>Math.abs(x.mg)<.03?"even on the market":x.mg>0?`they get ${Math.round(x.mg*100)}% more on the market`:`you get ${Math.round(-x.mg*100)}% more on the market`;
-  const why=x=>rd?`<p class="sub">${x.tt?`Your championship odds ${pc(x.tt.pre)} → <b class="good">${pc(x.tt.post)}</b>; `:""}your lineup <b class="good">${(x.lw||0)>=0?"+":""}${f1(x.lw||0)}</b> pts/week, theirs <b>+${f1(x.gThem||0)}</b> (${recOf(x.c.t)}).${x.drops&&x.drops.length?` You’d drop ${x.drops.map(id=>esc(PL[id]?PL[id].name:"a bench player")).join(", ")} to make room.`:""}</p>`
-    :`<p class="sub"><b>For you</b> (${planLbl(me.ts.st)}): ${fitWhy(me.ts.st,x.fMe,true)}, <b class="good">+${Math.round(x.pMe*100)}%</b> value to your roster.<br><b>For ${esc(x.c.t.name)}</b> (${recOf(x.c.t)}, ${planLbl(x.c.ts.st)}): ${fitWhy(x.c.ts.st,x.fTh,false)}${x.pTh>=.02?`, +${Math.round(x.pTh*100)}% value to their roster`:""}. ${mkt(x)[0].toUpperCase()+mkt(x).slice(1)}.</p>`;
+  const mkt=x=>Math.abs(x.mg)<.03?"even on the market":x.mg>0?`market favors them ${Math.round(x.mg*100)}%`:`market favors you ${Math.round(-x.mg*100)}%`;
+  const why=x=>rd?`<p class="sub">${x.tt?`Title odds ${pc(x.tt.pre)} → <b class="good">${pc(x.tt.post)}</b> · `:""}lineup <b class="good">${(x.lw||0)>=0?"+":""}${f1(x.lw||0)}</b>/wk · theirs ${(x.gThem||0)>=0?"+":""}${f1(x.gThem||0)}/wk${x.drops&&x.drops.length?` · drop ${x.drops.map(id=>esc(PL[id]?PL[id].name:"a bench player")).join(", ")}`:""}</p>`
+    :`<p class="sub"><b>You</b> · ${fitWhy(me.ts.st,x.fMe,true)} · <b class="good">+${Math.round(x.pMe*100)}%</b> value<br><b>Them</b> (${recOf(x.c.t)}, ${planLbl(x.c.ts.st)}) · ${fitWhy(x.c.ts.st,x.fTh,false)}${x.pTh>=.02?` · +${Math.round(x.pTh*100)}% value`:""} · ${mkt(x)}</p>`;
   const card=x=>`<div class="scard"><div class="row sp"><b class="ell">${esc(x.c.t.name)}</b><span class="tag">${fdLbl[x.type]}</span></div>
     <div class="fx"><div><span class="eyebrow">You send</span>${x.send.map(a=>`<div class="fxa">${an(a,mi)}</div>`).join("")}</div><div><span class="eyebrow">You get</span>${x.get.map(a=>`<div class="fxa">${an(a,x.c.ti)}</div>`).join("")}</div></div>
     ${why(x)}<button class="btn ghost sm" data-build='${esc(JSON.stringify({a:x.send.map(a=>enc(a,mi,x.c.ti)),b:x.get.map(a=>enc(a,x.c.ti,mi))}))}' data-bt="${x.c.ti}">Open in calculator</button></div>`;
@@ -5528,6 +5528,36 @@ alertsFor=(function(prev){return function(W){const a=prev(W),done=a.filter(x=>x.
 /* ===== v72: display honesty — no 0%/100% while games are on, live edge label, LIVE badge numbers only for this league's rosters ===== */
 myMatchup=(function(prev){return function(L){const M=prev(L);try{if(M&&M.left&&(M.left[0]>0||M.left[1]>0))M.wpA=Math.max(.001,Math.min(.999,M.wpA));}catch(e){}return M;};})(myMatchup);
 liveSet=(function(prev){return function(){const out=prev();try{const L=S.L;if(!L||!out.size)return out;const own=new Set(L.teams.flatMap(t=>t.players||[]));for(const [id,v] of out)if(v!=null&&!own.has(id))out.set(id,null);}catch(e){}return out;};})(liveSet);
+/* ===== v73: say less on screen — methodology moves behind an info button; trade cards in one compact line per side =====
+   Rules below match the long explanatory paragraphs by their opening words. Each matched paragraph is removed (or
+   replaced by a short line) and its full text opens from an "i" button next to the section heading. Legal text stays. */
+fitWhy=function(st,f,you){const lu=f.lu||0,lw=Math.abs(lu)<.3?"lineup even":`${lu>0?"+":""}${f1(lu)} pts/wk lineup`;
+  if(st==="contender")return lw;
+  if(st==="rebuilding"){const p=[];if(f.ageIn!=null&&f.ageOut!=null&&f.ageIn<f.ageOut-.4)p.push(`younger (${f1(f.ageIn)} vs ${f1(f.ageOut)})`);if(f.pk)p.push(f.pk>1?`+${f.pk} picks`:"+ a pick");return p.join(" · ")||"long-term value";}
+  return lu>.3?lw:"more value";};
+const CONDENSE=[
+  {re:/^Win probability from each lineup/,t:"How win odds work"},
+  {re:/^Points per game so far against what the model expects/,t:"Pace vs expected"},
+  {re:/^(Demo league: six teams|Odds use )/,t:"How league odds work"},
+  {re:/^Trades that /,t:"How trade ideas are picked",short:()=>S.fmt.type==="redraft"?"Raises your title odds without gutting their lineup.":"Fits your plan and stays fair to them."},
+  {re:/^Each add is judged by/,t:"How adds are picked"},
+  {re:/^Tested on \d[\d,]* real Sleeper leagues/,t:"How adds are picked"},
+  {re:/^Tested on 2024–25: rising snaps/,t:"How risers are found"},
+  {re:/^Tested on 2024–25 seasons it never saw/,t:"How the track record works"},
+  {re:/^Hashmark logs its buy, sell and waiver calls/,t:"How the track record works",short:()=>"Checked here once games are played."},
+  {re:/^Breakout candidates first/,t:"How targets are picked"},
+  {re:/^Scores rank production within each position/,t:"How devy scores work"},
+  {re:/^BUY only appears on other teams/,t:"Buy and sell tags"},
+  {re:/^Blends point differential/,t:"How power ranks work"}];
+const cxKey=t=>"cx_"+t.toLowerCase().replace(/[^a-z]+/g,"_");
+function condense(root){if(!root||route()==="legal")return;const seen={};
+  root.querySelectorAll("p").forEach(p=>{if(p.closest("#sheet,.scard,.alert"))return;const txt=p.innerText.trim(),r=CONDENSE.find(c=>c.re.test(txt));if(!r)return;
+    const k=cxKey(r.t);if(!seen[k]){seen[k]=1;DEFS[k]=[r.t,""];}if(!DEFS[k][1].includes(txt))DEFS[k][1]=(DEFS[k][1]?DEFS[k][1]+" ":"")+txt;
+    const sec=p.closest("section,.pan")||root,h=[...sec.querySelectorAll("h2,h1")].find(x=>!x.closest(".mhd,[data-go],button,.scard")&&!x.classList.contains("ell"));
+    if(h){const row=h.closest(".row"),tag=row&&row.querySelector(".tag");const host=tag||h;if(!host.querySelector(`[data-inf="${k}"]`))host.insertAdjacentHTML("beforeend"," "+info(k));}
+    if(r.short)p.innerHTML=esc(r.short())+(h?"":" "+info(k));else if(h)p.remove();else{p.innerHTML=`${esc(r.t)} ${info(k)}`;p.classList.add("sub");}});}
+decorate=(function(prev){return function(root){const r=prev(root);try{condense(root);}catch(e){console.error(e);}return r;};})(decorate);
+
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

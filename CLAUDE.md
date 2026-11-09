@@ -61,6 +61,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    v72: `pc()` shows "<1%"/">99%" (never 0/100 unless certain); live win odds held to 0.1-99.9% until all games final;
    win-chance texts use pc (bar widths still PCT); edge-by-position says "live projection" during games; LIVE badge
    number only for players rostered in the league being viewed.
+   v73: methodology paragraphs move behind info buttons (`CONDENSE` rules matched by opening words, applied in `decorate`;
+   full text goes to `DEFS["cx_*"]`, button in the section's tag pill or heading, never inside team-name headings);
+   trade cards are one compact line per side. Add a rule to CONDENSE when a new long explanation is added. Legal stays.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
