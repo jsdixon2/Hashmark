@@ -5687,7 +5687,8 @@ loadGameClock=async function(force){if(S.mode!=="live")return;const now=Date.now
       const half=/HALFTIME/i.test(nm),endP=/END_PERIOD|END_OF_REG/i.test(nm)||(st==="in"&&clk===0&&per>=1);
       const rem=st==="pre"?1:st==="post"?0:half?.5:per>4?.04:Math.max(.03,1-((per-1)*900+(900-Math.min(900,clk)))/3600);
       const lbl=st!=="in"?"":half?"Half":per>4?(endP?"End of OT":"OT "+(s.displayClock||"")):endP?(per===4?"End of regulation":`End of Q${per}`):`Q${per} ${s.displayClock||""}`;
-      for(const x of c.competitors||[]){const ab=gcAb(x.team&&x.team.abbreviation);if(ab)m[ab]={st,rem,lbl,at:now};}}
+      const cs=c.competitors||[];for(const x of cs){const ab=gcAb(x.team&&x.team.abbreviation);if(!ab)continue;const o=cs.find(y=>y!==x),oab=o&&gcAb(o.team&&o.team.abbreviation);
+        m[ab]={st,rem,lbl,at:now,opp:oab||null,home:x.homeAway==="home",pf:x.score!=null&&x.score!==""?+x.score:null,pa:o&&o.score!=null&&o.score!==""?+o.score:null};}}
     if(Object.keys(m).length)GCLK.m=m;}catch(e){}};
 gameState=function(team){if(S.mode!=="live"||!team||team==="FA")return null;const e=GCLK.m[team];if(e&&Date.now()-e.at<15*60e3)return e;
   if(typeof NFLS==="undefined"||!NFLS)return null;const al=t=>t==="LA"?"LAR":t;const g=NFLS.find(x=>x.wk===S.week&&(al(x.a)===team||al(x.h)===team));if(!g)return null;
@@ -5709,6 +5710,18 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .mxc .mxd .mxdv{font-weight:600;color:var(--muted)}
 .slotrow .lnk.mxc .mxv .mxd{display:inline!important}
 </style>`);
+
+/* ===== v81: "Final · W 27–24 vs TB" — the NFL result and opponent after Final on the matchup page =====
+   Scores from ESPN's scoreboard (same fetch as the game clock); fallback: the schedule's final scores (nflverse). */
+function nflResult(team){if(!team)return "";let e=null;try{e=GCLK.m[team];}catch(x){}
+  let opp=e&&e.opp,home=e&&e.home,pf=e&&e.pf,pa=e&&e.pa;
+  if((pf==null||pa==null||!opp)&&typeof NFLS!=="undefined"&&NFLS){const al=t=>t==="LA"?"LAR":t;const g=NFLS.find(x=>x.wk===S.week&&(al(x.a)===team||al(x.h)===team));
+    if(g){home=al(g.h)===team;opp=home?al(g.a):al(g.h);if(g.as!=null&&g.hs!=null){pf=home?g.hs:g.as;pa=home?g.as:g.hs;}}}
+  if(!opp)return "";const vs=(home?"vs ":"@ ")+opp;if(pf==null||pa==null)return vs;
+  return `${pf>pa?"W":pf<pa?"L":"T"} ${pf}–${pa} ${vs}`;}
+const finalTag=(h,team)=>{const r=nflResult(team);return r&&h.includes(" · Final</div>")?h.replace(" · Final</div>",` · Final · ${esc(r)}</div>`):h;};
+mxCell=(function(prev){return function(p,right,W){return finalTag(prev(p,right,W),p&&p.team);};})(mxCell);
+kdCell=(function(prev){return function(L,W,id,right){const h=prev(L,W,id,right);let t=null;try{const m=id&&kdMeta(id);t=m&&m.team;}catch(e){}return finalTag(h,t);};})(kdCell);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}

@@ -83,6 +83,8 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    and OT stay live, labelled); time-only estimate keeps a game live up to 5.5 h (was 4.2); liveSet windows 5.5 h.
    v80: final matchup cells show ▲/▼ difference vs Hashmark's pregame projection (`preProjOf` = hmProj, else Sleeper proj;
    K/DST via kdPts with no live data), green/red, grey within 0.5.
+   v81: "Final · W 27–24 vs TB" (`nflResult`): scores/opponent/home from the ESPN scoreboard (GCLK.m pf/pa/opp/home),
+   fallback sched.json as/hs.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;

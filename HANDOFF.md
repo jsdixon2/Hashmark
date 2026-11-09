@@ -109,6 +109,11 @@ Newest session at the top.
 - **v80 (owner: show final score vs Hashmark's weekly projection):** wrappers on `mxCell`/`kdCell` add
   `vsProj(pts, proj)` after final scores ("22.4 ▲5.9 vs 16.5"). Arrows come from the existing .good/.bad classes.
 
+- **v81 (owner: add the NFL final score and opponent next to "Final"):**
+  - `loadGameClock` stores `opp`, `home`, `pf` and `pa` per team from ESPN.
+  - `nflResult(team)` builds "W 27–24 @ CHI", falling back to sched.json `as`/`hs`.
+  - Wrappers on `mxCell`/`kdCell` add it after "Final".
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)
