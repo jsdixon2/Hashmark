@@ -70,6 +70,8 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    line as footer. Page chrome (`pageChrome`, final render wrapper): no breadcrumb eyebrow, sub-title replaces title.
    One info button per row. Waiver rows: tier pill under the number. Trade cards show value in points, not %.
    Wider tap areas for inline links (::after); War Room buttons 36px.
+   v75: player tiles (`mono`) show POS / jersey number / TEAM stacked (small) or big number with "POS · TEAM" (large);
+   "–" when Sleeper has no number. No initials.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;

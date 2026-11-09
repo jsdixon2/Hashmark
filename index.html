@@ -5605,6 +5605,19 @@ span[data-go]::after,b[data-go]::after,a[data-go]::after,span.lnk::after{content
 .wvr .pill{margin-top:4px;display:inline-block}
 </style>`);
 
+/* ===== v75: player tiles show position / jersey number / team instead of initials ===== */
+mono=(function(prev){return function(p,sm){if(!p||!p.pos)return prev(p,sm);const [c1,c2]=tcol(p.team);const n=p.num!=null&&p.num!==""&&!isNaN(+p.num)?String(+p.num):"–",tm=p.team||"FA";
+  if(sm)return `<div class="jt sm jt3" style="--c1:${c1};--c2:${c2}" aria-label="${esc(p.pos+" number "+n+", "+tm)}"><i></i><span class="j3"><b>${esc(p.pos)}</b><b class="jn3">${esc(n)}</b><b>${esc(tm)}</b></span></div>`;
+  return `<div class="jt" style="--c1:${c1};--c2:${c2}" aria-label="${esc(p.pos+" number "+n+", "+tm)}"><i></i><b class="jn">${esc(n)}</b><em>${esc(p.pos)} · ${esc(tm)}</em></div>`;};})(mono);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.jt.sm.jt3{width:44px;height:44px}
+.jt3 .j3{position:relative;display:flex;flex-direction:column;align-items:center;line-height:1}
+.jt3 .j3 b{font:800 9px/1.05 var(--fd)!important;letter-spacing:.04em;color:rgba(255,255,255,.92);text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.jt3 .j3 b.jn3{font:800 15px/1.05 var(--fd)!important;color:#fff;margin:1px 0}
+.jt3>i{display:none}.jt3,.jt3 *{text-decoration:none!important}
+.jt.sm.jt3{box-shadow:inset 0 -3px 0 var(--c2),0 0 0 4px var(--panel),0 8px 20px rgba(0,0,0,.3)}
+</style>`);
+
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

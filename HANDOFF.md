@@ -63,6 +63,12 @@ Newest session at the top.
     areas.
   - **QA:** simulated live demo with final, live and pregame players plus stats; page audit with no errors or overflow.
 
+- **v75 (owner: initials in player boxes aren't helpful; show "RB/26/PHI"):**
+  - The `mono` wrapper draws small tiles (44px) as three stacked lines: position, jersey number (`p.num` from Sleeper's
+    `number`, "–" if missing) and team. The stripe is replaced by a bottom team-colour edge.
+  - The large player-page tile shows the number big with "QB · PIT" at the top.
+  - The demo league has no jersey numbers; live leagues do.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)
