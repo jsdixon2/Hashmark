@@ -150,6 +150,20 @@ Newest session at the top.
   - **Test:** mocked combinations (week fails, default fails, both lack the game, both fail, in → final) all resolve to
     final.
 
+- **v86 (owner: sell-high "Build this trade" should be several optimized options incl. 2-for-1 / 1-for-2; "Love for
+  Nabers" is unrealistic because Nabers is their top WR):**
+  - **`tradeOpts(L, p, "sell"|"buy")`:**
+    - **Types:** builds 1-for-1, 1-for-2 and 2-for-1 around the player.
+    - **Redraft:** your lineup +0.3 or more, theirs −1 at worst.
+    - **Keeper/dynasty:** implied value plus `fitsPlan` for you, `okForThem` for them.
+    - **Market:** they lose at most 10%, you overpay at most 25%.
+    - **Output:** at least one of each type when available, at most 4 options, at most 2 per team.
+  - **`realOK`:** asking for their single most valuable player needs a 5%+ market edge for them and their lineup not
+    worse; asking for their top player at a position needs their lineup change ≥ −0.3. Also applied as a `finder`
+    filter.
+  - **Cards:** the `sigCard` wrapper replaces "Build this trade" with the options list and drops "Best buyer" when
+    options exist.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)

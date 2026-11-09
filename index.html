@@ -5841,6 +5841,61 @@ loadGameClock=async function(force){if(S.mode!=="live")return;const now=Date.now
 gameState=(function(prev){return function(team){const g=prev(team);try{if(g&&g.est&&g.st==="in"&&GCLK.okAt&&Date.now()-GCLK.okAt<5*60e3&&!(GCLK.m&&GCLK.m[team])){
   const al=t=>t==="LA"?"LAR":t;const x=NFLS&&NFLS.find(y=>y.wk===S.week&&(al(y.a)===team||al(y.h)===team));const k=x?gcKick(x):NaN;if(isFinite(k)&&(Date.now()-k)/3600e3>3.4)return {st:"post",rem:0,est:1};}}catch(e){}return g;};})(gameState);
 
+/* ===== v86: several ready-made trade options on Sell-high / Buy-low cards; realism check on every suggestion =====
+   Options: 1-for-1, 1-for-2 (adds depth) and 2-for-1 (consolidates) built around the player, scored the same way as the
+   trade finder (redraft: starting-lineup change for both teams; keeper/dynasty: value to your roster + plan fit).
+   Realism (also applied to the trade finder): a manager rarely gives up his single most valuable player, or the top
+   starter at a position, unless he clearly comes out ahead — such asks need the market to favour him by 5%+ and his
+   starting lineup not to get worse. */
+function topOf(t){const ps=t.players.map(id=>PL[id]).filter(p=>p&&POSI.hasOwnProperty(p.pos)&&!isIDP(p));const best=ps.slice().sort((a,b)=>(b.val||0)-(a.val||0))[0];
+  const byPos={};for(const p of ps)if(!byPos[p.pos]||(byPos[p.pos].val||0)<(p.val||0))byPos[p.pos]=p;return {best,byPos};}
+function realOK(L,c,get,mg,gTh){const T=topOf(c.t||L.teams[c.ti]),ids=get.filter(a=>a.k!=="k").map(a=>a.id);
+  const star=T.best&&ids.includes(T.best.id),posTop=ids.some(id=>{const p=PL[id];return p&&T.byPos[p.pos]&&T.byPos[p.pos].id===id;});
+  if(star&&(mg<.05||gTh<0))return false;if(posTop&&gTh<-.3)return false;return true;}
+finder=(function(prev){return function(){const v=prev(),L=S.L;if(!L)return v;const C=leagueCtx(L);
+  return v.filter(x=>{const c=C[x.c.ti]||x.c,gTh=x.fTh?x.fTh.lu:(x.gThem!=null&&S.fmt.type==="redraft"?x.gThem:0);return realOK(L,c,x.get,x.mg||0,gTh);});};})(finder);
+function tradeOpts(L,p,dir){const k=(L._ctx&&L._ctx.k)+"|to|"+p.id+"|"+dir+"|"+planGet(L);L._to=L._to||{};if(L._to[k])return L._to[k];
+  const C=leagueCtx(L),mi=mineIdx(L),me=L.teams[mi],rd=S.fmt.type==="redraft";const owner=C.find(c=>c.t.players.includes(p.id));
+  const okP=q=>q&&POSI.hasOwnProperty(q.pos)&&!isIDP(q)&&(q.val||0)>=150&&!lostSeason(q),P=id=>({k:"p",id,p:PL[id]});
+  const M=a=>rd?(a.p.val||0):mktVal(a.p),V=(ti,a,inc)=>implied(L,ti,a.p,!inc);
+  const mine=me.players.map(id=>PL[id]).filter(okP).sort((a,b)=>b.val-a.val).slice(0,14).map(q=>P(q.id)),X=P(p.id),meB=lpts(me.players,L),meC=C[mi];
+  const out=[];const teams=dir==="sell"?C.filter(c=>c.ti!==mi):owner&&owner.ti!==mi?[owner]:[];
+  for(const c of teams){const th=c.t,thB=lpts(th.players,L),theirs=th.players.map(id=>PL[id]).filter(okP).sort((a,b)=>b.val-a.val).slice(0,14).map(q=>P(q.id));
+    const ev=(send,get,type)=>{const mIn=effV(get.map(M)),mOut=effV(send.map(M));if(!mIn||!mOut)return;const mg=(mOut-mIn)/Math.max(mIn,mOut);if(mg<-.1||mg>.25)return;
+      const sI=send.map(a=>a.id),gI=get.map(a=>a.id);let ra={drops:[]},rb={drops:[]};try{ra=rosterAfter(L,mi,gI,sI);rb=rosterAfter(L,c.ti,sI,gI);}catch(e){}
+      const myA=me.players.filter(id=>!sI.includes(id)&&!ra.drops.includes(id)).concat(gI),thA=th.players.filter(id=>!gI.includes(id)&&!rb.drops.includes(id)).concat(sI);
+      const gMe=lpts(myA,L)-meB,gTh=lpts(thA,L)-thB;if(!realOK(L,c,get,mg,gTh))return;
+      let sc;if(rd){if(gMe<.3||gTh<-1)return;sc=gMe+.15*Math.max(0,gTh)+.5*Math.min(0,gTh);}
+      else{const vMe=effV(get.map(a=>V(mi,a,true)))-effV(send.map(a=>V(mi,a,false)));if(vMe<=0)return;const fMe=fitOf(L,mi,get,send),fTh=fitOf(L,c.ti,send,get);
+        if(!fitsPlan(meC.ts.st,fMe)||!okForThem(c.ts.st,fTh))return;if(c.ts.st==="contender"&&gTh<-1)return;sc=vMe/Math.max(1,effV(send.map(a=>V(mi,a,false))))+(fitsPlan(c.ts.st,fTh)?.1:0);}
+      out.push({c,send,get,type,mg,gMe,gTh,drops:ra.drops,sc});};
+    if(dir==="sell"){for(const q of theirs)ev([X],[q],"1for1");
+      for(let i=0;i<theirs.length;i++)for(let j=i+1;j<Math.min(theirs.length,12);j++){if(theirs[i].p.val>=p.val&&theirs[j].p.val>=p.val)continue;ev([X],[theirs[i],theirs[j]],"1for2");}
+      for(const m of mine){if(m.id===p.id)continue;for(const q of theirs){if(q.p.val<=p.val)continue;ev([X,m],[q],"2for1");}}}
+    else{for(const m of mine)ev([m],[X],"1for1");
+      for(let i=0;i<mine.length;i++)for(let j=i+1;j<Math.min(mine.length,12);j++){if(mine[i].p.val>=p.val&&mine[j].p.val>=p.val)continue;ev([mine[i],mine[j]],[X],"2for1");}
+      for(const m of mine)for(const q of theirs){if(q.id===p.id||m.p.val<=p.val)continue;ev([m],[X,q],"1for2");}}}
+  out.sort((a,b)=>b.sc-a.sc);const pick=[],seen=new Set(),perT={};
+  for(const ty of ["1for1","2for1","1for2"]){const x=out.find(o=>o.type===ty&&!pick.includes(o));if(x){pick.push(x);perT[x.c.ti]=(perT[x.c.ti]||0)+1;}}
+  for(const x of out){if(pick.length>=4)break;if(pick.includes(x))continue;if((perT[x.c.ti]||0)>=2)continue;const sig=x.send.concat(x.get).map(a=>a.id).sort().join();if(seen.has(sig))continue;seen.add(sig);pick.push(x);perT[x.c.ti]=(perT[x.c.ti]||0)+1;}
+  pick.sort((a,b)=>b.sc-a.sc);L._to[k]=pick;return pick;}
+function optsHtml(L,opts){if(!opts.length)return `<p class="sub mt">No realistic trade built around him right now.</p>`;const mi=mineIdx(L),rd=S.fmt.type==="redraft";
+  const lbl={"1for1":"1-for-1","2for1":"2-for-1 · consolidate","1for2":"1-for-2 · add depth"};const nm=a=>esc(a.p.name);
+  return `<div class="topt mt"><span class="eyebrow">Trade options</span>${opts.map(x=>{const enc=(a,f,to)=>[a.id,f,to];
+    const mk=Math.abs(x.mg)<.03?"even market":x.mg>0?`market favors them ${Math.round(x.mg*100)}%`:`market favors you ${Math.round(-x.mg*100)}%`;
+    return `<div class="tor"><div class="tot"><div><span class="pill">${lbl[x.type]}</span> <b>${esc(x.c.t.name)}</b> <span class="sub">${recOf(x.c.t)}</span></div>
+      <div class="sub">Send ${x.send.map(nm).join(" + ")} · get ${x.get.map(nm).join(" + ")}</div>
+      <div class="sub">You ${x.gMe>=0?"+":""}${f1(x.gMe)} pts/wk · they ${x.gTh>=0?"+":""}${f1(x.gTh)} · ${mk}${x.drops&&x.drops.length?` · drop ${x.drops.map(id=>esc(PL[id]?PL[id].name:"")).join(", ")}`:""}</div></div>
+      <button class="chip" data-build='${esc(JSON.stringify({a:x.send.map(a=>enc(a,mi,x.c.ti)),b:x.get.map(a=>enc(a,x.c.ti,mi))}))}' data-bt="${x.c.ti}">Build</button></div>`;}).join("")}</div>`;}
+sigCard=(function(prev){return function(x,kind){let h=prev(x,kind);try{const L=S.L;const opts=tradeOpts(L,x.p,kind==="sell"?"sell":"buy");
+  h=h.replace(/<button class="btn ghost sm" data-build=[\s\S]*?Build this trade<\/button>/,optsHtml(L,opts));
+  if(kind==="sell")h=h.replace(/<li>Ask for [^<]*<\/li>/,"");if(opts.length)h=h.replace(/<div class="pay"><span class="eyebrow">Best buyer<\/span>[\s\S]*?<\/div>/,"");}catch(e){console.error(e);}return h;};})(sigCard);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.topt{border-top:1px solid var(--line);padding-top:8px}.topt .eyebrow{display:block;margin-bottom:2px}
+.tor{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.tor:last-child{border-bottom:0}
+.tor .tot{flex:1;min-width:0}.tor .tot>div:first-child .sub{white-space:nowrap}.tor .pill{font-size:10px;padding:2px 7px}.tor .chip{flex:none}
+</style>`);
+
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

@@ -100,6 +100,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    v85: game clock fetches ESPN's default AND week-specific scoreboards (`gcParse`), merges every success (finals never
    revert); if ESPN answered in the last 5 min without the game and kickoff was 3.4+ h ago, it's final. Kickoff-only
    estimate and liveSet windows: 4.5 h.
+   v86: Sell-high / Buy-low cards list up to 4 built trade options (`tradeOpts`: 1-for-1, 2-for-1, 1-for-2, at least one
+   of each type when available; same scoring as the finder; max 2 per team) with Build buttons. Realism (`realOK`, also
+   filters finder): asking for a team's most valuable player needs the market to favour them 5%+ and their lineup not
+   to drop; asking for their top player at a position needs their lineup not to drop more than 0.3 pts/wk.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
