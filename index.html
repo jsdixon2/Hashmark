@@ -3028,7 +3028,7 @@ function vScoutLand(){if(!CFB&&CFBst==="idle")setTimeout(loadCfb,50);const top=C
   ${tile("nfl","NFL teams","32",best?`Best offense by EPA: ${best[0]}`:"Team pages","lg")}</div>`;}
 /* ---------- Home overview ---------- */
 function liveSet(){const out=new Map();if(S.mode!=="live"||typeof NFLS==="undefined"||!NFLS)return out;const now=Date.now();
-  const teams=new Set();for(const g of NFLS){if(g.wk!==S.week||!g.day)continue;const k=Date.parse(`${g.day}T${(g.time||"13:00")}:00-05:00`);if(!isFinite(k))continue;if(now>=k&&now<=k+4*3600e3&&!g.final){teams.add(g.a);teams.add(g.h);}}
+  const teams=new Set();for(const g of NFLS){if(g.wk!==S.week||!g.day)continue;const k=Date.parse(`${g.day}T${(g.time||"13:00")}:00-05:00`);if(!isFinite(k))continue;if(now>=k&&now<=k+5.5*3600e3&&!g.final){teams.add(g.a);teams.add(g.h);}}
   if(!teams.size)return out;for(const L of S.leagues)for(const m of (L.matchups||[]).flat())for(const [id,v] of Object.entries(m.pp||{})){const p=PL[id];if(p&&teams.has(p.team))out.set(id,Math.max(out.get(id)||0,+v||0));}
   for(const p of Object.values(PL))if(teams.has(p.team)&&!out.has(p.id))out.set(p.id,null);return out;}
 function smartTiles(){const d=new Date().getDay(),live=liveSet(),n=NW.items.length?feed("mine"):[];const g=typeof GAMES!=="undefined"?GAMES.length:0;
@@ -3486,7 +3486,7 @@ setInterval(()=>{if(document.hidden||S.mode!=="live")return;if(!liveSet().size)r
 /* kickoff times in Eastern, DST-aware */
 liveSet=(function(){return function(){const out=new Map();if(S.mode!=="live"||typeof NFLS==="undefined"||!NFLS)return out;const now=Date.now();const teams=new Set();
   for(const g of NFLS){if(g.wk!==S.week||!g.day)continue;const d=new Date(g.day+"T12:00:00Z"),y=d.getUTCFullYear();const nov1=new Date(Date.UTC(y,10,1)),fsn=1+((7-nov1.getUTCDay())%7),mar1=new Date(Date.UTC(y,2,1)),ssm=1+((7-mar1.getUTCDay())%7)+7;
-    const dst=d>=new Date(Date.UTC(y,2,ssm))&&d<new Date(Date.UTC(y,10,fsn));const k=Date.parse(`${g.day}T${(g.time||"13:00")}:00${dst?"-04:00":"-05:00"}`);if(!isFinite(k))continue;if(now>=k&&now<=k+4.2*3600e3&&!g.final){teams.add(g.a);teams.add(g.h);}}
+    const dst=d>=new Date(Date.UTC(y,2,ssm))&&d<new Date(Date.UTC(y,10,fsn));const k=Date.parse(`${g.day}T${(g.time||"13:00")}:00${dst?"-04:00":"-05:00"}`);if(!isFinite(k))continue;if(now>=k&&now<=k+5.5*3600e3&&!g.final){teams.add(g.a);teams.add(g.h);}}
   if(!teams.size)return out;for(const L of S.leagues)for(const m of (L.matchups||[]).flat())for(const [id,v] of Object.entries(m.pp||{})){const p=PL[id];if(p&&teams.has(p.team))out.set(id,Math.max(out.get(id)||0,+v||0));}
   for(const p of Object.values(PL))if(teams.has(p.team)&&!out.has(p.id))out.set(p.id,null);return out;};})();
 
@@ -5674,6 +5674,25 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 @keyframes mxpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.75)}}
 @media (prefers-reduced-motion:reduce){.mxc .mxdot{animation:none}}
 </style>`);
+
+/* ===== v79: overtime-safe game state =====
+   A game is final only when ESPN says it is completed (or its status name says FINAL). End of regulation, end of a quarter
+   and overtime stay live. Without ESPN, the kickoff-time estimate keeps a game live for up to 5.5 hours (was 4.2), so
+   overtime and long games aren't closed early; the schedule's final flag (nflverse result) still closes it. */
+loadGameClock=async function(force){if(S.mode!=="live")return;const now=Date.now();if(!force&&now-GCLK.t<40000)return;GCLK.t=now;
+  try{const r=await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard",{cache:"no-store"});if(!r.ok)return;const j=await r.json(),m={};
+    for(const ev of j.events||[]){const c=(ev.competitions||[])[0];if(!c)continue;const s=c.status||ev.status||{},ty=s.type||{},per=+s.period||0,clk=+s.clock||0,nm=String(ty.name||"");
+      let st=ty.state;if(!/^(pre|in|post)$/.test(st))continue;
+      const done=ty.completed===true||/FINAL/i.test(nm);if(st==="post"&&!done)st="in";if(done)st="post";
+      const half=/HALFTIME/i.test(nm),endP=/END_PERIOD|END_OF_REG/i.test(nm)||(st==="in"&&clk===0&&per>=1);
+      const rem=st==="pre"?1:st==="post"?0:half?.5:per>4?.04:Math.max(.03,1-((per-1)*900+(900-Math.min(900,clk)))/3600);
+      const lbl=st!=="in"?"":half?"Half":per>4?(endP?"End of OT":"OT "+(s.displayClock||"")):endP?(per===4?"End of regulation":`End of Q${per}`):`Q${per} ${s.displayClock||""}`;
+      for(const x of c.competitors||[]){const ab=gcAb(x.team&&x.team.abbreviation);if(ab)m[ab]={st,rem,lbl,at:now};}}
+    if(Object.keys(m).length)GCLK.m=m;}catch(e){}};
+gameState=function(team){if(S.mode!=="live"||!team||team==="FA")return null;const e=GCLK.m[team];if(e&&Date.now()-e.at<15*60e3)return e;
+  if(typeof NFLS==="undefined"||!NFLS)return null;const al=t=>t==="LA"?"LAR":t;const g=NFLS.find(x=>x.wk===S.week&&(al(x.a)===team||al(x.h)===team));if(!g)return null;
+  if(g.final)return {st:"post",rem:0};const k=gcKick(g);if(!isFinite(k))return null;const h=(Date.now()-k)/3600e3;
+  if(h<0)return {st:"pre",rem:1};if(h>5.5)return {st:"post",rem:0,est:1};return {st:"in",rem:Math.max(.03,1-h/3.1),est:1,lbl:h>3.1?"Late":"live"};};
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}

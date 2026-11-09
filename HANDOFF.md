@@ -96,6 +96,16 @@ Newest session at the top.
   (red-tinted card, 3px red edge on the outer side, extended with negative margins so names don't truncate) and a red
   "LIVE" before the clock. The dot pulses, except with reduced motion. "proj" stays inline with its number.
 
+- **v79 (owner: TB@CHI heading to overtime showed as final):**
+  - `loadGameClock` and `gameState` are redefined.
+  - **ESPN:** "post" counts only with `type.completed` or a FINAL status name. End of regulation, end of a period and
+    OT stay "in", labelled "End of regulation" / "OT 6:52".
+  - **Kickoff-time estimate:** live up to 5.5 h ("Late" after 3.1 h), was 4.2 h.
+  - **`liveSet` windows:** 4 / 4.2 h raised to 5.5 h.
+  - **Tested** with mocked ESPN payloads for each case.
+  - **Not confirmed:** which path closed the game on the owner's phone (ESPN payload or the time estimate). Both are
+    fixed.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)
