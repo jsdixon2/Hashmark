@@ -24,6 +24,14 @@ Newest session at the top.
   the list grew to the whole lineup. Two or more finished starters now fold into one line ("N starters have played ·
   X points banked").
 
+- **v72 (owner said yes to the three display fixes):**
+  - `pc()` now shows "<1%" / ">99%".
+  - Seven win-chance texts switched from `${PCT(x)}%` to `${pc(x)}`; style widths untouched.
+  - The home ring skips its count-up for `<`/`>` values.
+  - `myMatchup` holds `wpA` to 0.001-0.999 while any lineup has points left. Before this, 1 − 1e-47 rounded to "100%".
+  - The "Projected edge by position" heading says "live projection" during games.
+  - The `liveSet` wrapper keeps the LIVE badge number only for players rostered in `S.L`.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)

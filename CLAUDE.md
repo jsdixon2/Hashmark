@@ -58,6 +58,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    final flag / 4-hour kickoff window). `alertsFor` (feeds matchup "Needs attention", home moves, start/sit) skips locked
    starters (finished ones show "has played · X points banked") and never suggests a locked bench player.
    v71: 2+ finished starters fold into one line ("N starters have played · X points banked").
+   v72: `pc()` shows "<1%"/">99%" (never 0/100 unless certain); live win odds held to 0.1-99.9% until all games final;
+   win-chance texts use pc (bar widths still PCT); edge-by-position says "live projection" during games; LIVE badge
+   number only for players rostered in the league being viewed.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
