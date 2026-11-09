@@ -106,6 +106,9 @@ Newest session at the top.
   - **Not confirmed:** which path closed the game on the owner's phone (ESPN payload or the time estimate). Both are
     fixed.
 
+- **v80 (owner: show final score vs Hashmark's weekly projection):** wrappers on `mxCell`/`kdCell` add
+  `vsProj(pts, proj)` after final scores ("22.4 ▲5.9 vs 16.5"). Arrows come from the existing .good/.bad classes.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)

@@ -5694,6 +5694,22 @@ gameState=function(team){if(S.mode!=="live"||!team||team==="FA")return null;cons
   if(g.final)return {st:"post",rem:0};const k=gcKick(g);if(!isFinite(k))return null;const h=(Date.now()-k)/3600e3;
   if(h<0)return {st:"pre",rem:1};if(h>5.5)return {st:"post",rem:0,est:1};return {st:"in",rem:Math.max(.03,1-h/3.1),est:1,lbl:h>3.1?"Late":"live"};};
 
+/* ===== v80: final score vs Hashmark's weekly projection =====
+   Next to each final score: ▲/▼ difference from Hashmark's pregame projection (hmProj; Sleeper's projection if missing),
+   green when he beat it, red when he fell short, grey within half a point. Kickers and defenses use their projection. */
+function preProjOf(p){try{const h=hmProj(p);if(h&&!h.bye&&isFinite(h.m))return h.m;}catch(e){}return p&&p.proj!=null?+p.proj:null;}
+function vsProj(pts,proj){if(proj==null||!isFinite(proj)||pts==null)return "";const d=pts-proj,c=Math.abs(d)<.5?"":d>0?"good":"bad";
+  return ` <span class="mxd ${c}" title="Hashmark projection ${f1(proj)}">${Math.abs(d)<.5?"= ":""}${f1(Math.abs(d))} <span class="mxdv">vs ${f1(proj)}</span></span>`;}
+mxCell=(function(prev){return function(p,right,W){let h=prev(p,right,W);try{const m=mxState(p,W);if(m.k==="final"){const a=`<div class="num mxv"><b>${f1(m.pts)}</b>`;if(h.includes(a))h=h.replace(a,a+vsProj(m.pts,preProjOf(p)));}}catch(e){}return h;};})(mxCell);
+kdCell=(function(prev){return function(L,W,id,right){let h=prev(L,W,id,right);try{if(h.includes(" · Final</div>")){const pp=W&&W.ls&&W.ls.pp?W.ls.pp:{},pts=pp[id]!=null?+pp[id]:null;let pre=null;try{pre=kdPts(L,id,null);}catch(e){}
+  const m=/<div class="num mxv"><b>([^<]*)<\/b>/.exec(h);if(m&&pts!=null)h=h.replace(m[0],m[0]+vsProj(pts,pre));}}catch(e){}return h;};})(kdCell);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.mxc .mxd{font-size:12px;font-weight:700;margin-left:4px;color:var(--muted)}
+.mxc .mxd.good{color:var(--good,#16a34a)}.mxc .mxd.bad{color:var(--bad,#e5484d)}
+.mxc .mxd .mxdv{font-weight:600;color:var(--muted)}
+.slotrow .lnk.mxc .mxv .mxd{display:inline!important}
+</style>`);
+
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
