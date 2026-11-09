@@ -5680,7 +5680,7 @@ document.head.insertAdjacentHTML("beforeend",`<style>
    and overtime stay live. Without ESPN, the kickoff-time estimate keeps a game live for up to 5.5 hours (was 4.2), so
    overtime and long games aren't closed early; the schedule's final flag (nflverse result) still closes it. */
 loadGameClock=async function(force){if(S.mode!=="live")return;const now=Date.now();if(!force&&now-GCLK.t<40000)return;GCLK.t=now;
-  try{const r=await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard",{cache:"no-store"});if(!r.ok)return;const j=await r.json(),m={};
+  try{const r=await fetch(GCLK_URL(),{cache:"no-store"});if(!r.ok)return;const j=await r.json(),m={};
     for(const ev of j.events||[]){const c=(ev.competitions||[])[0];if(!c)continue;const s=c.status||ev.status||{},ty=s.type||{},per=+s.period||0,clk=+s.clock||0,nm=String(ty.name||"");
       let st=ty.state;if(!/^(pre|in|post)$/.test(st))continue;
       const done=ty.completed===true||/FINAL/i.test(nm);if(st==="post"&&!done)st="in";if(done)st="post";
@@ -5805,6 +5805,18 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .wkr{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:start}
 .rdet summary{cursor:pointer;list-style:none;padding:2px 0}.rdet summary::-webkit-details-marker{display:none}.rdet[open] summary{margin-bottom:8px}
 </style>`);
+
+/* ===== v84: no flip-flopping between Final and Live =====
+   ESPN's default scoreboard can switch to the next day's games after midnight, dropping a just-finished game; the app
+   replaced its game list each refresh, so that game fell back to the kickoff-time estimate ("Late", live) until a later
+   response brought it back. Now: ask for this NFL week explicitly, merge each response into what we know, and a final
+   result is never undone (finals don't expire; only a newer ESPN reading can change a team's state). */
+const GCLK_URL=()=>`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=${S.week||1}&dates=${S.season||new Date().getFullYear()}`;
+loadGameClock=(function(prev){return async function(force){if(S.mode!=="live")return;const now=Date.now();if(!force&&now-GCLK.t<40000)return;
+  const keep=Object.assign({},GCLK.m);GCLK.t=0;await prev(true);GCLK.t=now;
+  const m=Object.assign({},keep);for(const [k,v] of Object.entries(GCLK.m)){const o=keep[k];if(o&&o.st==="post"&&v.st!=="post")continue;m[k]=v;}  /* a final stays final */
+  GCLK.m=m;};})(loadGameClock);
+gameState=(function(prev){return function(team){const e=GCLK.m&&GCLK.m[team];if(S.mode==="live"&&e&&e.st==="post")return e;return prev(team);};})(gameState);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}

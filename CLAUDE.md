@@ -94,6 +94,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    holes); Depth chart per position (`rosRow`: slot chip/BN/IR/TX, age, ROS/wk, value or rank, injury + SELL tags,
    this-week proj) incl. K/DST; Next 4 weeks planner (`rosHoles`, week-specific holes beyond permanent ones); roster
    moves + keeper plan; start/sit breakdown collapsed.
+   v84: no Final/Live flip-flop. ESPN scoreboard requested for this week (`GCLK_URL`: seasontype=2&week=&dates=); each
+   response merges into GCLK.m (teams missing from a response keep their last state); a "post" never reverts, and
+   gameState returns a known final regardless of age.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;

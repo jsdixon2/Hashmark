@@ -131,6 +131,15 @@ Newest session at the top.
   - **Holes:** permanent holes (no player at the position) are counted once, not per week.
   - **QA:** demo league, no errors.
 
+- **v84 (owner: after TB@CHI ended, the cell kept switching between "LIVE · Late" and "Final · W 27–24"):**
+  - **Cause:** ESPN's default scoreboard can switch to the next day's games after midnight, so some responses lacked
+    the game. `GCLK.m` was replaced on every refresh, and the game fell back to the kickoff-time estimate.
+  - **Fix:**
+    - Request the scoreboard for this week (`GCLK_URL`).
+    - Merge each response into what we already have.
+    - A final never reverts, and `gameState` trusts a known final regardless of age.
+  - **Test:** a mocked final, followed by two responses without the game, stays final.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)
