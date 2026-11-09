@@ -3028,7 +3028,7 @@ function vScoutLand(){if(!CFB&&CFBst==="idle")setTimeout(loadCfb,50);const top=C
   ${tile("nfl","NFL teams","32",best?`Best offense by EPA: ${best[0]}`:"Team pages","lg")}</div>`;}
 /* ---------- Home overview ---------- */
 function liveSet(){const out=new Map();if(S.mode!=="live"||typeof NFLS==="undefined"||!NFLS)return out;const now=Date.now();
-  const teams=new Set();for(const g of NFLS){if(g.wk!==S.week||!g.day)continue;const k=Date.parse(`${g.day}T${(g.time||"13:00")}:00-05:00`);if(!isFinite(k))continue;if(now>=k&&now<=k+5.5*3600e3&&!g.final){teams.add(g.a);teams.add(g.h);}}
+  const teams=new Set();for(const g of NFLS){if(g.wk!==S.week||!g.day)continue;const k=Date.parse(`${g.day}T${(g.time||"13:00")}:00-05:00`);if(!isFinite(k))continue;if(now>=k&&now<=k+4.5*3600e3&&!g.final){teams.add(g.a);teams.add(g.h);}}
   if(!teams.size)return out;for(const L of S.leagues)for(const m of (L.matchups||[]).flat())for(const [id,v] of Object.entries(m.pp||{})){const p=PL[id];if(p&&teams.has(p.team))out.set(id,Math.max(out.get(id)||0,+v||0));}
   for(const p of Object.values(PL))if(teams.has(p.team)&&!out.has(p.id))out.set(p.id,null);return out;}
 function smartTiles(){const d=new Date().getDay(),live=liveSet(),n=NW.items.length?feed("mine"):[];const g=typeof GAMES!=="undefined"?GAMES.length:0;
@@ -3486,7 +3486,7 @@ setInterval(()=>{if(document.hidden||S.mode!=="live")return;if(!liveSet().size)r
 /* kickoff times in Eastern, DST-aware */
 liveSet=(function(){return function(){const out=new Map();if(S.mode!=="live"||typeof NFLS==="undefined"||!NFLS)return out;const now=Date.now();const teams=new Set();
   for(const g of NFLS){if(g.wk!==S.week||!g.day)continue;const d=new Date(g.day+"T12:00:00Z"),y=d.getUTCFullYear();const nov1=new Date(Date.UTC(y,10,1)),fsn=1+((7-nov1.getUTCDay())%7),mar1=new Date(Date.UTC(y,2,1)),ssm=1+((7-mar1.getUTCDay())%7)+7;
-    const dst=d>=new Date(Date.UTC(y,2,ssm))&&d<new Date(Date.UTC(y,10,fsn));const k=Date.parse(`${g.day}T${(g.time||"13:00")}:00${dst?"-04:00":"-05:00"}`);if(!isFinite(k))continue;if(now>=k&&now<=k+5.5*3600e3&&!g.final){teams.add(g.a);teams.add(g.h);}}
+    const dst=d>=new Date(Date.UTC(y,2,ssm))&&d<new Date(Date.UTC(y,10,fsn));const k=Date.parse(`${g.day}T${(g.time||"13:00")}:00${dst?"-04:00":"-05:00"}`);if(!isFinite(k))continue;if(now>=k&&now<=k+4.5*3600e3&&!g.final){teams.add(g.a);teams.add(g.h);}}
   if(!teams.size)return out;for(const L of S.leagues)for(const m of (L.matchups||[]).flat())for(const [id,v] of Object.entries(m.pp||{})){const p=PL[id];if(p&&teams.has(p.team))out.set(id,Math.max(out.get(id)||0,+v||0));}
   for(const p of Object.values(PL))if(teams.has(p.team)&&!out.has(p.id))out.set(p.id,null);return out;};})();
 
@@ -5693,7 +5693,7 @@ loadGameClock=async function(force){if(S.mode!=="live")return;const now=Date.now
 gameState=function(team){if(S.mode!=="live"||!team||team==="FA")return null;const e=GCLK.m[team];if(e&&Date.now()-e.at<15*60e3)return e;
   if(typeof NFLS==="undefined"||!NFLS)return null;const al=t=>t==="LA"?"LAR":t;const g=NFLS.find(x=>x.wk===S.week&&(al(x.a)===team||al(x.h)===team));if(!g)return null;
   if(g.final)return {st:"post",rem:0};const k=gcKick(g);if(!isFinite(k))return null;const h=(Date.now()-k)/3600e3;
-  if(h<0)return {st:"pre",rem:1};if(h>5.5)return {st:"post",rem:0,est:1};return {st:"in",rem:Math.max(.03,1-h/3.1),est:1,lbl:h>3.1?"Late":"live"};};
+  if(h<0)return {st:"pre",rem:1};if(h>4.5)return {st:"post",rem:0,est:1};return {st:"in",rem:Math.max(.03,1-h/3.1),est:1,lbl:h>3.1?"Late":"live"};};
 
 /* ===== v80: final score vs Hashmark's weekly projection =====
    Next to each final score: ▲/▼ difference from Hashmark's pregame projection (hmProj; Sleeper's projection if missing),
@@ -5817,6 +5817,29 @@ loadGameClock=(function(prev){return async function(force){if(S.mode!=="live")re
   const m=Object.assign({},keep);for(const [k,v] of Object.entries(GCLK.m)){const o=keep[k];if(o&&o.st==="post"&&v.st!=="post")continue;m[k]=v;}  /* a final stays final */
   GCLK.m=m;};})(loadGameClock);
 gameState=(function(prev){return function(team){const e=GCLK.m&&GCLK.m[team];if(S.mode==="live"&&e&&e.st==="post")return e;return prev(team);};})(gameState);
+
+/* ===== v85: game clock from two ESPN views, merged =====
+   v84's week-specific scoreboard request may fail; a failed request left the last reading ("in progress") to go stale
+   and the game fell back to the kickoff estimate ("LIVE · Late") after it had ended. Now both the week view and ESPN's
+   default view are requested; every successful response is merged; a final never reverts. */
+function gcParse(j,now){const m={};for(const ev of (j&&j.events)||[]){const c=(ev.competitions||[])[0];if(!c)continue;const s=c.status||ev.status||{},ty=s.type||{},per=+s.period||0,clk=+s.clock||0,nm=String(ty.name||"");
+    let st=ty.state;if(!/^(pre|in|post)$/.test(st))continue;const done=ty.completed===true||/FINAL/i.test(nm);if(st==="post"&&!done)st="in";if(done)st="post";
+    const half=/HALFTIME/i.test(nm),endP=/END_PERIOD|END_OF_REG/i.test(nm)||(st==="in"&&clk===0&&per>=1);
+    const rem=st==="pre"?1:st==="post"?0:half?.5:per>4?.04:Math.max(.03,1-((per-1)*900+(900-Math.min(900,clk)))/3600);
+    const lbl=st!=="in"?"":half?"Half":per>4?(endP?"End of OT":"OT "+(s.displayClock||"")):endP?(per===4?"End of regulation":`End of Q${per}`):`Q${per} ${s.displayClock||""}`;
+    const cs=c.competitors||[];for(const x of cs){const ab=gcAb(x.team&&x.team.abbreviation);if(!ab)continue;const o=cs.find(y=>y!==x),oab=o&&gcAb(o.team&&o.team.abbreviation);
+      m[ab]={st,rem,lbl,at:now,opp:oab||null,home:x.homeAway==="home",pf:x.score!=null&&x.score!==""?+x.score:null,pa:o&&o.score!=null&&o.score!==""?+o.score:null};}}
+  return m;}
+loadGameClock=async function(force){if(S.mode!=="live")return;const now=Date.now();if(!force&&now-GCLK.t<40000)return;GCLK.t=now;
+  const base="https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard";
+  const urls=[base,`${base}?seasontype=2&week=${S.week||1}&dates=${S.season||new Date().getFullYear()}`];
+  const rs=await Promise.allSettled(urls.map(u=>fetch(u,{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject(r.status))));
+  const m=Object.assign({},GCLK.m);let ok=0;
+  for(const r of rs){if(r.status!=="fulfilled")continue;ok++;for(const [k,v] of Object.entries(gcParse(r.value,now))){const o=m[k];if(o&&o.st==="post"&&v.st!=="post")continue;if(o&&o.at===now&&o.st==="post")continue;m[k]=v;}}
+  GCLK.m=m;GCLK.ok=ok;GCLK.okAt=ok?now:GCLK.okAt;};
+/* ESPN is answering but no longer lists this team's game and it kicked off 3.4+ hours ago: it's over */
+gameState=(function(prev){return function(team){const g=prev(team);try{if(g&&g.est&&g.st==="in"&&GCLK.okAt&&Date.now()-GCLK.okAt<5*60e3&&!(GCLK.m&&GCLK.m[team])){
+  const al=t=>t==="LA"?"LAR":t;const x=NFLS&&NFLS.find(y=>y.wk===S.week&&(al(y.a)===team||al(y.h)===team));const k=x?gcKick(x):NaN;if(isFinite(k)&&(Date.now()-k)/3600e3>3.4)return {st:"post",rem:0,est:1};}}catch(e){}return g;};})(gameState);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}

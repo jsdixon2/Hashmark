@@ -140,6 +140,16 @@ Newest session at the top.
     - A final never reverts, and `gameState` trusts a known final regardless of age.
   - **Test:** a mocked final, followed by two responses without the game, stays final.
 
+- **v85 (owner: after v84 the finished game stayed "LIVE · Late"):**
+  - **Likely cause:** the v84 week-specific URL failed. The last ESPN reading ("in", taken just before the official
+    final) went stale after 15 minutes, and the kickoff estimate took over.
+  - **Fix:**
+    - Fetch both ESPN's default and week scoreboards, and merge whichever succeed.
+    - Treat a game as final if ESPN is answering but no longer lists it and it kicked off 3.4+ h ago.
+    - Kickoff-only estimate and `liveSet` windows: 4.5 h.
+  - **Test:** mocked combinations (week fails, default fails, both lack the game, both fail, in → final) all resolve to
+    final.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)

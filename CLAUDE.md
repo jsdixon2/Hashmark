@@ -97,6 +97,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    v84: no Final/Live flip-flop. ESPN scoreboard requested for this week (`GCLK_URL`: seasontype=2&week=&dates=); each
    response merges into GCLK.m (teams missing from a response keep their last state); a "post" never reverts, and
    gameState returns a known final regardless of age.
+   v85: game clock fetches ESPN's default AND week-specific scoreboards (`gcParse`), merges every success (finals never
+   revert); if ESPN answered in the last 5 min without the game and kickoff was 3.4+ h ago, it's final. Kickoff-only
+   estimate and liveSet windows: 4.5 h.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
