@@ -122,6 +122,15 @@ Newest session at the top.
   - **Bench:** `mxBench` puts the result and stat line in the meta under the name, with "Final", "LIVE", "proj" or "Bye"
     under the score.
 
+- **v83 (owner: bench final-vs-projection; roster tab "bland and useless": more manager tools, less repetition, small
+  boxes):**
+  - **Bench:** the `mxBench` wrapper adds `vsProj` after "Final".
+  - **`vRoster` rebuilt:** at-a-glance boxes, To do with action buttons, one depth chart (replacing Lineup, Full roster,
+    Strength vs league and Underlying value), a 4-week bye/injury planner, IR/taxi moves, the keeper plan, and start/sit
+    in a collapsed `<details>`.
+  - **Holes:** permanent holes (no player at the position) are counted once, not per week.
+  - **QA:** demo league, no errors.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)

@@ -5740,6 +5740,72 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .slotrow>.mxc[style*="right"]>*{max-width:100%}
 </style>`);
 
+/* ===== v83: bench final-vs-projection; Roster tab rebuilt as a manager's desk =====
+   Roster tab: at-a-glance boxes, a to-do list of real actions, one depth chart (replaces Lineup + Full roster + Strength
+   vs league + Underlying value), a 4-week bye/injury planner, then IR/taxi moves and the keeper plan. */
+mxBench=(function(prev){return function(p,W){let h=prev(p,W);try{const m=mxState(p,W);if(m.k==="final")h=h.replace('<div class="meta">Final</div>',`<div class="meta">Final${vsProj(m.pts,preProjOf(p))}</div>`);}catch(e){}return h;};})(mxBench);
+function rosSafe(f,d){try{return f();}catch(e){console.error(e);return d;}}
+function rosHoles(L,t,weeks){const out=[];const ids=startIds(L,t),slots=L.slots||[];const w0=S.week||1;
+  for(let k=0;k<weeks;k++){const w=w0+k;const avail=ids.filter(id=>{const p=PL[id];if(!p||!WV_OFF.has(p.pos))return false;if(!wvPlays(p.team,w))return false;
+      if(/^(ir|pup|nfi|sus)/i.test(String(p.inj||"")))return false;if(k===0&&p.inj&&OUTRX.test(p.inj))return false;if(k===0&&locked(p)&&false)return false;return true;});
+    const full=lineup(ids.filter(id=>PL[id]&&WV_OFF.has(PL[id].pos)),slots).out.filter(x=>x.p).map(x=>x.p);
+    const base=lineup(ids.filter(id=>PL[id]&&WV_OFF.has(PL[id].pos)&&!/^(ir|pup|nfi|sus)/i.test(String(PL[id].inj||""))),slots).out.filter(x=>!x.p).map(x=>slotLabel(x.slot));
+    const lu=lineup(avail,slots).out,empty=lu.filter(x=>!x.p).map(x=>slotLabel(x.slot));for(const b of base){const i=empty.indexOf(b);if(i>=0)empty.splice(i,1);}
+    const outS=full.filter(p=>!avail.includes(p.id)).map(p=>`${p.name} (${!wvPlays(p.team,w)?"bye":statusWord?statusWord(p.inj):"out"})`);
+    out.push({w,empty,outS,base,pts:lineup(avail,slots).pts});}
+  return out;}
+function rosTodo(L,t){const T=[],mi=mineIdx(L);
+  rosSafe(()=>{const M=myMatchup(L);if(M)alertsFor(M.A).filter(a=>a.lvl==="bad"||a.lvl==="warn").slice(0,4).forEach(a=>T.push({lvl:a.lvl,t:a.msg,s:a.fix,go:"matchup",b:"Lineup"}));},0);
+  rosSafe(()=>{const r=wireRecs(L,1)[0];if(r&&r.g>=wvBar())T.push({lvl:"good",t:`Add ${r.p.name}${r.d?` for ${r.d.name}`:""}`,s:`+${f1(r.g)} lineup pts over 4 weeks · ${r.tier}`,go:"waivers",b:"Waivers"});},0);
+  rosSafe(()=>{const prot=wvProtected(L,t),lu=lineup(startIds(L,t),L.slots),st=new Set(lu.out.filter(x=>x.p).map(x=>x.p.id));
+    startIds(L,t).map(id=>PL[id]).filter(p=>p&&WV_OFF.has(p.pos)&&!st.has(p.id)&&!prot(p.id)).map(p=>({p,v:wvVec(p,L).reduce((a,b)=>a+b,0)})).filter(x=>x.v<4).sort((a,b)=>a.v-b.v).slice(0,2)
+      .forEach(x=>T.push({lvl:"info",t:`Cut candidate: ${x.p.name}`,s:`${f1(x.v)} pts projected over the next 4 weeks; that roster spot could hold a waiver add`,go:"waivers",b:"Waivers",id:x.p.id}));},0);
+  rosSafe(()=>{const G=tradeSignals(L);(G.sells||[]).slice(0,2).forEach(x=>T.push({lvl:"info",t:`Sell high: ${x.p.name}`,s:(x.why&&x.why[0])||"His price is above what he’ll produce for you",go:"trade-sell",b:"Trade Lab",id:x.p.id}));},0);
+  rosSafe(()=>{rosHoles(L,t,4).slice(1).filter(h=>h.empty.length).slice(0,2).forEach(h=>T.push({lvl:"warn",t:`Week ${h.w}: no ${h.empty.join(", ")} starter`,s:h.outS.length?`Out: ${h.outS.slice(0,3).join(", ")}`:"Not enough healthy players at the position",go:"waivers",b:"Waivers"}));},0);
+  return T;}
+function rosRow(L,t,p,slot,sig){const ir=(t.ir||[]).includes(p.id),tx=(t.taxi||[]).includes(p.id),wk=rosSafe(()=>wkProj(p),0),ros=rosSafe(()=>rosPPG(p),0);
+  const chip=slot?`<span class="chip rsl">${esc(slotLabel(slot))}</span>`:`<span class="chip rsl mute">${ir?"IR":tx?"TX":"BN"}</span>`;
+  const tags=[p.inj?`<span class="warn">⚑ ${esc(String(p.inj).split(/[;(]/)[0].trim())}</span>`:"",sig==="sell"?`<span class="pill sellp">SELL</span>`:sig==="buy"?`<span class="pill buyp">BUY</span>`:""].filter(Boolean).join(" ");
+  const meta=[p.age?`${Math.floor(p.age)} yrs`:"",`${f1(ros)}/wk`,S.fmt.type!=="redraft"?`value ${f0(p.val)}`:p.rank?`${p.pos}${p.rank}`:""].filter(Boolean).join(" · ");
+  return `<button class="rrow${slot?"":" bn"}" data-go="player-${p.id}">${chip}<span class="rrn"><b class="ell">${esc(p.name)}</b><span class="sub ell">${meta}${tags?" · "+tags:""}</span></span><span class="rrv"><b class="num">${f1(wk)}</b><span class="sub">this wk</span></span></button>`;}
+vRoster=function(){const L=S.L;if(!L)return `<div class="empty">No league loaded.</div>`;if(L.rip)return `<section class="pan"><div class="ripm" style="margin-top:0">R.I.P.</div><p class="sub">Your roster was released when you were chopped.</p></section>`;
+  const mi=mineIdx(L),t=L.teams[mi];if(!t)return `<div class="empty">Team not found.</div>`;const n=L.teams.length;
+  const rk=rosSafe(()=>ranksFor(L)[mi],{}),M=rosSafe(()=>myMatchup(L),null),lu=lineup(startIds(L,t),L.slots),cap=rosterCap(L),act=startIds(L,t).length,irS=+(L.lset&&L.lset.reserve_slots)||0,txS=+(L.lset&&L.lset.taxi_slots)||0;
+  const holes=rosSafe(()=>rosHoles(L,t,4),[]),hc=holes.reduce((s,h)=>s+h.empty.length,0),risk=rosSafe(()=>teamRisk(L,mi).label,"–");
+  const G=rosSafe(()=>tradeSignals(L),{sells:[],buys:[]}),sig={};(G.sells||[]).forEach(x=>sig[x.p.id]="sell");
+  const box=(v,l,go)=>`<div${go?` class="tap" data-go="${go}" role="link" tabindex="0"`:""}><b>${v}</b><span>${l}</span></div>`;
+  const kp=`<div class="kpis rkp mt">${box(M?f1(M.A.proj):f1(lu.pts),M?`This week · ${pc(M.wpA)} win`:"Lineup pts/wk","matchup")}${box(rk.pw?`#${rk.pw} of ${n}`:"–","Power rank","league")}${box(pc(rk.po),"Playoff odds","league")}
+    ${box(cap?`${act}/${cap}`:act,cap?(cap-act>0?`${cap-act} open spot${cap-act>1?"s":""}`:"Roster full")+(irS?` · IR ${(t.ir||[]).length}/${irS}`:"")+(txS?` · Taxi ${(t.taxi||[]).length}/${txS}`:""):"Players")}${box(hc?`${hc}`:"0",hc?"Lineup holes, next 4 wks":"No lineup holes, 4 wks")}${box(esc(risk),"Roster risk")}</div>`;
+  const todo=rosTodo(L,t);
+  const td=`<section class="pan mt"><div class="row sp"><h2>To do</h2><span class="tag">${todo.length||"All set"}</span></div>${todo.length?todo.map(x=>`<div class="tdo"><i class="dot ${x.lvl==="bad"?"bad":x.lvl==="warn"?"warn":x.lvl==="good"?"good":"info"}"></i><div class="tdt"><b>${esc(x.t)}</b><div class="sub">${esc(x.s||"")}</div></div><button class="chip tdb" data-go="${x.go}">${esc(x.b)}</button></div>`).join(""):`<p class="sub">Lineup set, no holes ahead, nothing worth adding or cutting.</p>`}</section>`;
+  const nd={};rosSafe(()=>needs(L,t).forEach(x=>nd[x.pos]=x.d),0);
+  const slotOf={};lu.out.forEach(x=>{if(x.p)slotOf[x.p.id]=x.slot;});
+  const dc=["QB","RB","WR","TE"].filter(ps=>L.slots.some(s=>ELIG[s]&&ELIG[s].includes(ps))).map(ps=>{const arr=t.players.map(id=>PL[id]).filter(p=>p&&p.pos===ps).sort((a,b)=>(slotOf[b.id]?1:0)-(slotOf[a.id]?1:0)||rosSafe(()=>rosPPG(b)-rosPPG(a),0));
+    const d=nd[ps];return `<div class="pan dcp"><div class="row sp"><h3>${pos(ps)} <span class="sub">${arr.length}</span></h3>${d!=null?`<span class="num ${d<0?"bad":"good"}">${d>0?"+":""}${f1(d)} vs avg</span>`:""}</div>${arr.map(p=>rosRow(L,t,p,slotOf[p.id],sig[p.id])).join("")||`<p class="sub">None rostered.</p>`}</div>`;}).join("");
+  const kd=rosSafe(()=>kdLineup(L,t).filter(x=>x.m).map(x=>`<div class="rrow"><span class="chip rsl">${x.slot==="DEF"?"D/ST":x.slot}</span><span class="rrn"><b class="ell">${esc(x.m.name)}</b><span class="sub ell">${esc(kdGame(x.m)||x.m.team)}${x.m.ss?` · ${f1(x.m.ss.ppg)}/g`:""}</span></span><span class="rrv"><b class="num">${f1(x.m.wk)}</b><span class="sub">this wk</span></span></div>`).join(""),"");
+  const dcs=`<section class="mt2"><div class="row sp"><h2>Depth chart</h2><span class="tag">this week · rest of season</span></div><div class="mt">${dc}${kd?`<div class="pan dcp"><h3>K / D/ST</h3>${kd}</div>`:""}</div></section>`;
+  const pl=holes.length?`<section class="pan mt"><div class="row sp"><h2>Next 4 weeks</h2><span class="tag">byes & injuries</span></div>${holes.map(h=>`<div class="wkr"><b class="wkn2">Wk ${h.w}</b><div class="wkd">${h.empty.length?`<span class="bad">No ${esc(h.empty.join(", "))} starter</span>`:(h.base&&h.base.length?`<span>No new holes</span> <span class="sub">· ${esc(h.base.join(", "))} still empty</span>`:`<span class="good">Full lineup</span>`)}${h.outS.length?`<div class="sub">Out: ${esc(h.outS.join(", "))}</div>`:""}</div><span class="num">${f1(h.pts)}</span></div>`).join("")}<p class="sub mt">Right column: projected starting lineup with the players available that week.</p></section>`:"";
+  const ss=rosSafe(()=>startSit(),"");
+  return `<div class="row sp" style="flex-wrap:wrap"><div><h1>${esc(t.name)}</h1><div class="sub">${recOf(t)} · ${esc(t.owner)}</div></div></div>${kp}${td}${dcs}${pl}
+    ${rosSafe(()=>rosterMoves(L,t),"")}${rosSafe(()=>keeperCard(L,t),"")}
+    ${ss?`<details class="pan mt rdet"><summary><b>Start/sit breakdown</b> <span class="sub">close calls and why</span></summary>${ss}</details>`:""}`;};
+document.head.insertAdjacentHTML("beforeend",`<style>
+.rkp{grid-template-columns:repeat(3,1fr)!important;border-radius:16px;overflow:hidden}
+.rkp>div{padding:10px 10px 9px}.rkp>div b{font-size:19px}.rkp>div span{font-size:11.5px;line-height:1.25}
+.tdo{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}.tdo:last-child{border-bottom:0}
+.tdo .dot{margin-top:6px;flex:none}.tdo .tdt .sub{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tdo .tdt{flex:1;min-width:0}.tdo .tdb{flex:none;align-self:center}
+.dcp{margin-top:10px;padding-top:12px}.dcp h3{margin:0}
+.rrow{all:unset;box-sizing:border-box;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;padding:8px 0;border-top:1px solid var(--line);cursor:pointer}
+.rrow.bn .rrn b{font-weight:600;color:var(--muted)}
+.rrow .rsl{min-width:34px;justify-content:center;font-size:11px;padding:3px 6px}.rrow .rsl.mute{opacity:.6}
+.rrow .rrn{display:flex;flex-direction:column;min-width:0}.rrow .rrv{display:flex;flex-direction:column;align-items:flex-end}
+.rrow .rrv .sub{font-size:10.5px}
+.pill.sellp{background:color-mix(in srgb,var(--bad,#e5484d) 18%,transparent);color:var(--bad,#e5484d);font-size:10px;padding:2px 6px}
+.pill.buyp{background:color-mix(in srgb,var(--good,#16a34a) 18%,transparent);color:var(--good,#16a34a);font-size:10px;padding:2px 6px}
+.wkr{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:start}
+.rdet summary{cursor:pointer;list-style:none;padding:2px 0}.rdet summary::-webkit-details-marker{display:none}.rdet[open] summary{margin-bottom:8px}
+</style>`);
+
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
