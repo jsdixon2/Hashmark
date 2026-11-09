@@ -64,6 +64,12 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    v73: methodology paragraphs move behind info buttons (`CONDENSE` rules matched by opening words, applied in `decorate`;
    full text goes to `DEFS["cx_*"]`, button in the section's tag pill or heading, never inside team-name headings);
    trade cards are one compact line per side. Add a rule to CONDENSE when a new long explanation is added. Legal stays.
+   v74: matchup lineup cells (`mxCell`/`mxBench`): bold = real league points once a game starts (from matchup
+   players_points), grey "proj" before kickoff; status Final / Q4 13:06 · proj / opponent+time; Sleeper weekly stat line
+   (`loadWkStats`, `statLine`, refreshed with live scores). Needs attention: opponents' problems without advice, "played"
+   line as footer. Page chrome (`pageChrome`, final render wrapper): no breadcrumb eyebrow, sub-title replaces title.
+   One info button per row. Waiver rows: tier pill under the number. Trade cards show value in points, not %.
+   Wider tap areas for inline links (::after); War Room buttons 36px.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;

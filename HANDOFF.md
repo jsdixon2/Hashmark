@@ -43,6 +43,26 @@ Newest session at the top.
   - **Audit (all 22 pages in the demo):** no paragraph over 160 characters except the legal page, no horizontal
     overflow, and no page errors.
 
+- **v74 (owner: fix items 1, 3-6 of the UI report, consolidate headers, clean up the matchup page, add game stats):**
+  - **Matchup lineups:** the bold number is real league points (`W.ls.pp`) once a game starts. Before kickoff it shows
+    a grey projection plus "proj".
+  - **Status line:** Final, or "Q4 13:06 · proj X", or opponent and kickoff time.
+  - **Stat line:** built from Sleeper `/stats/nfl/regular/{season}/{week}` (`loadWkStats`, refreshed every 90 s with
+    live scores). Example: "22/31, 284 yds, 2 TD, 1 INT · 4 car, 21 yds".
+  - **Bench:** uses the same rules.
+  - **Needs attention:** only your own problems. "Their problems" no longer carries fix advice, and "N starters have
+    played" is a footer line.
+  - **Headers:** `pageChrome()` in a final render wrapper removes the `.pgtitle .eyebrow` and replaces the h1 with
+    `h2.pgsub` when one exists.
+  - **Other:**
+    - Info buttons in one row merge into one (`mx_*` keys).
+    - Waiver rows: tier pill under the number, "13.4/wk".
+    - Trade cards: "+1,947 value" instead of "+94%".
+    - Inline links get a ±8px tap area via `::after`; War Room ▲▼☆ are 36px.
+  - **Known limit:** links inside boxes that clip overflow (trade-card team names, roster names) still have small tap
+    areas.
+  - **QA:** simulated live demo with final, live and pregame players plus stats; page audit with no errors or overflow.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)
