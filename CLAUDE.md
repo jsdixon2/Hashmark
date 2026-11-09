@@ -72,6 +72,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    Wider tap areas for inline links (::after); War Room buttons 36px.
    v75: player tiles (`mono`) show POS / jersey number / TEAM stacked (small) or big number with "POS · TEAM" (large);
    "–" when Sleeper has no number. No initials.
+   v76: small box = number + team only; list rows put the position tag before the name and drop the team text (inline
+   tag keeps only age in dynasty/keeper); matchup live cells "21.0  23.7 proj" with a red dot + clock in the status line;
+   K and D/ST get their own named rows (`kdMatchRows`/`kdCell`, names from `kdMeta`).
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;

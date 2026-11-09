@@ -1314,7 +1314,7 @@ function selectLeague(id){const L=S.leagues.find(l=>l.id===id)||S.leagues[0];S.L
 /* ===== UI primitives ===== */
 function mono(p,sm){const t=TEAMS[p.team]||TEAMS.FA;return `<div class="mono${sm?" sm":""}" style="--c1:${t[1]};--c2:${t[2]}" aria-hidden="true"><em>${esc(p.team)}</em><b>${esc(initials(p.name))}</b></div>`;}
 const pos=p=>`<span class="pos ${p}">${p==="PK"?"Pick":p}</span>`;
-function prow(p,extra,lab){return `<div class="pr" data-go="player-${p.id}" role="link" tabindex="0">${mono(p,1)}<div><div class="nm">${esc(p.name)}</div><div class="meta">${pos(p.pos)} ${esc(p.team)}${p.rank?`, ${p.pos}${p.rank}`:""}${p.inj?` <span class="warn">⚑ ${esc(p.inj.split(";")[0])}</span>`:""}</div></div><div style="text-align:right"><div class="num">${extra!=null?extra:f0(p.val)}</div><div class="meta">${lab||(extra!=null?"":"value")}</div></div><button class="add" data-add="${p.id}" aria-label="Add ${esc(p.name)} to Trade Lab">+</button></div>`;}
+function prow(p,extra,lab){return `<div class="pr" data-go="player-${p.id}" role="link" tabindex="0">${mono(p,1)}<div><div class="nm">${pos(p.pos)} ${esc(p.name)}</div><div class="meta">${p.rank?`${p.pos}${p.rank}`:""}${p.inj?` <span class="warn">⚑ ${esc(p.inj.split(";")[0])}</span>`:""}</div></div><div style="text-align:right"><div class="num">${extra!=null?extra:f0(p.val)}</div><div class="meta">${lab||(extra!=null?"":"value")}</div></div><button class="add" data-add="${p.id}" aria-label="Add ${esc(p.name)} to Trade Lab">+</button></div>`;}
 const EXP={};let expN=0;
 function expBtn(title,fn){const id="x"+(++expN);EXP[id]={title,fn};return `<button class="expand" data-expand="${id}">Expand</button>`;}
 function openSheet(t,html){$("#sheetT").textContent=t;$("#sheetB").innerHTML=html;$("#sheet").hidden=false;$("#sheetX").focus();}
@@ -1387,7 +1387,7 @@ function vMatchup(li){const L=S.leagues[li];if(!L)return `<div class="empty">Tha
         <p class="sub">Win probability from each lineup’s Week ${S.week} projection and how much fantasy scores swing week to week (calibrated on 44,000 real Sleeper matchups)${A.live!=null?"; during games each player counts his points so far plus his projection for the time left, and the odds tighten as games finish":""}.</p></section>
   <section class="grid2 mt"><div class="pan"><h2>Needs attention</h2>${need.map(a=>alertHtml(a,1)).join("")||`<p>Nothing flagged. Lineup looks set.</p>`}${aB.length?`<h3 class="mt">Their problems</h3>${aB.map(a=>alertHtml(Object.assign({},a,{fix:""}),1)).join("")}`:""}${info.length?`<p class="sub mt">${info.map(a=>esc(a.msg+" · "+a.fix)).join("<br>")}</p>`:""}</div>
     <div class="pan"><h2>Projected edge by position</h2><p class="sub">Your starters minus theirs, ${A.live!=null&&S.mode==="live"?"live projection (points so far plus the time left)":`Week ${S.week} projection`}.</p>${posEdges(A,B)}</div></section>
-  <section class="pan mt"><h2>Lineups</h2>${[...Array(n).keys()].map(k=>`<div class="slotrow">${cell(A.rows[k],0,A)}<span class="chip" style="justify-self:center">${slotLabel((A.rows[k]||B.rows[k]).slot)}</span>${cell(B.rows[k],1,B)}</div>`).join("")}${(A.kd||B.kd)?`<div class="slotrow"><span class="num"><b>${f1(A.kd||0)}</b></span><span class="chip" style="justify-self:center">K + DEF</span><span class="num" style="text-align:right"><b>${f1(B.kd||0)}</b></span></div>`:""}${Math.abs(A.cal||0)>=.5?`<p class="sub mt">Totals include a ${A.cal>0?"+":"−"}${f1(Math.abs(A.cal))} league-scoring adjustment per team: this league’s scoring has run ${A.cal>0?"above":"below"} projections this season (bonuses and custom points).</p>`:""}</section>
+  <section class="pan mt"><h2>Lineups</h2>${[...Array(n).keys()].map(k=>`<div class="slotrow">${cell(A.rows[k],0,A)}<span class="chip" style="justify-self:center">${slotLabel((A.rows[k]||B.rows[k]).slot)}</span>${cell(B.rows[k],1,B)}</div>`).join("")}${kdMatchRows(L,A,B)}${Math.abs(A.cal||0)>=.5?`<p class="sub mt">Totals include a ${A.cal>0?"+":"−"}${f1(Math.abs(A.cal))} league-scoring adjustment per team: this league’s scoring has run ${A.cal>0?"above":"below"} projections this season (bonuses and custom points).</p>`:""}</section>
   <section class="pan mt"><h2>Your bench</h2>${A.bench.slice().sort((a,b)=>wkProj(b)-wkProj(a)).map(p=>mxBench(p,A)).join("")||`<div class="empty">No bench players.</div>`}</section>
   <div class="row mt" style="flex-wrap:wrap"><button class="btn" data-league="${esc(L.id)}">League hub</button><button class="btn ghost" data-tradewith="${B.ti}">Trade with ${esc(B.t.name)}</button>${S.mode==="live"?`<button class="btn ghost" data-refresh="1">Refresh live scores</button>`:""}</div>
   ${S.mode==="live"?`<p class="sub mt">Lineup changes happen in Sleeper; Hashmark reads your lineup but can’t set it.</p>`:`<p class="sub mt">Demo matchup: the model set both lineups by rest-of-season value, so it can start players who are on bye. That’s what the alerts catch.</p>`}`;}
@@ -1415,7 +1415,7 @@ function exploits(){if(!slateIsCurrent())return [];const out=[];
 function ownerOf(p){const L=S.L;if(!L)return null;const t=L.teams.find(tm=>tm.players.includes(p.id));return t?(t.mine?"mine":t.name):"avail";}
 function vEdges(){const all=exploits();if(!all.length)return `<h1>Exploitable matchups</h1><div class="empty">The Week 8 slate is the only one loaded, and none of its remaining games match your current week.</div>`;
   let rows=all.filter(x=>S.etab==="ALL"||x.p.pos===S.etab);if(S.eown!=="ALL")rows=rows.filter(x=>ownerOf(x.p)===S.eown);
-  const card=x=>{const o=ownerOf(x.p);return `<div class="pan mt"><div class="pr" data-go="player-${x.p.id}" role="link" tabindex="0" style="border:0;padding:0">${mono(x.p,1)}<div><div class="nm">${esc(x.p.name)}</div><div class="meta">${pos(x.p.pos)} ${x.p.team} ${x.m.home?"vs":"at"} ${x.m.opp}, ${x.m.g.when}${o?`, <span class="${o==="avail"?"good":""}">${o==="mine"?"your roster":o==="avail"?"available":"on "+esc(o)}</span>`:""}</div></div><div style="text-align:right"><div class="score ${x.score>=60?"good":x.score<=40?"bad":""}">${x.score}</div><div class="meta">exploit score</div></div><button class="add" data-add="${x.p.id}" aria-label="Add ${esc(x.p.name)} to Trade Lab">+</button></div>
+  const card=x=>{const o=ownerOf(x.p);return `<div class="pan mt"><div class="pr" data-go="player-${x.p.id}" role="link" tabindex="0" style="border:0;padding:0">${mono(x.p,1)}<div><div class="nm">${pos(x.p.pos)} ${esc(x.p.name)}</div><div class="meta">${x.m.home?"vs":"at"} ${x.m.opp}, ${x.m.g.when}${o?`, <span class="${o==="avail"?"good":""}">${o==="mine"?"your roster":o==="avail"?"available":"on "+esc(o)}</span>`:""}</div></div><div style="text-align:right"><div class="score ${x.score>=60?"good":x.score<=40?"bad":""}">${x.score}</div><div class="meta">exploit score</div></div><button class="add" data-add="${x.p.id}" aria-label="Add ${esc(x.p.name)} to Trade Lab">+</button></div>
     <div class="grid4 mt" style="gap:8px"><div><div class="sub">Expected pts</div><b class="num">${f1(x.exp)}</b></div><div><div class="sub">Season avg</div><b class="num">${f1(x.p.ppg??x.p.proj)}</b></div><div><div class="sub">Ceiling odds</div><b class="num good">${pc(x.ceil)}</b></div><div><div class="sub">Dud odds</div><b class="num bad">${pc(x.dud)}</b></div></div>
     <div class="chips mt">${x.R.map(([c,t])=>`<span class="chip ${c}">${esc(t)}</span>`).join("")}</div></div>`;};
   const top=rows.slice(0,12),low=rows.length>12?rows.slice(-5).reverse():[];
@@ -3791,7 +3791,7 @@ vNfl=(function(prev){return function(ab){let h=prev(ab);const t=TEAMS[ab];if(!t|
   h=h.replace(/^<div class="row" style="gap:14px;align-items:center">[\s\S]*?<\/h1><\/div><\/div>/,hero);
   const ps=Object.values(PL).filter(p=>p.team===ab&&POSI.hasOwnProperty(p.pos)).sort((a,b)=>(["QB","RB","WR","TE"].indexOf(a.pos)-["QB","RB","WR","TE"].indexOf(b.pos))||b.val-a.val).slice(0,24);
   const own=p=>{const x=ownerOf(p);return x==="mine"?"Your team":x==="avail"||x==null?"Free agent":x;};
-  const rows=ps.map(p=>`<button class="trow" data-go="player-${p.id}">${mono(p,1)}<span class="tsn"><b class="ell">${esc(p.name)}</b><span class="sub ell">${p.pos}${roleTags(p)[0]?" · "+esc(roleTags(p)[0]):""} · ${esc(own(p))}</span></span><b class="num">${f0(p.val)}</b></button>`).join("");
+  const rows=ps.map(p=>`<button class="trow" data-go="player-${p.id}">${mono(p,1)}<span class="tsn"><b class="ell">${pos(p.pos)} ${esc(p.name)}</b><span class="sub ell">${roleTags(p)[0]?esc(roleTags(p)[0])+" · ":""}${esc(own(p))}</span></span><b class="num">${f0(p.val)}</b></button>`).join("");
   h=h.replace(/<section class="pan mt"><div class="row sp"><h2>Fantasy-relevant players<\/h2>[\s\S]*?<\/section>$/,`<section class="pan mt"><div class="row sp"><h2>Fantasy roster</h2><span class="tag">Market value ${info("mv")}</span></div><div class="mt">${rows||'<p class="sub">No players loaded for this team.</p>'}</div></section>`);
   return h;};})(vNfl);
 /* team badges everywhere a team row appears */
@@ -3989,7 +3989,7 @@ function allPlayers(){const q=(S.pq||"").toLowerCase(),own=S.plOwn||"all";
   const key={val:p=>-p.val,pts:p=>-(p.pts??-1),ppg:p=>-(p.ppg??-1),age:p=>p.age??99,risk:p=>p.risk,brk:p=>-p.brk}[S.psort||"val"];ps.sort((a,b)=>key(a)-key(b));
   const ex=p=>S.psort==="pts"?f1(p.pts):S.psort==="ppg"?f1(p.ppg):S.psort==="brk"?(p.broke?"Arrived":pc(p.brk)):S.psort==="risk"?p.risk:S.psort==="age"?p.age:f0(p.val);
   const lb={pts:"season pts",ppg:"per game",brk:"breakout",risk:"risk",age:"age"}[S.psort]||"market value";
-  const row=p=>{const o=ownerLbl(p);return `<div class="pr" data-go="player-${p.id}" role="link" tabindex="0">${mono(p,1)}<div style="min-width:0"><div class="nm ell">${esc(p.name)}</div><div class="meta ell">${pos(p.pos)} ${esc(p.team)}${p.inj?` · <span class="warn">${esc(p.inj.split(" ")[0])}</span>`:""} · <span class="own ${o.k}">${esc(o.t)}</span></div></div><div style="text-align:right"><div class="num">${ex(p)??"–"}</div><div class="meta">${lb}</div></div></div>`;};
+  const row=p=>{const o=ownerLbl(p);return `<div class="pr" data-go="player-${p.id}" role="link" tabindex="0">${mono(p,1)}<div style="min-width:0"><div class="nm ell">${pos(p.pos)} ${esc(p.name)}</div><div class="meta ell">${p.inj?`<span class="warn">${esc(p.inj.split(" ")[0])}</span> · `:""}<span class="own ${o.k}">${esc(o.t)}</span></div></div><div style="text-align:right"><div class="num">${ex(p)??"–"}</div><div class="meta">${lb}</div></div></div>`;};
   return `<div class="pan list">${lst(ps.slice(0,300).map(row),40,`No players match${q?` “${esc(S.pq)}”`:""}.`)}</div><p class="sub mt">Ownership is for ${esc(S.L?S.L.name:"this league")}. Values use this league’s format.</p>`;}
 vWaivers=(function(prev){return function(){const t=S.plT||"wire";
   const ctl=`<div class="pgctl"><div class="plrow"><div class="seg sm"><button data-plt="wire" class="${t==="wire"?"on":""}">Waiver wire</button><button data-plt="all" class="${t==="all"?"on":""}">All players</button></div>${t==="all"?`<div class="field"><input id="pq" value="${esc(S.pq||"")}" placeholder="Search name or team (DET)" aria-label="Search players" autocomplete="off"></div>`:""}</div>
@@ -5282,7 +5282,7 @@ function wvBidTxt(r){const b=r.bid;if(!b)return "";return `Bid $${b.bid} · wins
 function wvPrioTxt(L,r){if(wvFa(L))return "";const me=L.teams[mineIdx(L)],wp=me&&me.wp;if(r.g>=8)return wp?`Worth your waiver claim (you're #${wp})`:"Worth a waiver claim";if(r.g<4)return "Wait for him to clear waivers";return "Claim if nobody better is on your list";}
 /* ---- waiver page ---- */
 function wvRow(r,L){const p=r.p,st=r.g>=12?"hot":r.g>=8?"":"",note=[r.d?`Drop ${esc(r.d.name)} <span class="sub">${esc(r.d.pos)}</span>`:"Open roster spot",wvFa(L)?wvBidTxt(r):wvPrioTxt(L,r)].filter(Boolean).join(" · ");
-  return `<div class="pr wvr" data-go="player-${p.id}" role="link" tabindex="0">${mono(p,1)}<div style="min-width:0"><div class="nm">${esc(p.name)}</div><div class="meta">${pos(p.pos)} ${esc(p.team)} · ${f1(r.rate)}/wk${S.trend&&S.trend[p.id]?` · <span class="trend">▲ ${f0(S.trend[p.id])} adds</span>`:""}</div><div class="meta">${note}</div></div><div style="text-align:right"><div class="num">${r.g>=0?"+":""}${f1(r.g)}</div><span class="pill ${st}">${r.tier}</span></div></div>`;}
+  return `<div class="pr wvr" data-go="player-${p.id}" role="link" tabindex="0">${mono(p,1)}<div style="min-width:0"><div class="nm">${pos(p.pos)} ${esc(p.name)}</div><div class="meta">${f1(r.rate)}/wk${S.trend&&S.trend[p.id]?` · <span class="trend">▲ ${f0(S.trend[p.id])} adds</span>`:""}</div><div class="meta">${note}</div></div><div style="text-align:right"><div class="num">${r.g>=0?"+":""}${f1(r.g)}</div><span class="pill ${st}">${r.tier}</span></div></div>`;}
 /* track record: what Hashmark tagged each week, checked against what happened */
 function tagLog(L){if(!L||L.demo||S.mode!=="live")return null;const k="hm_tags_"+L.id;let o;try{o=JSON.parse(LS.get(k)||"{}");}catch(e){o={};}o.w=o.w||{};return {o,save:()=>LS.set(k,JSON.stringify(o))};}
 function tagRecord(L,kind,rows){const T=tagLog(L);if(!T)return;const w=String(S.week||1),e=T.o.w[w]=T.o.w[w]||{};const nv=JSON.stringify(rows);if(JSON.stringify(e[kind])===nv)return;e[kind]=rows;
@@ -5577,8 +5577,8 @@ function mxState(p,W){const pp=W&&W.ls&&W.ls.pp?W.ls.pp:null,pts=pp&&pp[p.id]!=n
   if((gs&&gs.st==="post")||(g&&g.final))return {k:"final",pts:pts!=null?pts:(p.last!=null?p.last:0)};
   if(gs&&gs.st==="in")return {k:"live",pts:pts!=null?pts:0,lbl:gs.lbl&&gs.lbl!=="live"?gs.lbl.trim():"Live",proj:wkProj(p)};
   return {k:"pre",proj:wkProj(p)};}
-function mxCell(p,right,W){const m=mxState(p,W),st=m.k!=="pre"&&m.k!=="bye"?statLine(p):"",tag=m.k==="final"?"Final":m.k==="live"?`${m.lbl} · proj ${f1(m.proj)}`:m.k==="bye"?"Bye":esc(gameTag(p));
-  const val=m.k==="final"?`<b>${f1(m.pts)}</b>`:m.k==="live"?`<b>${f1(m.pts)}</b> <span class="mxl">LIVE</span>`:m.k==="bye"?`<span class="mxp">0.0</span>`:`<span class="mxp">${f1(m.proj)}</span> <span class="sub">proj</span>`;
+function mxCell(p,right,W){const m=mxState(p,W),st=m.k!=="pre"&&m.k!=="bye"?statLine(p):"",tag=m.k==="final"?"Final":m.k==="live"?`<span class="mxdot"></span>${m.lbl}`:m.k==="bye"?"Bye":esc(gameTag(p));
+  const val=m.k==="final"?`<b>${f1(m.pts)}</b>`:m.k==="live"?`<b>${f1(m.pts)}</b> <span class="mxpj">${f1(m.proj)} proj</span>`:m.k==="bye"?`<span class="mxp">0.0</span>`:`<span class="mxp">${f1(m.proj)}</span> <span class="sub">proj</span>`;
   return `<button class="lnk mxc" data-go="player-${p.id}" style="${right?"text-align:right":""}"><b>${esc(p.name)}</b><div class="sub">${p.pos} ${esc(p.team)} · ${tag}</div>${st?`<div class="mxs">${esc(st)}</div>`:""}<div class="num mxv">${val}</div></button>`;}
 function mxBench(p,W){const m=mxState(p,W),v=m.k==="final"||m.k==="live"?f1(m.pts):f1(m.proj||0),lab=m.k==="final"?"Final"+(statLine(p)?" · "+statLine(p):""):m.k==="live"?`${m.lbl} · ${statLine(p)||"live"}`:m.k==="bye"?"Bye":gameTag(p)+" · proj";return prow(p,v,lab);}
 refreshLive=(function(prev){return async function(...a){const r=await prev(...a);try{if(await loadWkStats())if(/^matchup/.test(route()))render();}catch(e){}return r;};})(refreshLive);
@@ -5617,6 +5617,32 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .jt3>i{display:none}.jt3,.jt3 *{text-decoration:none!important}
 .jt.sm.jt3{box-shadow:inset 0 -3px 0 var(--c2),0 0 0 4px var(--panel),0 8px 20px rgba(0,0,0,.3)}
 </style>`);
+
+/* ===== v76: player box = jersey number + team; kicker and defense rows on the matchup page ===== */
+mono=(function(prev){return function(p,sm){if(!p||!p.pos||!sm)return prev(p,sm);const [c1,c2]=tcol(p.team);const n=p.num!=null&&p.num!==""&&!isNaN(+p.num)?String(+p.num):"–",tm=p.team||"FA";
+  return `<div class="jt sm jt3" style="--c1:${c1};--c2:${c2}" aria-label="${esc("Number "+n+", "+tm)}"><i></i><span class="j3"><b class="jn3">${esc(n)}</b><b>${esc(tm)}</b></span></div>`;};})(mono);
+/* kicker / defense cell: same rules as player cells (real points once his game starts, grey projection before) */
+function kdCell(L,W,id,right){const m=id&&id!=="0"?kdMeta(id):null;if(!m)return `<span class="bad" style="${right?"text-align:right":""}">Empty</span>`;
+  const pp=W&&W.ls&&W.ls.pp?W.ls.pp:null,pts=pp&&pp[id]!=null?+pp[id]:null;let gs=null;try{gs=gameState(m.team);}catch(e){}const g=gameOf({team:m.team});
+  let pre=0;try{pre=kdPts(L,id,null);}catch(e){}
+  const k=g&&g.bye?"bye":(gs&&gs.st==="post")||(g&&g.final)?"final":gs&&gs.st==="in"?"live":"pre";
+  const tag=k==="final"?"Final":k==="live"?`<span class="mxdot"></span>${esc(gs.lbl&&gs.lbl!=="live"?gs.lbl:"Live")}`:k==="bye"?"Bye":esc(kdGame(m)||m.team);
+  const val=k==="final"?`<b>${f1(pts!=null?pts:0)}</b>`:k==="live"?`<b>${f1(pts!=null?pts:0)}</b> <span class="mxpj">${f1((pts||0)+pre*(gs.rem||0))} proj</span>`:`<span class="mxp">${f1(k==="bye"?0:pre)}</span> <span class="sub">proj</span>`;
+  return `<div class="lnk mxc" style="${right?"text-align:right":""}"><b>${esc(m.name)}</b><div class="sub">${m.pos==="DEF"?"D/ST":"K"} ${esc(m.team)} · ${tag}</div><div class="num mxv">${val}</div></div>`;}
+function kdMatchRows(L,A,B){try{const slots=(L.allSlots||L.rpos||[]);const ids=W=>{const out=[];if(W.ls&&W.ls.starters&&L.allSlots){L.allSlots.forEach((s,k)=>{if(KDEF[s])out.push({s,id:W.ls.starters[k]});});return out;}
+    return kdLineup(L,W.t).map(x=>({s:x.slot,id:x.m?x.m.id:null}));};
+  const a=ids(A),b=ids(B),n=Math.max(a.length,b.length);let h="";
+  for(let i=0;i<n;i++){const s=(a[i]||b[i]).s;h+=`<div class="slotrow">${kdCell(L,A,a[i]&&a[i].id,0)}<span class="chip" style="justify-self:center">${s==="DEF"?"D/ST":s}</span>${kdCell(L,B,b[i]&&b[i].id,1)}</div>`;}
+  return h;}catch(e){console.error(e);return "";}}
+document.head.insertAdjacentHTML("beforeend",`<style>
+.jt3 .j3 b.jn3{font:800 17px/1.05 var(--fd)!important;margin:0 0 1px}
+.mxc .mxpj{font-size:12px;font-weight:600;color:var(--muted);margin-left:4px}
+.mxdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--bad,#e5484d);margin-right:5px;vertical-align:1px}
+</style>`);
+/* rows with a player box already show the team there: the inline tag keeps only the age (dynasty/keeper) */
+tmTagEl=(function(prev){return function(el){prev(el);try{if(!el.querySelector(".jt3"))return;const s=el.querySelector(".tmt");if(!s)return;const p=PL[el.dataset.go.slice(7)],a=p&&S.fmt&&S.fmt.type!=="redraft"&&p.age?Math.floor(p.age):null;if(a)s.textContent=String(a);else s.remove();}catch(e){}};})(tmTagEl);
+mxCell=(function(prev){return function(p,right,W){let h=prev(p,right,W);try{if(h.includes(` · ${esc(p.team)}</div>`))h=h.replace(` · ${esc(p.team)}</div>`," · Not started</div>");}catch(e){}return h;};})(mxCell);
+document.head.insertAdjacentHTML("beforeend",`<style>.mxc .mxv{white-space:nowrap}</style>`);
 
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}

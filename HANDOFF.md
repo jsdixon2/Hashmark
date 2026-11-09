@@ -69,6 +69,16 @@ Newest session at the top.
   - The large player-page tile shows the number big with "QB · PIT" at the top.
   - The demo league has no jersey numbers; live leagues do.
 
+- **v76 (owner: drop the team under the name, take position out of the box and put the tag before the name; small live
+  projection beside live score; real K and D/ST names on the matchup):**
+  - **List rows:** five templates edited in place (prow, exploit card, value list, players list, waiver row) so the
+    position tag comes before the name and the team text goes.
+  - **Inline tag:** the `tmTagEl` wrapper reduces it to age only when a row has a box.
+  - **Matchup:** live cells show "21.0  23.7 proj". Status lines use a red dot plus the clock, and "Not started" when
+    the schedule gives only the team.
+  - **K/DEF:** the K + DEF total row is replaced by per-slot rows from `L.allSlots` with live starters, or `kdLineup`
+    otherwise.
+
 ---
 
 ## 2026-11-08, night: v69, trade ideas and targets never empty (on main)
