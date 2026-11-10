@@ -63,6 +63,11 @@ Built so far:
 - **v98 Notifications:** Game-changers (15+ point swing in win chance, batched 10 min unless 25+) and Urgent roster;
   quiet hours (default 11 pm-8 am; urgent still on Thu/Sun/Mon). Fires while the app is open/backgrounded
   (service worker `showNotification`). Waiver results, trades and The Wire daily need a push server: not built.
+- **leagues.yml fix:** run 6 crawled 2.5 h (archive grew to 14,770 team-seasons; tau2 measured for the first time:
+  S .27, ap .27, lineups .17, scoring .29, consistency .24, hardware .16) but its push hit a merge conflict on
+  data/mgr_ref.json (my v89 commit changed it meanwhile) and the crawl was lost while the job still showed success.
+  The workflow now commits the archive first, rebases onto main, rebuilds calib + mgr_ref on top, and exits 1 if the
+  push fails. Never edit data/mgr_ref.json on main while a league-archive run is in progress.
 - **QA:** every route (24) in dark + light at 360 px: no console errors, no horizontal overflow (Playwright, demo).
 - **Demo caveat:** the demo's current league and its history use different ids/teams, so Scouting/Awards/Wire fall
   back to the demo history's latest season; real Sleeper leagues match by league id.

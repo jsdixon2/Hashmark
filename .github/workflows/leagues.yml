@@ -15,11 +15,18 @@ jobs:
       - uses: actions/checkout@v5
       - run: python3 scripts/fetch_leagues.py
         env: {MAX_LEAGUES: "1500", GROW: "250"}
+      # Save the crawl first, then rebuild derived files on top of the latest main, so a concurrent change to
+      # data/mgr_ref.json can never make the push fail and throw the crawl away (happened on run 6).
+      - run: |
+          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
+          git add bt/leagues.json.gz
+          git diff --staged --quiet || git commit -q -m "backtest archive: anonymous league matchups"
+          ok=0; for i in 1 2 3 4; do if git pull --rebase -q -X theirs origin main; then ok=1; break; fi; git rebase --abort 2>/dev/null; sleep 5; done
+          [ "$ok" = 1 ] || { echo "could not rebase onto main"; exit 1; }
       - run: python3 scripts/build_calib.py
       - run: python3 scripts/build_mgr.py
       - run: |
-          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
           git add bt/ data/mgr_ref.json
-          git diff --staged --quiet && exit 0
-          git commit -m "backtest archive: anonymous league matchups + manager reference"
-          for i in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep 5; done
+          git diff --staged --quiet || git commit -q -m "manager reference rebuilt from the archive"
+          for i in 1 2 3 4; do git pull --rebase -q -X theirs origin main && git push && exit 0; git rebase --abort 2>/dev/null; sleep 8; done
+          echo "push failed after 4 tries"; exit 1
