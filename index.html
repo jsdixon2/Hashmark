@@ -6370,6 +6370,62 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .awr b{font-size:16px;white-space:nowrap}.awr.mine .awk::after{content:" · you";color:var(--acc)}.awh{margin:12px 0 2px;font-size:15px}
 </style>`);
 /* /v96 */
+/* ===== v97: The Wire. A news feed of only your league, written like a local paper: a headline, then two lines with
+   the numbers behind it. Stories (newest first): last week's upsets (winner's pregame chance under 30%), blowouts
+   and photo finishes, trades and big waiver bids of the last two weeks, standings (unbeaten, winless, streaks of 3+),
+   the playoff race (clinched, eliminated, bubble) and track-record notes from managers' league-mate skill ranks
+   ("news is news": allowed league-wide). Team › The Wire; the top story also leads Huddle. ===== */
+function wireStories(){const G=HX.data,L=S.L;if(!G||!L)return [];const x=G.LS.find(z=>z.id===L.id)||(L.demo?G.LS.slice().sort((a,b)=>b.season-a.season)[0]:null);if(!x)return [];
+  const out=[],tn=rid=>awTeamName(x,rid),uOf=rid=>(x.rosters.find(q=>+q.rid===+rid)||{}).uid,M=u=>G.M[u]||{},w=awWeek(x),cur=x.season;
+  const scoresOf=rid=>(M(uOf(rid)).scores||[]).filter(q=>q.lg===x.chain&&q.s===cur).sort((a,b)=>a.w-b.w);
+  const rec=rid=>{const s=scoresOf(rid);return {w:s.filter(q=>q.won).length,l:s.filter(q=>!q.won&&q.v!==q.opp).length,s};};
+  const push=(tag,cls,head,body,when,pr)=>out.push({tag,cls,head,body,when,pr});const V=(n,a,b)=>n==="You"?b:a;
+  /* last week's games */
+  if(w){const wk=x.weeks[w-1]||[];const games=[];const seen=new Set();for(const m of wk){if(m.mid==null||seen.has(m.mid)||!(m.pts>0))continue;const o=wk.find(q=>q.mid===m.mid&&q.rid!==m.rid);if(!o)continue;seen.add(m.mid);const [a,b]=m.pts>=o.pts?[m,o]:[o,m];games.push({a,b,mg:a.pts-b.pts});}
+    for(const g of games){const sa=scoresOf(g.a.rid).find(q=>q.w===w);if(sa&&sa.p!=null&&sa.p<.3){push("Upset","acc",`${tn(g.a.rid)} ${V(tn(g.a.rid),"stuns","stun")} ${tn(g.b.rid)}`,`${f1(g.a.pts)}–${f1(g.b.pts)}. Their win chance at kickoff was ${pc(sa.p)}.`,`Week ${w}`,90-sa.p*100);}}
+    const bl=games.slice().sort((a,b)=>b.mg-a.mg)[0];if(bl&&bl.mg>=40)push("Blowout","",`${tn(bl.a.rid)} ${V(tn(bl.a.rid),"routs","rout")} ${tn(bl.b.rid)} by ${f1(bl.mg)}`,`${f1(bl.a.pts)}–${f1(bl.b.pts)}, the biggest margin of the week.`,`Week ${w}`,60);
+    const pf=games.slice().sort((a,b)=>a.mg-b.mg)[0];if(pf&&pf.mg<3)push("Photo finish","",`${tn(pf.a.rid)} ${V(tn(pf.a.rid),"edges","edge")} ${tn(pf.b.rid)} by ${f1(pf.mg)}`,`${f1(pf.a.pts)}–${f1(pf.b.pts)}.`,`Week ${w}`,62);}
+  /* transactions, last two weeks */
+  const recent=(x.tx||[]).filter(t=>t.wk>=Math.max(1,(w||1)-1)).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  for(const t of recent.filter(t=>t.type==="trade").slice(0,4)){const sides=[...new Set((t.rids||[]).map(Number))];if(sides.length<2)continue;
+    const got=r=>Object.entries(t.adds||{}).filter(([p,rr])=>+rr===r).map(([p])=>hxName(p));const picks=r=>(t.dp||[]).filter(p=>+p.to===r).map(p=>`${p.season} R${p.round}`);
+    const [a,b]=sides,ga=[...got(a),...picks(a)],gb=[...got(b),...picks(b)];
+    push("Trade","good",`${tn(a)} and ${tn(b)} make a deal`,`${tn(a)} ${V(tn(a),"gets","get")} ${ga.join(", ")||"future considerations"}; ${tn(b)} ${V(tn(b),"gets","get")} ${gb.join(", ")||"future considerations"}.`,`Week ${t.wk}`,80);}
+  const bids=recent.filter(t=>t.type==="waiver"&&t.bid>0).sort((a,b)=>b.bid-a.bid).slice(0,2);
+  for(const t of bids){const [p,r]=Object.entries(t.adds||{})[0]||[];if(!p)continue;push("Waivers","",`${tn(r)} ${V(tn(r),"spends","spend")} $${t.bid} on ${hxName(p)}`,`The biggest bid of the week${t.bid>=20?", and a statement":""}.`,`Week ${t.wk}`,50+Math.min(20,t.bid/2));}
+  /* standings */
+  const teams=x.rosters.map(r=>({rid:r.rid,...rec(r.rid)})).filter(t=>t.s.length);
+  for(const t of teams){const g=t.w+t.l;if(g<3)continue;const s=t.s;let n=0;const last=s[s.length-1];if(last){for(let i=s.length-1;i>=0&&s[i].won===last.won;i--)n++;}
+    const u=uOf(t.rid),mm=M(u),sk=mm.sk||{};
+    if(t.l===0)push("Standings","good",`${tn(t.rid)} stays perfect at ${t.w}–0`,`${f1(avgx(s.map(q=>q.v)))} points a game, ${f1(avgx(s.map(q=>q.v-q.opp)))} better than their opponents.`,"This season",70);
+    else if(t.w===0&&g>=4){const notes=[];if(sk.drafting!=null&&sk.drafting<=30)notes.push(`${mm.name}'s draft record sits in the bottom ${Math.max(1,Math.round(sk.drafting))}% of this league's managers`);if(sk.waivers!=null&&sk.waivers>=70)notes.push(`the waiver wire is where ${mm.name} does best`);
+      push("Standings","bad",`${tn(t.rid)} falls to 0–${t.l}`,`${f1(avgx(s.map(q=>q.v)))} points a game.${notes.length?" "+notes.join("; ")+".":""}`,"This season",65);}
+    else if(n>=3&&last)push(last.won?"Streak":"Slump",last.won?"good":"bad",`${tn(t.rid)} ${last.won?"wins":"drops"} ${n} straight`,`Now ${t.w}–${t.l}.${last.won?"":sk.drafting!=null&&sk.drafting<=30?` A tough spot: ${mm.name}'s drafting ranks in the bottom third of the league.`:""}`,"This season",55+n);}
+  /* playoff race */
+  try{const od=oddsFor(L);if(od&&od.length===L.teams.length){const rows=L.teams.map((t,i)=>({n:t.name,po:od[i].po})).sort((a,b)=>b.po-a.po);
+    const cl=rows.filter(r=>r.po>.995),el=rows.filter(r=>r.po<.005),bub=rows.filter(r=>r.po>=.25&&r.po<=.75);
+    if(cl.length)push("Playoff race","good",`${cl.map(r=>r.n).join(", ")} ${cl.length===1?"has":"have"} clinched`,`Playoff spots locked in with ${L.remWeeks||"a few"} weeks left.`,"Today",75);
+    if(bub.length>=2)push("Playoff race","",`${bub.length} teams on the bubble`,bub.map(r=>`${r.n} ${pc(r.po)}`).join(" · ")+".","Today",72);
+    if(el.length)push("Playoff race","bad",`${el.map(r=>r.n).join(", ")} ${el.length===1?"is":"are"} out`,`No path to the playoffs left in ${L.remWeeks||"the remaining"} weeks.`,"Today",58);}}catch(e){}
+  return out.sort((a,b)=>b.pr-a.pr);}
+function wireStory(s){return `<article class="wst"><div class="row sp"><span class="wtag ${s.cls?"w-"+s.cls:""}">${esc(s.tag)}</span><span class="wwhen">${esc(s.when||"")}</span></div><h3>${esc(s.head)}</h3><p>${esc(s.body)}</p></article>`;}
+function vWire(){if(HX.st!=="ready"){if(HX.st==="idle")setTimeout(hxLoad,0);return `<section class="pan"><p class="sub">Reading this league's Sleeper history…</p></section>`;}
+  const st=wireStories(),L=S.L;return `<div class="wmast"><span class="wmsub">${esc(L?L.name:"")} · Week ${S.week} edition</span></div>${st.length?st.map(wireStory).join(""):`<section class="pan"><p class="sub">Quiet week in the league. Nothing worth printing yet.</p></section>`}`;}
+if(HUBS.team&&!HUBS.team.tabs.some(t=>t[0]==="wire"))HUBS.team.tabs.splice(1,0,["wire","The Wire"]);
+vHome=(function(prev){return function(){if(route()==="wire")return vWire();return prev();};})(vHome);
+pageTitle=(function(prev){return function(r){if(r==="wire")return {eb:["Team"],h:"The Wire"};return prev(r);};})(pageTitle);
+LABEL=(function(prev){return function(r){return r==="wire"?"The Wire":prev(r);};})(LABEL);
+rerenderStats=(function(prev){return function(){prev();if(route()==="wire"&&HX.st==="ready")render();};})(rerenderStats);
+vHuddle=(function(prev){return function(){let h=prev();try{if(HX.st==="ready"){const s=wireStories()[0];if(s){const i0=h.indexOf('<section class="pan hdm"'),i=i0>=0?h.indexOf("</section>",i0)+10:-1;const card=`<button class="wtop" data-go="wire"><span class="wmn sm">THE WIRE</span>${wireStory(s).replace("<article","<div").replace("</article>","</div>")}</button>`;h=i>=0?h.slice(0,i)+card+h.slice(i):h+card;}}}catch(e){console.error(e);}return h;};})(vHuddle);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.wmast{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:4px 0 12px;margin-bottom:12px;border-bottom:2px solid var(--acc)}
+.wmn{font:700 26px/1 var(--fd);letter-spacing:.14em}.wmn.sm{font-size:12px;letter-spacing:.18em;color:var(--muted)}.wmsub{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.wst{background:var(--panel);border-radius:var(--r,20px);padding:14px 16px;margin-bottom:10px;border:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.wst h3,.wtop h3{font:700 17px/1.25 var(--fd);margin:6px 0 4px}.wst p,.wtop p{margin:0;font-size:14px;line-height:1.45;color:var(--muted)}
+.wtag{font:700 10.5px var(--fb);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.wtag.w-acc{color:var(--acc)}.wtag.w-good{color:var(--good)}.wtag.w-bad{color:var(--bad)}.wwhen{font-size:11.5px;color:var(--muted)}
+.wtop .wst{background:none;border:0;padding:0;margin:0}.wtop{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;background:var(--panel);border-radius:var(--r,20px);padding:14px 16px;margin-bottom:12px}
+</style>`);
+/* /v97 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
