@@ -74,6 +74,22 @@ Built so far:
   passed through "Top 8%", so ranks never count; background data loads overwrote the cached Huddle with demo numbers
   during restore, so `render` now waits while `S._snapOn`. Bars needed a forced reflow to animate from 0.
   Not built (by choice): sounds; haptics (iPhone web apps can't vibrate anyway).
+- **v100 audit (owner: "double check for consistency, redundancy, confusing navigation, inaccurate data, incorrect
+  rankings, formatting; fix it first")**. Found and fixed:
+  - Rankings contradicting each other: Locker tiles showed league-mate letter grades (Trades A+, Waivers A) next to
+    "Bottom 48% / 23% on Sleeper". On All leagues the letter now comes from the Sleeper-wide percentile; the trade
+    tile's own grade average is labelled "Hashmark grade"; Luck and Activity lost their grades (not skills).
+  - Redundancy: titles/finals/playoff record appeared three times in the Locker (hero, Sleeper-wide card, tile); the
+    Sleeper-wide copy is now one line. Huddle tiles that duplicated tabs or cards (Matchups, Updates, Gameday) removed;
+    awards on Huddle show 3 with an "All awards" sheet.
+  - Navigation: League page had two stacked tab rows -> one; "Updates" named two different tabs -> Huddle "News" and
+    Team "Player news"; search still listed "My stats"/"Overview"/"Home" -> Locker/Huddle; The Wire, Records,
+    Almanac added to search.
+  - Formatting: "Demo league i" (info button text copied into the h1) fixed in `pageChrome`; Huddle's day line sat
+    under the greeting; "▲ YOU" tag (the up-arrow means better than expected) -> plain orange "YOU"; position chips
+    were still coloured on some lists (specificity) -> neutral; My teams card showed 0.0-0.0 before kickoff -> the
+    projection with "proj", win chance below.
+  - Data spot checks: Huddle and Matchup win chance agree; last-week line, Week N awards and The Wire agree.
 - **QA:** every route (24) in dark + light at 360 px: no console errors, no horizontal overflow (Playwright, demo).
 - **Demo caveat:** the demo's current league and its history use different ids/teams, so Scouting/Awards/Wire fall
   back to the demo history's latest season; real Sleeper leagues match by league id.

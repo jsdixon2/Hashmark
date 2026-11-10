@@ -2681,9 +2681,9 @@ const _hb15=homeBoxes;homeBoxes=function(){return `<div class="lbx2">${S.leagues
   return `<div class="lbx sm" data-golg="${esc(L.id)}" data-go="matchup-${li}" role="link" tabindex="0">
    <div class="eyebrow ell">${esc(L.name)}</div>
    <div class="lbs ell">${t.w}-${t.l}${t.t?"-"+t.t:""} · ${ordn(st.r)}${st.dv?` · ${ordn(st.dv.r)} div`:""}</div>
-   ${d.ok?`<div class="lsc num"><b>${f1(d.la)}</b><span>–</span><b class="op">${f1(d.lb)}</b></div>
+   ${d.ok?`<div class="lsc num">${d.la||d.lb?`<b>${f1(d.la)}</b><span>–</span><b class="op">${f1(d.lb)}</b>`:`<b>${f1(d.ap)}</b><span>–</span><b class="op">${f1(d.bp)}</b><em class="lscp">proj</em>`}</div>
    <div class="lop ell">vs ${esc(d.b)}${os?` · ${ordn(os)}`:""}</div>
-   <div class="lpj ell">Proj ${f1(d.ap)}–${f1(d.bp)} · ${pc(d.wp)} win</div><div class="pbar"><i style="width:${PCT(d.wp)}%"></i></div>`:`<div class="lop">No matchup this week</div>`}
+   <div class="lpj ell">${d.la||d.lb?`Proj ${f1(d.ap)}–${f1(d.bp)} · `:""}${pc(d.wp)} win chance</div><div class="pbar"><i style="width:${PCT(d.wp)}%"></i></div>`:`<div class="lop">No matchup this week</div>`}
    <button class="lbr" data-golg="${esc(L.id)}" data-go="team-${ti}">Roster ${CHEV}</button></div>`;}).join("")}</div>`;};
 const _ds15=dockSync;dockSync=function(){_ds15();const r=route();document.querySelectorAll(".dock button").forEach(b=>{if(r==="stats")b.classList.toggle("on",b.dataset.r==="stats");});};
 const _mh15=menuHtml;menuHtml=function(){return _mh15().replace(/(<button class="mlink[^"]*" data-go="home"[\s\S]*?<\/button>)/,'$1<button class="mlink'+(route()==="stats"?" on":"")+'" data-go="stats" data-dclose="1">'+ic("edge").replace(ICO.edge,'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>')+'<span>My stats</span></button>');};
@@ -6533,6 +6533,59 @@ gateShow=(function(prev){return function(st,msg){try{if(st==="restore"&&!S._snap
     v.innerHTML=`<div class="snapbar">Updating your leagues…</div>`+s.h;v.classList.add("snap");S._snapOn=true;return;}}}catch(e){}if(st!=="restore"&&S._snapOn){S._snapOn=false;const v=$("#view");if(v)v.classList.remove("snap");render();}return prev(st,msg);};})(gateShow);
 gateHide=(function(prev){return function(){S._snapOn=false;const v=$("#view");if(v)v.classList.remove("snap");return prev.apply(this,arguments);};})(gateHide);
 /* /v99 */
+/* ===== v100: consistency audit fixes.
+   - Huddle: day/week line sits above the greeting; awards show the top 3 with "All awards" (sheet); tiles that repeat
+     a tab or a card above (Matchups, Updates, Gameday) are gone; "Everything" -> "More".
+   - Locker: one ranking language. On "All leagues" every skill tile's letter grade comes from its Sleeper-wide
+     percentile (was a league-mate grade that could say A+ next to "Bottom 48% on Sleeper"); Luck and Activity have no
+     grade (not skills); the Skills radar says it's vs league mates; the Sleeper-wide card's titles/finals block (third
+     copy of the same numbers) becomes one line.
+   - Page titles: pageChrome copied an info button's "i" into the h1 ("Demo league i"); the button now sits after the title.
+   - League page: two stacked tab rows (Standings/Transactions/Rules + Standings & odds/Matchups/...) become one row.
+   - "you" tag no longer carries the ▲ "up" marker (mint/▲ mean better than expected, not "this is you"). ===== */
+/* page titles: text without buttons, buttons kept after the title */
+pageChrome=function(){const v=$("#view");if(!v)return;const pt=v.querySelector(".pgtitle");if(!pt)return;const eb=pt.querySelector(".eyebrow");if(eb)eb.remove();
+  const sub=v.querySelector("h2.pgsub"),h1=pt.querySelector("h1");if(sub&&h1){const c=sub.cloneNode(true);c.querySelectorAll("button,.ibtn,.info,svg").forEach(x=>x.remove());h1.textContent=c.textContent.trim();
+    const btns=[...sub.querySelectorAll("button")];if(btns.length){const w=document.createElement("span");w.className="pgbtns";btns.forEach(b=>w.appendChild(b));h1.after(w);}sub.remove();}};
+/* Huddle: compact awards + sheet */
+const awCardFull=awCard;
+awCard=function(){const h=awCardFull();if(!h)return "";const tmp=document.createElement("div");tmp.innerHTML=h;const rows=[...tmp.querySelectorAll(".awr")],sh=tmp.querySelector(".row:last-child");
+  if(rows.length<=4)return h;rows.slice(3).forEach(r=>r.remove());const ph=tmp.querySelector(".awh");if(ph)ph.remove();
+  if(sh)sh.insertAdjacentHTML("afterbegin",`<button class="btn sm ghost" data-awall>All ${rows.length} awards</button>`);return tmp.innerHTML;};
+document.addEventListener("click",e=>{if(!e.target.closest||!e.target.closest("[data-awall]"))return;e.preventDefault();e.stopPropagation();const h=awCardFull();
+  const t=document.createElement("div");t.innerHTML=h;const ti=(t.querySelector("h2")||{}).textContent||"Awards";const s=t.querySelector("section");openSheet(ti,s?s.innerHTML.replace(/<div class="row sp">[\s\S]*?<\/div>/,""):h);},true);
+/* Locker tiles: Sleeper-wide grade on "All leagues" */
+stTiles=(function(prev){return function(D){let h=prev(D);try{h=h.replace(/(data-stc="(luck|activity)"[\s\S]*?)<span class="grd [^"]*">[^<]*<\/span>/g,"$1");
+  if(statsScope()==="all"&&MREF&&HX.data){const C=mrCareer(HX.data,HX.data.uid);if(C&&!C.none)for(const [tk,mk] of Object.entries(MR_TILE)){const v=C[mk];if(!v)continue;const g=SKG(Math.round(v.p));
+    h=h.replace(new RegExp(`(data-stc="${tk}"[\\s\\S]*?)<span class="grd [^"]*">[^<]*</span>`),`$1<span class="grd ${gcl(g)}">${g}</span>`);}}
+  h=h.replace(/(data-stc="skills"[\s\S]*?average percentile)/,"$1 vs league mates");}catch(e){console.error(e);}return h;};})(stTiles);
+/* one row of tabs on the League page */
+let LT_CACHE=[["standings","Standings & odds"],["matchups","Matchups"],["teams","Teams"],["fa","Free agents"],["records","Records"]];
+function ltMerge(v){const pc=v.querySelector(".pinctl")||document.querySelector(".pinctl");const seg=(pc||v).querySelector(".lgseg");if(!seg)return;const fr=(pc||v).querySelector(".tabs.fr");
+  if(fr){const ls=[...fr.querySelectorAll("[data-ltab]")].map(b=>[b.dataset.ltab,b.textContent.trim()]);if(ls.length)LT_CACHE=ls;}
+  const cur=S.lgT||"standings",lt=S.ltab||LT_CACHE[0][0],extra=[...seg.querySelectorAll("[data-lgt]")].filter(b=>b.dataset.lgt!=="standings").map(b=>[b.dataset.lgt,b.textContent.trim()]);
+  const row=`<div class="tabs fr lt1" role="tablist">${LT_CACHE.map(([k,n])=>`<button role="tab" data-lgt="standings" data-ltab="${k}" class="${cur==="standings"&&lt===k?"on":""}">${esc(n)}</button>`).join("")}${extra.map(([k,n])=>`<button role="tab" data-lgt="${k}" class="${cur===k?"on":""}">${esc(n)}</button>`).join("")}</div>`;
+  if(fr)fr.remove();seg.insertAdjacentHTML("afterend",row);seg.remove();}
+render=(function(prev){return function(){const r=prev.apply(this,arguments);try{const v=$("#view"),rt=route();if(!v)return r;
+  if(rt==="home"){const eb=v.querySelector(".hdhero .eyebrow"),pt=v.querySelector(".pgtitle");if(eb&&pt)pt.prepend(eb);
+    v.querySelectorAll(".tiles .tile").forEach(t=>{const n=(t.querySelector(".tn span")||{}).textContent;if(/^(Matchups|Updates|Gameday)$/.test(n||""))t.remove();});const m=v.querySelector(".hdmore");if(m)m.textContent="More";}
+  if(rt==="stats"){const hk=v.querySelector(".mrpan .hxk");if(hk){const t=[...hk.querySelectorAll("div")].map(d=>{const b=d.querySelector("b"),s=d.querySelector("span");return b&&s?`${b.textContent} ${s.textContent.toLowerCase()}`:"";}).filter(Boolean).join(" · ");hk.outerHTML=`<p class="sub mt" style="margin-bottom:0">${esc(t)}</p>`;}}
+  if(rt==="league")ltMerge(v);}catch(e){console.error(e);}return r;};})(render);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.tag.good::before{content:none!important}.c-tm .tag.good{color:var(--acc)!important;border-color:var(--acc)!important}
+.pgtitle .eyebrow{display:block;margin-bottom:4px}.pgbtns{display:inline-flex;gap:6px;vertical-align:middle;margin-left:8px}
+.lt1{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}.lt1::-webkit-scrollbar{display:none}.lt1 button{flex:none}
+</style>`);
+document.head.insertAdjacentHTML("beforeend",`<style>.lscp{font-style:normal;font-size:12px;color:var(--muted);margin-left:6px;font-weight:600}</style>`);
+/* names: one word per place. Huddle tabs Huddle · News · Gameday; Team tab "Player news"; search pages renamed */
+if(HUBS.home){const n=HUBS.home.tabs.find(x=>x[0]==="news");if(n)n[1]="News";}
+if(HUBS.team){const u=HUBS.team.tabs.find(x=>x[0]==="tupd");if(u)u[1]="Player news";}
+for(const P of PAGES){if(P[0]==="home"){P[1]="Huddle";P[2]="Huddle";P[3]+=" huddle";}else if(P[0]==="news"){P[1]="News";P[2]="Huddle";}else if(P[0]==="gameday")P[2]="Huddle";else if(P[0]==="tupd")P[1]="Player news";else if(P[0]==="stats"){P[1]=P[1]==="My stats"?"Locker":P[1];P[2]="Locker";P[3]+=" locker my stats";}}
+PAGES.push(["wire","The Wire","Team","league news bulletin stories upsets trades"],["stats","Records","Locker","high score streaks best season"],["stats","Almanac","Locker","champions all-time table history"]);
+stTiles=(function(prev){return function(D){return prev(D).replace(/trades · avg ([A-F][+-]?)/,"trades · Hashmark grade $1");};})(stTiles);
+document.head.insertAdjacentHTML("beforeend",`<style>.pgtitle{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px}.pgtitle .eyebrow{flex-basis:100%}.pgbtns{margin-left:0}</style>`);
+document.head.insertAdjacentHTML("beforeend",`<style>html:root body .pos.pos.pos.pos[class]{background:var(--panel2)!important;color:var(--ink)!important;border:1px solid var(--line)!important}</style>`);
+/* /v100 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

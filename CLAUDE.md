@@ -133,6 +133,12 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    ranks never count), bars fill once per screen (`m99Bars`), press spring on every tappable thing, pylon loader +
    skeletons (`HM_LOADER`, `m99Skel`), empty states in the voice (`EMPTY99`), pull to refresh (Huddle, Matchup, Wire),
    instant open from the last Huddle snapshot (LS `hm_snap`, `S._snapOn` blocks demo renders until live data arrives).
+   v100 consistency audit: Locker tile grades come from the Sleeper-wide percentile on "All leagues" (no A+ next to
+   "Bottom 48%"); Luck/Activity ungraded; Skills radar labelled "vs league mates"; Sleeper-wide card's titles block is
+   one line; `pageChrome` keeps info buttons out of h1 text; League page one tab row (`ltMerge`); Huddle eyebrow above
+   the greeting, awards top 3 + "All awards" sheet, tiles that duplicated tabs removed ("More"); "you" tag in Pylon, no ▲;
+   tab names Huddle · News · Gameday and Team "Player news"; search PAGES renamed (+ The Wire, Records, Almanac);
+   position chips neutral everywhere (specificity override); My teams card shows projections pregame, not 0.0-0.0.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
