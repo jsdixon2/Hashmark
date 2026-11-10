@@ -214,7 +214,9 @@ def season_rows(L, R, ST, POS, ex):
         lu = lineup_eff(lg, R[lid], ST, POS) if lid in R else {}
         own = {x[0]: x[5] for x in lg.get("rost") or [] if len(x) > 5 and x[5]}
         sc_all = (R.get(lid) or {}).get("sc") or lg.get("sc") or {}
-        wvm, trm, ntr, drm = trans_metrics(lg, pws, make_pts(lg, ST, POS, sc_all))
+        # player stat lines start in 2021: earlier seasons would score every pickup, trade and pick as 0
+        has_st = any(k.startswith(f"{lg['season']}-") for k in ST)
+        wvm, trm, ntr, drm = trans_metrics(lg, pws, make_pts(lg, ST, POS, sc_all)) if has_st else ({}, {}, collections.Counter(), {})
         if fv is not None:  # hardware = finish + playoff wins + points title
             pf = {rid: sum(T["pts"]) for rid, T in per.items()}
             if pf:

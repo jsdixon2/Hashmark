@@ -90,6 +90,11 @@ Built so far:
     were still coloured on some lists (specificity) -> neutral; My teams card showed 0.0-0.0 before kickoff -> the
     projection with "proj", win chance below.
   - Data spot checks: Huddle and Matchup win chance agree; last-week line, Week N awards and The Wire agree.
+- **Merge to main (2026-11-11):** run 7 saved its crawl: 14,766 team-seasons, 1,311 leagues (2019-25), 2,256
+  managers seen in 2+ seasons, so tau2 is now MEASURED: overall .29, all-play .27, lineups .17, scoring .29,
+  consistency .24, hardware .20, waivers .22, trades .06, drafts .03. Trades and drafts barely persist season to
+  season, so Sleeper-wide trade/draft ranks stay near average until a manager has many seasons (correct, not a bug).
+  build_mgr skips trans metrics for seasons without stat lines (2019-20), which had scored every pickup/trade/pick 0.
 - **QA:** every route (24) in dark + light at 360 px: no console errors, no horizontal overflow (Playwright, demo).
 - **Demo caveat:** the demo's current league and its history use different ids/teams, so Scouting/Awards/Wire fall
   back to the demo history's latest season; real Sleeper leagues match by league id.
