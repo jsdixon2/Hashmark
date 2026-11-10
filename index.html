@@ -6101,7 +6101,7 @@ pageTitle=(function(prev){return function(r){const t=prev(r);if(r==="stats"&&t){
 LABEL=(function(prev){return function(r){return r==="stats"?"Locker":prev(r);};})(LABEL);
 document.addEventListener("click",e=>{if(!e.target.closest("[data-open-leagues]"))return;e.preventDefault();e.stopPropagation();openDrawer();},true);
 render=(function(prev){return function(){const r=prev.apply(this,arguments);try{brandMarks();
-  if(route()==="stats"){const v=document.getElementById("view"),pt=v&&v.querySelector(".pgtitle");if(pt&&!v.querySelector(".lktools")){pt.insertAdjacentHTML("beforeend",`<div class="row lktools" style="gap:8px;margin-top:10px"><button class="btn sm" data-profile>Settings</button><button class="btn sm" data-open-leagues>Leagues</button></div>`);}}}catch(e){}return r;};})(render);
+  if(route()==="stats"){const v=document.getElementById("view"),pt=v&&v.querySelector(".pgtitle");if(pt&&!v.querySelector(".lktools")){pt.insertAdjacentHTML("beforeend",`<div class="row lktools" style="gap:8px;margin-top:10px"><button class="btn sm" data-profile>Settings</button><button class="btn sm" data-ctx="league">Switch league</button></div>`);}}}catch(e){}return r;};})(render);
 brandMarks();
 /* /v90 */
 /* ===== v91: Huddle. The home screen predicts the moment: a greeting that knows the NFL week (Tue recap + waivers,
@@ -6261,6 +6261,115 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .scnote{border-left:3px solid var(--acc);background:var(--panel2);border-radius:12px;padding:10px 12px;margin:12px 0;font-size:14px;line-height:1.4}
 </style>`);
 /* /v94 */
+/* ===== v95: Voices + personal lines. Settings (profile sheet) gets a Voice choice; default "Just the Numbers".
+   Personal lines on Huddle ("Last week"): number first, then one line in the chosen voice. Events, most notable first:
+   first win over a rival after 3+ losses, personal-record score, two straight close losses, blowout, bench points,
+   plain result. Injuries, deadlines and money never get a joke (those lines don't pass through the voice). ===== */
+const VOICES=[["numbers","Just the Numbers","Facts only. No jokes."],["booth","Booth Mode","Play-by-play hype, like the TV booth."],["heckler","The Heckler","Mean, but only to you."],["headset","The Headset","Old-school coach. Short and gruff."],["hype","Hype Man","Your biggest fan."],["oldtimer","Back in My Day","Everything was harder in '89."]];
+const VOICE_FX={
+ win:{booth:"And the crowd goes wild.",heckler:"Even a broken clock.",headset:"Good. Film at 8 a.m.",hype:"Absolute cinema.",oldtimer:"In my day that'd win the whole thing."},
+ loss:{booth:"Tough break in this one, folks.",heckler:"Bold strategy, losing.",headset:"We regroup. Fundamentals.",hype:"Comeback season starts now.",oldtimer:"We lost plenty in '89 too."},
+ blowout:{booth:"That's a mercy-rule situation!",heckler:"Okay, you can stop now.",headset:"That's how you play it.",hype:"Frame it. Print it. Tattoo it.",oldtimer:"We didn't score like that. We had leather helmets."},
+ record:{booth:"History made, folks!",heckler:"You peaked. Probably.",headset:"New standard. Keep it.",hype:"GREATEST. WEEK. EVER.",oldtimer:"Biggest number since gas was a quarter."},
+ rivalry:{booth:"The curse is LIFTED!",heckler:"Took you long enough.",headset:"Monkey's off the back.",hype:"Screenshot it. Send it. Twice.",oldtimer:"Revenge, served on a Monday night."},
+ closeloss:{booth:"Fate owes this team one.",heckler:"So close. Still a loss.",headset:"Hold the line.",hype:"The comeback arc is loading.",oldtimer:"Close only counts in horseshoes."},
+ bench:{booth:"The bench did its best work on the bench!",heckler:"Your bench would like a word. And a starting spot.",headset:"Points rotting on the bench. Laps.",hype:"Depth king behaviour, honestly.",oldtimer:"We didn't have benches. We had a bucket."}};
+const voiceGet=()=>{const v=LS.get("hm_voice")||"numbers";return VOICES.some(x=>x[0]===v)?v:"numbers";};
+const voiceFx=k=>{const v=voiceGet();return v==="numbers"?"":(VOICE_FX[k]||{})[v]||"";};
+/* the most notable thing about your last game in each current league */
+function pvLines(){const G=HX.data;if(!G||!G.me)return [];const me=G.me,all=me.scores||[],out=[];const nm=u=>(G.M[u]&&G.M[u].name)||"your opponent";
+  const seasons=new Set((me.seasons||[]).map(s=>s.s)).size;
+  for(const c of G.curChains||[]){const xs=all.filter(q=>q.lg===c).sort((a,b)=>a.s-b.s||a.w-b.w);const L=xs[xs.length-1];if(!L)continue;const P=xs[xs.length-2];
+    const res=`${L.won?"Won":L.v===L.opp?"Tied":"Lost"} ${f1(L.v)}–${f1(L.opp)} ${L.won?"over":"to"} ${esc(nm(L.op))}.`;let ev="",kind=L.won?"win":"loss";
+    const prior=xs.slice(0,-1).filter(q=>q.op===L.op),pw=prior.filter(q=>q.won).length,pl=prior.filter(q=>!q.won&&q.v!==q.opp).length;
+    if(L.won&&pw===0&&pl>=3){ev=`Your first win against them in ${pl+1} tries: ${pl}-0 before, 1-${pl} now.`;kind="rivalry";}
+    else if(seasons>=2&&L.v>=Math.max(...all.map(q=>q.v))){ev=`Your highest score in ${seasons} seasons.`;kind="record";}
+    else if(!L.won&&P&&!P.won&&P.s===L.s&&Math.abs(L.v-L.opp)<7&&Math.abs(P.v-P.opp)<7){ev=`Two straight losses by ${f1(P.opp-P.v)} and ${f1(L.opp-L.v)}.`;kind="closeloss";}
+    else if(L.won&&L.v-L.opp>=35){ev=`Won by ${f1(L.v-L.opp)}.`;kind="blowout";}
+    else if((L.bn||0)>=25){ev=`${f1(L.bn)} points left on your bench.`;kind="bench";}
+    out.push({lg:G.chainName[c]||"League",wk:L.w,s:L.s,text:res+(ev?" "+ev:""),fx:voiceFx(kind),kind});}
+  return out;}
+function pvCard(){const ls=pvLines();if(!ls.length)return "";return `<section class="pan pvcard"><div class="row sp"><h2>Last week</h2><span class="tag">Wk ${ls[0].wk}</span></div>${ls.map(l=>`<div class="pvl"><div class="pvlg">${esc(l.lg)}</div><div>${l.text}${l.fx?` <span class="pvfx">${esc(l.fx)}</span>`:""}</div></div>`).join("")}</section>`;}
+vHuddle=(function(prev){return function(){let h=prev();try{if(HX.st==="ready")h+=pvCard();else if(S.mode==="live"&&HX.st==="idle"&&!S._pvBoot){S._pvBoot=1;setTimeout(()=>{hxLoad();},2500);}}catch(e){console.error(e);}return h;};})(vHuddle);
+rerenderStats=(function(prev){return function(){prev();if(route()==="home"&&HX.st==="ready")render();};})(rerenderStats);
+/* settings: Voice */
+openDrawer=(function(prev){return function(){prev();try{const B=$("#sheetB"),host=B&&B.querySelector(".pfl");if(B)B.querySelectorAll(".pfl button span").forEach(x=>{if(x.textContent==="My stats")x.textContent="Locker";});if(!host||B.querySelector(".pfvoice"))return;const cur=voiceGet();
+  host.insertAdjacentHTML("beforeend",`<div class="pfs pfvoice"><div class="eyebrow">Voice</div>${VOICES.map(([k,n,d])=>`<button class="pfvo${k===cur?" on":""}" data-voice="${k}"><span class="pfr"></span><span><b>${n}</b><em>${d}</em></span></button>`).join("")}<p class="sub" style="margin:6px 0 0">Every voice goes straight on injuries, deadlines and money.</p></div>`);}catch(e){console.error(e);}};})(openDrawer);
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-voice]");if(!b)return;e.preventDefault();e.stopPropagation();LS.set("hm_voice",b.dataset.voice);document.querySelectorAll("[data-voice]").forEach(x=>x.classList.toggle("on",x===b));if(route()==="home")render();},true);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.pvl{padding:9px 0;border-top:1px solid var(--line);font-size:14.5px;line-height:1.4}.pvl:first-of-type{border-top:0}.pvlg{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.pvfx{color:var(--muted)}
+.pfvo{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:12px;align-items:center;width:100%;padding:9px 2px;border-top:1px solid var(--line)}
+.pfvo .pfr{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center}.pfvo.on .pfr{border-color:var(--acc)}.pfvo.on .pfr::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--acc)}
+.pfvo b{display:block;font-size:14px}.pfvo em{display:block;font-style:normal;font-size:12px;color:var(--muted)}
+</style>`);
+/* /v95 */
+/* ===== v96: Recap cards + weekly awards. For the last finished week of the league you're viewing: team awards
+   (The Avalanche, Highway Robbery, Wrong Place Wrong Time, Mercy Rule, Photo Finish, Benchwarmer's Revenge,
+   Set It and Forget It, Dumpster Diver, Rock Bottom) and player awards (The Franchise, Overachiever, Missing Persons
+   Report, Wasted Talent, Off the Scrap Heap, Special Teams Special). Player awards compare with the player's own
+   average this season (pregame projections aren't archived). Shown on Huddle; "Share" draws a 1080x1350 image
+   (league awards or your week) and opens the phone's share sheet, or downloads it. ===== */
+function awLS(){const G=HX.data,L=S.L;if(!G||!L)return null;return G.LS.find(z=>z.id===L.id)||(L.demo?G.LS.slice().sort((a,b)=>b.season-a.season)[0]:null);}
+function awWeek(x){for(let i=Math.min(x.weeks.length,(x.pws||15)-1)-1;i>=0;i--){const wk=x.weeks[i];if(wk&&wk.filter(m=>m.pts>0).length>=Math.max(2,x.rosters.length/2))return i+1;}return 0;}
+function awData(x){const w=awWeek(x);if(!w)return null;const wk=x.weeks[w-1],slots=slotsOf(x.rpos||[]);
+  const tn=rid=>{const r=x.rosters.find(q=>+q.rid===+rid),u=r&&x.users.find(z=>z.uid===r.uid);return (u&&u.team)||"Team "+rid;};
+  const avg={};x.weeks.slice(0,w-1).forEach(k=>k.forEach(m=>{for(const p of (m.st||[])){const v=+((m.pp||{})[p]);if(v>0)(avg[p]=avg[p]||[]).push(v);}}));
+  const pav=p=>avg[p]&&avg[p].length>=3?avgx(avg[p]):null;
+  const pick=new Set();(x.tx||[]).forEach(t=>{if((t.type==="waiver"||t.type==="free_agent")&&t.wk<=w)Object.entries(t.adds||{}).forEach(([p,r])=>pick.add(p+"|"+r));});
+  const T=wk.filter(m=>m.pts>0).map(m=>{const op=wk.find(o=>o.mid!=null&&o.mid===m.mid&&o.rid!==m.rid),ids=Object.keys(m.pp||{}),opt=optimal(ids,m.pp||{},slots)||m.pts;
+    return {rid:m.rid,n:tn(m.rid),pts:m.pts,op,won:op?m.pts>op.pts:null,m:op?m.pts-op.pts:null,bench:Math.max(0,opt-m.pts),perfect:opt-m.pts<.5,m0:m};});
+  if(!T.length)return null;const sorted=T.map(t=>t.pts).sort((a,b)=>a-b),med=sorted[Math.floor(sorted.length/2)],by=(xs,f)=>xs.slice().sort((a,b)=>f(b)-f(a))[0];
+  const team=[],player=[],add=(arr,k,who,val,sub,rid)=>arr.push({k,who,val,sub,rid});
+  const top=by(T,t=>t.pts);add(team,"The Avalanche",top.n,f1(top.pts),"highest score",top.rid);
+  const rob=T.filter(t=>t.won&&t.pts<med).sort((a,b)=>a.pts-b.pts)[0];if(rob)add(team,"Highway Robbery",rob.n,f1(rob.pts),`won with a below-median score`,rob.rid);
+  const wp=T.filter(t=>t.won===false&&sorted.indexOf(t.pts)>=sorted.length-3).sort((a,b)=>b.pts-a.pts)[0];if(wp)add(team,"Wrong Place, Wrong Time",wp.n,f1(wp.pts),"lost with a top-3 score",wp.rid);
+  const mr=by(T.filter(t=>t.won),t=>t.m);if(mr)add(team,"Mercy Rule",mr.n,"+"+f1(mr.m),`over ${tn(mr.op.rid)}`,mr.rid);
+  const pf=T.filter(t=>t.won).sort((a,b)=>a.m-b.m)[0];if(pf&&pf!==mr)add(team,"Photo Finish",pf.n,"+"+f1(pf.m),`over ${tn(pf.op.rid)}`,pf.rid);
+  const bw=by(T,t=>t.bench);if(bw&&bw.bench>=10)add(team,"Benchwarmer's Revenge",bw.n,f1(bw.bench),"points left on the bench",bw.rid);
+  const pe=T.filter(t=>t.perfect).sort((a,b)=>b.pts-a.pts)[0];if(pe)add(team,"Set It and Forget It",pe.n,"100%","perfect lineup",pe.rid);
+  const S2=[],B2=[];for(const t of T){const st=new Set(t.m0.st||[]);for(const [p,v] of Object.entries(t.m0.pp||{})){const o={p,v:+v||0,t,av:pav(p),pick:pick.has(p+"|"+t.rid)};(st.has(p)?S2:B2).push(o);}}
+  const dd=by(S2.filter(o=>o.pick),o=>o.v);if(dd&&dd.v>=10)add(team,"Dumpster Diver",dd.t.n,f1(dd.v),`${hxName(dd.p)} (pickup)`,dd.t.rid);
+  const rb=T.slice().sort((a,b)=>a.pts-b.pts)[0];add(team,"Rock Bottom",rb.n,f1(rb.pts),"lowest score",rb.rid);
+  const fr=by(S2,o=>o.v);if(fr)add(player,"The Franchise",`${hxPos(fr.p)||""} ${hxName(fr.p)}`,f1(fr.v),fr.t.n,fr.t.rid);
+  const ov=by(S2.filter(o=>o.av!=null),o=>o.v-o.av);if(ov&&ov.v-ov.av>5)add(player,"Overachiever",`${hxPos(ov.p)||""} ${hxName(ov.p)}`,"+"+f1(ov.v-ov.av),`vs his ${f1(ov.av)} average`,ov.t.rid);
+  const mp=S2.filter(o=>o.av!=null&&o.av>=10).sort((a,b)=>(a.v-a.av)-(b.v-b.av))[0];if(mp&&mp.v-mp.av<-6)add(player,"Missing Persons Report",`${hxPos(mp.p)||""} ${hxName(mp.p)}`,f1(mp.v-mp.av),`vs his ${f1(mp.av)} average`,mp.t.rid);
+  const wt=by(B2,o=>o.v);if(wt&&wt.v>=12)add(player,"Wasted Talent",`${hxPos(wt.p)||""} ${hxName(wt.p)}`,f1(wt.v),`on ${wt.t.n}'s bench`,wt.t.rid);
+  const sh=by(S2.filter(o=>o.pick),o=>o.v);if(sh&&sh.v>=12)add(player,"Off the Scrap Heap",`${hxPos(sh.p)||""} ${hxName(sh.p)}`,f1(sh.v),`picked up by ${sh.t.n}`,sh.t.rid);
+  const sp=by(S2.filter(o=>/^(K|DEF)$/.test(hxPos(o.p)||"")),o=>o.v);if(sp&&sp.v>=10)add(player,"Special Teams Special",`${hxPos(sp.p)} ${hxName(sp.p)}`,f1(sp.v),sp.t.n,sp.t.rid);
+  const myRid=(x.rosters.find(q=>q.uid===HX.data.uid||(q.co||[]).includes(HX.data.uid))||{}).rid,me=T.find(t=>+t.rid===+myRid);
+  return {w,season:x.season,lg:x.name,team,player,me,myRid};}
+function awTeamName(x,rid){const r=x.rosters.find(q=>+q.rid===+rid),u=r&&x.users.find(z=>z.uid===r.uid);return (u&&u.team)||"Team "+rid;}
+function awCard(){const x=awLS();if(!x)return "";const A=awData(x);if(!A)return "";const mine=a=>+a.rid===+A.myRid;
+  const row=a=>`<div class="awr${mine(a)?" mine":""}"><div><div class="awk">${esc(a.k)}</div><div class="aww">${esc(a.who)}</div><div class="aws">${esc(a.sub||"")}</div></div><b class="num">${esc(a.val)}</b></div>`;
+  return `<section class="pan awcard"><div class="row sp"><h2>Week ${A.w} awards</h2><span class="tag">${esc(A.lg)}</span></div>
+   ${A.team.map(row).join("")}${A.player.length?`<h3 class="awh">Players</h3>${A.player.map(row).join("")}`:""}
+   <div class="row" style="gap:8px;margin-top:12px"><button class="btn sm" data-awshare="league">Share awards</button>${A.me?`<button class="btn sm ghost" data-awshare="me">Share my week</button>`:""}</div></section>`;}
+vHuddle=(function(prev){return function(){let h=prev();try{if(HX.st==="ready")h+=awCard();}catch(e){console.error(e);}return h;};})(vHuddle);
+/* share image: drawn on a canvas, brand colours, Space Grotesk / Inter (fall back to system fonts) */
+async function awImage(kind){const x=awLS(),A=x&&awData(x);if(!A)return null;const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;const g=c.getContext("2d");
+  try{await document.fonts.ready;}catch(e){}const F1='"Space Grotesk",system-ui,sans-serif',F2='Inter,system-ui,sans-serif';
+  g.fillStyle="#0B0C0E";g.fillRect(0,0,W,H);g.fillStyle="#2A2D33";for(let i=0;i<W;i+=54){g.fillRect(i,H-90,4,18);}g.fillStyle="#FF6B1A";g.fillRect(270,H-90,4,18);
+  const mark=(x0,y0,s)=>{g.fillStyle="#F2F1EC";g.beginPath();g.roundRect(x0+12*s,y0+44.5*s,76*s,11*s,5.5*s);g.fill();g.fillStyle="#FF6B1A";for(const [a,b] of [[20,12.5],[66,12.5],[20,60.5],[66,60.5]]){g.beginPath();g.roundRect(x0+a*s,y0+b*s,14*s,27*s,3*s);g.fill();}};
+  mark(70,64,.7);g.fillStyle="#F2F1EC";g.font=`700 40px ${F1}`;g.fillText("hashmark",150,112);g.fillStyle="#9BA1A9";g.font=`500 26px ${F2}`;g.textAlign="right";g.fillText(`${A.lg} · Week ${A.w}`,W-70,108);g.textAlign="left";
+  let y=230;if(kind==="me"&&A.me){const m=A.me;g.fillStyle="#9BA1A9";g.font=`600 26px ${F2}`;g.fillText("FINAL",70,y);y+=110;g.fillStyle="#F2F1EC";g.font=`700 120px ${F1}`;g.fillText(f1(m.pts),70,y);const sw=g.measureText(f1(m.pts)).width;
+    g.fillStyle="#9BA1A9";g.font=`700 64px ${F1}`;g.fillText(`– ${m.op?f1(m.op.pts):"–"}`,70+sw+24,y);y+=80;
+    g.fillStyle=m.won?"#3DDBB4":"#FF5470";g.font=`700 44px ${F1}`;g.fillText(m.won?"WIN":"LOSS",70,y);if(m.op){g.fillStyle="#9BA1A9";g.font=`500 34px ${F2}`;g.fillText(`${m.won?"over":"to"} ${awTeamName(x,m.op.rid)}`,70+g.measureText(m.won?"WIN  ":"LOSS  ").width+40,y);}y+=90;
+    const tops=Object.entries(m.m0.pp||{}).filter(([p])=>(m.m0.st||[]).includes(p)).sort((a,b)=>b[1]-a[1]).slice(0,3);g.fillStyle="#9BA1A9";g.font=`600 24px ${F2}`;g.fillText("TOP PLAYERS",70,y);y+=16;
+    for(const [p,v] of tops){y+=58;g.fillStyle="#F2F1EC";g.font=`600 36px ${F2}`;g.fillText(`${hxPos(p)||""} ${hxName(p)}`.trim().slice(0,30),70,y);g.textAlign="right";g.font=`700 38px ${F1}`;g.fillText(f1(+v||0),W-70,y);g.textAlign="left";}
+    y+=60;g.fillStyle="#F2F1EC";g.font=`500 34px ${F2}`;
+    const mineAw=[...A.team,...A.player].filter(a=>+a.rid===+A.myRid);for(const a of mineAw.slice(0,5)){y+=20;g.fillStyle="#FF6B1A";g.font=`700 24px ${F2}`;g.fillText(a.k.toUpperCase(),70,y);y+=44;g.fillStyle="#F2F1EC";g.font=`600 34px ${F2}`;g.fillText(`${a.who}  ${a.val}`,70,y);y+=30;}}
+  else{g.fillStyle="#F2F1EC";g.font=`700 64px ${F1}`;g.fillText(`Week ${A.w} awards`,70,y);y+=40;for(const a of [...A.team,...A.player].slice(0,9)){y+=58;g.fillStyle="#FF6B1A";g.font=`700 22px ${F2}`;g.fillText(a.k.toUpperCase(),70,y);g.textAlign="right";g.fillStyle="#F2F1EC";g.font=`700 34px ${F1}`;g.fillText(a.val,W-70,y+30);g.textAlign="left";y+=32;g.font=`500 30px ${F2}`;g.fillText(a.who.slice(0,34),70,y);y+=14;g.fillStyle="#24272D";g.fillRect(70,y+14,W-140,2);}}
+  return await new Promise(r=>c.toBlob(r,"image/png"));}
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest("[data-awshare]");if(!b)return;e.preventDefault();e.stopPropagation();const blob=await awImage(b.dataset.awshare);if(!blob)return;
+  const file=new File([blob],"hashmark-week.png",{type:"image/png"});try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"Hashmark"});return;}}catch(err){if(err&&err.name==="AbortError")return;}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="hashmark-week.png";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);},true);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.awr{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)}.awr:first-of-type{border-top:0}
+.awk{font:700 11px var(--fb);letter-spacing:.1em;text-transform:uppercase;color:var(--acc)}.aww{font-weight:600;font-size:14.5px}.aws{font-size:12.5px;color:var(--muted)}
+.awr b{font-size:16px;white-space:nowrap}.awr.mine .awk::after{content:" · you";color:var(--acc)}.awh{margin:12px 0 2px;font-size:15px}
+</style>`);
+/* /v96 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
