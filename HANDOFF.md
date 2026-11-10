@@ -90,6 +90,11 @@ Built so far:
     were still coloured on some lists (specificity) -> neutral; My teams card showed 0.0-0.0 before kickoff -> the
     projection with "proj", win chance below.
   - Data spot checks: Huddle and Matchup win chance agree; last-week line, Week N awards and The Wire agree.
+- **v101 false release (owner screenshot):** Huddle said "Jordan Love FA was released" from Fox's headline "NFL Week 9
+  All-Stars: Jordan Love Makes The Cut". Old `relStatus` matched release/cut/waive within 30 characters after the name.
+  It fed three places: the FA team label (`tmLabel`), free-agent lists (`freeAgents` filter) and the "Released" move.
+  New `relMatch` needs transaction phrasing; tested on 8 release and 7 non-release headlines (all correct); plus a
+  Sleeper cross-check (still on a team after 36 h -> not released). No player in the current feed is flagged.
 - **Merge to main (2026-11-11):** run 7 saved its crawl: 14,766 team-seasons, 1,311 leagues (2019-25), 2,256
   managers seen in 2+ seasons, so tau2 is now MEASURED: overall .29, all-play .27, lineups .17, scoring .29,
   consistency .24, hardware .20, waivers .22, trades .06, drafts .03. Trades and drafts barely persist season to

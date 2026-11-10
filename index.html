@@ -6586,6 +6586,27 @@ stTiles=(function(prev){return function(D){return prev(D).replace(/trades · avg
 document.head.insertAdjacentHTML("beforeend",`<style>.pgtitle{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px}.pgtitle .eyebrow{flex-basis:100%}.pgbtns{margin-left:0}</style>`);
 document.head.insertAdjacentHTML("beforeend",`<style>html:root body .pos.pos.pos.pos[class]{background:var(--panel2)!important;color:var(--ink)!important;border:1px solid var(--line)!important}</style>`);
 /* /v100 */
+/* ===== v101: release detection without false alarms. "NFL Week 9 All-Stars: Jordan Love Makes The Cut" was read as a
+   release (old rule: release/cut/waive within 30 characters after the name), so Love showed "FA", vanished from
+   nothing but got a "was released" move. Now a headline counts only when it is written as a transaction:
+   - team acts on the player:  "Packers release/cut/waive (QB) Jordan Love"  (name right after the verb, not "Love's")
+   - passive with an auxiliary: "Jordan Love was / has been / is being / gets released|waived|cut"
+   - "Jordan Love released|waived|cut by|from ...", "cut ties with (QB) Jordan Love"
+   and Sleeper must agree: if Sleeper still lists him on an NFL team, a release story only counts for its first 36 hours
+   (Sleeper usually updates the same day). ===== */
+const REL_POS="(?:qb|rb|wr|te|k|lb|ilb|olb|cb|s|fs|ss|de|dt|dl|db|edge|fb|ol|ot|og|g|c|ls|p)";
+function relMatch(name,title){const n=nrm(name),t=nrm(title||"");if(!n||n.split(" ").length<2||!t.includes(n))return false;const e=n.replace(/[-.*+?^${}()|[\]\\]/g,"\\$&");
+  return new RegExp(`\\b(?:release[sd]?|releasing|waive[sd]?|waiving|cuts?|cutting)\\s+(?:${REL_POS}\\s+)?${e}\\b(?!'s|s\\b)`).test(t)
+    ||new RegExp(`\\b${e}\\s+(?:was|has been|have been|is being|gets|got|will be|to be)\\s+(?:officially\\s+)?(?:released|waived|cut)\\b`).test(t)
+    ||new RegExp(`\\b${e}\\s+(?:released|waived|cut)\\s+(?:by|from)\\b`).test(t)
+    ||new RegExp(`\\bcut ties with\\s+(?:${REL_POS}\\s+)?${e}\\b`).test(t);}
+relStatus=function(p){if(!p)return null;const k=p.id+"|"+(NW.built||0)+"|"+((NW.items||[]).length)+"|"+(p.team||"");if(p._rel&&p._rel.k===k)return p._rel.v;let rel=null,sign=0;
+  for(const it of (NW.items||[])){if(!it.ts||Date.now()-it.ts>30*864e5)continue;if(relMatch(p.name,it.t)){if(!rel||it.ts>rel.ts)rel=it;}
+    else if(nrm(it.t||"").includes(nrm(p.name))&&(RX_SIGN.test(it.t)||(it.k||[]).includes("trade")))sign=Math.max(sign,it.ts);}
+  let v=rel&&rel.ts>sign?{ts:rel.ts,t:rel.t,src:rel.src}:null;
+  if(v&&p.team&&p.team!=="FA"&&Date.now()-v.ts>36*3600e3)v=null; /* Sleeper still has him on a team a day and a half later: trust Sleeper */
+  p._rel={k,v};return v;};
+/* /v101 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

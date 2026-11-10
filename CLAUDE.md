@@ -139,6 +139,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    the greeting, awards top 3 + "All awards" sheet, tiles that duplicated tabs removed ("More"); "you" tag in Pylon, no ▲;
    tab names Huddle · News · Gameday and Team "Player news"; search PAGES renamed (+ The Wire, Records, Almanac);
    position chips neutral everywhere (specificity override); My teams card shows projections pregame, not 0.0-0.0.
+   v101 release detection (owner: "Jordan Love was released" came from the headline "Jordan Love Makes The Cut"):
+   `relMatch` only counts transaction phrasing (team verb + name, "was/has been released|waived|cut", "released by/from",
+   "cut ties with"); and if Sleeper still lists the player on a team, a release story only counts for 36 hours.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
