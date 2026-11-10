@@ -5944,6 +5944,96 @@ tradeOpts=(function(prev){return function(L,p,dir){const base=prev(L,p,dir);cons
   out.sort((a,b)=>b.sc-a.sc);const add=[];for(const ty of ["2for2","3for2"]){const x=out.find(o=>o.type===ty);if(x)add.push(x);}
   const all=base.slice(0,4-Math.min(2,add.length)).concat(add.slice(0,2));L._tob[k]=all;return all;};})(tradeOpts);
 
+/* ===== v88: Sleeper-wide manager percentiles. The overall profile (My stats, "All leagues") places the whole career
+   against every team-season in the anonymous archive (data/mgr_ref.json, built by scripts/build_mgr.py), shown as
+   "Top X%". League views keep league-mate ranks. Same per-season definitions as the builder:
+   ap all-play win % · sc points vs league average · cons -CV of weekly points · lu points started / best lineup ·
+   out finish value (title 1, runner-up .45, 3rd .25, 4th .2, playoffs .1) minus the league average · luck.
+   Hygiene: leagues under 8 teams, guillotine, unusual scoring, no head-to-head and short seasons are left out;
+   every metric is clipped to the format bucket's 2.5-97.5% range, z to +-3.
+   Career = championship-weighted, shrunk average of season scores: title seasons count 1.25x; a keeper/dynasty season
+   below average that led to a title in that league within 2 seasons counts 0.5x (rebuild that paid off); the average
+   is pulled toward the middle by k = (1 - tau2) / tau2 seasons, so new accounts start near average. ===== */
+let MREF=null,MREFst="idle";
+async function loadMgrRef(){if(MREFst!=="idle")return;MREFst="loading";
+  try{const r=await fetch("data/mgr_ref.json?t="+Math.floor(Date.now()/864e5));if(!r.ok)throw 0;MREF=await r.json();MREFst="ready";}catch(e){MREFst="error";}
+  if(route()==="stats")render();}
+const mrSizeB=n=>n<=10?"10":n<=12?"12":"14";
+function mrRef(k,m){if(!MREF)return null;const t=k.split("|")[0];for(const kk of [k,t+"|*","*|*"]){const b=MREF.B[kk];if(b&&b[m])return b[m];}return null;}
+function mrZ(k,m,v){const b=mrRef(k,m);if(!b||v==null||!isFinite(v))return null;const x=Math.min(b[3],Math.max(b[2],v));return Math.max(-3,Math.min(3,(x-b[0])/b[1]));}
+function mrFinish(x){if(!x.complete||!x.bracket||!x.bracket.length)return null;const fin={},po=new Set(),V=MREF.VAL||{1:1,2:.45,3:.25,4:.2},P=MREF.PO_VAL??.1;
+  for(const b of x.bracket){for(const t of [b.t1,b.t2])if(typeof t==="number")po.add(t);if(b.p&&b.w!=null){fin[+b.w]=b.p;if(b.l!=null)fin[+b.l]=b.p+1;}}
+  if(!Object.values(fin).includes(1))return null;const o={};for(const r of x.rosters)o[r.rid]=V[fin[r.rid]]??(po.has(r.rid)?P:0);return o;}
+/* one row per league-season the manager played; null when the season can't be compared fairly (reason in .why) */
+function mrSeasons(G,uid){const out=[];if(!MREF)return out;
+  for(const x of G.LS){const mine=x.rosters.filter(r=>r.uid===uid||(r.co||[]).includes(uid)).map(r=>r.rid);if(!mine.length)continue;
+    const rid=mine[0],base={s:x.season,lg:x.name,chain:x.chain,type:x.type||0,size:x.size,live:!x.complete};
+    const skip=why=>out.push(Object.assign(base,{skip:why}));
+    if(x.gl){skip("guillotine");continue;}if(x.size<8){skip("under 8 teams");continue;}
+    const n=x.size,reg=x.weeks.slice(0,Math.max(0,(x.pws||15)-1)).filter(wk=>wk.filter(m=>m.pts>0).length>=n/2);
+    const allp=reg.flatMap(wk=>wk.map(m=>m.pts).filter(v=>v>0));const avg=allp.length?avgx(allp):0;
+    if(x.complete&&reg.length<10){skip("short season");continue;}if(allp.length&&(avg<40||avg>260)){skip("unusual scoring");continue;}
+    if(reg.flatMap(wk=>wk.filter(m=>m.pts>0&&m.mid!=null)).length<allp.length*.8){skip("no head-to-head");continue;}
+    let ap=0,g=0,w=0,zero=0;const pts=[],rel=[];
+    for(const wk of reg){const sc=wk.map(m=>m.pts).filter(v=>v>0),lm=avgx(sc),me=wk.find(m=>+m.rid===+rid);if(!me)continue;if(!(me.pts>0)){zero++;continue;}if(me.mid==null)continue;
+      const op=wk.find(m=>m.mid===me.mid&&+m.rid!==+rid);if(!op)continue;const oth=sc.slice();oth.splice(oth.indexOf(me.pts),1);
+      ap+=(oth.filter(v=>v<me.pts).length+.5*oth.filter(v=>v===me.pts).length)/Math.max(1,oth.length);g++;w+=me.pts>op.pts?1:me.pts===op.pts?.5:0;pts.push(me.pts);rel.push(me.pts/lm-1);}
+    if(zero>=2){skip("team inactive");continue;}if(g<(x.complete?8:3)){skip(x.complete?"under 8 games":"too early");continue;}
+    const k=`${x.type||0}|${mrSizeB(n)}`,mean=avgx(pts);
+    const r=Object.assign(base,{k,g,ap:ap/g,sc:avgx(rel),cons:mean?-(sdv(pts)/mean):null,luck:(w-ap)/g,wins:w});
+    const sc2=((G.M[uid]||{}).scores||[]).filter(q=>q.s===x.season&&q.lg===x.chain);if(sc2.length>=6){const a=sc2.reduce((s,q)=>s+q.v,0),b=sc2.reduce((s,q)=>s+q.v+(q.bn||0),0);if(b>0)r.lu=a/b;}
+    const fv=mrFinish(x);if(fv){const fm=avgx(Object.values(fv));r.out=(fv[rid]||0)-fm;r.fin=fv[rid]||0;r.champ=fv[rid]===1;}
+    for(const m of ["ap","sc","cons","lu","out"])r["z_"+m]=mrZ(k,m,r[m]);
+    const parts=["ap"].concat(r.z_lu!=null?["lu"]:[]).concat(r.z_out!=null?["out"]:[]),set=parts.length===3?"full":parts.includes("out")?"nolu":parts.includes("lu")?"perf":"ap";
+    const W=MREF.W,sd=MREF.S_SD[set]||1;r.S=parts.reduce((s,p)=>s+W[p]*r["z_"+p],0)/parts.reduce((s,p)=>s+W[p],0)/sd;
+    r.wt=x.complete?1:Math.min(1,g/13);out.push(r);}
+  // championship weighting: title seasons count more; a below-average keeper/dynasty season that led to a title within 2 seasons counts less
+  for(const r of out){if(r.skip)continue;if(r.champ)r.wt*=1.25,r.why="title";
+    else if(r.type>0&&r.S<0&&out.some(q=>!q.skip&&q.chain===r.chain&&q.champ&&q.s>r.s&&q.s<=r.s+2))r.wt*=.5,r.why="rebuild that paid off";}
+  return out;}
+function mrCareer(G,uid){if(!MREF||!G)return null;const rows=mrSeasons(G,uid),ok=rows.filter(r=>!r.skip);if(!ok.length)return {rows,ok,none:1};
+  const T=MREF.tau2,shr=(key,zk)=>{const xs=ok.filter(r=>r[zk]!=null);const W=xs.reduce((s,r)=>s+r.wt,0);if(!W)return null;const t2=T[key]||.25,kk=(1-t2)/t2;
+    const th=xs.reduce((s,r)=>s+r.wt*r[zk],0)/(W+kk);return {p:100*phi(th/Math.sqrt(t2)),n:W};};
+  const effN=ok.reduce((s,r)=>s+r.wt,0);
+  return {rows,ok,effN,prov:effN<2,all:shr("S","S"),ap:shr("ap","z_ap"),lu:shr("lu","z_lu"),sc:shr("sc","z_sc"),cons:shr("cons","z_cons"),out:shr("out","z_out"),
+    luck:avgx(ok.map(r=>r.luck*r.g)),titles:ok.filter(r=>r.champ).length,done:ok.filter(r=>!r.live).length};}
+/* "Top 9%" in the upper half, "Bottom 30%" in the lower half, "Average" in the middle; "~" while provisional */
+function topTxt(p,prov){if(p==null)return "–";const t=prov?"~":"";if(p>=50.5)return `Top ${t}${Math.max(1,Math.round(100-p))}%`;if(p<=49.5)return `Bottom ${t}${Math.max(1,Math.round(p))}%`;return "Average";}
+document.head.insertAdjacentHTML("beforeend",`<style>.mrk .rkr{grid-template-columns:minmax(0,8.5em) minmax(0,1fr) auto}.mrk .rkr b{white-space:nowrap;min-width:5.6em}
+.mrd{display:flex;flex-direction:column;gap:12px}.mrd .rkr{grid-template-columns:minmax(0,1fr) auto;row-gap:5px}.mrd .rkr .bar{grid-column:1/-1;grid-row:2}.mrd .rkr em{grid-column:1/-1;font:400 12px var(--fb);color:var(--muted);font-style:normal}
+.mrs{display:flex;flex-direction:column}.mrs>div{padding:10px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px}.mrs .sub{margin:0}</style>`);
+const mrCls=p=>p==null?"":p>=75?"hi":p<=25?"lo":"";
+const MR_SK=[["ap","Weekly results","All-play win %: the share of the league you outscore each week"],["out","Championships","Finishes vs the league's average, titles weighted most"],["lu","Lineups","Points started vs your best possible lineup"],["sc","Scoring","Points vs the league average"],["cons","Consistency","How steady your weekly scores are"]];
+function mrPanel(G){if(MREFst==="idle")setTimeout(loadMgrRef,0);if(!MREF)return MREFst==="error"?"":`<section class="pan mt"><p class="sub">Loading Sleeper-wide comparison…</p></section>`;
+  const C=mrCareer(G,G.uid);if(!C||C.none)return `<section class="pan mt"><div class="eyebrow">Sleeper-wide</div><p class="sub">No season yet that can be compared fairly (8+ teams, head-to-head, standard-range scoring).</p></section>`;
+  const N=MREF.n||{};
+  return `<section class="pan mt mrpan" data-mr="1" role="button" tabindex="0" aria-label="Sleeper-wide ranking details" style="cursor:pointer">
+   <div class="row sp"><div class="eyebrow">Sleeper-wide</div>${C.prov?`<span class="tag">Provisional · ${f1(C.effN)} seasons</span>`:`<span class="tag">${C.done} seasons</span>`}</div>
+   <div class="hxlab" style="font:800 clamp(28px,8vw,40px)/1.05 var(--fd);margin-top:6px">${topTxt(C.all&&C.all.p,C.prov)}</div>
+   <p class="sub" style="margin:2px 0 0">of Sleeper managers · ${(N.team_seasons||0).toLocaleString()} team-seasons in ${(N.leagues||0).toLocaleString()} leagues</p>
+   <div class="rkb mrk mt">${MR_SK.map(([k,n])=>{const v=C[k];return `<div class="rkr"><span>${n}</span><span class="bar"><i class="${mrCls(v&&v.p)}" style="width:${v?Math.max(3,Math.round(v.p)):0}%"></i></span><b class="num">${v?topTxt(v.p,C.prov):"–"}</b></div>`;}).join("")}</div>
+   <p class="sub mt" style="margin-bottom:0">Luck: ${C.luck>=0?"+":""}${f1(C.luck)} wins a season vs all-play · not part of the ranking · tap for the breakdown</p></section>`;}
+function mrOpen(){const G=HX.data;const C=mrCareer(G,G&&G.uid);if(!C||C.none)return;const N=MREF.n||{},ex=MREF.excluded||{};
+  const zc=v=>{if(v==null)return "–";const t=Math.abs(v)<.05?"0.0":(v>0?"+":"−")+Math.abs(v).toFixed(1);return `<span class="${v>=.5?"good":v<=-.5?"bad":""}">${t}</span>`;};
+  const rows=C.rows.slice().sort((a,b)=>b.s-a.s||String(a.lg).localeCompare(String(b.lg)));
+  const ty=t=>["Redraft","Keeper","Dynasty"][t]||"Redraft";
+  openSheet("Sleeper-wide",`<div class="sdbody"><h2 class="sdt1">${topTxt(C.all.p,C.prov)} of Sleeper managers</h2>
+   <div class="eyebrow">${C.ok.length} league-season${C.ok.length===1?"":"s"} compared${C.prov?" · provisional":""}</div>
+   <div class="rkb mrd mt">${MR_SK.map(([k,n,d])=>{const v=C[k];return `<div class="rkr"><span>${n}</span><b class="num">${v?topTxt(v.p,C.prov):"–"}</b><span class="bar"><i class="${mrCls(v&&v.p)}" style="width:${v?Math.max(3,Math.round(v.p)):0}%"></i></span><em>${d}</em></div>`;}).join("")}</div>
+   <h3 class="mt">Season by season</h3><p class="sub" style="margin-top:2px">Season score in standard deviations from the average Sleeper team (0 = average).</p>
+   <div class="mrs">${rows.map(r=>r.skip?`<div><span>${r.s} · ${esc(r.lg)}</span><span class="sub">Left out</span><span class="sub">${r.size}-team ${ty(r.type)} · ${esc(r.skip)}</span></div>`:
+     `<div><span>${r.s} · ${esc(r.lg)}${r.live?" · live":""}</span><b class="num">${zc(r.S)}</b><span class="sub">${r.size}-team ${ty(r.type)} · all-play ${pcx(r.ap)} · ${r.out==null?"season in progress":r.champ?"Champion":r.fin>=.45?"Runner-up":r.fin>=.2?"Semifinal":r.fin>0?"Playoffs":"Missed playoffs"}${r.lu==null?"":` · lineups ${pcx(r.lu)}`}</span><span class="sub">${r.wt===1?"":`counts ${r.wt.toFixed(2)}×${r.why?" · "+r.why:" · partial season"}`}</span></div>`).join("")}</div>
+   <h3 class="mt">How it works</h3><ul class="why">
+    <li>Each season gets a score from results (all-play win %, ${Math.round(MREF.W.ap*100)}%), championship finish (${Math.round(MREF.W.out*100)}%) and lineup efficiency (${Math.round(MREF.W.lu*100)}%), each compared with teams in the same format (league type and size).</li>
+    <li>Titles weigh most: a title is worth the same as a season far above average, title seasons count 1.25×, and a below-average keeper or dynasty season that led to a title within 2 seasons counts half.</li>
+    <li>New accounts start near average: your seasons are pulled toward the middle by about ${f1((1-MREF.tau2.S)/MREF.tau2.S)} seasons' worth of average until enough history builds up. Under 2 seasons is marked provisional.</li>
+    <li>Outliers are removed before comparing: ${Object.entries(ex).map(([k,v])=>`${v} ${esc(k)}`).join(", ")}. Every metric is capped at the 2.5th and 97.5th percentile of its format.</li>
+    <li>Reference: ${(N.team_seasons||0).toLocaleString()} team-seasons, ${(N.leagues||0).toLocaleString()} Sleeper leagues, seasons ${(N.seasons||[]).join(", ")}. Lineup efficiency from ${(N.with_lineups||0).toLocaleString()} team-seasons with exact weekly rosters. ${MREF.tau2_src==="measured"?`Career persistence measured on ${(N.managers_multi_season||0).toLocaleString()} managers seen in 2+ seasons.`:"Career persistence is a conservative estimate until the archive has enough repeat managers; it is measured automatically once it does."}</li>
+    <li>League views (pick a league above) rank you against that league's managers instead.</li></ul></div>`);
+  $("#sheet").classList.add("skpop");}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-mr]");if(!b||route()!=="stats")return;e.preventDefault();e.stopPropagation();mrOpen();},true);
+vStats=(function(prev){return function(){const h=prev();if(HX.st!=="ready"||!HX.data||statsScope()!=="all")return h;
+  const i=h.indexOf('<section class="pan hxhero');if(i<0)return h;const j=h.indexOf("</section>",i)+10;let p="";try{p=mrPanel(HX.data);}catch(e){console.error(e);}return h.slice(0,j)+p+h.slice(j);};})(vStats);
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

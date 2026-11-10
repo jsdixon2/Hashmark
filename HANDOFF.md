@@ -6,6 +6,31 @@ Newest session at the top.
 
 ---
 
+## 2026-11-10: v88, Sleeper-wide manager percentiles
+- **Owner asked:** the overall profile should compare a manager's whole career with every Sleeper manager studied, shown
+  as "Top X%", not just against league mates; league profiles stay league-specific. Weight championships so rebuilding
+  seasons are balanced; new accounts start near average; drop samples too small to use; outliers must not distort it.
+- **Reference (`scripts/build_mgr.py` -> `data/mgr_ref.json`, 3.5 KB):** from `bt/leagues.json.gz` (+ `bt/rosters.json.gz`
+  and `bt/sleeper_stats.json.gz` for lineup efficiency). 9,357 team-seasons in 828 leagues (2021-25, finished seasons).
+  - Left out: 195 unfinished seasons, 13 leagues under 8 teams, 11 guillotine, 6 unusual scoring (avg team score outside
+    40-260), 3 with under 10 scored weeks, 4 dead leagues (25%+ abandoned teams), 13 abandoned teams.
+  - Per format bucket (league type x size 10/12/14; under 150 team-seasons falls back to type, then all): winsorized
+    mean/sd and the 2.5/97.5% clip bounds for ap, sc, cons, lu, out, luck.
+  - Lineup efficiency rebuilt from exact rosters with league scoring on archived stat lines (K/DST Sleeper standard);
+    a week counts only when rebuilt starter points match Sleeper's score within 8% (3,716 team-seasons qualify).
+    Taxi leagues: players a team never started all season are left out, like the app's v62 rule.
+- **Score:** season = (.45 z_allplay + .40 z_finish + .15 z_lineups) / sd of that composite (per set of available parts).
+  Finish value: title 1, runner-up .45, 3rd .25, 4th .2, other playoff team .1, minus the league average.
+  Career = sum(w·S) / (sum(w) + k), k = (1 - tau2) / tau2; Top % from Phi(career / sqrt(tau2)).
+  Weights: finished season 1, live season games/13, title season x1.25, below-average keeper/dynasty season followed
+  by a title in that league within 2 seasons x0.5. Under 2 effective seasons = provisional ("Top ~10%").
+- **Limitation (being fixed):** the archive had no owner ids, so career persistence (tau2) is assumed (.25 composite).
+  `scripts/fetch_leagues.py` now stores hashed owner ids and backfills old leagues; once 300+ owners appear in 2+
+  seasons, `build_mgr.py` measures tau2 itself (`tau2_src: "measured"`). This needs the leagues workflow to run on main.
+- **To check later:** the app's lineup efficiency (Sleeper players_points) vs the archive's rebuilt version (stat lines):
+  compare means once owner ids let us match the owner's own leagues. Waivers/trades/drafting are not Sleeper-wide yet
+  (their app definitions need the value model); they stay ranked against league mates.
+
 ## 2026-11-09: v70, start/sit advice respects locks (on main)
 - **Owner's report:** "Start Quentin Johnston over DeMario Douglas" appeared while both were LIVE.
 - **Cause:**

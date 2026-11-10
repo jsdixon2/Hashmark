@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """Anonymous fantasy-matchup archive for model backtests: bt/leagues.json.gz.
-Starts from one Sleeper user's leagues and follows leaguemates to their other public leagues (seasons 2021+),
+Starts from one Sleeper user's leagues and follows leaguemates to their other public leagues (seasons 2019+),
 up to MAX_LEAGUES league-seasons. Saves only numbers: league settings, weekly scores, starters (NFL player ids),
-standings and playoff results. League ids are hashed; no usernames, team names or league names are stored."""
+standings and playoff results. League ids are hashed; no usernames, team names or league names are stored.
+v88: each roster also stores a hashed owner id (and the hashed previous-season league id), so the same anonymous
+manager can be followed across seasons for Sleeper-wide career percentiles (scripts/build_mgr.py). Leagues archived
+before v88 are backfilled with one rosters call when the crawl passes them again."""
 import gzip, hashlib, json, os, time, urllib.request
 from collections import deque
 
 API = "https://api.sleeper.app/v1"
 SEED = os.environ.get("SEED_USER", "jackdixon")
 MAX_LEAGUES = int(os.environ.get("MAX_LEAGUES", "700"))
-SEASONS = [2021, 2022, 2023, 2024, 2025, 2026]
+SEASONS = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
 OUT = "bt/leagues.json.gz"
 CALLS = [0]
 
@@ -32,6 +35,15 @@ def get(path):
 
 def hid(x):
     return hashlib.sha1(("hm:" + str(x)).encode()).hexdigest()[:12]
+
+
+def uhash(x):
+    return hashlib.sha1(("hmu:" + str(x)).encode()).hexdigest()[:12] if x else None
+
+
+def rost_rows(rosters):
+    return [[r.get("roster_id"), (r.get("settings") or {}).get("wins"), (r.get("settings") or {}).get("losses"), (r.get("settings") or {}).get("ties"),
+             (r.get("settings") or {}).get("fpts"), uhash(r.get("owner_id")), [uhash(c) for c in (r.get("co_owners") or []) if c]] for r in rosters]
 
 
 def league_pack(lg):
@@ -72,8 +84,7 @@ def league_pack(lg):
     return {"id": hid(lid), "season": int(lg.get("season")), "status": lg.get("status"), "type": st.get("type"), "n": st.get("num_teams") or len(rosters),
             "pws": pws, "pteams": st.get("playoff_teams"), "lws": st.get("last_scored_leg") or st.get("leg"), "pos": lg.get("roster_positions"),
             "sc": keep_sc, "guillotine": 1 if (st.get("type") == 3 or "guillotine" in (lg.get("name") or "").lower() or "chopped" in (lg.get("name") or "").lower()) else 0,
-            "rost": [[r.get("roster_id"), (r.get("settings") or {}).get("wins"), (r.get("settings") or {}).get("losses"), (r.get("settings") or {}).get("ties"),
-                      (r.get("settings") or {}).get("fpts")] for r in rosters],
+            "rost": rost_rows(rosters), "own": 1, "prev": hid(lg["previous_league_id"]) if lg.get("previous_league_id") else None,
             "weeks": weeks, "tx": tx, "draft": dr, "bracket": [[b.get("r"), b.get("m"), b.get("t1"), b.get("t2"), b.get("w"), b.get("l"), b.get("p")] for b in br]}
 
 
@@ -87,7 +98,9 @@ def main():
     walked = set()
     live = {k for k, v in old["leagues"].items() if v.get("status") == "in_season" or "tx" not in v}
     cap_new = max(0, MAX_LEAGUES - len(old["leagues"])) + int(os.environ.get("GROW", "120"))
-    while q and (added < cap_new or refreshed < len(live)):
+    need = {k for k, v in old["leagues"].items() if not v.get("own")}  # archived before owner ids were kept
+    filled = 0
+    while q and (added < cap_new or refreshed < len(live) or need):
         uid = q.popleft()
         for s in SEASONS:
             for lg in get(f"/user/{uid}/leagues/nfl/{s}") or []:
@@ -98,6 +111,13 @@ def main():
                     old.setdefault("_ref", set()).add(h); pk = league_pack(lg)
                     if pk and pk["weeks"]: old["leagues"][h] = pk
                     refreshed += 1
+                if h in need and h in old["leagues"]:
+                    ro = get(f"/league/{lid}/rosters")
+                    if ro:
+                        L0 = old["leagues"][h]; L0["rost"] = rost_rows(ro); L0["own"] = 1
+                        L0["prev"] = hid(lg["previous_league_id"]) if lg.get("previous_league_id") else None
+                        filled += 1
+                    need.discard(h)
                 # leaguemates feed the crawl (also through leagues already saved, so later runs reach the same circle)
                 if h not in walked:
                     walked.add(h)
@@ -110,13 +130,13 @@ def main():
                 if pk and pk["weeks"]:
                     old["leagues"][pk["id"]] = pk; added += 1
                     if added % 25 == 0: print(f"{len(old['leagues'])} leagues, {CALLS[0]} calls")
-                if added >= cap_new and refreshed >= len(live): break
-            if added >= cap_new and refreshed >= len(live): break
+                if added >= cap_new and refreshed >= len(live) and not need: break
+            if added >= cap_new and refreshed >= len(live) and not need: break
     old.pop("_ref", None); old["seen"] = sorted(done)
     old["built"] = time.strftime("%Y-%m-%dT%H:%MZ", time.gmtime())
     os.makedirs("bt", exist_ok=True)
     with gzip.open(OUT, "wt") as f: json.dump(old, f, separators=(",", ":"))
-    print(f"saved {len(old['leagues'])} league-seasons ({added} new, {refreshed} in-season refreshed), {CALLS[0]} API calls")
+    print(f"saved {len(old['leagues'])} league-seasons ({added} new, {refreshed} in-season refreshed, {filled} owner ids backfilled, {len(need)} not reached), {CALLS[0]} API calls")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,8 @@
 name: league-archive
 on:
   push:
-    paths: ["scripts/fetch_leagues.py", ".github/workflows/leagues.yml"]
+    branches: [main]
+    paths: ["scripts/fetch_leagues.py", "scripts/build_mgr.py", ".github/workflows/leagues.yml"]
   schedule: [{cron: "23 11 * * 2"}]
   workflow_dispatch: {}
 permissions: {contents: write}
@@ -13,11 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: python3 scripts/fetch_leagues.py
-        env: {MAX_LEAGUES: "700"}
+        env: {MAX_LEAGUES: "1500", GROW: "250"}
       - run: python3 scripts/build_calib.py
+      - run: python3 scripts/build_mgr.py
       - run: |
           git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
-          git add bt/
+          git add bt/ data/mgr_ref.json
           git diff --staged --quiet && exit 0
-          git commit -m "backtest archive: anonymous league matchups"
+          git commit -m "backtest archive: anonymous league matchups + manager reference"
           for i in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep 5; done

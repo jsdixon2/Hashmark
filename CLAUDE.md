@@ -107,6 +107,14 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    v87: bigger deals (`bigDeals` in the finder; `tradeOpts` wrapper on cards): 2-for-2, 3-for-2, 2-for-3 from each side's
    top 7, shared `dealEval`, higher bar (redraft +1.5 pts/wk; keeper/dynasty +5% value, and non-rebuilders' lineup
    ≥ -2 pts/wk); redraft big deals must not lower your title odds. New finder filter tabs.
+   v88: Sleeper-wide manager percentiles on My stats ("All leagues"): "Top X%" / "Bottom X%" / "Average" (`topTxt`),
+   `mrPanel` + `mrOpen` breakdown sheet, `mrSeasons`/`mrCareer`. Reference `data/mgr_ref.json` from
+   `scripts/build_mgr.py` (run by leagues.yml after the crawl): 9,357 team-seasons / 828 leagues after outlier filters.
+   Season score = all-play z .45 + finish value z .40 + lineup efficiency z .15, per format bucket (type x size, min 150).
+   Career: title seasons 1.25x, below-average keeper/dynasty season before a title within 2 seasons 0.5x, shrunk toward
+   average by k=(1-tau2)/tau2 (tau2 assumed .25 until the archive has 300+ repeat owners, then measured).
+   Crawler now stores hashed owner ids (`uhash`, "hmu:" salt) + hashed previous league id; backfills old leagues;
+   seasons 2019+; leagues.yml MAX 1500 / GROW 250, push trigger limited to main. League views keep league-mate ranks.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
