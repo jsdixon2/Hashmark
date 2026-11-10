@@ -6426,6 +6426,44 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .wtop .wst{background:none;border:0;padding:0;margin:0}.wtop{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;background:var(--panel);border-radius:var(--r,20px);padding:14px 16px;margin-bottom:12px}
 </style>`);
 /* /v97 */
+/* ===== v98: Notifications. Settings › Notifications: game-changers (win chance swings 15+ points), urgent roster
+   (a starter out or an empty slot); quiet hours (default
+   11 pm-8 am; urgent roster notices still come on game days); batching (one alert per league per 10 min unless the
+   swing is 25+). Alerts fire while Hashmark is open or in the background on the phone (service worker
+   showNotification). Alerts with the app fully closed need a push server (not built: no backend yet). ===== */
+const NF_DEF={swing:true,urgent:true,waivers:true,trades:true,wire:false,qs:"23:00",qe:"08:00"};
+const nfGet=()=>{try{return Object.assign({},NF_DEF,JSON.parse(LS.get("hm_notif")||"{}"));}catch(e){return {...NF_DEF};}};
+const nfSet=o=>LS.set("hm_notif",JSON.stringify(o));
+function nfQuiet(o){const now=new Date(),m=now.getHours()*60+now.getMinutes(),t=s=>{const [h,mm]=s.split(":").map(Number);return h*60+mm;},a=t(o.qs),b=t(o.qe);return a>b?(m>=a||m<b):(m>=a&&m<b);}
+async function nfSend(title,body,tag){try{if(!("Notification" in window)||Notification.permission!=="granted")return;const opt={body,tag,icon:"icon-192.png",badge:"icon-192.png"};
+  const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();if(reg&&reg.showNotification)await reg.showNotification(title,opt);else new Notification(title,opt);}catch(e){}}
+const NF_ST=(()=>{try{return JSON.parse(sessionStorage.getItem("hm_nfst")||"{}");}catch(e){return {};}})();const nfSave=()=>{try{sessionStorage.setItem("hm_nfst",JSON.stringify(NF_ST));}catch(e){}};
+function nfCheck(){const o=nfGet();if(S.mode!=="live")return;const quiet=nfQuiet(o),gameDay=[0,1,4].includes(new Date().getDay()),now=Date.now();
+  if(o.swing&&!quiet){for(const {L,d} of sums()){if(!d||!d.ok||!d.live)continue;const k="wp_"+L.id,last=NF_ST[k];if(last==null){NF_ST[k]={p:d.wp,t:now};continue;}
+    const dp=Math.abs(d.wp-last.p);if(dp>=.15&&(now-last.t>=600000||dp>=.25)){nfSend(`${pc(last.p)} → ${pc(d.wp)} win chance`,`${L.name}: ${f1(d.as)}–${f1(d.bs)} vs ${d.b}`,"wp"+L.id);NF_ST[k]={p:d.wp,t:now};}}}
+  if(o.urgent&&(!quiet||gameDay)){let mv=[];try{mergedMoves();mv=mergedMoves().filter(m=>/Urgent/.test(m.k));}catch(e){}const day=new Date().toDateString();
+    for(const m of mv.slice(0,3)){const k="u_"+day+"_"+m.t;if(NF_ST[k])continue;NF_ST[k]=1;nfSend(m.t,`${m.s||""}`.slice(0,140),"u"+m.t);}}
+  nfSave();}
+refreshLive=(function(prev){return async function(...a){const r=await prev(...a);try{nfCheck();}catch(e){}return r;};})(refreshLive);
+setInterval(()=>{try{nfCheck();}catch(e){}},120000);
+openDrawer=(function(prev){return function(){prev();try{const B=$("#sheetB"),host=B&&B.querySelector(".pfl");if(!host||B.querySelector(".pfnotif"))return;const o=nfGet(),perm=("Notification" in window)?Notification.permission:"unsupported";
+  const tg=(k,n,d)=>`<button class="pfto" data-nf="${k}"><span><b>${n}</b><em>${d}</em></span><span class="sw${o[k]?" on":""}"><i></i></span></button>`;
+  host.insertAdjacentHTML("beforeend",`<div class="pfs pfnotif"><div class="eyebrow">Notifications</div>
+   ${perm==="granted"?"":perm==="unsupported"?`<p class="sub">This browser can't show notifications. On iPhone, add Hashmark to your home screen first.</p>`:`<button class="btn sm" data-nfallow>Allow notifications</button>`}
+   ${tg("swing","Game-changers","Plays that move your win chance 15+ points")}${tg("urgent","Urgent roster","A starter ruled out, or an empty lineup slot")}
+   <div class="pfqh"><span><b>Quiet hours</b><em>Urgent roster notices still come on game days</em></span><span><input type="time" data-nfq="qs" value="${o.qs}"> – <input type="time" data-nfq="qe" value="${o.qe}"></span></div>
+   <p class="sub" style="margin:6px 0 0">Alerts arrive while Hashmark is open or running in the background, at most one per league every 10 minutes unless the swing is 25+ points. Waiver results, trades and The Wire's daily edition need push alerts, coming with the Hashmark server.</p></div>`);}catch(e){console.error(e);}};})(openDrawer);
+document.addEventListener("click",async e=>{const t=e.target.closest&&e.target.closest("[data-nf],[data-nfallow]");if(!t)return;e.preventDefault();e.stopPropagation();
+  if(t.hasAttribute("data-nfallow")){try{await Notification.requestPermission();}catch(err){}closeSheet();openDrawer();return;}
+  const o=nfGet(),k=t.dataset.nf;o[k]=!o[k];nfSet(o);t.querySelector(".sw").classList.toggle("on",o[k]);},true);
+document.addEventListener("change",e=>{const t=e.target.closest&&e.target.closest("[data-nfq]");if(!t)return;const o=nfGet();o[t.dataset.nfq]=t.value||NF_DEF[t.dataset.nfq];nfSet(o);},true);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.pfto,.pfqh{all:unset;box-sizing:border-box;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:9px 2px;border-top:1px solid var(--line)}
+.pfto b,.pfqh b{display:block;font-size:14px}.pfto em,.pfqh em{display:block;font-style:normal;font-size:12px;color:var(--muted)}
+.sw{width:40px;height:24px;border-radius:12px;background:var(--line);position:relative;flex:none;transition:background .15s}.sw i{position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}.sw.on{background:var(--acc)}.sw.on i{left:18px}
+.pfqh input{background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:4px 6px;font:500 13px var(--fb)}
+</style>`);
+/* /v98 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

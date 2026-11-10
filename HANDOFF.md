@@ -36,6 +36,36 @@ Built so far:
   card from `mergedMoves()[0]`, this week's matchups across leagues (`sums()`), then the old tiles under "Everything".
 - **v92 Locker:** `STB.records` (high/low score, biggest win/loss, streaks per league chain, best season, playoff
   record) and `STB.almanac` (champions by year, all-time table, biggest blowouts) + tiles; sheets titled Locker.
+- **v93 Sleeper-wide waivers / trades / drafts** (owner: "yes please" to Sleeper-wide skills). New metrics in
+  `scripts/build_mgr.py` `trans_metrics` and the app's `mrTrans`, same definitions:
+  - `wv` pickup quality: points per started week of your waiver/FA pickups minus the league's average starter slot
+    (needs 4+ started weeks). First tried volume (pickup points per game): correlation with all-play win % was 0.02,
+    because weak teams start more pickups; quality correlates 0.26, so quality ships.
+  - `tr` trades: per game, points received players scored in your lineup minus points the players you gave scored in
+    theirs (0.20 vs all-play). Picks are not valued (dynasty trades for picks look like losses in year one).
+  - `dr` drafts: per pick, points the pick scored in your lineup that season minus the average of the 12 picks around
+    it, keepers excluded (0.07 vs all-play; dynasty rookie drafts are noisy in year one).
+  - Shown on the Sleeper-wide card and as "Top X% on Sleeper" on the Locker tiles. NOT in the overall score
+    (results already contain them). tau2 assumed (.20/.10/.10) until owner ids let build_mgr measure it.
+- **v94 Scouting report:** button under the matchup page -> sheet: lifetime H2H, streak, playoff meetings, last
+  meeting; this season's bench points left (league rank), starters who scored 0, waiver claims (rank), trades vs
+  league average, close games; last 4 weeks vs average, luck; a "This week" note when an opponent's player is
+  listed Out/Doubtful/Questionable. Needs the Locker's history (hxLoad starts on demand).
+- **v95 Voices:** settings (profile sheet) radio list; Huddle "Last week" lines: rivalry first win (after 3+ losses),
+  personal-record score, two straight close losses, 35+ blowout, 25+ bench points, else the result. Voice adds one
+  line; Just the Numbers adds nothing. HX history now auto-loads 2.5 s after opening Huddle in live mode.
+- **v96 Awards + share:** last finished week of the viewed league; player awards compare with the player's own season
+  average (no archived pregame projections; Vulture / Garbage Time Hero not built: no TD or quarter data).
+  Share draws a 1080x1350 PNG (league awards or your week) -> share sheet or download.
+- **v97 The Wire:** Team › The Wire (+ top story on Huddle): upsets (pregame chance < 30%), 40+ blowouts, photo
+  finishes (< 3), trades and big FAAB bids from the last 2 weeks, unbeaten / winless / 3+ streaks with track-record
+  notes (league-mate skill ranks), playoff race (clinched > 99.5%, bubble 25-75%, out < 0.5%).
+- **v98 Notifications:** Game-changers (15+ point swing in win chance, batched 10 min unless 25+) and Urgent roster;
+  quiet hours (default 11 pm-8 am; urgent still on Thu/Sun/Mon). Fires while the app is open/backgrounded
+  (service worker `showNotification`). Waiver results, trades and The Wire daily need a push server: not built.
+- **QA:** every route (24) in dark + light at 360 px: no console errors, no horizontal overflow (Playwright, demo).
+- **Demo caveat:** the demo's current league and its history use different ids/teams, so Scouting/Awards/Wire fall
+  back to the demo history's latest season; real Sleeper leagues match by league id.
 - Block sources in `.build/v90.js` ...; spliced with a helper that delimits each block with `/* /vNN */`.
 
 ## 2026-11-10: v88, Sleeper-wide manager percentiles

@@ -120,6 +120,14 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    hardware .45 / lineups .15; title seasons 1.5x, points-title seasons 1.15x; once a career has a title or points title,
    below-average seasons count .75x; rebuild-before-title .5x. Panel shows letter grade (SKG), titles, finals, points
    titles, playoff record.
+   v90-v98 rebrand + rebuild (see HANDOFF.md for the brand decisions): v90 Pylon palette/fonts/P2 mark/icons, dock
+   Huddle·Team·GM·Scout, `#menuBtn` -> Locker (route `stats`); v91 Huddle (`vHuddle`, `hdPhase`, `hdMove`, `hdMatchups`);
+   v92 Locker Records/Almanac (`STB.records`, `STB.almanac`); v93 Sleeper-wide waivers/trades/drafts (`mrTrans`, ref
+   metrics wv/tr/dr from `trans_metrics` in build_mgr.py; waiver = pickup QUALITY, volume tested ~0 vs winning);
+   v94 Scouting report (`scButton`/`scOpen`, button under the matchup page); v95 Voices (`VOICES`, `VOICE_FX`, LS
+   `hm_voice`, default numbers) + Huddle "Last week" personal lines (`pvLines`); v96 weekly awards + share images
+   (`awData`, `awImage`); v97 The Wire (`wireStories`, route `wire` in the Team hub, top story on Huddle); v98
+   notifications (`nfCheck`, LS `hm_notif`, quiet hours; local/background only, no push server yet).
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
