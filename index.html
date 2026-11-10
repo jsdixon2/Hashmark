@@ -6607,6 +6607,118 @@ relStatus=function(p){if(!p)return null;const k=p.id+"|"+(NW.built||0)+"|"+((NW.
   if(v&&p.team&&p.team!=="FA"&&Date.now()-v.ts>36*3600e3)v=null; /* Sleeper still has him on a team a day and a half later: trust Sleeper */
   p._rel={k,v};return v;};
 /* /v101 */
+/* ===== v102: The Wire, in depth (owner: "the excerpts are small and useless; tell me everything I need/want/should
+   know"). Every story = headline + lead + fact panel + details. New: Week in review, Injury report, Who's hot.
+   Game stories: score, kickoff win chance, who carried the winner (top 3 starters), what sank the loser (bench left,
+   zero-point starters, the bench player who would have won it), both records after, playoff odds now, lifetime
+   head to head. Trades: every player with position, team, age, points a game, rest-of-season projection, market
+   value; picks; points each side has started since; lineup and value balance. Waiver bids: bid vs the league's
+   typical winning bid, points and starts since. Standings: record, points rank, all-play record, luck, playoff odds,
+   next opponent, track-record notes. Playoff race: every bubble team with record and odds. ===== */
+function wxCtx(){const G=HX.data,L=S.L;if(!G||!L)return null;const x=G.LS.find(z=>z.id===L.id)||(L.demo?G.LS.slice().sort((a,b)=>b.season-a.season)[0]:null);if(!x)return null;
+  const same=x.id===L.id,tn=rid=>awTeamName(x,rid),uOf=rid=>(x.rosters.find(q=>+q.rid===+rid)||{}).uid,cur=x.season,w=awWeek(x),pws=x.pws||15;
+  const games=(rid)=>{const out=[];x.weeks.forEach((wk,i)=>{if(i+1>=pws)return;const m=wk.find(q=>+q.rid===+rid);if(!m||!(m.pts>0)||m.mid==null)return;const o=wk.find(q=>q.mid===m.mid&&q.rid!==m.rid);if(!o)return;out.push({w:i+1,v:m.pts,o:o.pts,op:o.rid,won:m.pts>o.pts,tie:m.pts===o.pts,m,om:o});});return out;};
+  const rec=rid=>{const g=games(rid);return {w:g.filter(q=>q.won).length,l:g.filter(q=>!q.won&&!q.tie).length,t:g.filter(q=>q.tie).length,pf:g.reduce((s,q)=>s+q.v,0),pa:g.reduce((s,q)=>s+q.o,0),g};};
+  const allPlay=rid=>{let w=0,n=0;x.weeks.forEach((wk,i)=>{if(i+1>=pws)return;const sc=wk.filter(q=>q.pts>0),me=sc.find(q=>+q.rid===+rid);if(!me)return;for(const o of sc)if(o!==me){n++;if(me.pts>o.pts)w++;else if(me.pts===o.pts)w+=.5;}});return n?w/n:null;};
+  const teams=x.rosters.map(r=>({rid:r.rid,...rec(r.rid)})).filter(t=>t.g.length);
+  const ranked=teams.slice().sort((a,b)=>b.w-a.w||b.pf-a.pf),pfR=teams.slice().sort((a,b)=>b.pf-a.pf);
+  let od=null;try{if(same){const o=oddsFor(L);if(o&&o.length===L.teams.length)od=o;}}catch(e){}
+  const odds=rid=>{if(!od)return null;const i=L.teams.findIndex(t=>+t.id===+rid);return i>=0?od[i].po:null;};
+  const nextOpp=rid=>{if(!same||!L.matchups)return null;const i=L.teams.findIndex(t=>+t.id===+rid);for(const pr of L.matchups){const a=pr.find(q=>q.i===i);if(a){const b=pr.find(q=>q.i!==i);return b?L.teams[b.i]:null;}}return null;};
+  const ppg=pid=>{const pp=x.PP&&x.PP[pid];if(pp){const v=Object.values(pp).filter(q=>q>0);if(v.length)return avgx(v);}const p=PL[pid];return p&&p.ppg||null;};
+  const pn=pid=>{const p=PL[pid];return `${hxPos(pid)||(p&&p.pos)||""} ${hxName(pid)}`.trim();};
+  return {G,L,x,same,tn,uOf,cur,w,pws,games,rec,allPlay,teams,ranked,pfR,odds,nextOpp,ppg,pn};}
+const wPoss=n=>n==="You"?"Your":n+"'s";
+const wRec=r=>`${r.w}–${r.l}${r.t?"–"+r.t:""}`;
+function wGameStory(C,g,kind,pr){const {tn,rec,odds,G,uOf,x}=C,a=g.a,b=g.b,ra=rec(a.rid),rb=rec(b.rid);
+  const st=m=>(m.st||[]).filter(p=>p&&p!=="0").map(p=>({p,v:+((m.pp||{})[p])||0})).sort((q,r)=>r.v-q.v);
+  const slots=slotsOf(x.rpos||[]),bOpt=optimal(Object.keys(b.pp||{}),b.pp||{},slots)||b.pts,bLeft=Math.max(0,bOpt-b.pts);
+  const benchB=Object.entries(b.pp||{}).filter(([p])=>!(b.st||[]).includes(p)).map(([p,v])=>({p,v:+v||0})).sort((q,r)=>r.v-q.v)[0];
+  const zeros=st(b).filter(q=>q.v<=0);const top=st(a).slice(0,3),worst=st(b).filter(q=>C.ppg(q.p)).map(q=>({...q,d:q.v-C.ppg(q.p)})).sort((q,r)=>q.d-r.d)[0];
+  const sa=((G.M[uOf(a.rid)]||{}).scores||[]).find(q=>q.lg===x.chain&&q.s===C.cur&&q.w===g.w),h=(G.M[uOf(a.rid)]||{}).h2h&&G.M[uOf(a.rid)].h2h[uOf(b.rid)];
+  const lead={upset:`${tn(a.rid)} beat ${tn(b.rid)} ${f1(a.pts)}–${f1(b.pts)} as a ${sa&&sa.p!=null?pc(sa.p):"heavy"} underdog at kickoff.`,
+    blowout:`${tn(a.rid)} beat ${tn(b.rid)} by ${f1(g.mg)}, ${f1(a.pts)}–${f1(b.pts)}, the biggest margin of Week ${g.w}.`,
+    finish:`${tn(a.rid)} held off ${tn(b.rid)} by ${f1(g.mg)}, ${f1(a.pts)}–${f1(b.pts)}.`}[kind];
+  const det=[];if(top.length)det.push(`${tn(a.rid)} was carried by ${top.map(q=>`${C.pn(q.p)} (${f1(q.v)})`).join(", ")}.`);
+  if(worst&&worst.d<-5)det.push(`${wPoss(tn(b.rid))} biggest miss: ${C.pn(worst.p)} scored ${f1(worst.v)}, ${f1(-worst.d)} under his ${f1(C.ppg(worst.p))} average.`);
+  if(zeros.length)det.push(`${tn(b.rid)} started ${zeros.length} player${zeros.length>1?"s":""} who scored 0 (${zeros.map(q=>C.pn(q.p)).join(", ")}).`);
+  if(bLeft>=.5)det.push(`${tn(b.rid)} left ${f1(bLeft)} points on the bench${benchB&&benchB.v>0?`, led by ${C.pn(benchB.p)} (${f1(benchB.v)})`:""}.${bLeft>g.mg?` The best possible lineup would have won.`:""}`);
+  if(h&&h.g>1)det.push(`Lifetime: ${tn(a.rid)} is ${h.w}–${h.l} against ${tn(b.rid)}.`);
+  const facts=[["Final",`${f1(a.pts)}–${f1(b.pts)}`],["Margin",f1(g.mg)],sa&&sa.p!=null?["Win chance at kickoff",`${pc(sa.p)} for ${tn(a.rid)}`]:null,["Records now",`${tn(a.rid)} ${wRec(ra)} · ${tn(b.rid)} ${wRec(rb)}`],
+    odds(a.rid)!=null?["Playoff odds now",`${tn(a.rid)} ${pc(odds(a.rid))} · ${tn(b.rid)} ${pc(odds(b.rid))}`]:null,["Bench points left",`${tn(b.rid)} ${f1(bLeft)}`]].filter(Boolean);
+  const head={upset:`${tn(a.rid)} stun${tn(a.rid)==="You"?"":"s"} ${tn(b.rid)}`,blowout:`${tn(a.rid)} rout${tn(a.rid)==="You"?"":"s"} ${tn(b.rid)} by ${f1(g.mg)}`,finish:`${tn(a.rid)} edge${tn(a.rid)==="You"?"":"s"} ${tn(b.rid)} by ${f1(g.mg)}`}[kind];
+  return {tag:{upset:"Upset",blowout:"Blowout",finish:"Photo finish"}[kind],cls:kind==="upset"?"acc":"",head,lead,facts,det,when:`Week ${g.w}`,pr};}
+wireStories=function(){const C=wxCtx();if(!C)return [];const {x,tn,w,rec,teams,ranked,pfR,odds,nextOpp,allPlay,G,uOf,cur}=C,out=[],push=s=>out.push(s);
+  /* last week's games */
+  if(w){const wk=x.weeks[w-1]||[],seen=new Set(),games=[];for(const m of wk){if(m.mid==null||seen.has(m.mid)||!(m.pts>0))continue;const o=wk.find(q=>q.mid===m.mid&&q.rid!==m.rid);if(!o)continue;seen.add(m.mid);const [a,b]=m.pts>=o.pts?[m,o]:[o,m];games.push({a,b,mg:a.pts-b.pts,w});}
+    for(const g of games){const sa=((G.M[uOf(g.a.rid)]||{}).scores||[]).find(q=>q.lg===x.chain&&q.s===cur&&q.w===w);if(sa&&sa.p!=null&&sa.p<.3)push(wGameStory(C,g,"upset",90-sa.p*100));}
+    const bl=games.slice().sort((a,b)=>b.mg-a.mg)[0];if(bl&&bl.mg>=40)push(wGameStory(C,bl,"blowout",60));
+    const pf=games.slice().sort((a,b)=>a.mg-b.mg)[0];if(pf&&pf.mg<5&&pf!==bl)push(wGameStory(C,pf,"finish",63));
+    const sc=wk.filter(m=>m.pts>0).map(m=>m.pts),hi=wk.filter(m=>m.pts>0).sort((a,b)=>b.pts-a.pts),avg=avgx(sc);
+    if(games.length)push({tag:"Week in review",cls:"",head:`Week ${w}: ${tn(hi[0].rid)} posts the high score`,lead:`${tn(hi[0].rid)} led the league with ${f1(hi[0].pts)}; ${tn(hi[hi.length-1].rid)} had the low at ${f1(hi[hi.length-1].pts)}. The league averaged ${f1(avg)}.`,
+      facts:games.map(g=>[`${tn(g.a.rid)} def. ${tn(g.b.rid)}`,`${f1(g.a.pts)}–${f1(g.b.pts)}`]),det:[`Standings: ${ranked.slice(0,4).map((t,i)=>`${i+1}. ${tn(t.rid)} ${wRec(t)}`).join(" · ")}${ranked.length>4?" …":""}`],when:`Week ${w}`,pr:58});}
+  /* trades, last 3 weeks */
+  const recent=(x.tx||[]).filter(t=>t.wk>=Math.max(1,(w||1)-2)).sort((a,b)=>(b.ts||0)-(a.ts||0));const dyn=(x.type||0)>0;
+  for(const t of recent.filter(t=>t.type==="trade").slice(0,4)){const sides=[...new Set((t.rids||[]).map(Number))];if(sides.length<2)continue;
+    const got=r=>Object.entries(t.adds||{}).filter(([p,rr])=>+rr===r).map(([p])=>p),pk=r=>(t.dp||[]).filter(p=>+p.to===r).map(p=>`${p.season} round ${p.round} pick`);
+    const desc=p=>{const q=PL[p]||{},bits=[q.team||"FA",q.age?Math.floor(q.age)+" yrs":null,C.ppg(p)!=null?`${f1(C.ppg(p))} pts/g`:null,q.ros?`${f1(q.ros)} proj/wk`:null,dyn&&q.val?`value ${Math.round(q.val).toLocaleString()}`:null].filter(Boolean);return `${C.pn(p)} (${bits.join(", ")})`;};
+    const since=(pids,r)=>{let s=0;x.weeks.forEach((wk,i)=>{if(i+1<t.wk)return;const m=wk.find(q=>+q.rid===+r);if(!m)return;for(const p of pids)if((m.st||[]).includes(p))s+=+((m.pp||{})[p])||0;});return s;};
+    const [a,b]=sides,ga=got(a),gb=got(b),va=ga.reduce((s,p)=>s+((PL[p]||{}).val||0),0),vb=gb.reduce((s,p)=>s+((PL[p]||{}).val||0),0),ra=ga.reduce((s,p)=>s+((PL[p]||{}).ros||0),0),rb=gb.reduce((s,p)=>s+((PL[p]||{}).ros||0),0);
+    const allP=[...ga,...gb],hasPicks=(t.dp||[]).length>0,okRos=allP.length&&allP.every(p=>(PL[p]||{}).ros>0),okVal=dyn&&!hasPicks&&allP.length&&allP.every(p=>(PL[p]||{}).val>0);
+    const facts=[[`${tn(a)} get${tn(a)==="You"?"":"s"}`,[...ga.map(C.pn),...pk(a)].join(", ")||"nothing"],[`${tn(b)} get${tn(b)==="You"?"":"s"}`,[...gb.map(C.pn),...pk(b)].join(", ")||"nothing"],
+      okRos?["Rest-of-season points a week",`${tn(a)} +${f1(ra)} · ${tn(b)} +${f1(rb)}`]:null,okVal?["Market value received",`${tn(a)} ${Math.round(va).toLocaleString()} · ${tn(b)} ${Math.round(vb).toLocaleString()}`]:null,
+      ["Started since the deal",`${tn(a)} ${f1(since(ga,a))} pts · ${tn(b)} ${f1(since(gb,b))} pts`]].filter(Boolean);
+    const ad=r=>tn(r)==="You"?"add":"adds",det=[...ga.map(p=>`${tn(a)} ${ad(a)} ${desc(p)}.`),...gb.map(p=>`${tn(b)} ${ad(b)} ${desc(p)}.`)];
+    const edge=ra-rb;if(okRos&&Math.abs(edge)>=1.5)det.push(`For this season, ${tn(edge>0?a:b)} gets the bigger weekly boost (+${f1(Math.abs(edge))} projected points a week).`);
+    if(dyn&&hasPicks)det.push("Draft picks are part of this deal, so the value balance isn't scored here; open the Trade Lab calculator for the full grade.");
+    if(okVal){const d=(va-vb)/Math.max(va,vb,1);if(Math.abs(d)>=.1)det.push(`On long-term market value, ${tn(d>0?a:b)} wins the deal by ${Math.round(Math.abs(d)*100)}%.`);else det.push("Market values are within 10%: a fair deal on paper.");}
+    push({tag:"Trade",cls:"good",head:`${tn(a)} and ${tn(b)} make a deal`,lead:`${tn(a)} sends ${[...gb.map(C.pn),...pk(b)].join(", ")||"nothing"} to ${tn(b)} for ${[...ga.map(C.pn),...pk(a)].join(", ")||"nothing"}.`,facts,det,when:`Week ${t.wk}`,pr:82});}
+  /* waiver bids */
+  const allBids=(x.tx||[]).filter(t=>t.type==="waiver"&&t.bid>0).map(t=>t.bid).sort((a,b)=>a-b),med=allBids.length?allBids[Math.floor(allBids.length/2)]:0;
+  for(const t of recent.filter(t=>t.type==="waiver"&&t.bid>0).sort((a,b)=>b.bid-a.bid).slice(0,2)){const [p,r]=Object.entries(t.adds||{})[0]||[];if(!p)continue;let pts=0,starts=0,wks=0;
+    x.weeks.forEach((wk,i)=>{if(i+1<t.wk||i+1>=C.pws)return;const m=wk.find(q=>+q.rid===+r);if(!m)return;wks++;if((m.st||[]).includes(p)){starts++;pts+=+((m.pp||{})[p])||0;}});const q=PL[p]||{};
+    push({tag:"Waivers",cls:"",head:`${tn(r)} spend${tn(r)==="You"?"":"s"} $${t.bid} on ${hxName(p)}`,lead:`${tn(r)} won ${C.pn(p)}${q.team?` (${q.team})`:""} for $${t.bid}, ${med?`${(t.bid/med).toFixed(1)}× the league's typical winning bid of $${med}`:"the biggest bid of the week"}.`,
+      facts:[["Bid",`$${t.bid}`],med?["League's median winning bid",`$${med}`]:null,["Started since",`${starts} of ${wks} week${wks===1?"":"s"} · ${f1(pts)} pts`],q.ros?["Projection",`${f1(q.ros)} pts a week rest of season`]:null].filter(Boolean),
+      det:[q.inj?`Injury status: ${q.inj}.`:null,C.ppg(p)?`Season average: ${f1(C.ppg(p))} points a game when he plays.`:null].filter(Boolean),when:`Week ${t.wk}`,pr:50+Math.min(20,t.bid/2)});}
+  /* standings stories */
+  for(const T of teams){const g=T.w+T.l+T.t;if(g<3)continue;const s=T.g,last=s[s.length-1];let n=0;for(let i=s.length-1;i>=0&&s[i].won===last.won&&!s[i].tie;i--)n++;
+    const u=uOf(T.rid),mm=G.M[u]||{},sk=mm.sk||{},ap=allPlay(T.rid),po=odds(T.rid),no=nextOpp(T.rid),pfRank=C.pfR.findIndex(q=>q.rid===T.rid)+1,rank=ranked.findIndex(q=>q.rid===T.rid)+1;
+    const facts=[["Record",`${wRec(T)} · ${ordn(rank)} of ${ranked.length}`],["Points for",`${f1(T.pf/g)} a game · ${ordn(pfRank)} in the league`],ap!=null?["All-play record",`${pc(ap)} (as if they played everyone every week)`]:null,
+      ap!=null?["Luck",`${T.w-ap*g>=0?"+":""}${f1(T.w-ap*g)} wins vs all-play`]:null,po!=null?["Playoff odds",pc(po)]:null,no?["Next",`vs ${no.name}`]:null].filter(Boolean);
+    const notes=[];if(sk.drafting!=null&&sk.drafting<=30)notes.push(`${mm.name}'s draft record ranks in the bottom ${Math.max(1,Math.round(sk.drafting))}% of this league's managers`);if(sk.trading!=null&&sk.trading>=70)notes.push(`${mm.name} is one of the league's best traders (top ${Math.max(1,100-Math.round(sk.trading))}%)`);if(sk.waivers!=null&&sk.waivers>=70)notes.push(`the waiver wire is where ${mm.name} does best`);if(sk.lineup!=null&&sk.lineup<=30)notes.push(`${mm.name} leaves more points on the bench than most`);
+    const top3=Object.entries((C.x.PP||{})).filter(([p])=>(s[s.length-1].m.st||[]).includes(p)).map(([p])=>({p,v:C.ppg(p)||0})).sort((a,b)=>b.v-a.v).slice(0,3);
+    const det=[];if(top3.length)det.push(`Core: ${top3.map(q=>`${C.pn(q.p)} (${f1(q.v)}/g)`).join(", ")}.`);if(notes.length)det.push(notes.join("; ")+".");
+    if(ap!=null&&Math.abs(T.w-ap*g)>=1.5)det.push(T.w-ap*g<0?`The record is worse than the scoring: ${f1(ap*g)} expected wins from their points, ${T.w} actual.`:`The record flatters them: ${T.w} wins from scoring worth ${f1(ap*g)}.`);
+    if(T.l===0)push({tag:"Standings",cls:"good",head:`${tn(T.rid)} stay${tn(T.rid)==="You"?"":"s"} perfect at ${wRec(T)}`,lead:`${tn(T.rid)} ${tn(T.rid)==="You"?"have":"has"} won all ${T.w} games, averaging ${f1(T.pf/g)} points.`,facts,det,when:"This season",pr:70});
+    else if(T.w===0&&g>=4)push({tag:"Standings",cls:"bad",head:`${tn(T.rid)} fall${tn(T.rid)==="You"?"":"s"} to ${wRec(T)}`,lead:`${tn(T.rid)} ${tn(T.rid)==="You"?"are":"is"} still looking for a first win, averaging ${f1(T.pf/g)} points a game.`,facts,det,when:"This season",pr:66});
+    else if(n>=3)push({tag:last.won?"Streak":"Slump",cls:last.won?"good":"bad",head:`${tn(T.rid)} ${last.won?"win":"lose"}${tn(T.rid)==="You"?"":"s"} ${n} straight`,lead:`${tn(T.rid)} ${last.won?"won":"lost"} each of the last ${n} games and now sit${tn(T.rid)==="You"?"":"s"} at ${wRec(T)}, ${ordn(rank)} in the league.`,facts,det,when:"This season",pr:55+n});}
+  /* playoff race */
+  try{const rows=C.same?C.L.teams.map(t=>{const r=rec(t.id);return {n:t.name,rid:t.id,po:odds(t.id),r};}).filter(q=>q.po!=null).sort((a,b)=>b.po-a.po):[];
+    if(rows.length){const bub=rows.filter(q=>q.po>=.2&&q.po<=.8),cl=rows.filter(q=>q.po>.995),el=rows.filter(q=>q.po<.005),rem=C.L.remWeeks||0;
+      if(bub.length>=2)push({tag:"Playoff race",cls:"",head:`${bub.length} teams fighting for the last spots`,lead:`With ${rem||"a few"} week${rem===1?"":"s"} left, ${bub.length} teams sit between 20% and 80% to make the playoffs.`,
+        facts:rows.map(q=>[`${q.n} (${wRec(q.r)})`,pc(q.po)]),det:[cl.length?`Clinched: ${cl.map(q=>q.n).join(", ")}.`:"Nobody has clinched yet.",el.length?`Eliminated: ${el.map(q=>q.n).join(", ")}.`:"Nobody is eliminated yet.",
+          ...bub.slice(0,4).map(q=>{const no=nextOpp(q.rid);return no?`${q.n} plays ${no.name} next.`:null;}).filter(Boolean)],when:"Today",pr:74});
+      else if(cl.length)push({tag:"Playoff race",cls:"good",head:`${cl.map(q=>q.n).join(", ")} ${cl.length===1?"has":"have"} clinched`,lead:`Playoff spots are locked in with ${rem||"a few"} weeks left.`,facts:rows.map(q=>[`${q.n} (${wRec(q.r)})`,pc(q.po)]),det:[],when:"Today",pr:72});}}catch(e){}
+  /* injury report: starters from the latest week who are listed out, doubtful or on IR */
+  if(w){const wk=x.weeks[w-1]||[],hurt=[];for(const m of wk)for(const p of (m.st||[])){const q=PL[p];if(q&&q.inj&&/out|doubt|\bir\b|pup|susp/i.test(q.inj))hurt.push({rid:m.rid,p,inj:q.inj});}
+    if(hurt.length)push({tag:"Injury report",cls:"bad",head:`${hurt.length} starter${hurt.length>1?"s":""} on the injury report`,lead:`${new Set(hurt.map(h=>h.rid)).size} team${new Set(hurt.map(h=>h.rid)).size>1?"s":""} need a fix before kickoff.`,
+      facts:hurt.map(h=>[tn(h.rid),`${C.pn(h.p)} · ${h.inj}`]),det:[],when:"Today",pr:68});}
+  /* who's hot: rostered players, last 3 weeks */
+  if(w>=3){const acc={};x.weeks.slice(Math.max(0,w-3),w).forEach(wk=>wk.forEach(m=>{for(const p of (m.st||[])){const v=+((m.pp||{})[p])||0;(acc[p]=acc[p]||{v:0,n:0,rid:m.rid}).v+=v;acc[p].n++;acc[p].rid=m.rid;}}));
+    const hot=Object.entries(acc).filter(([,o])=>o.n>=2).map(([p,o])=>({p,a:o.v/o.n,rid:o.rid,d:o.v/o.n-(C.ppg(p)||o.v/o.n)})).sort((a,b)=>b.a-a.a).slice(0,5);
+    if(hot.length)push({tag:"Who's hot",cls:"acc",head:`${C.pn(hot[0].p)} leads the league over the last 3 weeks`,lead:`The five hottest starters in the league, by points a game since Week ${Math.max(1,w-2)}.`,
+      facts:hot.map(h=>[`${C.pn(h.p)} · ${tn(h.rid)}`,`${f1(h.a)}/g${Math.abs(h.d)>=2?` (${h.d>0?"+":""}${f1(h.d)} vs season)`:""}`]),det:[],when:`Weeks ${Math.max(1,w-2)}–${w}`,pr:52});}
+  return out.sort((a,b)=>b.pr-a.pr);};
+wireStory=function(s,brief){brief=brief===true;const facts=(s.facts||[]).length?`<div class="wfx">${s.facts.map(([k,v])=>`<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("")}</div>`:"";
+  return `<article class="wst"><div class="row sp"><span class="wtag ${s.cls?"w-"+s.cls:""}">${esc(s.tag)}</span><span class="wwhen">${esc(s.when||"")}</span></div><h3>${esc(s.head)}</h3><p>${esc(s.lead||s.body||"")}</p>${brief?"":facts+((s.det||[]).length?`<ul class="wdet">${s.det.map(d=>`<li>${esc(d)}</li>`).join("")}</ul>`:"")}</article>`;};
+vHuddle=(function(prev){return function(){let h=prev();try{h=h.replace(/(<button class="wtop"[\s\S]*?<\/button>)/,m=>{const s=wireStories()[0];return s?`<button class="wtop" data-go="wire"><span class="wmn sm">THE WIRE</span>${wireStory(s,true).replace("<article","<div").replace("</article>","</div>")}<span class="wmore">Full story ›</span></button>`:m;});}catch(e){}return h;};})(vHuddle);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.wfx{display:grid;grid-template-columns:1fr;gap:0;margin:10px 0 4px;border-top:1px solid var(--line)}
+.wfx>div{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px}.wfx span{color:var(--muted)}.wfx b{text-align:right;font-weight:600}
+.wdet{margin:8px 0 0;padding-left:18px;font-size:14px;line-height:1.5;color:var(--ink)}.wdet li{margin-bottom:5px}
+.wst p{color:var(--ink)!important;opacity:.92}.wmore{display:block;margin-top:8px;color:var(--acc);font-weight:700;font-size:13.5px}
+</style>`);
+/* /v102 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

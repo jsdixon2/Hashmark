@@ -142,6 +142,13 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    v101 release detection (owner: "Jordan Love was released" came from the headline "Jordan Love Makes The Cut"):
    `relMatch` only counts transaction phrasing (team verb + name, "was/has been released|waived|cut", "released by/from",
    "cut ties with"); and if Sleeper still lists the player on a team, a release story only counts for 36 hours.
+   v102 The Wire in depth (`wxCtx`, `wGameStory`, new `wireStories`/`wireStory(s,brief)`): lead + fact panel + details;
+   game stories (kickoff chance, top 3 starters, loser's biggest miss vs average, zero-point starters, bench left and
+   whether the best lineup would have won, records/odds after, lifetime H2H); trades (each player: team, age, pts/g,
+   ROS/wk, value; picks; points started since; ROS and value balance only when every piece has a number, no value
+   verdict when picks are involved); waiver bids vs the league's median winning bid; standings (rank, PF rank,
+   all-play, luck, odds, next opponent, core, track-record notes); playoff race table; Week in review; Injury report;
+   Who's hot (last 3 weeks). Huddle shows the top story brief with "Full story".
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;

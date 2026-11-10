@@ -90,6 +90,10 @@ Built so far:
     were still coloured on some lists (specificity) -> neutral; My teams card showed 0.0-0.0 before kickoff -> the
     projection with "proj", win chance below.
   - Data spot checks: Huddle and Matchup win chance agree; last-week line, Week N awards and The Wire agree.
+- **v102 The Wire in depth** (owner: "excerpts are small and useless; be informative"). Every story now has a lead,
+  a fact panel and detail bullets; new story types Week in review, Injury report, Who's hot. Guard rails: trade value
+  and projection comparisons only when every player has a number; with picks in the deal it says so instead of
+  declaring a winner (a pick valued 0 had produced "wins the deal by 100%"). Grammar for team named "You".
 - **v101 false release (owner screenshot):** Huddle said "Jordan Love FA was released" from Fox's headline "NFL Week 9
   All-Stars: Jordan Love Makes The Cut". Old `relStatus` matched release/cut/waive within 30 characters after the name.
   It fed three places: the FA team label (`tmLabel`), free-agent lists (`freeAgents` filter) and the "Released" move.
