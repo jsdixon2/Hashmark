@@ -6181,6 +6181,86 @@ stTiles=(function(prev){return function(D){let h=prev(D);try{const R=rbData(D);c
   if(add.length)h=h.replace('<div class="sttiles mt">','<div class="sttiles mt">'+add.join(""));}catch(e){console.error(e);}return h;};})(stTiles);
 if(HUBS.home&&HUBS.home.tabs[0])HUBS.home.tabs[0][1]="Huddle";
 /* /v92 */
+/* ===== v93: Sleeper-wide waivers, trades and drafts. Same definitions as scripts/build_mgr.py trans_metrics:
+   wv pickup quality = points per started week of your waiver/FA pickups minus the league's average per starting slot
+      (4+ started weeks; volume tested ~0 vs winning, quality 0.26), tr = per game, points received players scored in
+      your lineup minus what the players you gave scored in theirs, dr = per pick, points your pick scored in your
+      lineup that season minus the average of the 12 picks around it (keepers left out). Shown on the Sleeper-wide
+      card and as "Top X%" lines on the Locker tiles. Not part of the overall score (results already include them). ===== */
+function mrTrans(x,rid){const pws=x.pws||15,by=new Map();let tot=0,n=0;
+  x.weeks.forEach((wk,i)=>{const w=i+1;if(w>=pws)return;for(const m of wk){for(const p of (m.st||[])){if(!p||p==="0")continue;const v=+((m.pp||{})[p])||0;tot+=v;n++;(by.get(p)||by.set(p,[]).get(p)).push([w,+m.rid,v]);}}});
+  const lav=n?tot/n:0,started=(pid,r,w0)=>(by.get(pid)||[]).reduce((s,[w,rr,v])=>s+(rr===+r&&w>=w0?v:0),0);
+  const out={};let q=0,qn=0,trs=0,ntr=0;const seen=new Set();
+  for(const t of (x.tx||[]).slice().sort((a,b)=>a.wk-b.wk||(a.ts||0)-(b.ts||0))){
+    if(t.type==="waiver"||t.type==="free_agent"){for(const [pid,r] of Object.entries(t.adds||{})){if(+r!==+rid||seen.has(pid))continue;seen.add(pid);for(const [w,rr,v] of (by.get(pid)||[]))if(rr===+rid&&w>=t.wk){q+=v;qn++;}}}
+    else if(t.type==="trade"){const adds=t.adds||{},drops=t.drops||{},inv=new Set([...Object.values(adds),...Object.values(drops)].map(Number));if(inv.has(+rid))ntr++;
+      for(const [pid,r] of Object.entries(adds)){const v=started(pid,r,t.wk);if(+r===+rid)trs+=v;if(drops[pid]!=null&&+drops[pid]===+rid&&+r!==+rid)trs-=v;}}}
+  if(qn>=4)out.wv=q/qn-lav;out.ntr=ntr;out.trs=trs;
+  const d=(x.drafts||[]).find(d=>+d.season===+x.season);if(d){const pk=d.picks.filter(p=>p.pid&&!p.kp).sort((a,b)=>a.no-b.no);
+    if(pk.length>=12){const v=pk.map(p=>started(p.pid,p.rid,1)),mine=[];pk.forEach((p,i)=>{if(+p.rid!==+rid)return;const nb=[];for(let j=Math.max(0,i-6);j<Math.min(pk.length,i+7);j++)if(j!==i)nb.push(v[j]);mine.push(v[i]-avgx(nb));});if(mine.length)out.dr=avgx(mine);}}
+  return out;}
+mrSeasons=(function(prev){return function(G,uid){const rows=prev(G,uid);try{const byKey=new Map(G.LS.map(x=>[x.season+"|"+x.chain,x]));
+  for(const r of rows){if(r.skip)continue;const x=byKey.get(r.s+"|"+r.chain);if(!x)continue;const rid=(x.rosters.find(q=>q.uid===uid||(q.co||[]).includes(uid))||{}).rid;if(rid==null)continue;
+    const T=mrTrans(x,rid);if(T.wv!=null)r.wv=T.wv;if(T.ntr)r.tr=T.trs/r.g;if(T.dr!=null)r.dr=T.dr;r.ntr=T.ntr;
+    for(const m of ["wv","tr","dr"])r["z_"+m]=r[m]!=null?mrZ(r.k,m,r[m]):null;}}catch(e){console.error(e);}return rows;};})(mrSeasons);
+mrCareer=(function(prev){return function(G,uid){const C=prev(G,uid);if(!C||C.none||!MREF)return C;const T=MREF.tau2;
+  for(const [key] of [["wv"],["tr"],["dr"]]){const xs=C.ok.filter(r=>r["z_"+key]!=null),W=xs.reduce((s,r)=>s+r.wt,0);if(!W||T[key]==null){C[key]=null;continue;}
+    const t2=T[key],k=(1-t2)/t2,th=xs.reduce((s,r)=>s+r.wt*r["z_"+key],0)/(W+k);C[key]={p:100*phi(th/Math.sqrt(t2)),n:W};}return C;};})(mrCareer);
+if(!MR_SK.some(x=>x[0]==="wv"))MR_SK.push(["wv","Waivers","Points your pickups score when started, vs the league's starters"],["tr","Trades","Points gained in your lineup from trades, minus what you gave away"],["dr","Drafts","Points your picks score for you vs the picks around them"]);
+/* Locker tiles: the Sleeper-wide comparison under the big number */
+const MR_TILE={lineups:"lu",scoring:"sc",waivers:"wv",trades:"tr",drafts:"dr"};
+stTiles=(function(prev){return function(D){let h=prev(D);try{if(statsScope()!=="all"||!MREF||!HX.data)return h;const C=mrCareer(HX.data,HX.data.uid);if(!C||C.none)return h;
+  for(const [tk,mk] of Object.entries(MR_TILE)){const v=C[mk];if(!v)continue;h=h.replace(new RegExp(`(data-stc="${tk}"[\\s\\S]*?<div class="stsub">)`),`$1<span class="stcmp">${topTxt(v.p,C.prov)} on Sleeper</span> · `);}}catch(e){console.error(e);}return h;};})(stTiles);
+document.head.insertAdjacentHTML("beforeend",`<style>.stcmp{color:var(--acc);font-weight:700}</style>`);
+/* /v93 */
+/* ===== v94: Scouting report. A button under the matchup page opens the opponent's report: head to head (lifetime,
+   streak, playoff meetings), tendencies this season ranked in the league (bench points left, zero-point starters,
+   waiver claims, trades, close games), form (last 4 weeks vs season, luck) and one note for this week when the data
+   supports it. Built from the Sleeper history the Locker loads (hxLoad); visible only to you. ===== */
+function scCtx(li){const L=S.leagues[li];if(!L)return null;let d={};try{d=leagueSummary(L);}catch(e){}const oi=d.bi;if(oi==null||!L.teams[oi])return null;
+  const opp=L.teams[oi],G=HX.data;if(!G)return {L,opp,oi};const x=G.LS.find(z=>z.id===L.id)||(L.demo?G.LS.slice().sort((a,b)=>b.season-a.season)[0]:null);if(!x)return {L,opp,oi,G};
+  const r=x.rosters.find(q=>+q.rid===+opp.id);return {L,opp,oi,G,x,ou:r&&r.uid,me:G.uid};}
+function scData(c){const {G,x,ou,me}=c;if(!G||!x||!ou)return null;const M=G.M[ou],Me=G.M[me];if(!M)return null;
+  const chain=x.chain,cur=x.season,sc=(M.scores||[]).filter(q=>q.lg===chain&&q.s===cur),all=(M.scores||[]).filter(q=>q.lg===chain);
+  const h=(Me&&Me.h2h&&Me.h2h[ou])||{w:0,l:0,g:0};const games=((Me&&Me.scores)||[]).filter(q=>q.op===ou).sort((a,b)=>b.s-a.s||b.w-a.w);
+  let streak="";if(games.length){const f=games[0].won;let n=0;for(const g of games){if(g.won===f&&!(g.v===g.opp))n++;else break;}streak=(f?"W":"L")+n;}
+  const po=((Me&&Me.poG)||[]).filter(g=>g.op===ou);
+  /* tendencies ranked among this league's managers this season */
+  const lgU=x.rosters.map(q=>q.uid).filter(Boolean),stat=(u,f)=>{const s=((G.M[u]||{}).scores||[]).filter(q=>q.lg===chain&&q.s===cur);return s.length?f(s,u):null;};
+  const rank=(f,dir)=>{const vals=lgU.map(u=>({u,v:stat(u,f)})).filter(o=>o.v!=null).sort((a,b)=>dir*(b.v-a.v));const i=vals.findIndex(o=>o.u===ou);return i<0?null:{r:i+1,n:vals.length,v:vals[i].v};};
+  const bench=rank(s=>avgx(s.map(q=>q.bn||0)),-1);
+  const rid=(x.rosters.find(q=>q.uid===ou)||{}).rid;let zero=0;x.weeks.forEach((wk,i)=>{if(i+1>=(x.pws||15))return;const m=wk.find(q=>+q.rid===+rid);if(!m)return;for(const p of (m.st||[]))if(p&&p!=="0"&&!(+((m.pp||{})[p])>0))zero++;});
+  const tx=(x.tx||[]).filter(t=>(t.type==="waiver"||t.type==="free_agent")&&Object.values(t.adds||{}).some(r=>+r===+rid)).length,trd=(x.tx||[]).filter(t=>t.type==="trade"&&(t.rids||[]).map(Number).includes(+rid)).length;
+  const txAll=lgU.map(u=>{const r2=(x.rosters.find(q=>q.uid===u)||{}).rid;return (x.tx||[]).filter(t=>(t.type==="waiver"||t.type==="free_agent")&&Object.values(t.adds||{}).some(r=>+r===+r2)).length;}).sort((a,b)=>b-a);
+  const trAll=lgU.map(u=>{const r2=(x.rosters.find(q=>q.uid===u)||{}).rid;return (x.tx||[]).filter(t=>t.type==="trade"&&(t.rids||[]).map(Number).includes(+r2)).length;});
+  const close=sc.filter(q=>Math.abs(q.v-q.opp)<7),last4=sc.slice(-4),avg=avgx(sc.map(q=>q.v)),exp=sc.reduce((s,q)=>s+(q.p||0),0),won=sc.filter(q=>q.won).length;
+  return {name:M.name,h,games,streak,po,bench,zero,tx,txRank:txAll.indexOf(tx)+1,txN:txAll.length,trd,trAvg:avgx(trAll),close,last4:avgx(last4.map(q=>q.v)),avg,won,exp,g:sc.length,allG:all.length};}
+function scNote(c){const {L,opp}=c;const hurt=opp.players.map(id=>PL[id]).filter(p=>p&&p.inj&&/out|doubt|quest|\bir\b/i.test(p.inj)).sort((a,b)=>(b.proj||0)-(a.proj||0));
+  if(!hurt.length)return "";const p=hurt[0];return `${esc(p.pos)} ${esc(p.name)} is listed ${esc(p.inj.split(" ")[0])}${hurt.length>1?` (and ${hurt.length-1} more on their roster)`:""}. Check their lineup before kickoff.`;}
+function scButton(li){const c=scCtx(li);if(!c)return "";const D=c.G?scData(c):null;
+  const head=D&&D.bench?`Leaves ${f1(D.bench.v)} pts/wk on the bench (${ordn(D.bench.r)} of ${D.bench.n})`:D&&D.h.g?`Lifetime ${D.h.w}-${D.h.l} against them`:"Head to head, habits and form";
+  return `<button class="scbtn" data-scout="${li}"><span class="sck">Scouting report · ${esc(c.opp.name)}</span><b>${head}</b><span class="scgo">Open ›</span></button>`;}
+function scOpen(li){const c=scCtx(li);if(!c)return;if(!c.G){openSheet("Scouting report",`<p class="sub">Reading this league's Sleeper history…</p>`);if(HX.st!=="loading")hxLoad();const t=setInterval(()=>{if(HX.st==="ready"){clearInterval(t);scOpen(li);}else if(HX.st==="error"){clearInterval(t);}},600);return;}
+  const D=scData(c);if(!D){openSheet("Scouting report",`<p class="sub">No Sleeper history for this manager yet.</p>`);return;}
+  const kv=(a,b,s,cl)=>`<div class="rbr"><div><div class="rbl">${a}</div>${s?`<div class="rbs">${s}</div>`:""}</div><b class="num${cl?" "+cl:""}">${b}</b></div>`;
+  const note=scNote(c),poW=D.po.filter(g=>g.won).length;
+  openSheet("Scouting report",`<div class="sdbody"><h2 class="sdt1">${esc(c.opp.name)}</h2><div class="eyebrow">${esc(D.name)} · ${D.won}-${D.g-D.won} this season</div>
+   ${note?`<div class="scnote"><b>This week:</b> ${note}</div>`:""}
+   ${sdSec("Head to head",kv("Lifetime",D.h.g?`${D.h.w}-${D.h.l}`:"First meeting",D.h.g?`${D.h.g} games · avg ${f1((D.h.pf-D.h.pa)/Math.max(1,D.h.g))} margin`:"")+(D.streak?kv("Streak",D.streak,"",D.streak[0]==="W"?"good":"bad"):"")+(D.po.length?kv("Playoff meetings",`${poW}-${D.po.length-poW}`,D.po.map(g=>g.s).join(", "),poW>=D.po.length-poW?"good":"bad"):"")
+     +(D.games.length?kv("Last meeting",`${D.games[0].won?"W":"L"} ${f1(D.games[0].v)}–${f1(D.games[0].opp)}`,`Wk ${D.games[0].w} ${D.games[0].s}`):""))}
+   ${sdSec("Tendencies · this season",(D.bench?kv("Bench points left",`${f1(D.bench.v)}/wk`,`${ordn(D.bench.r)} most of ${D.bench.n}`,D.bench.r<=Math.ceil(D.bench.n/3)?"bad":""):"")
+     +kv("Starters who scored 0",String(D.zero),"injured, on bye or benched by their team")+kv("Waiver claims",String(D.tx),D.txN?`${ordn(D.txRank)} most of ${D.txN}`:"")+kv("Trades",String(D.trd),`league average ${f1(D.trAvg)}`)
+     +kv("Close games (under 7)",`${D.close.filter(q=>q.won).length}-${D.close.filter(q=>!q.won).length}`,""))}
+   ${D.g>=4?sdSec("Form",kv("Last 4 weeks",f1(D.last4),`season average ${f1(D.avg)}`,D.last4>=D.avg?"good":"bad")+kv("Luck",`${D.won} wins`,`${f1(D.exp)} expected from their scores`)):""}
+   <p class="sub mt">Only you can see this report.</p></div>`);$("#sheet").classList.add("skpop");}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-scout]");if(!b)return;e.preventDefault();e.stopPropagation();scOpen(+b.dataset.scout);},true);
+vMatchup=(function(prev){return function(li){const h=prev(li);try{const L=S.leagues[li];if(!L||L.gl)return h;return h+scButton(li);}catch(e){console.error(e);return h;}};})(vMatchup);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.scbtn{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 10px;width:100%;margin-top:14px;padding:14px 16px;border-radius:var(--r,20px);background:var(--panel);border:1px solid var(--line)}
+.scbtn .sck{grid-column:1/-1;font:700 11px var(--fb);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.scbtn b{font-weight:650;font-size:15px}.scbtn .scgo{color:var(--acc);font-weight:700;font-size:14px}
+.scnote{border-left:3px solid var(--acc);background:var(--panel2);border-radius:12px;padding:10px 12px;margin:12px 0;font-size:14px;line-height:1.4}
+</style>`);
+/* /v94 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

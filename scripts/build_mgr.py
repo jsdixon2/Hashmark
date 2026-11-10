@@ -34,7 +34,7 @@ PO_VAL = .1
 PT = .3   # points title: most regular-season points in the league
 PW = .1   # each playoff game won (winners bracket)
 W = {"ap": .40, "lu": .15, "out": .45}
-TAU2_DEFAULT = {"S": .25, "ap": .25, "lu": .35, "sc": .25, "cons": .12, "out": .10}
+TAU2_DEFAULT = {"S": .25, "ap": .25, "lu": .35, "sc": .25, "cons": .12, "out": .10, "wv": .20, "tr": .10, "dr": .10}
 STARTERS = {"QB", "RB", "WR", "TE", "K", "DEF", "FLEX", "WRRB_FLEX", "REC_FLEX", "SUPER_FLEX"}
 ELIG = {"QB": {"QB"}, "RB": {"RB"}, "WR": {"WR"}, "TE": {"TE"}, "K": {"K"}, "DEF": {"DEF"}, "FLEX": {"RB", "WR", "TE"},
         "WRRB_FLEX": {"RB", "WR"}, "REC_FLEX": {"WR", "TE"}, "SUPER_FLEX": {"QB", "RB", "WR", "TE"}}
@@ -117,6 +117,65 @@ def lineup_eff(lg, rl, ST, POS):
     return {rid: v[0] / v[1] for rid, v in out.items() if v[2] >= 6 and v[1] > 0}
 
 
+def make_pts(lg, ST, POS, sc):
+    def pts(w, p):  # league scoring on archived stat lines; K and D/ST use Sleeper's standard points
+        st = ST.get(f"{lg['season']}-{w}", {}).get(p) or {}
+        if not p.isdigit() or POS.get(p) in ("K", "DEF"): return float(st.get("pts_std", 0.0) or 0.0)
+        return sum(float(st.get(k, 0.0) or 0.0) * v for k, v in sc.items())
+    return pts
+
+
+def trans_metrics(lg, pws, pts):
+    """v93 Sleeper-wide skills, same definitions as the app (mrSeasons):
+    wv  pickup quality: points per started week of your waiver / free-agent pickups (from the week added on) minus
+        the league's average points per starting slot; needs 4+ started weeks. (Volume - pickup points per game -
+        tested ~0 correlation with all-play win %, because weak teams start more pickups; quality tested 0.26.)
+    tr  per game: points received players scored in your lineup minus points the players you gave scored in theirs
+    dr  per pick: points a drafted player scored in the drafting team's lineup this season minus the average of the
+        12 picks around it (6 before, 6 after); keepers left out"""
+    S = {}
+    for wk, rows in (lg.get("weeks") or {}).items():
+        w = int(wk)
+        if w >= pws: continue
+        for r in rows:
+            for p in (r[3] or []):
+                if p and p != "0": S[(w, p)] = r[0]
+    def started(pid, rid, w0):
+        return sum(pts(w, pid) for (w, p), rr in S.items() if p == pid and rr == rid and w >= w0)
+    allv = [pts(w, p) for (w, p) in S]; lav = sum(allv) / max(1, len(allv))
+    wq = collections.defaultdict(lambda: [0.0, 0])
+    tr, ntr = collections.defaultdict(float), collections.Counter()
+    seen = set()
+    for t in sorted(lg.get("tx") or [], key=lambda t: (t[1], t[8] or 0)):
+        typ, w, adds = t[0], t[1], t[3] or {}
+        if typ in ("waiver", "free_agent"):
+            for pid, rid in adds.items():
+                if (pid, rid) in seen: continue
+                seen.add((pid, rid))
+                for (ww, p), rr in S.items():
+                    if p == pid and rr == rid and ww >= w: wq[rid][0] += pts(ww, pid); wq[rid][1] += 1
+        elif typ == "trade":
+            drops = t[4] or {}
+            for rid in set(adds.values()) | set(drops.values()): ntr[rid] += 1
+            for pid, r in adds.items():
+                x = started(pid, r, w); tr[r] += x
+                g = drops.get(pid)
+                if g is not None and g != r: tr[g] -= x
+    dr = {}
+    d = lg.get("draft") or {}
+    if d and str(d.get("season")) == str(lg["season"]):
+        pk = sorted([p for p in d.get("picks") or [] if p[2] and not p[4]], key=lambda p: p[1])
+        if len(pk) >= 12:
+            v = [started(p[2], p[3], 1) for p in pk]
+            acc = collections.defaultdict(list)
+            for i, p in enumerate(pk):
+                nb = [v[j] for j in range(max(0, i - 6), min(len(pk), i + 7)) if j != i]
+                acc[p[3]].append(v[i] - sum(nb) / len(nb))
+            dr = {rid: sum(x) / len(x) for rid, x in acc.items()}
+    wv = {rid: t / n - lav for rid, (t, n) in wq.items() if n >= 4}
+    return wv, tr, ntr, dr
+
+
 def season_rows(L, R, ST, POS, ex):
     rows = []
     for lid, lg in L.items():
@@ -154,6 +213,8 @@ def season_rows(L, R, ST, POS, ex):
         fv = finish_vals(lg)
         lu = lineup_eff(lg, R[lid], ST, POS) if lid in R else {}
         own = {x[0]: x[5] for x in lg.get("rost") or [] if len(x) > 5 and x[5]}
+        sc_all = (R.get(lid) or {}).get("sc") or lg.get("sc") or {}
+        wvm, trm, ntr, drm = trans_metrics(lg, pws, make_pts(lg, ST, POS, sc_all))
         if fv is not None:  # hardware = finish + playoff wins + points title
             pf = {rid: sum(T["pts"]) for rid, T in per.items()}
             if pf:
@@ -168,6 +229,9 @@ def season_rows(L, R, ST, POS, ex):
                    "luck": (T["w"] - T["ap"]) / g}
             if fv is not None: row["out"] = fv.get(rid, 0.0) - fmean
             if rid in lu: row["lu"] = lu[rid]
+            if rid in wvm: row["wv"] = wvm[rid]
+            if ntr.get(rid): row["tr"] = trm.get(rid, 0.0) / g
+            if rid in drm: row["dr"] = drm[rid]
             rows.append(row)
     return rows
 
@@ -189,7 +253,7 @@ def main():
     POS = positions(L); POS.update({p: "DEF" for p in list(POS) if not p.isdigit()})
     ex = collections.Counter()
     rows = season_rows(L, R, ST, POS, ex)
-    MET = ["ap", "sc", "cons", "lu", "out", "luck"]
+    MET = ["ap", "sc", "cons", "lu", "out", "luck", "wv", "tr", "dr"]
     B = {}
     keys = sorted({r["k"] for r in rows})
     groups = {k: [r for r in rows if r["k"] == k] for k in keys}
@@ -227,7 +291,7 @@ def main():
     for r in rows:
         nm = "full" if r.get("lu") is not None and r.get("out") is not None else "nolu" if r.get("out") is not None else None
         r["S"] = comp(r, SETS[nm]) / S_SD[nm] if nm and S_SD.get(nm) else None
-        for m in ("ap", "sc", "cons", "lu", "out"): r["z_" + m] = z(r, m)
+        for m in ("ap", "sc", "cons", "lu", "out", "wv", "tr", "dr"): r["z_" + m] = z(r, m)
 
     # career persistence (tau2) from managers seen in 2+ seasons, when owner ids exist
     tau2, src = dict(TAU2_DEFAULT), "assumed"
@@ -237,7 +301,7 @@ def main():
     multi = {o: rs for o, rs in by_o.items() if len({x["s"] for x in rs}) >= 2}
     if len(multi) >= 300:
         src = "measured"
-        for m, key in (("S", "S"), ("ap", "z_ap"), ("lu", "z_lu"), ("sc", "z_sc"), ("cons", "z_cons"), ("out", "z_out")):
+        for m, key in (("S", "S"), ("ap", "z_ap"), ("lu", "z_lu"), ("sc", "z_sc"), ("cons", "z_cons"), ("out", "z_out"), ("wv", "z_wv"), ("tr", "z_tr"), ("dr", "z_dr")):
             cp, n = 0.0, 0
             for rs in multi.values():
                 v = [(x["s"], x[key]) for x in rs if x.get(key) is not None]
