@@ -115,6 +115,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    average by k=(1-tau2)/tau2 (tau2 assumed .25 until the archive has 300+ repeat owners, then measured).
    Crawler now stores hashed owner ids (`uhash`, "hmu:" salt) + hashed previous league id; backfills old leagues;
    seasons 2019+; leagues.yml MAX 1500 / GROW 250, push trigger limited to main. League views keep league-mate ranks.
+   v89 (owner: weigh titles, playoff records and points titles enough that off years don't make everyone average):
+   "out" is now hardware = finish value + .1 per playoff win + .3 points title (ref v2: PT/PW); weights ap .40 /
+   hardware .45 / lineups .15; title seasons 1.5x, points-title seasons 1.15x; once a career has a title or points title,
+   below-average seasons count .75x; rebuild-before-title .5x. Panel shows letter grade (SKG), titles, finals, points
+   titles, playoff record.
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;

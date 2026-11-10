@@ -10,8 +10,8 @@ Per team-season metrics (same definitions as the app, v88):
   sc    points relative to the league's weekly average (0.10 = 10% above average)
   cons  consistency: minus the coefficient of variation of weekly scores
   lu    lineup efficiency: points started / best possible lineup (rosters archive only)
-  out   championship equity: finish value (title 1, runner-up .45, 3rd .25, 4th .2, other playoff team .1)
-        minus the league's average finish value, so a title in a 14-team league is worth more than in an 8-team one
+  out   hardware: finish value (title 1, runner-up .45, 3rd .25, 4th .2, other playoff team .1) + .1 per playoff
+        game won + .3 for the league's points title, minus the league's average, so a title in a 14-team league is worth more than in an 8-team one
   luck  (wins - all-play wins) per game; shown, never part of the score
 
 Data hygiene (outliers kill rankings):
@@ -31,7 +31,9 @@ OUT = "data/mgr_ref.json"
 MIN_N = 150
 VAL = {1: 1.0, 2: .45, 3: .25, 4: .2}
 PO_VAL = .1
-W = {"ap": .45, "lu": .15, "out": .40}
+PT = .3   # points title: most regular-season points in the league
+PW = .1   # each playoff game won (winners bracket)
+W = {"ap": .40, "lu": .15, "out": .45}
 TAU2_DEFAULT = {"S": .25, "ap": .25, "lu": .35, "sc": .25, "cons": .12, "out": .10}
 STARTERS = {"QB", "RB", "WR", "TE", "K", "DEF", "FLEX", "WRRB_FLEX", "REC_FLEX", "SUPER_FLEX"}
 ELIG = {"QB": {"QB"}, "RB": {"RB"}, "WR": {"WR"}, "TE": {"TE"}, "K": {"K"}, "DEF": {"DEF"}, "FLEX": {"RB", "WR", "TE"},
@@ -63,7 +65,8 @@ def finish_vals(lg):
             fin[w] = p
             if l is not None: fin[l] = p + 1
     if not any(v == 1 for v in fin.values()): return None
-    return {rid: VAL.get(fin.get(rid), PO_VAL if rid in po else 0.0) for rid in [x[0] for x in lg["rost"]]}
+    pw = collections.Counter(w for r, m, t1, t2, w, l, p in br if isinstance(w, int) and isinstance(t1, int) and isinstance(t2, int))
+    return {rid: VAL.get(fin.get(rid), PO_VAL if rid in po else 0.0) + PW * pw.get(rid, 0) for rid in [x[0] for x in lg["rost"]]}
 
 
 def positions(L):
@@ -151,6 +154,10 @@ def season_rows(L, R, ST, POS, ex):
         fv = finish_vals(lg)
         lu = lineup_eff(lg, R[lid], ST, POS) if lid in R else {}
         own = {x[0]: x[5] for x in lg.get("rost") or [] if len(x) > 5 and x[5]}
+        if fv is not None:  # hardware = finish + playoff wins + points title
+            pf = {rid: sum(T["pts"]) for rid, T in per.items()}
+            if pf:
+                top = max(pf, key=pf.get); fv = dict(fv); fv[top] = fv.get(top, 0.0) + PT
         fmean = sum(fv.values()) / len(fv) if fv else None
         for rid, T in per.items():
             if rid in bad: ex["abandoned team"] += 1; continue
@@ -241,10 +248,10 @@ def main():
                 tot = [x[key] for rs in multi.values() for x in rs if x.get(key) is not None]
                 var = sdv(tot) ** 2 or 1
                 tau2[m] = round(min(.8, max(.03, cp / n / var)), 4)
-    out = {"built": time.strftime("%Y-%m-%dT%H:%MZ", time.gmtime()), "v": 1,
+    out = {"built": time.strftime("%Y-%m-%dT%H:%MZ", time.gmtime()), "v": 2,
            "n": {"team_seasons": len(rows), "leagues": len({r["lg"] for r in rows}), "with_lineups": sum(1 for r in rows if r.get("lu") is not None),
                  "managers_multi_season": len(multi), "seasons": sorted({r["s"] for r in rows})},
-           "excluded": dict(ex), "W": W, "VAL": VAL, "PO_VAL": PO_VAL, "MIN_N": MIN_N, "S_SD": S_SD,
+           "excluded": dict(ex), "W": W, "VAL": VAL, "PO_VAL": PO_VAL, "PT": PT, "PW": PW, "MIN_N": MIN_N, "S_SD": S_SD,
            "tau2": tau2, "tau2_src": src, "B": B}
     os.makedirs("data", exist_ok=True)
     with open(OUT, "w") as f: json.dump(out, f, separators=(",", ":"))
