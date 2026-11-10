@@ -128,6 +128,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    `hm_voice`, default numbers) + Huddle "Last week" personal lines (`pvLines`); v96 weekly awards + share images
    (`awData`, `awImage`); v97 The Wire (`wireStories`, route `wire` in the Team hub, top story on Huddle); v98
    notifications (`nfCheck`, LS `hm_notif`, quiet hours; local/background only, no push server yet).
+   v99 motion + polish (owner: skip sounds and haptics): directional page transitions (`m99Dir`: tab cross-fade, deeper
+   slide-in, back slide-out), count-up on first view / tick on change keyed by the number's label (`m99Nums`; Top/Bottom
+   ranks never count), bars fill once per screen (`m99Bars`), press spring on every tappable thing, pylon loader +
+   skeletons (`HM_LOADER`, `m99Skel`), empty states in the voice (`EMPTY99`), pull to refresh (Huddle, Matchup, Wire),
+   instant open from the last Huddle snapshot (LS `hm_snap`, `S._snapOn` blocks demo renders until live data arrives).
 6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
    last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
    defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;

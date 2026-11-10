@@ -68,6 +68,12 @@ Built so far:
   data/mgr_ref.json (my v89 commit changed it meanwhile) and the crawl was lost while the job still showed success.
   The workflow now commits the archive first, rebases onto main, rebuilds calib + mgr_ref on top, and exits 1 if the
   push fails. Never edit data/mgr_ref.json on main while a league-archive run is in progress.
+- **v99 motion + polish** (owner asked for high-end UX; skip sounds and haptics). "Motion once": animate the first
+  time, never on every refresh; everything off under Reduce Motion. Bugs found in testing and fixed: numbers keyed by
+  position ticked from another card's value ("Top 137%"), now keyed by their label; counting "Top 45%" up from 0
+  passed through "Top 8%", so ranks never count; background data loads overwrote the cached Huddle with demo numbers
+  during restore, so `render` now waits while `S._snapOn`. Bars needed a forced reflow to animate from 0.
+  Not built (by choice): sounds; haptics (iPhone web apps can't vibrate anyway).
 - **QA:** every route (24) in dark + light at 360 px: no console errors, no horizontal overflow (Playwright, demo).
 - **Demo caveat:** the demo's current league and its history use different ids/teams, so Scouting/Awards/Wire fall
   back to the demo history's latest season; real Sleeper leagues match by league id.

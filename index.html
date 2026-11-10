@@ -6464,6 +6464,75 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .pfqh input{background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:4px 6px;font:500 13px var(--fb)}
 </style>`);
 /* /v98 */
+/* ===== v99: motion and polish ("motion once": animate the first time you see something, never on every refresh;
+   all of it off with Reduce Motion). Directional page transitions (deeper slides in from the right, back from the
+   left, tabs cross-fade); numbers count up on first view and tick from old to new when live scores change; bars fill
+   in; one press-and-release spring on every tappable thing; skeleton cards + the pylon loader while Sleeper history
+   loads; empty states written in the voice; pull to refresh on Huddle, Matchup and The Wire; instant open from the
+   last Huddle snapshot while your leagues reload. No sounds, no haptics (owner: skip). ===== */
+const RM=()=>window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+document.head.insertAdjacentHTML("beforeend",`<style id="motion99">
+@media (prefers-reduced-motion:no-preference){
+ #view.enter.m-fwd{animation:m99f .32s cubic-bezier(.2,.8,.2,1) both}#view.enter.m-back{animation:m99b .32s cubic-bezier(.2,.8,.2,1) both}#view.enter.m-tab{animation:m99t .22s ease-out both}
+ @keyframes m99f{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+ @keyframes m99b{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+ @keyframes m99t{from{opacity:0}to{opacity:1}}
+ button,[data-go],[role="link"],.tile,.rtile,.sttile,.hdmove,.hdrow,.scbtn,.wtop,.pfvo,.pfto{transition:transform .18s cubic-bezier(.3,1.5,.5,1),background-color .15s,opacity .15s}
+ button:active,[data-go]:active,[role="link"]:active,.tile:active,.rtile:active,.sttile:active,.hdmove:active,.hdrow:active,.scbtn:active,.wtop:active,.pfvo:active,.pfto:active{transform:scale(.97);transition-duration:.06s}
+ .m99bar{transition:width .7s cubic-bezier(.2,.8,.2,1)!important}
+ .skel{background:linear-gradient(90deg,var(--panel) 0,var(--panel2) 40%,var(--panel) 80%);background-size:300% 100%;animation:skel 1.3s linear infinite}
+ @keyframes skel{from{background-position:100% 0}to{background-position:-200% 0}}
+ .hml rect.p{animation:hmlp 1.2s ease-in-out infinite}.hml rect.p:nth-of-type(3){animation-delay:.15s}.hml rect.p:nth-of-type(4){animation-delay:.3s}.hml rect.p:nth-of-type(5){animation-delay:.45s}
+ .hml rect.l{transform-origin:12px 50px;animation:hmll 1.2s ease-in-out infinite}
+ @keyframes hmlp{0%,100%{opacity:.25}50%{opacity:1}}@keyframes hmll{0%{transform:scaleX(.15)}60%,100%{transform:scaleX(1)}}
+}
+.skc{border-radius:var(--r,20px);height:86px;margin-bottom:10px}.skc.t{height:150px}
+.hmlw{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 0 6px;color:var(--muted);font-size:13.5px}.hml{width:44px;height:44px}
+.empty.e99{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:28px 16px;color:var(--muted)}.empty.e99 .hmk{width:34px;height:34px;opacity:.55}
+.ptr{position:fixed;left:50%;top:calc(var(--hh,60px) + 8px);transform:translate(-50%,-60px);z-index:30;width:40px;height:40px;border-radius:50%;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;transition:opacity .15s}
+.ptr .hmk{width:22px;height:22px}.ptr.go .hmk{animation:hmlp .9s ease-in-out infinite}
+.snapbar{position:sticky;top:calc(var(--hh,60px) + 4px);z-index:5;margin:0 auto 10px;width:max-content;padding:6px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+#view.snap{pointer-events:none}
+</style>`);
+const HM_LOADER=(t="Loading")=>`<div class="hmlw"><svg class="hml" viewBox="10 10 80 80" aria-hidden="true"><rect class="l" x="12" y="44.5" width="76" height="11" rx="5.5" fill="currentColor"/><rect class="p" x="20" y="12.5" width="14" height="27" rx="3" fill="var(--acc)"/><rect class="p" x="66" y="12.5" width="14" height="27" rx="3" fill="var(--acc)"/><rect class="p" x="66" y="60.5" width="14" height="27" rx="3" fill="var(--acc)"/><rect class="p" x="20" y="60.5" width="14" height="27" rx="3" fill="var(--acc)"/></svg><span>${t}</span></div>`;
+/* ---- direction of travel ---- */
+let M99={r:null,n:0};
+function m99Dir(){const r=route(),n=NAV.length,pr=M99.r;let d="fwd";if(pr==null)d="tab";else if(n<M99.n)d="back";else{try{const a=hubOf(pr),b=hubOf(r);if(a&&a===b&&(HUBS[a].tabs.some(t=>t[0]===tabOf(pr))&&HUBS[a].tabs.some(t=>t[0]===tabOf(r))||r===HUBS[a].land||pr===HUBS[a].land))d="tab";else if(a!==b&&b&&r===HUBS[b].land)d="tab";}catch(e){}}M99={r,n};return d;}
+/* ---- numbers: count up once, tick on change ---- */
+const NUM_SEEN=new Map();const NUMRX=/^([^\d−-]*?)([+\-−]?)(\d{1,4}(?:[.,]\d+)?)(%?[^\d]*)$/;
+function m99Nums(v){if(RM())return;const r=route();const els=v.querySelectorAll(".num,.stbig,.hxlab,.hdsc,.hdwp,.tb,.hdh");let i=0;
+  els.forEach(el=>{if(el.children.length>1||el.closest(".sheet"))return;const tx=el.textContent.trim();const m=tx.match(NUMRX);if(!m||/\d/.test(m[1])||/\d/.test(m[4])||/^(Top|Bottom)\b|#|rank/i.test(tx))return;/* rankings read wrong while counting (Top 8% -> Top 45%) */
+    const lab=((el.parentElement&&el.parentElement.textContent)||"").replace(/[\d.,%+−–-]/g,"").replace(/\s+/g," ").trim().slice(0,90),key=r+"|"+el.className+"|"+lab,to=parseFloat(m[3].replace(",",".")),dec=(m[3].split(/[.,]/)[1]||"").length,prev=NUM_SEEN.get(key);NUM_SEEN.set(key,to);
+    if(prev===to||!isFinite(to)||el.querySelector("*"))return;const from=prev==null?0:prev;if(prev==null&&to===0)return;const t0=performance.now(),dur=prev==null?650:450;
+    const fmt=x=>m[1]+m[2]+x.toFixed(dec)+m[4];const step=t=>{const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=fmt(from+(to-from)*e);if(k<1)requestAnimationFrame(step);else el.textContent=tx;};
+    el.textContent=fmt(from);requestAnimationFrame(step);});}
+/* ---- bars fill in once per screen ---- */
+const BAR_SEEN=new Set();
+function m99Bars(v){if(RM())return;const r=route();if(BAR_SEEN.has(r))return;BAR_SEEN.add(r);
+  v.querySelectorAll(".bar i,.mb i,.rkr .bar i,.hxbar i").forEach(el=>{const w=el.style.width;if(!w)return;el.style.transition="none";el.style.width="0%";void el.offsetWidth;el.style.transition="";el.classList.add("m99bar");requestAnimationFrame(()=>{el.style.width=w;});});}
+/* ---- empty states in the voice ---- */
+const EMPTY99={"No league loaded.":"No league loaded yet. Pick one from Switch league.","No updates right now.":"No updates right now. Quiet is good.","Nobody notable is unrostered.":"Nobody worth a roster spot is on waivers right now.","No one fits this week.":"No one fits this week. Your lineup is already the best one.","No remaining games on this slate.":"No games left this week. Back on Thursday."};
+function m99Empty(v){v.querySelectorAll(".empty:not(.e99)").forEach(el=>{const t=el.textContent.trim();if(EMPTY99[t])el.textContent=EMPTY99[t];if(el.querySelector("*"))return;el.classList.add("e99");el.insertAdjacentHTML("afterbegin",HM_MARK("var(--acc)","var(--muted)"));});}
+/* ---- skeletons + loader while Sleeper history loads ---- */
+function m99Skel(v){const p=v.querySelector("#hxtxt");if(p&&!v.querySelector(".hmlw")){p.insertAdjacentHTML("beforebegin",HM_LOADER("Reading your Sleeper history"));p.closest("section")&&p.closest("section").insertAdjacentHTML("afterend",`<div class="skc skel t"></div><div class="skc skel"></div><div class="skc skel"></div>`);}
+  v.querySelectorAll("section.pan>p.sub").forEach(x=>{if(/^Reading this league/.test(x.textContent)&&!x.parentNode.querySelector(".hmlw")){x.insertAdjacentHTML("beforebegin",HM_LOADER("Reading this league's Sleeper history"));x.remove();}});}
+render=(function(prev){return function(){if(S._snapOn&&S.mode!=="live")return;const r=prev.apply(this,arguments);try{const v=$("#view");if(v){const d=m99Dir();v.classList.remove("m-fwd","m-back","m-tab");if(v.classList.contains("enter"))v.classList.add("m-"+d);
+  m99Empty(v);m99Skel(v);m99Bars(v);m99Nums(v);if(route()==="home"&&S.mode==="live"&&!v.classList.contains("snap"))setTimeout(m99Snap,400);}}catch(e){console.error(e);}return r;};})(render);
+/* sheets get the same treatment */
+openSheet=(function(prev){return function(t,h){const r=prev(t,h);try{const b=$("#sheetB");if(b){m99Empty(b);if(!RM())b.querySelectorAll(".bar i,.mb i").forEach(el=>{const w=el.style.width;if(!w)return;el.style.transition="none";el.style.width="0%";void el.offsetWidth;el.style.transition="";el.classList.add("m99bar");requestAnimationFrame(()=>{el.style.width=w;});});}}catch(e){}return r;};})(openSheet);
+/* ---- pull to refresh: Huddle, Matchup, The Wire ---- */
+(function(){let y0=null,dy=0,busy=false;const el=document.createElement("div");el.className="ptr";el.innerHTML=HM_MARK();document.body.appendChild(el);
+  const ok=()=>{const r=route();return (r==="home"||r==="wire"||r==="mymatch"||r.startsWith("matchup-"))&&$("#sheet").hidden&&!document.body.classList.contains("gated");};
+  addEventListener("touchstart",e=>{if(busy||!ok()||window.scrollY>0){y0=null;return;}y0=e.touches[0].clientY;dy=0;},{passive:true});
+  addEventListener("touchmove",e=>{if(y0==null)return;dy=Math.max(0,e.touches[0].clientY-y0);const k=Math.min(1,dy/80);el.style.opacity=k;el.style.transform=`translate(-50%,${-60+k*70}px) rotate(${k*180}deg)`;},{passive:true});
+  addEventListener("touchend",async()=>{if(y0==null)return;y0=null;if(dy<80){el.style.opacity=0;el.style.transform="translate(-50%,-60px)";return;}busy=true;el.classList.add("go");
+    try{if(typeof refreshLive==="function"&&S.mode==="live")await refreshLive();render();}catch(e){}el.classList.remove("go");el.style.opacity=0;el.style.transform="translate(-50%,-60px)";busy=false;},{passive:true});})();
+/* ---- instant open: show the last Huddle while your leagues reload ---- */
+function m99Snap(){try{if(route()!=="home"||S.mode!=="live")return;const v=$("#view");if(!v||v.classList.contains("snap"))return;const h=v.innerHTML;if(h.length<200||h.length>180000)return;LS.set("hm_snap",JSON.stringify({t:Date.now(),h}));}catch(e){}}
+gateShow=(function(prev){return function(st,msg){try{if(st==="restore"&&!S._snapShown){const s=JSON.parse(LS.get("hm_snap")||"null");if(s&&s.h&&Date.now()-s.t<7*864e5){S._snapShown=1;const v=$("#view");
+    v.innerHTML=`<div class="snapbar">Updating your leagues…</div>`+s.h;v.classList.add("snap");S._snapOn=true;return;}}}catch(e){}if(st!=="restore"&&S._snapOn){S._snapOn=false;const v=$("#view");if(v)v.classList.remove("snap");render();}return prev(st,msg);};})(gateShow);
+gateHide=(function(prev){return function(){S._snapOn=false;const v=$("#view");if(v)v.classList.remove("snap");return prev.apply(this,arguments);};})(gateHide);
+/* /v99 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
