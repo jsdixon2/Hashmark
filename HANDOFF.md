@@ -6,6 +6,38 @@ Newest session at the top.
 
 ---
 
+## 2026-11-10/11: the rebrand + rebuild (v90+), in progress on `claude/festive-planck-liolqe`, NOT on main yet
+Owner asked to build "everything we've discussed" and report before committing to main. Brand decisions (all from the
+brand book canvas, https://claude.ai/artifact/A3fXk4HH4m6o2YLAG74QXz):
+- **Name:** Hashmark (trademark search still to do). **Logo:** P2 "Pylons and the 50": four orange pylons (14×27 at
+  x 20/66 on a 100 grid) around a chalk 50-yard line (76×11). No diagonal crossbar (Hinge's logo is an H with one).
+  Chalk ground: line turns Night; Pylon ground: pylons turn Night. Min 16 px; drop the tile below 29 px.
+- **Colour:** Pylon #FF6B1A (yours/live/act; #E85A0C on light), mint #3DDBB4 up/good, pink #FF5470 down/bad,
+  Night #0B0C0E, Locker #15171B, Line #24272D/#2A2D33, Muted #9BA1A9, Chalk #F2F1EC. Colour only means something.
+- **Type:** Space Grotesk (display, numbers) + Inter (text). **Appearance:** Auto (phone) / Dark / Light.
+- **Nav:** Huddle · Team · GM · Scout; top-left profile button = Locker (My stats + Settings + Leagues); search top right.
+- **Voice:** default "Just the Numbers"; optional Booth Mode, The Heckler (roasts only you), The Headset, Hype Man,
+  Back in My Day. Every voice is straight on injuries, deadlines, money. Personal lines: records, rivalries, traits.
+- **Manager rank:** "Top X%" / "Bottom X%" / "Average" + letter grade; hardware-weighted (v88/v89).
+- **League bulletin:** "The Wire"; stories may cite any manager's track record league-wide ("news is news").
+- **Notifications:** game-changers (win odds swing 15+) and urgent roster; quiet hours 11 pm-8 am; batched.
+- **No account wall** for now.
+- **Recap awards (team):** The Avalanche, Highway Robbery, Wrong Place Wrong Time, Mercy Rule, Photo Finish,
+  Benchwarmer's Revenge, Set It and Forget It, Dumpster Diver, The Fleece, Rock Bottom. **(player):** The Franchise,
+  Overachiever, Missing Persons Report, Wasted Talent, Off the Scrap Heap, Special Teams Special, The Vulture, Garbage Time Hero.
+
+Built so far:
+- **v90 rebrand:** palette tokens (dark + light) injected last so they win; `.good`/`.bad` = mint/pink (was accent);
+  position chips neutral; `HM_MARK()` svg + "hashmark" wordmark replaces `.wm`; dock Huddle/Team/GM/Scout with new
+  icons, Stats removed from dock; `#menuBtn` opens the Locker (route `stats`); Locker has Settings (`data-profile`)
+  and Leagues (`data-open-leagues`) buttons; `pageTitle`/`LABEL`/`openSheet` say "Locker". Fonts link swapped.
+  New `icon.svg`, `icon-180/192/512.png` (rendered from the mark), manifest colours, sw cache `hashmark-v10`.
+- **v91 Huddle:** `vOverview` wrapper prepends `vHuddle()`: day-of-week greeting/phase (`hdPhase`), "Your move"
+  card from `mergedMoves()[0]`, this week's matchups across leagues (`sums()`), then the old tiles under "Everything".
+- **v92 Locker:** `STB.records` (high/low score, biggest win/loss, streaks per league chain, best season, playoff
+  record) and `STB.almanac` (champions by year, all-time table, biggest blowouts) + tiles; sheets titled Locker.
+- Block sources in `.build/v90.js` ...; spliced with a helper that delimits each block with `/* /vNN */`.
+
 ## 2026-11-10: v88, Sleeper-wide manager percentiles
 - **Owner asked:** the overall profile should compare a manager's whole career with every Sleeper manager studied, shown
   as "Top X%", not just against league mates; league profiles stay league-specific. Weight championships so rebuilding
