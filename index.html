@@ -1651,7 +1651,7 @@ const _vW=vWaivers;vWaivers=function(){return _vW().replace(LEGAL,"")+vFaab()+LE
 const _vL=vLeague;vLeague=function(){return _vL()+`<div class="row mt"><button class="btn ghost" data-go="tx">Transactions</button><button class="btn ghost" data-go="rules">League rules</button></div>`;};
 const _rl=refreshLive;refreshLive=async function(){await _rl();S.upd=Date.now();};
 setInterval(()=>pollQuiet(),45000);
-setInterval(()=>{if(S.mode==="live"&&S.L&&!document.hidden)loadTxns(S.L).then(()=>["waivers","tx"].includes(route())&&render());},180000);
+setInterval(()=>{if(S.mode==="live"&&S.L&&!document.hidden)loadTxns(S.L).then(()=>["waivers","tx"].includes(route())&&bgRender());},180000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)pollQuiet();});
 
 /* ===== v5: command center ===== */
@@ -5299,7 +5299,7 @@ myMatchup=(function(prev){return function(L){const M=prev(L);if(!M||S.mode!=="li
   M.wpA=sd<.25?(d>0?1:d<0?0:.5):1/(1+Math.exp(-1.7*WP.b*d/sd));}catch(e){}return M;};})(myMatchup);
 gameTag=(function(prev){return function(p){try{const gs=p&&gameState(p.team);if(gs&&gs.st==="in"){const lp=livePtsMap();return `${gs.lbl||"live"}${lp.has(p.id)?`, ${f1(lp.get(p.id))} pts so far`:""}`;}}catch(e){}return prev(p);};})(gameTag);
 refreshLive=(function(prev){return async function(...a){await loadGameClock();const r=await prev(...a);for(const L of S.leagues||[]){L._mut=(L._mut||0)+1;L._sum=null;}return r;};})(refreshLive);
-setInterval(()=>{if(document.hidden||S.mode!=="live")return;if(!Object.values(GCLK.m).some(x=>x.st==="in")&&!liveSet().size)return;loadGameClock(true).then(()=>{for(const L of S.leagues||[])L._sum=null;if(!S.quiet)try{render();}catch(e){}});},60000);
+setInterval(()=>{if(document.hidden||S.mode!=="live")return;if(!Object.values(GCLK.m).some(x=>x.st==="in")&&!liveSet().size)return;loadGameClock(true).then(()=>{for(const L of S.leagues||[])L._sum=null;if(!S.quiet)try{bgRender();}catch(e){}});},60000);
 
 /* ===== v67: waiver picks trim every free agent's outlook by 1.5 pts a game before choosing =====
    Players on the wire with near-equal outlooks: the top pick tends to be the one we overrate. Tested on 516 real leagues
@@ -6713,6 +6713,37 @@ function tmRosterFplay(){const L=S.L;if(!L||!TM)return "";const t=L.teams[mineId
 vRoster=(function(prev){return function(){let h=prev();try{if(!TM){if(TMst==="idle")setTimeout(loadTeams,0);return h;}const s=tmRosterFplay();if(!s)return h;const i=h.indexOf("<h2>Start/Sit</h2>");if(i>=0){const a=h.lastIndexOf("<section",i);return h.slice(0,a)+s+h.slice(a);}return h+s;}catch(e){console.error(e);return h;}};})(vRoster);
 document.head.insertAdjacentHTML("beforeend",`<style>.tm104 td,.tm104 th{white-space:nowrap}</style>`);
 /* /v104 */
+/* ===== v105: background refreshes never reset the page you're reading.
+   Owner: "when I'm scrolling players the app times out, closes the see-more list and brings me to the top".
+   Cause: in a live league the 45 s score poll (pollQuiet -> refreshLive -> render) and the 3 min transactions refresh
+   redrew whatever page was open; "See all" expansions live only in the DOM, so the list collapsed, the page got
+   shorter and the scroll position was lost.
+   - Background renders (S.quiet, bgRender) only redraw pages that show live scores/transactions (UI105_LIVE); other
+     pages keep their data in memory and show it on the next visit.
+   - A background render waits while the user is touching/scrolling (1.5 s after the last touch/scroll/wheel).
+   - Any redraw of the same page keeps: expanded "See all" lists, open <details>, table side-scroll, and scrollY. ===== */
+let UI105T=0,UI105R=null,UI105P=0;
+["touchstart","touchmove","scroll","wheel"].forEach(ev=>addEventListener(ev,()=>{UI105T=Date.now();},{passive:true,capture:true}));
+addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-more]");if(b&&b.previousElementSibling)b.previousElementSibling.dataset.open="1";},true);
+const UI105_LIVE=r=>/^(home|matchup|league|team-|myteam|roster|week|gameday|edges|tx)/.test(r||"");
+function bgRender(){const q=S.quiet;S.quiet=1;try{render();}finally{S.quiet=q;}}
+function ui105Key(el,sel){const v=$("#view"),s=el.closest("section")||v,h=s&&s.querySelector("h2,h3");return (h?h.textContent.trim():"")+"#"+[...s.querySelectorAll(sel)].indexOf(el);}
+function ui105Snap(){const v=$("#view");if(!v)return null;
+  return {y:window.scrollY,more:new Set([...v.querySelectorAll(".lmore[data-open]")].map(l=>ui105Key(l,".lmore"))),
+    det:new Set([...v.querySelectorAll("details[open]")].map(d=>ui105Key(d,"details"))),
+    tw:[...v.querySelectorAll(".tw")].map(t=>t.scrollLeft)};}
+function ui105Restore(s){const v=$("#view");if(!v||!s)return;
+  if(s.more.size)v.querySelectorAll(".lmore").forEach(l=>{if(!s.more.has(ui105Key(l,".lmore")))return;l.classList.remove("clip");l.dataset.open="1";const b=l.nextElementSibling;if(b&&b.matches("[data-more]"))b.remove();});
+  if(s.det.size)v.querySelectorAll("details").forEach(d=>{if(s.det.has(ui105Key(d,"details")))d.open=true;});
+  v.querySelectorAll(".tw").forEach((t,i)=>{if(s.tw[i])t.scrollLeft=s.tw[i];});
+  if(Math.abs(window.scrollY-s.y)>1)window.scrollTo(0,s.y);}
+render=(function(prev){return function(){const r=route();
+  if(S.quiet&&r===UI105R){if(!UI105_LIVE(r)){S._stale105=1;return;}
+    if(Date.now()-UI105T<1500){if(!UI105P)UI105P=setTimeout(()=>{UI105P=0;bgRender();},1600);return;}}
+  const same=r===UI105R&&!(typeof BACKING!=="undefined"&&BACKING),snap=same?ui105Snap():null;
+  const out=prev.apply(this,arguments);UI105R=route();
+  if(snap&&UI105R===r)try{ui105Restore(snap);}catch(e){console.error(e);}return out;};})(render);
+/* /v105 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

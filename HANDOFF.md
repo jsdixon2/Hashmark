@@ -90,6 +90,11 @@ Built so far:
     were still coloured on some lists (specificity) -> neutral; My teams card showed 0.0-0.0 before kickoff -> the
     projection with "proj", win chance below.
   - Data spot checks: Huddle and Matchup win chance agree; last-week line, Week N awards and The Wire agree.
+- **v105 page resets while scrolling (owner bug report).** Live leagues only: `pollQuiet` (45 s) -> `refreshLive` ->
+  `render()` redrew any route, incl. GM › Waivers/Players; "See all" is DOM-only (`.lmore.clip` + `[data-more]`), so the
+  list collapsed, the page shrank and the scroll jumped. Demo mode never polls, which is why QA missed it. Reproduced on
+  the old build (Playwright: expand, scroll 2600, render -> collapsed, height 3901->3065). Fix in `.build/v105.js`.
+  Engine 8 screens and the Engine 1 refit were paused for this and still await the owner's go.
 - **2026-11-11: owner asked for items 1-4 of the optimization list.**
   1. Launch data (v103): measured ~1.1 MB compressed / 4.7 MB parsed per launch. Causes: every data file fetched with
      no-store + a time-stamped URL (re-download every 2 min-1 h) and Huddle loading the college file for one tile.
