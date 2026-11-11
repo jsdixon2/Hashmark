@@ -29,7 +29,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    v106: Value card breakdown (`vb106`): Dynasty market 60% / This season 20% / Hashmark model 20% (SF; 1QB .6/.25/.15),
    keeper = keeper value 50% + this season 50%, redraft = experts 62% + model 38%; footer names the adjustment (league
    size, TE premium, catch scoring, injury, smoothing; `vb106Why`). Young-player retest `backtest/e13_young.py`
-   (owner: Germie Bernard 955 vs market ~1,250): see HANDOFF; NO engine change made yet, awaiting owner's go.
+   (owner: Germie Bernard 955 vs market ~1,250): see HANDOFF.
+   v107 (owner go): players aged <= 23 in dynasty/keeper (`YNG107`): production model looks 4 seasons ahead at .8
+   discount (`hmModelVal` wrapper), this-season share halved with the rest to the dynasty market (`blendFor` wrapper).
+   Test: young miss vs next-year market 871 -> 762, vs 2-season production 1,142 -> 1,193; all 695 -> 670 / 1,061 -> 1,072.
+   Demo: young players +2-12% (Jeanty #21 -> #16), others < 1% lower.
 4. Trades — done. Grades from 7,656 real trades; redraft graded on championship odds; keeper leagues blend this season
    with next season's keeper value (weight fitted on 1,657 keeper trades: ~25% at 1 keeper per 10 roster spots,
    ~35% at 2, levelling near 38%; contender ×0.75, rebuilder ×1.3); keeper pick costs; IDP kept out of trade ideas.

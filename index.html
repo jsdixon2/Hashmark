@@ -6778,6 +6778,21 @@ valueCard=(function(prev){return function(p){let h=prev(p);try{if(!p||!h)return 
   h=h.replace(/<p class="sub">0–10,000, higher is better\.[\s\S]*?<\/p>/,`<p class="sub">0–10,000, higher is better. Values by <a href="https://www.dynastydealer.com" target="_blank" rel="noopener">Dynasty Dealer</a>, <a href="https://www.fantasycalc.com" target="_blank" rel="noopener">FantasyCalc</a>, DynastyProcess, RosterAudit and FantasyPros. Shares fitted on 2020–24 markets against real production.</p>`);}catch(e){console.error(e);}return h;};})(valueCard);
 document.head.insertAdjacentHTML("beforeend",`<style>.vb106{margin:12px 0 6px}.vg106{padding:9px 0;border-top:1px solid var(--line)}.vg106h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.vg106h .sub{margin:0;font-size:12px}.vg106 .vsrcs{margin-top:6px}.vg106f{padding-top:9px;border-top:1px solid var(--line)}.vb106 .eyebrow{margin:6px 0 2px}</style>`);
 /* /v106 */
+/* ===== v107: young players' dynasty/keeper values (owner "go" after backtest/e13_young.py).
+   Test (FP dynasty SF history, Nov 2021-24, 1,196 player-dates): the app valued players <=23.5 about 480 below their
+   market a year later (older -26); the this-season share caused more of that than the production model, and the model
+   only looked 2 seasons ahead. Chosen variant for age <= 23 (Sleeper ages are whole years):
+     - production model looks 4 seasons ahead at a .8 discount (was SF 2 / .65, 1QB 3 / .75);
+     - this-season share halved (SF 20% -> 10%, 1QB 25% -> 12.5%), the difference goes to the dynasty market.
+   Measured on young players: miss vs next-year market 871 -> 762, vs next-2-season production 1,142 -> 1,193;
+   all players 695 -> 670 / 1,061 -> 1,072. Ordering among young players unchanged (rho .844 -> .845). ===== */
+const YNG107=p=>p&&(p.age!=null?p.age:99)<=23&&S.fmt.type!=="redraft";
+hmModelVal=(function(prev){return function(p){if(!YNG107(p))return prev(p);const k=S.fmt.qb==="sf"?"sf":"1q",o={yrs:HMV[k].yrs,disc:HMV[k].disc};
+  HMV[k].yrs=4;HMV[k].disc=.8;try{return prev(p);}finally{Object.assign(HMV[k],o);}};})(hmModelVal);
+blendFor=(function(prev){return function(p,set,modelRank){if(!YNG107(p)||!set.some(([k])=>k.startsWith("rd:")))return prev(p,set,modelRank);
+  const rd=set.filter(([k])=>k.startsWith("rd:")),mk=set.filter(([k])=>k!=="model"&&!k.startsWith("rd:"));const rw=rd.reduce((s,x)=>s+x[1],0),mw=mk.reduce((s,x)=>s+x[1],0)||1,mv=rw*.5;
+  const ns=set.map(([k,w])=>k.startsWith("rd:")?[k,w*.5]:k!=="model"?[k,w+mv*w/mw]:[k,w]);return prev(p,ns,modelRank);};})(blendFor);
+/* /v107 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
