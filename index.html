@@ -6744,6 +6744,40 @@ render=(function(prev){return function(){const r=route();
   const out=prev.apply(this,arguments);UI105R=route();
   if(snap&&UI105R===r)try{ui105Restore(snap);}catch(e){console.error(e);}return out;};})(render);
 /* /v105 */
+/* ===== v106: value breakdown that explains itself (owner: Germie Bernard showed 955, below every dynasty source).
+   The source chips mixed dynasty and this-season numbers with no labels (Dynasty Dealer 1,221 and 317) and the Hashmark
+   production model's share was not shown at all. The Value card now lists each group with its share and value:
+   Dynasty market / This season / Hashmark model (keeper: long-term blend 50% + this season 50%), then any adjustment
+   (scoring format, injury, day-to-day smoothing) so the parts add up to the number shown. ===== */
+function vb106Rows(parts,scale,ros){if(!parts||!parts.length)return {html:"",sum:0};const W=parts.reduce((s,x)=>s+x.w,0)||1;
+  const G=[["mk","Dynasty market",x=>x.k!=="model"&&!x.rd],["rd","This season",x=>!!x.rd],["md","Hashmark model",x=>x.k==="model"]];
+  if(!parts.some(x=>x.rd)&&S.fmt.type!=="dynasty")G[0][1]="Experts and markets";
+  let sum=0;const html=G.map(([id,lab,f])=>{const xs=parts.filter(f);if(!xs.length)return "";const w=xs.reduce((s,x)=>s+x.w,0),v=xs.reduce((s,x)=>s+x.v*x.w,0)/w,sh=w/W*scale;sum+=sh*v;
+    const chips=id==="md"?`<span class="vsrc">Production model <b class="num">#${Math.round(xs[0].r)}</b></span>`:xs.map(x=>`<span class="vsrc">${SRCN[x.k]||x.k} <b class="num">${x.rd&&x.r>=450?"unranked":/^ecr/.test(x.k)?"#"+Math.round(x.r):f0(Math.round(x.v))}</b></span>`).join("");
+    const why=id==="md"?(ros?"Hashmark’s rest-of-season projection":"points per game above a replacement starter, aged forward"):id==="rd"||ros?"rest-of-season rankings":"dynasty trade values";
+    return `<div class="vg106"><div class="vg106h"><span><b>${lab}</b> <span class="sub">${Math.round(sh*100)}% · ${why}</span></span><b class="num">${f0(Math.round(v))}</b></div><div class="vsrcs">${chips}</div></div>`;}).join("");
+  return {html,sum};}
+function vb106(p){const ty=S.fmt.type;let html="",sum=0;
+  if(ty==="keeper"&&p.vsrc&&p.vsrcR){const row=(lab,why,P)=>{const W=P.parts.reduce((s,x)=>s+x.w,0)||1,v=P.parts.reduce((s,x)=>s+x.v*x.w,0)/W;sum+=.5*v;
+      const chips=P.parts.map(x=>`<span class="vsrc">${x.k==="model"?"Hashmark model":SRCN[x.k]||x.k}${x.rd?" (this season)":""} <b class="num">${x.k==="model"||/^ecr/.test(x.k)?"#"+Math.round(x.r):x.rd&&x.r>=450?"unranked":f0(Math.round(x.v))}</b></span>`).join("");
+      return `<div class="vg106"><div class="vg106h"><span><b>${lab}</b> <span class="sub">50% · ${why}</span></span><b class="num">${f0(Math.round(v))}</b></div><div class="vsrcs">${chips}</div></div>`;};
+    html=row("Keeper value","dynasty markets + production model, for the seasons you can keep him",p.vsrc)+row("This season","rest-of-season rankings + Hashmark projection",p.vsrcR);}
+  else{const L=ty==="redraft"?p.vsrcR:p.vsrc;if(!L)return "";const parts=ty==="redraft"?L.parts.map(x=>({...x,rd:false})):L.parts;const a=vb106Rows(parts,1,ty==="redraft");html=a.html;sum=a.sum;}
+  if(!html)return "";const adj=Math.round(p.val-sum);
+  const foot=Math.abs(adj)>=Math.max(15,p.val*.02)?`<div class="vg106h vg106f"><span>Blend ${f0(Math.round(sum))} ${adj>0?"+":"−"} ${f0(Math.abs(adj))} <span class="sub">${esc(vb106Why(p,sum))}</span></span><b class="num">${f0(p.val)}</b></div>`:"";
+  return `<div class="vb106">${html}${foot}</div>`;}
+function vb106Why(p,sum){const L=S.L,sc=L&&L.scoring||{},n=L&&L.size||12,why=[];const P=p.vsrc&&p.vsrc.parts||[];
+  const rank=P.length?Math.round(P.reduce((s,x)=>s+x.r*x.w,0)/P.reduce((s,x)=>s+x.w,0)):p._mr||99;let m=1;try{m=fmtMult(p,rank);}catch(e){}
+  if(n!==12&&rank>36)why.push(`${n}-team league (${n<12?"depth is worth less":"depth is worth more"})`);
+  if(p.pos==="TE"&&+sc.bonus_rec_te>0)why.push("TE premium");if(sc.rec!=null&&sc.rec<1&&["RB","WR","TE"].includes(p.pos))why.push(sc.rec===0?"no points per catch":"half point per catch");
+  const st=String(p.inj||"");if(/\bout\b|\bir\b|doubt|\bpup\b|\bsus|quest/i.test(st)||(p.ic&&p.ic.c==="unc"))why.push("injury status");
+  const exp=S.fmt.type==="dynasty"?sum*m:null;if(exp!=null&&Math.abs(p.val-exp)>Math.max(15,p.val*.02)&&!why.includes("injury status"))why.push("smoothed with yesterday’s value");
+  return why.length?why.join(", "):"league scoring";}
+valueCard=(function(prev){return function(p){let h=prev(p);try{if(!p||!h)return h;const nb=vb106(p);if(!nb)return h;
+  const i=h.indexOf('<div class="vsrcs">');if(i>=0){const j=h.indexOf("</div>",i)+6;h=h.slice(0,i)+nb+h.slice(j);}else{const k=h.indexOf('<p class="sub">0–10,000');if(k>=0)h=h.slice(0,k)+nb+h.slice(k);}
+  h=h.replace(/<p class="sub">0–10,000, higher is better\.[\s\S]*?<\/p>/,`<p class="sub">0–10,000, higher is better. Values by <a href="https://www.dynastydealer.com" target="_blank" rel="noopener">Dynasty Dealer</a>, <a href="https://www.fantasycalc.com" target="_blank" rel="noopener">FantasyCalc</a>, DynastyProcess, RosterAudit and FantasyPros. Shares fitted on 2020–24 markets against real production.</p>`);}catch(e){console.error(e);}return h;};})(valueCard);
+document.head.insertAdjacentHTML("beforeend",`<style>.vb106{margin:12px 0 6px}.vg106{padding:9px 0;border-top:1px solid var(--line)}.vg106h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.vg106h .sub{margin:0;font-size:12px}.vg106 .vsrcs{margin-top:6px}.vg106f{padding-top:9px;border-top:1px solid var(--line)}.vb106 .eyebrow{margin:6px 0 2px}</style>`);
+/* /v106 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

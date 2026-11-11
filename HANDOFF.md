@@ -90,6 +90,27 @@ Built so far:
     were still coloured on some lists (specificity) -> neutral; My teams card showed 0.0-0.0 before kickoff -> the
     projection with "proj", win chance below.
   - Data spot checks: Huddle and Matchup win chance agree; last-week line, Week N awards and The Wire agree.
+- **v106 + young-player value retest (owner: why is Germie Bernard only 955?).** Every dynasty source has him #111-129
+  overall (~1,250 on the SF curve). The blend: market 60% (~1,260), this-season 20% (~1,260 avg, but DD rd #217 / FC rd
+  #133 / FP ROS #77), production model 20% (near 0: ~7-8 PPR ppg vs WR replacement 11, 2-season horizon). Display fix
+  shipped (v106, labelled groups + adjustment footer). Retest `backtest/e13_young.py` (FP dynasty SF ECR history in
+  bt/hv.json.gz at early-Nov dates 2021-24, 1,196 player-dates ranked <=300; outcomes = market 1 yr later and real PAR
+  over the next 2 seasons, both on the app curve; ties share average rank - without that the results moved between runs):
+  | variant | young<=23.5 mkt+1y bias/MAE | young prod MAE | all mkt MAE | all prod MAE |
+  | app (.6/.2/.2) | -479 / 871 | 1142 | 695 | 1061 |
+  | market only | +124 / 808 | 1382 | 733 | 1204 |
+  | young: 4 yrs ahead, disc .8 | -400 / 829 | 1153 | 685 | 1063 |
+  | young: this-season .1 | -309 / 803 | 1173 | 681 | 1068 |
+  | young: this-season .1 + 4 yrs disc .8 | -221 / 762 | 1193 | 670 | 1072 |
+  | young: this-season 0 + 4 yrs disc .8 | +2 / 735 | 1277 | 665 | 1090 |
+  Reading: the model does NOT undervalue young players vs real production (it improves production accuracy a lot vs
+  market only). Young players are valued ~450 below where the market puts them a year later (older: -26); the
+  this-season share causes more of that than the model. Ordering among young players (rho .844) doesn't change with
+  any variant: it's a level shift. For Bernard-like players (young WR, market #80-200, n=46) the current blend is
+  already the most accurate (690 / 1106 vs market 780 / 1337). The 2-season production outcome can't see years 3+,
+  which is exactly where young players' value sits, so it understates the case for youth.
+  Recommendation to owner: young (<=23.5) players get a 4-season model horizon at .8 discount and a 10% this-season
+  share (rest to market). Awaiting go.
 - **v105 page resets while scrolling (owner bug report).** Live leagues only: `pollQuiet` (45 s) -> `refreshLive` ->
   `render()` redrew any route, incl. GM › Waivers/Players; "See all" is DOM-only (`.lmore.clip` + `[data-more]`), so the
   list collapsed, the page shrank and the scroll jumped. Demo mode never polls, which is why QA missed it. Reproduced on

@@ -26,6 +26,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 1. Projections — done (weights fitted on Sleeper projections vs results).
 2. Win odds / playoff odds — done (fitted on 44k Sleeper matchups).
 3. Value engine — done (fitted on 2020-24 dynasty markets vs production; measured age curves; pick values).
+   v106: Value card breakdown (`vb106`): Dynasty market 60% / This season 20% / Hashmark model 20% (SF; 1QB .6/.25/.15),
+   keeper = keeper value 50% + this season 50%, redraft = experts 62% + model 38%; footer names the adjustment (league
+   size, TE premium, catch scoring, injury, smoothing; `vb106Why`). Young-player retest `backtest/e13_young.py`
+   (owner: Germie Bernard 955 vs market ~1,250): see HANDOFF; NO engine change made yet, awaiting owner's go.
 4. Trades — done. Grades from 7,656 real trades; redraft graded on championship odds; keeper leagues blend this season
    with next season's keeper value (weight fitted on 1,657 keeper trades: ~25% at 1 keeper per 10 roster spots,
    ~35% at 2, levelling near 38%; contender ×0.75, rebuilder ×1.3); keeper pick costs; IDP kept out of trade ideas.
