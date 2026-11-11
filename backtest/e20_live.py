@@ -35,7 +35,7 @@ def windows(season):
     out = {}
     for w, gs in G.items():
         keys = sorted({(d, s) for d, s, *_ in gs})
-        out[w] = {"win": {k: i for i, k in enumerate(keys)}, "team": {}}
+        out[w] = {"win": {k: i for i, k in enumerate(keys)}, "team": {}, "lab": [datetime.date.fromisoformat(d).strftime("%a") + "-" + ("am","early","late","night")[s] for d, s in keys]}
         for d, s, gid, h, a in gs:
             for t in (h, a): out[w]["team"][t] = (gid, out[w]["win"][(d, s)])
     return out
@@ -71,7 +71,7 @@ def main():
             for wk, rows in sorted(lg["weeks"].items(), key=lambda x: int(x[0])):
                 w = int(wk); P = SP.get(f"{season}-{w}")
                 if not P or w >= pws or w not in WIN: continue
-                Wt = WIN[w]["team"]; nwin = len(WIN[w]["win"])
+                Wt = WIN[w]["team"]; nwin = len(WIN[w]["win"]); labs = WIN[w]["lab"]
                 by = collections.defaultdict(list)
                 for rid, mid, pt, st in rows:
                     if mid is not None: by[mid].append((pt, st))
@@ -138,7 +138,7 @@ def main():
                                     rg += o["pre"] * rem * gm
                                     a += o["pre"]; b += o["pre"] * rem
                                 row += [pt, sof, rs, rg, b / a if a > 0 else 1.0, a]
-                            recs.append(row)
+                            row.append(labs[j]); recs.append(row)
         print(season, nm, len(recs), file=sys.stderr)
     json.dump(recs, gzip.open(OUT + "live_states.json.gz", "wt"))
 
