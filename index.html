@@ -6885,6 +6885,22 @@ const YW118=p=>{if(!p||S.fmt.type==="redraft")return 0;const a=p.age!=null?p.age
 hmModelVal=(function(prev){return function(p){const base=prev(p),w=YW118(p);if(!w)return base;const k=S.fmt.qb==="sf"?"sf":"1q",o={yrs:HMV[k].yrs,disc:HMV[k].disc};
   HMV[k].yrs=4;HMV[k].disc=.8;try{return w*prev(p)+(1-w)*base;}finally{Object.assign(HMV[k],o);}};})(hmModelVal);
 /* /v118 */
+/* ===== v120: NFL game-pick log reads the new teams.json card (build_teams: early = first pregame pick, final = last
+   pregame pick, frozen at kickoff; card {n,brier,acc (= final), final, early (7+ days ahead), by_src}). Scout › Power
+   rankings and the Report card show the last-pregame grade first; "a week or more ahead" only once 10+ games are graded.
+   Old card shape {n,brier,acc} and n = 0 still work. ===== */
+function gp120(c){c=c||{};const F=c.final||{n:c.n||0,brier:c.brier,acc:c.acc},E=c.early&&c.early.n>=10&&c.early.brier!=null?c.early:null;return {F:F&&F.n&&F.brier!=null?F:null,E,nw:!!c.final};}
+const gpB120=b=>b==null?"–":(+b).toFixed(3).replace(/^0/,""),gpP120=a=>`${Math.round((a||0)*100)}%`;
+tmPower=(function(prev){return function(...a){const c=TM&&TM.card,{F,E,nw}=gp120(c);if(!F)return prev(...a);
+  const old=TM.card;let h;try{TM.card={n:0};h=prev(...a);}finally{TM.card=old;}
+  const fb="Tested on 1,355 games (2021–25): rating Brier .225, closing line .212.";
+  const t=`Hashmark's game picks this season: ${F.n} graded, ${gpP120(F.acc)} right, Brier ${gpB120(F.brier)}${nw?" (last pick before kickoff)":""}${E?`; a week or more ahead ${gpP120(E.acc)}, Brier ${gpB120(E.brier)} (${E.n})`:""}.`;
+  return h.includes(fb)?h.replace(fb,t):h;};})(tmPower);
+vReport=(function(prev){return function(...a){let h=prev(...a);try{const G=(RPT&&RPT.games)||{},{F,E}=gp120(G.live_log);if(!F||!G.n)return h;
+  const at='</tbody></table></div><p class="sub mt">The closing line is the best predictor';if(!h.includes(at))return h;
+  const row=(l,x)=>`<tr><td>${l} <span class="sub">${f0(x.n)}</span></td><td class="num">${gpP120(x.acc)}</td><td class="num">${x.brier}</td></tr>`;
+  h=h.replace(at,row("Hashmark live, before kickoff",F)+(E?row("Hashmark live, a week or more ahead",E):"")+at);}catch(e){}return h;};})(vReport);
+/* /v120 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
