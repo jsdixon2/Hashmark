@@ -16,4 +16,5 @@ Scripts that fit and test Hashmark's engines against real outcomes. They read th
 | e9_wr.py, e9_wrfix.py | Waivers (v67) | WR rate variants with receiving-role features; wire-outlook haircut comparison (with e9_exact2 ADDH runs) |
 | e11_trades.py → e11_an.py | Trade finder (v68) | 3,413 real in-season dynasty/keeper trades: does fitting both teams' plans predict that both benefited? |
 | e13_young.py | Values (v106) | Do young players' dynasty values lag? Blend variants vs market 1 yr later and next-2-season production |
+| e14_data.py → e14_fit.py, e14_props.py | Projections (v108) | Player-week panel 2021-26 with the app's inputs; median-regression refit vs Sleeper (2025/2026 held out), boosted-tree ceiling; props blend weight |
 | e10_dvp.py | NFL teams (engine 6) | How much defense-vs-position actually predicts |

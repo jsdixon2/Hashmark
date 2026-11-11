@@ -2,18 +2,19 @@
 """Engine 8: report card + projection ranges -> data/report.json.
 
 Report card (graded on real results, current season, week by week):
-- projections: Hashmark (Sleeper projection through the fitted PJC weights, as in build_calib) vs Sleeper's own,
+- projections: Hashmark's full projection replayed from the same inputs the app uses (scripts/proj_panel.py: PJC formula
+  with recent scoring, expected points, matchup, implied total, questionable, betting props) vs Sleeper's own,
   mean absolute error per player-week (players projected 3+ who played), PPR.
 - win odds: every archived league matchup (bt/leagues.json.gz), pregame team projections from the starters through
   PJC, the app's fitted winProb (WP k .16, c 5, b 1.01); Brier vs a coin flip (.25) and 10-bucket calibration.
 - NFL game picks: the e12 rating (no line) vs the closing line, Brier and accuracy for this season's finished games;
   plus the live prediction log in data/teams.json once it has graded games.
 - waivers / trades: tested numbers from backtests (season-level), labelled as such.
-Projection ranges (fitted on 2021-2023, checked on 2024-2025): actual/projection ratio quantiles (10th, 90th) per
+Projection ranges (fitted on 2021-2024, checked on 2025-26; v108 uses the full projection): actual/projection ratio quantiles (10th, 90th) per
 position x projection tier x volatility tier (player's CV over prior games; "new" under 4 games) x questionable flag.
 Labels: interval width relative to projection; HIGH / MEDIUM / LOW cut at the 1/3 and 2/3 points per position.
-Tested 2024-25 (7,898 player-weeks): 80% range held 82.7%; relative miss HIGH .44 / MEDIUM .53 / LOW .72, coverage
-79% / 82% / 87%."""
+Tested 2025-26 (4,826 player-weeks): 80% range held 81.0%; relative miss HIGH .44 / MEDIUM .52 / LOW .74, coverage
+78% / 80% / 84%."""
 import gzip, json, math, os, csv, io, statistics, collections, datetime, urllib.request
 OUT = "data/report.json"
 WP = {"k": .16, "c": 5, "b": 1.01}
@@ -53,20 +54,15 @@ def main():
     season = max(int(k.split("-")[0]) for k in ST)
     weeks = sorted({int(k.split("-")[1]) for k in ST if k.startswith(f"{season}-")})
     # ---------- projections ----------
+    # the app's full projection rebuilt from the same inputs (scripts/proj_panel.py), PPR
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("pp", "scripts/proj_panel.py"); PP = importlib.util.module_from_spec(spec); spec.loader.exec_module(PP)
+    panel = PP.build(range(2021, season + 1)); HM = {(r["s"], r["w"], r["pid"]): r["hm"] for r in panel}
     proj_wk = {}
-    rows_all = collections.defaultdict(list)   # for ranges: (season, week, pid, pos, hm_proj, actual)
-    for key, P in SP.items():
-        s, w = map(int, key.split("-"))
-        S = ST.get(key) or {}
-        for pid, pr in P.items():
-            pos = POS.get(pid)
-            if pos not in ("QB", "RB", "WR", "TE"): continue
-            st = S.get(pid)
-            if not st or not st.get("gp"): continue
-            sp = pts(pr); a = pts(st)
-            if sp < 3: continue
-            h = hm(sp, C.get(pos), w)
-            rows_all[(s, w)].append((pid, pos, h, sp, a))
+    rows_all = collections.defaultdict(list)   # (season, week) -> [(pid, pos, hashmark proj, sleeper proj, actual)]
+    for r in panel:
+        if r["base"] < 3: continue
+        rows_all[(r["s"], r["w"])].append((r["pid"], r["pos"], r["hm"], r["base"], r["a"]))
     for w in weeks:
         r = rows_all.get((season, w)) or []
         if len(r) < 50: continue
@@ -75,6 +71,10 @@ def main():
     proj = {"weeks": proj_wk, "mae_hm": round(sum(x["hm"] * x["n"] for x in pw) / max(1, sum(x["n"] for x in pw)), 3) if pw else None,
             "mae_sleeper": round(sum(x["sl"] * x["n"] for x in pw) / max(1, sum(x["n"] for x in pw)), 3) if pw else None,
             "weeks_beat": sum(1 for x in pw if x["hm"] < x["sl"]), "weeks": proj_wk, "n_weeks": len(pw)}
+    cur = [x for w in weeks for x in rows_all.get((season, w)) or []]
+    proj["by_pos"] = {p: {"n": len(xs), "hm": round(sum(abs(a - h) for _, _, h, _, a in xs) / len(xs), 3), "sl": round(sum(abs(a - sp) for _, _, _, sp, a in xs) / len(xs), 3)}
+                      for p in ("QB", "RB", "WR", "TE") for xs in [[x for x in cur if x[1] == p]] if xs}
+    proj["method"] = "replayed from the same inputs the app uses (Sleeper projection, recent scoring, expected points, matchup, team total, injury, props)"
     # ---------- win odds ----------
     L = json.load(gzip.open("bt/leagues.json.gz", "rt"))["leagues"]
     wo = []
@@ -88,7 +88,7 @@ def main():
             for rid, mid, pt, st in rows:
                 hit = [x for x in st if x in P]
                 if not st or len(hit) / len(st) < .9: continue
-                tot[rid] = (sum(hm(pts(P[x], sc), C.get(POS.get(x)), w) for x in hit), mid, pt)
+                tot[rid] = (sum(HM.get((season, w, x)) if HM.get((season, w, x)) is not None and (sc.get("rec", 1) or 0) >= .75 else hm(pts(P[x], sc), C.get(POS.get(x)), w) for x in hit), mid, pt)
             by = collections.defaultdict(list)
             for rid, (t, mid, pt) in tot.items():
                 if mid is not None: by[mid].append((t, pt))
@@ -134,15 +134,15 @@ def main():
     for (s, w), rs in sorted(rows_all.items()):
         for pid, pos, h, sp, a in rs: hist[pid].append((s, w, a))
     injq = set()
-    for y in range(2021, 2026):
-        f = f"backtest/dl/inj_{y}.csv"
+    for y in range(2021, season + 1):
+        f = f"bt/nfl/injuries/{y}.csv.gz"
         if not os.path.exists(f): continue
-        for r in csv.DictReader(open(f)):
+        for r in csv.DictReader(gzip.open(f, "rt")):
             if (r.get("report_status") or "") == "Questionable" and r.get("game_type", "REG") == "REG":
                 injq.add((int(r["season"]), int(r["week"]), r.get("gsis_id")))
     g2s = {}
-    if os.path.exists("backtest/dl/ids.csv"):
-        for r in csv.DictReader(open("backtest/dl/ids.csv")):
+    if True:
+        for r in csv.DictReader(open(PP._get("ids.csv", PP.IDS), encoding="utf-8")):
             if r.get("sleeper_id") not in ("", "NA"): g2s[r["gsis_id"]] = str(r["sleeper_id"]).split(".")[0]
     q = {(s, w, g2s[g]) for s, w, g in injq if g in g2s}
     def tier(h): return 0 if h < 8 else 1 if h < 14 else 2
@@ -152,11 +152,11 @@ def main():
         m_ = statistics.mean(past); return "lo" if m_ <= 0 or statistics.pstdev(past) / m_ < .45 else ("mid" if statistics.pstdev(past) / m_ < .7 else "hi")
     cells = collections.defaultdict(list); test = []
     for (s, w), rs in rows_all.items():
-        if s < 2021 or s > 2025: continue
+        if s < 2021: continue
         for pid, pos, h, sp, a in rs:
             if h < 4: continue
             k = (pos, tier(h), vol(pid, s, w), 1 if (s, w, pid) in q else 0)
-            (cells[k] if s <= 2023 else test).append((k, h, a) if s > 2023 else a / h)
+            (cells[k] if s <= 2024 else test).append((k, h, a) if s > 2024 else a / h)
     def qt(xs, p):
         xs = sorted(xs); i = (len(xs) - 1) * p; lo = int(i); hi = min(len(xs) - 1, lo + 1); return xs[lo] + (xs[hi] - xs[lo]) * (i - lo)
     table = {}
@@ -188,8 +188,8 @@ def main():
     ranges = {"table": table, "cuts": cuts, "test_coverage_80": round(inside / n, 3) if n else None, "test_n": n, "labels": labels,
               "tiers": [8, 14], "vol_cv": [.45, .7], "new_games": 4}
     # ---------- tested numbers from the backtests ----------
-    tested = {"waivers": {"helped": .73, "pts": 8.8, "managers_pts": 7.6, "src": "redraft 2024-25, 516 leagues (e9)"},
-              "trades": {"fit_lineup_up": .80, "baseline": .44, "src": "3,413 dynasty/keeper trades 2022-25 (e11)"}}
+    tested = {"waivers": {"helped": .73, "pts": 8.8, "managers_pts": 7.6, "src": "redraft 2024-25, 516 leagues", "backtest": "e9"},
+              "trades": {"fit_lineup_up": .80, "baseline": .44, "src": "3,413 dynasty/keeper trades 2022-25", "backtest": "e11"}}
     out = {"built": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ"), "season": season, "projections": proj, "win_odds": odds,
            "games": games, "ranges": ranges, "tested": tested}
     json.dump(out, open(OUT, "w"), separators=(",", ":"))

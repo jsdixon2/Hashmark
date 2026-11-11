@@ -90,6 +90,14 @@ Built so far:
     were still coloured on some lists (specificity) -> neutral; My teams card showed 0.0-0.0 before kickoff -> the
     projection with "proj", win chance below.
   - Data spot checks: Huddle and Matchup win chance agree; last-week line, Week N awards and The Wire agree.
+- **v108 Engine 1 refit + Engine 8 screens (owner "Go").** Found that the report card graded a simplified stand-in
+  (all inputs = Sleeper proj), not the app's projection; the real formula with the old weights was ~even with Sleeper
+  (2026 5.192 vs 5.185). Refit (see CLAUDE.md engine 1): linear median regression matched a boosted-tree ceiling, so the
+  simple, explainable formula stays. Report card now replays the full projection (`scripts/proj_panel.py`). Not replayed:
+  wind/rain and practice tweaks (no archive). Props archive only covers 2026 (8 weeks): re-check PJ_PROPS_POS as it grows.
+  Win odds were fitted with the old projections; graded after the refit: Brier .2114 (was .212), calibration still ~1 pt.
+  Report card shows verdict pills (Beats Sleeper / Calibrated / Uses the line / Honest / Tested), not letter grades:
+  only rows with a real benchmark get a verdict. Waiver/trade numbers are season-level backtests, labelled "Tested".
 - **v106 + young-player value retest (owner: why is Germie Bernard only 955?).** Every dynasty source has him #111-129
   overall (~1,250 on the SF curve). The blend: market 60% (~1,260), this-season 20% (~1,260 avg, but DD rd #217 / FC rd
   #133 / FP ROS #77), production model 20% (near 0: ~7-8 PPR ppg vs WR replacement 11, 2-season horizon). Display fix

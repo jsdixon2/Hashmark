@@ -23,7 +23,12 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 - Pushing: `git pull --rebase && git push` (workflows commit data to `main` often).
 
 ## Engine status (see the "Hashmark analytics engine review" doc for the original audit)
-1. Projections — done (weights fitted on Sleeper projections vs results).
+1. Projections — done. v108 refit (`backtest/e14_data.py` -> `e14_fit.py`, `e14_props.py`): median regression per position
+   on the app's own inputs (Sleeper proj, PPG, last-3, xFP, last-3 xFP, DvP rank, implied total, has-PPG/has-xFP), fitted
+   2021-24: 2025 MAE 4.961 vs Sleeper 5.199 (16/18 weeks), 2026 5.071 vs 5.185 (7/9); a gradient-boosted ceiling did no
+   better (4.977 / 5.075). Shipped weights refit on 2021-25 (2026: 5.059); QB keeps the old PJC (refit worse for QBs both
+   years). Props share by position `PJ_PROPS_POS` QB .1 / RB-WR-TE .3 (2026, 1,214 player-weeks: .2 -> 5.322, .3 -> 5.31).
+   Full replay incl. props, 2026: Hashmark 5.037 vs Sleeper 5.186, 8 of 9 weeks.
 2. Win odds / playoff odds — done (fitted on 44k Sleeper matchups).
 3. Value engine — done (fitted on 2020-24 dynasty markets vs production; measured age curves; pick values).
    v106: Value card breakdown (`vb106`): Dynasty market 60% / This season 20% / Hashmark model 20% (SF; 1QB .6/.25/.15),
@@ -180,7 +185,14 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    is used only for future weeks: Scout › NFL teams Power rankings + Fantasy playoffs table, GM › Waivers Streamers
    (QB/TE/DST/K), Team › Roster Fantasy playoffs for your starters. Prediction log graded in teams.json `log`/`card`.
 7. College prospect (devy) score — untested, hand-set weights; fit on 2015-23 classes incl. draft capital.
-8. Confidence labels + live model report card.
+8. Confidence labels + live model report card — done (v108). `scripts/build_report.py` -> `data/report.json` (data.yml,
+   twice daily) grades the app's full projection replayed by `scripts/proj_panel.py` (stdlib; downloads nflverse weekly +
+   ffopportunity to /tmp/hm_dl, reads PJC/PJ_PROPS_POS from index.html), win odds (Brier .211, calibration), NFL picks,
+   ranges (cells pos x tier x volatility x questionable, fitted 2021-24, 80% range held 81% on 2025-26). App: `e8Range`
+   (hmProj wrapper sets lo/hi/sd/conf), labels HIGH/MEDIUM/LOW (`e8Chip`), player card "Week N projection" (stat tile
+   relabelled "Sleeper's Wk N projection"), matchup "likely X-Y" under team totals (sd = .16m+5), start/sit "Coin flip"
+   under 58%, Report card page (route `report`, `vReport`, link card at the bottom of the Locker, in search), track-record
+   lines on Waivers (Best adds) and Trade finder (dynasty/keeper).
 
 ## Open items
 - Done: `bt/rosters.json.gz` (900 leagues, exact weekly rosters). Waiver test 2024-25, 516 leagues / 62,616 team-weeks,

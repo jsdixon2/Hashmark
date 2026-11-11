@@ -3845,7 +3845,7 @@ startSit=function(){const L=S.L;if(!L||L.rip)return "";let R;try{R=ssRecs(L);}ca
    ${sw.length?`<p class="sub" style="margin:2px 0 8px">Hashmark recommends ${sw.length} change${sw.length===1?"":"s"}. Moving players who already played isn’t possible, so they’re left out.</p>${sw.map(x=>ssCard(x,false)).join("")}`:`<p class="sub" style="margin:2px 0 8px"><b class="good">Your lineup is already Hashmark’s best lineup.</b></p>`}
    ${cl.length?`<div class="eyebrow mt">Closest calls</div>${cl.map(x=>ssCard(x,true)).join("")}`:""}
    <p class="sub mt">Dot: Hashmark projection. Bar: likely range. Percent: chance the first player outscores the second.</p></section>`;};
-DEFS.ss=["Hashmark Start/Sit","Each projection starts from Sleeper’s weekly projection in your scoring. Hashmark then corrects it with weights fitted on 2021–24 results and tested on 2025–26: Sleeper’s known bias by position and level, season production, usage (expected points), the opponent and the team’s implied total. Sportsbook lines get 20%, then weather and injury or practice status. The percentage is how often the recommended player outscores the other in matchups like this; in testing, those percentages landed within about 2 points of what happened. Bars show the likely range: the real score falls inside it 80% of the time."];
+DEFS.ss=["Hashmark Start/Sit","Each projection starts from Sleeper’s weekly projection in your scoring. Hashmark then corrects it with weights refitted in November 2026 (fitted on 2021–24 and tested on 2025 and 2026 first, then refitted on 2021–25): Sleeper’s known bias by position and level, season production, usage (expected points), the opponent and the team’s implied total. Sportsbook lines get 30% (10% for quarterbacks, where they didn’t help), then weather and injury or practice status. The percentage is how often the recommended player outscores the other in matchups like this; in testing, those percentages landed within about 2 points of what happened. Bars show the likely range: the real score falls inside it 80% of the time (81% on 2025–26 games the ranges weren’t fitted on)."];
 
 /* traffic-light data colors: green good, yellow middling, red bad */
 const TLF=".bar>i,.pbar>i,.ht>i,.mb>i,.hvb>i,.tsb .bar>i";
@@ -4495,9 +4495,9 @@ document.addEventListener("click",e=>{if(e.target.closest("[data-hxs]")&&window.
 /* ===== v46: projection engine — weights fitted on 2021–24 Sleeper projections vs real scores, tested on 2025–26 =====
    coefficient order: [intercept, Sleeper projection, PPG, last-3 PPG, season xFP, last-3 xFP, matchup term, implied-total term, has PPG, has xFP]
    ranges: error quantile = a·projection + b, by position (5th, 10th, 90th, 95th percentiles) */
-const PJC={"QB":[4.057,0.452,-0.12,0.227,0.151,-0.096,0.004,0.359,0.454,0.454],"RB":[0.866,0.879,0.091,0.078,-0.16,0.012,0.047,0.144,0.224,0.224],"WR":[0.576,0.758,0.025,0.093,0.085,-0.032,0.018,-0.011,0.569,-0.527],"TE":[0.292,0.781,0.037,-0.051,-0.124,0.174,0.055,0.022,0.73,0.73]};
+const PJC={"QB":[4.057,0.452,-0.12,0.227,0.151,-0.096,0.004,0.359,0.454,0.454],"RB":[-1.688,0.863,0.076,0.069,-0.021,0.014,0.032,0.159,0.23,0.292],"WR":[-1.935,0.82,0.12,0.082,0.073,-0.09,0.022,0.012,0.424,-0.166],"TE":[-1.583,0.801,0.155,-0.01,-0.32,0.286,0.049,0.11,0.372,0.646]};
 const PJQ={"QB":{"05":[-0.241,-7.01],"1":[-0.131,-6.63],"9":[0.166,6.74],"95":[0.164,9.68]},"RB":{"05":[-0.59,-2.21],"1":[-0.461,-2.46],"9":[0.356,5.12],"95":[0.428,7.68]},"WR":{"05":[-0.651,-2.19],"1":[-0.501,-2.56],"9":[0.491,4.43],"95":[0.558,7.18]},"TE":{"05":[-0.701,-1.59],"1":[-0.541,-1.8],"9":[0.614,2.53],"95":[0.865,3.85]}};
-const PJ_PROPS=.2;
+const PJ_PROPS=.2,PJ_PROPS_POS={QB:.1,RB:.3,WR:.3,TE:.3};/* v108: props share by position (backtest/e14_props.py) */
 function pjRange(pos,m){const Q=PJQ[pos]||PJQ.WR,q=k=>Math.max(0,m+Q[k][0]*m+Q[k][1]);return {lo:q("1"),hi:q("9"),lo90:q("05"),hi90:q("95")};}
 hmProj=function(p){if(!p)return null;const g=gameOf(p);if(g&&g.bye)return {m:0,sd:0,lo:0,hi:0,lo90:0,hi90:0,f:[{t:"On bye",v:-99}],bye:true};
   if(p.inj&&OUTRX.test(p.inj))return {m:0,sd:0,lo:0,hi:0,lo90:0,hi90:0,f:[{t:`${statusWord(p.inj).replace(/^is /,"")}`,v:-99}],out:true};
@@ -4521,7 +4521,7 @@ hmProj=function(p){if(!p)return null;const g=gameOf(p);if(g&&g.bye)return {m:0,s
   // betting market (props), weather, availability
   const pr=typeof propsOf==="function"?propsOf(p):null;if(pr){const s2=(S.L&&S.L.scoring)||{rec:1,rec_yd:.1,rush_yd:.1,pass_yd:.04,rec_td:6,rush_td:6,pass_td:4};let mk=0,k=0;
     if(pr.rec!=null){mk+=pr.rec*(s2.rec_yd??.1)+(pr.rec/11.5)*(s2.rec??1);k++;}if(pr.rush!=null){mk+=pr.rush*(s2.rush_yd??.1);k++;}if(pr.pass!=null){mk+=pr.pass*(s2.pass_yd??.04)+1.6*(s2.pass_td??4);k++;}if(pr.atd!=null)mk+=pr.atd*6;
-    if(k){const d=mk-m;m=m*(1-PJ_PROPS)+mk*PJ_PROPS;if(Math.abs(d)>=1.5)add(d*PJ_PROPS/Math.max(5,base),`Sportsbooks imply about ${f1(mk)} points${pr.atd!=null?` (${Math.round(pr.atd*100)}% to score)`:""}`);}
+    if(k){const d=mk-m,PW=PJ_PROPS_POS[p.pos]??PJ_PROPS;m=m*(1-PW)+mk*PW;if(Math.abs(d)>=1.5)add(d*PW/Math.max(5,base),`Sportsbooks imply about ${f1(mk)} points${pr.atd!=null?` (${Math.round(pr.atd*100)}% to score)`:""}`);}
     else if(pr.atd!=null&&pr.atd>=.45)add(.08,`${Math.round(pr.atd*100)}% anytime-TD odds`);}
   const w=mu&&mu.g;if(w&&w.w!=null&&p.pos!=="RB"&&(w.w>=15||(w.g||0)>=25)){m*=.94;add(-.06,`Wind ${w.w} mph at kickoff`);}if(w&&w.pop>=60&&p.pos!=="RB"){m*=.97;add(-.03,`${w.pop}% chance of rain`);}
   if(p.inj){const s=p.inj.toLowerCase();if(/doubt/.test(s)){m*=.35;add(-.6,"Listed doubtful");}else if(/quest/.test(s)){m*=.88;add(-.12,"Listed questionable");}}
@@ -6793,6 +6793,100 @@ blendFor=(function(prev){return function(p,set,modelRank){if(!YNG107(p)||!set.so
   const rd=set.filter(([k])=>k.startsWith("rd:")),mk=set.filter(([k])=>k!=="model"&&!k.startsWith("rd:"));const rw=rd.reduce((s,x)=>s+x[1],0),mw=mk.reduce((s,x)=>s+x[1],0)||1,mv=rw*.5;
   const ns=set.map(([k,w])=>k.startsWith("rd:")?[k,w*.5]:k!=="model"?[k,w+mv*w/mw]:[k,w]);return prev(p,ns,modelRank);};})(blendFor);
 /* /v107 */
+/* ===== v108: Engine 8 in the app (data/report.json from scripts/build_report.py) + Engine 1 refit (PJC above).
+   - Projection ranges: every Hashmark projection (hmProj) gets its likely range from the fitted table (position x
+     projection tier x week-to-week volatility x questionable; 10th-90th percentile of actual/projection, fitted 2021-24,
+     held 81% on 2025-26) and a label: HIGH / MEDIUM / LOW from the range width (cuts per position). Start/sit odds use it.
+   - Player card: "Week N projection" (number, range bar, label, why). Matchup: likely range under each team total.
+     Start/sit: close calls under 58% say "Coin flip".
+   - Report card page (route "report", from the Locker and search): projections vs Sleeper (week by week, by position),
+     win odds (Brier, calibration chart), NFL game picks, ranges, and the tested waiver / trade numbers.
+   - Waivers and trade finder: one "track record" line each (tested numbers, labelled as backtests). ===== */
+let RPT=null,RPTst="idle";
+async function loadReport(){if(RPTst!=="idle")return;RPTst="loading";try{const r=await fetch("data/report.json",{cache:"no-cache"});if(!r.ok)throw 0;RPT=await r.json();RPTst="ready";}catch(e){RPTst="error";}
+  try{if(route()==="report")render();else bgRender();}catch(e){}}
+setTimeout(loadReport,0);
+function e8Range(p,m){const T=RPT&&RPT.ranges;if(!T||!T.table||!p||!PJC[p.pos]||!(m>0))return null;
+  const tr=T.tiers||[8,14],cv0=T.vol_cv||[.45,.7],tier=m<tr[0]?0:m<tr[1]?1:2;const xs=(p.log||[]).map(x=>+x.pts||0);let vol="new";
+  if(xs.length<(T.new_games||4)&&(p.g||0)>=(T.new_games||4))vol="mid";else if(xs.length>=(T.new_games||4)){const mu=xs.reduce((s,x)=>s+x,0)/xs.length,sd=Math.sqrt(xs.reduce((s,x)=>s+(x-mu)**2,0)/xs.length),cv=mu>0?sd/mu:0;vol=mu<=0||cv<cv0[0]?"lo":cv<cv0[1]?"mid":"hi";}
+  const q=/quest/i.test(p.inj||"")?1:0;let v=null;for(const k of [[p.pos,tier,vol,q],[p.pos,tier,vol,0],[p.pos,tier,"mid",0]]){v=T.table[k.join("|")];if(v)break;}if(!v)return null;
+  const w=v[1]-v[0],c=(T.cuts||{})[p.pos]||[1.7,2.1],lab=w<=c[0]?"HIGH":w<=c[1]?"MEDIUM":"LOW";
+  const why=q?"listed questionable":vol==="new"?((p.g||xs.length)?`only ${p.g||xs.length} game${(p.g||xs.length)===1?"":"s"} of data this season`:"no games of data yet this season"):vol==="hi"?"big week-to-week swings":vol==="lo"?"steady week to week":tier===0?"low projection: one play swings it":"normal week-to-week swings";
+  return {lo:m*v[0],hi:m*v[1],lab,why,vol,tier,q};}
+hmProj=(function(prev){return function(p){const r=prev(p);try{if(r&&!r.bye&&!r.out){const R=e8Range(p,r.m);if(R){r.lo=R.lo;r.hi=R.hi;r.sd=Math.max(1.5,(R.hi-R.lo)/2.563);r.conf=R;}}}catch(e){}return r;};})(hmProj);
+const e8Chip=lab=>`<span class="cf e8c ${lab==="HIGH"?"good":lab==="LOW"?"bad":"e8m"}">${lab}</span>`;
+function e8Bar(lo,m,hi,mx){mx=Math.max(mx||hi*1.15,1);const X=v=>Math.max(0,Math.min(100,v/mx*100)).toFixed(1);
+  return `<div class="e8bar" aria-hidden="true"><i class="e8rg" style="left:${X(lo)}%;width:${(X(hi)-X(lo)).toFixed(1)}%"></i><i class="e8pt" style="left:${X(m)}%"></i></div><div class="e8ax"><span>${f1(lo)}</span><span>${f1(hi)}</span></div>`;}
+/* player card */
+function e8PlayerSec(p){if(!p||!PJC[p.pos]||!S.L)return "";let h=null;try{if(locked(p))return "";h=hmProj(p);}catch(e){return "";}if(!h||!h.conf||h.bye||h.out)return "";const c=h.conf,L=RPT.ranges.labels||{},lb=L[c.lab];
+  return `<section class="pan mt e8p"><div class="row sp"><h2>Week ${S.week} projection</h2>${e8Chip(c.lab)}</div>
+   <div class="e8big"><b class="num">${f1(h.m)}</b><span class="sub">likely ${f1(c.lo)}–${f1(c.hi)}</span></div>${e8Bar(c.lo,h.m,c.hi)}
+   <p class="sub" style="margin-top:8px">${esc(c.why.charAt(0).toUpperCase()+c.why.slice(1))}. The real score lands inside this range 8 times in 10${lb?`; ${c.lab} projections miss by ${Math.round(lb.rel_err*100)}% of the projection on average`:""}. <span class="lnk" data-go="report">How Hashmark is graded</span></p></section>`;}
+vPlayer=(function(prev){return function(id){let h=prev(id);try{h=h.replace(/(<\/b><span>)(Week \d+ projection)(<\/span>)/,(m,a,b,c)=>a+"Sleeper’s "+b.replace("Week","Wk")+c);const s=e8PlayerSec(PL[id]);if(!s)return h;const i=h.search(/<section class="pan mt"><div class="row sp"><h2>Week \d+ matchup<\/h2>/);if(i>=0)return h.slice(0,i)+s+h.slice(i);
+  const j=h.indexOf("<h2>Weekly trend</h2>");if(j>=0){const a=h.lastIndexOf("<section",j);return h.slice(0,a)+s+h.slice(a);}return h+s;}catch(e){console.error(e);return h;}};})(vPlayer);
+/* matchup: likely range of each team total (same spread the fitted win odds use) */
+vMatchup=(function(prev){return function(i){let h=prev(i);try{if(!RPT)return h;h=h.replace(/(<div class="big mt">)([\d.,]+)(<\/div><div class="sub">Projected points<\/div>)/g,(m0,a,v,b)=>{const m=parseFloat(v.replace(/,/g,""));if(!(m>0))return m0;const sd=m*.16+5,z=1.2816;
+    return `${a}${v}${b}<div class="sub num e8tr">likely ${Math.round(Math.max(0,m-z*sd))}–${Math.round(m+z*sd)}</div>`;});}catch(e){}return h;};})(vMatchup);
+/* start/sit: honest close calls */
+startSit=(function(prev){return function(){const h=prev();return h.replace(/>Toss-up · /g,">Coin flip · ");};})(startSit);
+/* report card page */
+function e8Grade(kind){const R=RPT||{},P=R.projections||{},W=R.win_odds||{};
+  if(kind==="proj"){if(!P.mae_hm)return ["No games graded yet",""];const g=(P.mae_sleeper-P.mae_hm)/P.mae_sleeper;return g>=.01?["Beats Sleeper","good"]:g>=0?["Even with Sleeper","e8m"]:["Behind Sleeper","bad"];}
+  if(kind==="odds"){const err=e8CalErr();return err==null?["–",""]:err<=.03&&W.brier<.25?["Calibrated","good"]:err<=.05?["Close","e8m"]:["Off","bad"];}
+  if(kind==="rng"){const c=R.ranges&&R.ranges.test_coverage_80;return c==null?["–",""]:Math.abs(c-.8)<=.03?["Honest","good"]:c>.8?["A bit wide","e8m"]:["Too narrow","bad"];}
+  return ["",""];}
+function e8CalErr(){const C=(RPT&&RPT.win_odds&&RPT.win_odds.calib)||[];const n=C.reduce((s,x)=>s+x.n,0);return n?C.reduce((s,x)=>s+Math.abs(x.said-x.won)*x.n,0)/n:null;}
+function e8Row(go,title,pill,metric,bench){const tap=go&&go!==route();return `<div class="e8row${tap?" tap":""}"${tap?` data-go="${go}" role="link" tabindex="0"`:""}><div><b>${title}</b><div class="sub">${metric}</div>${bench?`<div class="sub e8bn">${bench}</div>`:""}</div><span class="cf ${pill[1]}">${esc(pill[0])}</span></div>`;}
+function e8Rows(){const R=RPT,P=R.projections||{},W=R.win_odds||{},G=R.games||{},T=R.tested||{},Rg=R.ranges||{};const rows=[];
+  if(P.mae_hm)rows.push(e8Row("report","Projections",e8Grade("proj"),`Off by ${f1(P.mae_hm)} pts a player this season`,`Sleeper ${f1(P.mae_sleeper)} · better ${P.weeks_beat} of ${P.n_weeks} weeks`));
+  if(W.brier)rows.push(e8Row("report","Win odds",e8Grade("odds"),`${Math.round(W.acc*100)}% of favourites won · Brier ${W.brier.toFixed(3)}`,`Coin flip .250 · ${f0(W.n)} matchups`));
+  if(G.n)rows.push(e8Row("report","NFL game picks",["Uses the line","e8m"],`${Math.round((G.line_acc||0)*100)}% right with the betting line`,`Hashmark rating alone ${Math.round((G.rating_acc||0)*100)}% · used only before a line is posted`));
+  if(Rg.test_coverage_80)rows.push(e8Row("report","Projection ranges",e8Grade("rng"),`The 80% range held ${Math.round(Rg.test_coverage_80*100)}% of the time`,`${f0(Rg.test_n)} player-weeks it was not fitted on`));
+  if(T.waivers)rows.push(e8Row("waivers","Waiver calls",["Tested","good"],`+${f1(T.waivers.pts)} lineup pts per move · ${Math.round(T.waivers.helped*100)}% helped`,`Managers’ own claims +${f1(T.waivers.managers_pts)} · ${esc(T.waivers.src)}`));
+  if(T.trades)rows.push(e8Row("trade-finder","Trade ideas",["Tested","good"],`Fits raised the contender’s lineup ${Math.round(T.trades.fit_lineup_up*100)}% of the time`,`Other trades ${Math.round(T.trades.baseline*100)}% · ${esc(T.trades.src)}`));
+  return rows.join("");}
+function e8Calib(){const C=(RPT.win_odds||{}).calib||[];if(!C.length)return "";const w=320,h=220,X=v=>30+v*(w-44),Y=v=>h-28-v*(h-44);
+  const grid=[0,.5,1].map(v=>`<line x1="${X(0)}" y1="${Y(v)}" x2="${X(1)}" y2="${Y(v)}" class="e8g"/>`).join("");const mx=Math.max(...C.map(c=>c.n));
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="max-width:420px" role="img" aria-label="Calibration: predicted vs actual win rate">${grid}<line x1="${X(0)}" y1="${Y(0)}" x2="${X(1)}" y2="${Y(1)}" class="e8d"/>${C.map(c=>`<circle cx="${X(c.said).toFixed(1)}" cy="${Y(c.won).toFixed(1)}" r="${(3+5*Math.sqrt(c.n/mx)).toFixed(1)}" class="e8dot"><title>Said ${Math.round(c.said*100)}%, won ${Math.round(c.won*100)}% (${f0(c.n)})</title></circle>`).join("")}
+   <text x="${X(0)}" y="${h-8}" class="e8t">0%</text><text x="${X(.5)-34}" y="${h-8}" class="e8t">Hashmark said</text><text x="${X(1)-24}" y="${h-8}" class="e8t">100%</text><text x="2" y="${Y(1)+4}" class="e8t">100%</text><text x="2" y="${Y(.5)+4}" class="e8t">won</text></svg>`;}
+function e8Weeks(){const P=RPT.projections||{},W=P.weeks||{},ks=Object.keys(W).map(Number).sort((a,b)=>a-b);if(!ks.length)return "";const mx=Math.max(...ks.flatMap(k=>[W[k].hm,W[k].sl]))*1.05,mn=Math.min(...ks.flatMap(k=>[W[k].hm,W[k].sl]))*.9;
+  const X=v=>((v-mn)/(mx-mn)*100).toFixed(1);
+  return `<div class="e8wk">${ks.map(k=>{const x=W[k],win=x.hm<x.sl;return `<div class="e8wr"><span class="sub">Wk ${k}</span><div class="e8wb"><i class="hm${win?" w":""}" style="width:${X(x.hm)}%"></i><i class="sl" style="width:${X(x.sl)}%"></i></div><span class="num ${win?"good":""}">${f1(x.hm)}</span><span class="num sub">${f1(x.sl)}</span></div>`;}).join("")}</div>
+   <p class="sub">Bars: average miss per player (shorter is better). Orange Hashmark, grey Sleeper.</p>`;}
+function vReport(){if(!RPT){if(RPTst==="idle")setTimeout(loadReport,0);return RPTst==="error"?`<section class="pan"><p class="sub">The report card couldn’t load. Pull to refresh or try again later.</p></section>`:`<section class="pan"><p class="sub">Loading the report card…</p></section>`;}
+  const R=RPT,P=R.projections||{},W=R.win_odds||{},G=R.games||{},Rg=R.ranges||{},L=Rg.labels||{},bp=P.by_pos||{};const d=R.built?new Date(R.built.replace("Z",":00Z")):null;
+  return `<section class="pan"><div class="row sp"><h2>How Hashmark did</h2><span class="tag">${R.season} season</span></div><p class="sub" style="margin-top:2px">Every number graded after the games against what really happened. Updated twice a day${d&&!isNaN(d)?` · last ${d.toLocaleDateString(undefined,{month:"short",day:"numeric"})}`:""}.</p>${e8Rows()}</section>
+  ${P.weeks?`<section class="pan mt"><div class="row sp"><h2>Projections, week by week</h2><span class="tag">vs Sleeper</span></div>${e8Weeks()}
+   ${Object.keys(bp).length?`<div class="tw mt"><table><thead><tr><th>Pos</th><th>Players</th><th>Hashmark</th><th>Sleeper</th></tr></thead><tbody>${Object.entries(bp).map(([k,v])=>`<tr><td><b>${k}</b></td><td class="num">${f0(v.n)}</td><td class="num ${v.hm<v.sl?"good":""}">${f1(v.hm)}</td><td class="num">${f1(v.sl)}</td></tr>`).join("")}</tbody></table></div>`:""}
+   <p class="sub mt">Average miss in PPR points for players Sleeper projected 3+ who played. Hashmark’s number is replayed from the same inputs the app uses (Sleeper’s projection, recent scoring, expected points, matchup, team total, injury status, betting props). Weights fitted on 2021–25.</p></section>`:""}
+  ${W.calib?`<section class="pan mt"><div class="row sp"><h2>Win odds: said vs happened</h2><span class="tag">${f0(W.n)} matchups</span></div>${e8Calib()}<p class="sub">Each dot is a group of matchups. When Hashmark said 70%, did those teams win about 70% of the time? On the dashed line means honest odds. Average gap this season: ${f1((e8CalErr()||0)*100)} points.</p></section>`:""}
+  ${G.n?`<section class="pan mt"><div class="row sp"><h2>NFL game picks</h2><span class="tag">${G.n} games</span></div><div class="tw"><table><thead><tr><th></th><th>Right</th><th>Brier</th></tr></thead><tbody><tr><td>Betting line</td><td class="num">${Math.round(G.line_acc*100)}%</td><td class="num">${G.line_brier}</td></tr><tr><td>Hashmark rating</td><td class="num">${Math.round(G.rating_acc*100)}%</td><td class="num">${G.rating_brier}</td></tr></tbody></table></div><p class="sub mt">The closing line is the best predictor there is, so Hashmark uses it once posted. The rating covers weeks before lines exist; 1–6 weeks ahead it beat ratings implied by the market in testing.</p></section>`:""}
+  ${Object.keys(L).length?`<section class="pan mt"><div class="row sp"><h2>Projection labels</h2><span class="tag">${f0(Rg.test_n)} player-weeks</span></div><div class="tw"><table><thead><tr><th>Label</th><th>Inside range</th><th>Avg miss</th></tr></thead><tbody>${["HIGH","MEDIUM","LOW"].filter(k=>L[k]).map(k=>`<tr><td>${e8Chip(k)}</td><td class="num">${Math.round(L[k].inside*100)}%</td><td class="num">${Math.round(L[k].rel_err*100)}% of proj</td></tr>`).join("")}</tbody></table></div><p class="sub mt">HIGH means a tight range and a steady role; LOW means a new role, big swings, a low projection or an injury. Tested on seasons the ranges were not fitted on.</p></section>`:""}`;}
+vHome=(function(prev){return function(){if(route()==="report")return vReport();return prev();};})(vHome);
+pageTitle=(function(prev){return function(r){if(r==="report")return {eb:["Locker"],h:"Report card"};return prev(r);};})(pageTitle);
+LABEL=(function(prev){return function(r){return r==="report"?"Report card":prev(r);};})(LABEL);
+PAGES.push(["report","Report card","Locker","how accurate grades projections win odds track record"]);
+vStats=(function(prev){return function(){let h=prev();try{if(!RPT){if(RPTst==="idle")setTimeout(loadReport,0);return h;}const P=RPT.projections||{};
+  h+=`<section class="pan mt tap" data-go="report" role="link" tabindex="0"><div class="row sp"><h2>Hashmark’s report card</h2><span class="tag">${RPT.season}</span></div><p class="sub" style="margin-top:2px">${P.mae_hm?`Projections off by ${f1(P.mae_hm)} pts a player vs Sleeper’s ${f1(P.mae_sleeper)}; better ${P.weeks_beat} of ${P.n_weeks} weeks.`:"How accurate the app has been, graded after every week."} See every grade.</p></section>`;}catch(e){}return h;};})(vStats);
+/* track-record lines (tested numbers) */
+vWaivers=(function(prev){return function(){let h=prev();try{const T=RPT&&RPT.tested&&RPT.tested.waivers;if(!T)return h;const i=h.indexOf("<h2>Best adds for your team</h2>");if(i<0)return h;const j=h.indexOf("</div>",i)+6;
+  return h.slice(0,j)+`<p class="sub e8tk">Track record: moves like these added ${f1(T.pts)} lineup points over 4 weeks and helped ${Math.round(T.helped*100)}% of the time; managers’ own claims added ${f1(T.managers_pts)} (tested on 2024–25 seasons).</p>`+h.slice(j);}catch(e){return h;}};})(vWaivers);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.e8c.e8m,.cf.e8m{color:var(--acc,#FF6B1A);border-color:currentColor}
+.e8big{display:flex;align-items:baseline;gap:10px;margin:8px 0 6px}.e8big b{font:700 32px var(--fd,inherit);letter-spacing:-.02em}
+.e8bar{position:relative;height:14px;margin-top:4px}.e8bar:before{content:"";position:absolute;left:0;right:0;top:6px;height:2px;border-radius:1px;background:var(--line)}
+.e8rg{position:absolute;top:3px;height:8px;border-radius:4px;background:var(--acc,#FF6B1A);opacity:.35}.e8pt{position:absolute;top:2px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--acc,#FF6B1A)}
+.e8ax{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.e8row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.e8row:first-of-type{border-top:0}.e8row .sub{margin:2px 0 0}.e8bn{color:var(--muted);font-size:12px}
+.e8row .cf{white-space:nowrap}
+.e8wk{margin-top:8px}.e8wr{display:grid;grid-template-columns:44px 1fr 38px 34px;gap:8px;align-items:center;padding:3px 0}.e8wr .sub{margin:0;font-size:12px}
+.e8wb{display:flex;flex-direction:column;gap:3px}.e8wb i{display:block;height:6px;border-radius:3px}.e8wb .hm{background:var(--muted);opacity:.6}.e8wb .hm.w{background:var(--acc,#FF6B1A);opacity:1}.e8wb .sl{background:var(--line)}
+.e8g{stroke:var(--line)}.e8d{stroke:var(--muted);stroke-dasharray:4 4}.e8dot{fill:var(--acc,#FF6B1A);fill-opacity:.85}.e8t{fill:var(--muted);font-size:10px}
+.e8tr{opacity:.85}.e8tk{margin:2px 0 8px}
+</style>`);
+vTrade=(function(prev){return function(){let h=prev();try{const T=RPT&&RPT.tested&&RPT.tested.trades;if(!T||route()!=="trade-finder"||S.fmt.type==="redraft")return h;const i=h.indexOf("Fits your plan");if(i<0)return h;const j=h.indexOf("</p>",i)+4;
+  return h.slice(0,j)+`<p class="sub e8tk">Track record: in ${esc(T.src.split(" (")[0])}, deals that fit the contender’s plan raised its real lineup ${Math.round(T.fit_lineup_up*100)}% of the time, vs ${Math.round(T.baseline*100)}% for other trades.</p>`+h.slice(j);}catch(e){return h;}};})(vTrade);
+/* /v108 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
