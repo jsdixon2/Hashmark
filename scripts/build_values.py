@@ -7,10 +7,13 @@ Sources (each optional; a failed source is skipped and reported):
   RosterAudit      https://rosteraudit.com        (dynasty values; attribution required; ROSTERAUDIT_KEY optional)
   DynastyProcess   https://github.com/dynastyprocess/data (consensus values, CC-BY)
   FantasyPros ECR  via DynastyProcess (weekly / rest-of-season consensus ranks and expert spread)
-  Fantasy Football Calculator ADP (attribution required)
+  Fantasy Football Calculator ADP (attribution required). FFC only lists players with enough recent mock drafts:
+    in-season the PPR feed returns a handful of players and the dynasty/rookie feeds return none. A feed below its
+    minimum (FFC_MIN) keeps the last good values from the previous file (same season, up to FFC_MAX_DAYS old), marked
+    with that run's `asof` in `sources`; with no good earlier run the keys are not written.
   nflverse injury reports (career injury history)
 """
-import csv, io, json, os, re, sys, time, urllib.parse, urllib.request
+import calendar, csv, io, json, os, re, sys, time, urllib.parse, urllib.request
 from collections import defaultdict
 
 UA = "Hashmark/1.0 (fantasy football hub; github.com/jsdixon2/Hashmark)"
@@ -89,6 +92,28 @@ def find(d, *keys):
     return None
 
 
+OUT = os.environ.get("HM_OUT_VALUES", "").strip() or "data/values.json"       # where to write
+PREV = os.environ.get("HM_PREV_VALUES", "").strip() or "data/values.json"     # last published file (read only)
+FFC_MIN = {"adp_ppr": 100, "adp_dyn": 100, "adp_rook": 24}   # a real 12-team board lists 180 (rookie: 36+)
+FFC_MAX_DAYS = 150
+FFC_POS = {"PK": "K"}
+
+
+def load_prev():
+    try:
+        with open(PREV) as fh:
+            return json.load(fh)
+    except Exception:
+        return None
+
+
+def age_days(asof):
+    try:
+        return (time.time() - calendar.timegm(time.strptime(asof, "%Y-%m-%dT%H:%MZ"))) / 86400
+    except Exception:
+        return None
+
+
 def season_now():
     t = time.gmtime()
     return t.tm_year if t.tm_mon >= 8 else t.tm_year - 1
@@ -96,6 +121,7 @@ def season_now():
 
 def main():
     cur = season_now()
+    prev = load_prev()
     ids = rows(DP_IDS)
     fp2s = {r["fantasypros_id"]: r["sleeper_id"] for r in ids if r.get("fantasypros_id") not in ("", "NA") and r.get("sleeper_id") not in ("", "NA")}
     g2s = {r["gsis_id"]: r["sleeper_id"] for r in ids if r.get("gsis_id") not in ("", "NA") and r.get("sleeper_id") not in ("", "NA")}
@@ -110,8 +136,8 @@ def main():
         if sid and val is not None:
             V[str(sid)][key] = round(val, 1) if isinstance(val, float) else val
 
-    def note(name, n):
-        STATUS.append({"name": name, "ok": n > 0, "n": n}); print(f"  {name}: {n}")
+    def note(name, n, **extra):
+        STATUS.append({"name": name, "ok": n > 0, "n": n, **extra}); print(f"  {name}: {n}", extra or "")
 
     # Dynasty Dealer (dynasty, and redraft PPR in 1QB/SF)
     for key, url in (("dd", "https://www.dynastydealer.com/api/player-values"),
@@ -176,18 +202,39 @@ def main():
         put(sid, key, f(r.get("ecr"))); put(sid, key + "_sd", f(r.get("sd")))
         n += 1
     note("FantasyPros ECR", n)
-    # Fantasy Football Calculator ADP
+    # Fantasy Football Calculator ADP (thin in-season: keep the last good board, see FFC_MIN)
+    pv = (prev or {}).get("v") or {}
+    pst = {x.get("name"): x for x in (prev or {}).get("sources") or [] if isinstance(x, dict)}
+    now = time.strftime("%Y-%m-%dT%H:%MZ", time.gmtime())
     for key, path in (("adp_ppr", f"ppr?teams=12&year={cur}"), ("adp_dyn", f"dynasty?teams=12&year={cur}"), ("adp_rook", f"rookie?teams=12&year={cur}")):
-        j = jget("https://fantasyfootballcalculator.com/api/v1/adp/" + path); n = 0
-        for d in walk(j):
-            nm, ps, adp = d.get("name"), d.get("position"), f(d.get("adp"))
-            if nm and adp:
-                sid = n2s.get((norm(nm), ps))
-                if sid:
-                    put(sid, key, adp); n += 1
-        if n < 20:
-            print("  FFC response sample:", json.dumps(j)[:400] if j is not None else None)
-        note("FFC " + key, n)
+        j = jget("https://fantasyfootballcalculator.com/api/v1/adp/" + path)
+        pl = j.get("players") if isinstance(j, dict) and isinstance(j.get("players"), list) else []
+        meta = j.get("meta") if isinstance(j, dict) and isinstance(j.get("meta"), dict) else {}
+        got = {}
+        for d in pl:
+            nm, adp = d.get("name"), f(d.get("adp"))
+            ps = FFC_POS.get(d.get("position"), d.get("position"))
+            sid = n2s.get((norm(nm), ps)) if nm and adp else None
+            if sid:
+                got[sid] = adp
+        live = dict(fetched=len(pl), matched=len(got), drafts=meta.get("total_drafts"),
+                    window=f"{meta.get('start_date')}..{meta.get('end_date')}" if meta else None)
+        print(f"  FFC {key}: {len(pl)} listed, {len(got)} matched, meta {json.dumps(meta)[:160]}" if j is not None else f"  FFC {key}: no response")
+        if len(got) >= FFC_MIN[key]:
+            for sid, adp in got.items():
+                put(sid, key, adp)
+            note("FFC " + key, len(got), asof=now, **live)
+            continue
+        old = pst.get("FFC " + key) or {}
+        oasof = old.get("asof") or (prev or {}).get("asof")
+        oage = age_days(oasof) if oasof else None
+        keep = {k: v[key] for k, v in pv.items() if isinstance(v, dict) and key in v}
+        if old.get("ok") and (prev or {}).get("season") == cur and oage is not None and oage <= FFC_MAX_DAYS and len(keep) >= FFC_MIN[key]:
+            for sid, adp in keep.items():
+                put(sid, key, adp)
+            note("FFC " + key, len(keep), asof=oasof, carried=True, **live)
+        else:
+            note("FFC " + key, 0, dropped="feed below minimum and no recent good board", **live)
     # injury history: weeks listed Out/IR on official reports, last 3 seasons
     inj = defaultdict(lambda: [0, 0, 0])
     for i, y in enumerate((cur - 2, cur - 1, cur)):
@@ -197,11 +244,11 @@ def main():
     for sid, a in inj.items():
         put(sid, "injh", a)
     note("injury history", len(inj))
-    os.makedirs("data", exist_ok=True)
+    os.makedirs(os.path.dirname(OUT) or ".", exist_ok=True)
     out = {"asof": time.strftime("%Y-%m-%dT%H:%MZ", time.gmtime()), "season": cur, "sources": STATUS, "v": V}
-    with open("data/values.json", "w") as fh:
+    with open(OUT, "w") as fh:
         json.dump(out, fh, separators=(",", ":"))
-    print(f"{len(V)} players with values; file {os.path.getsize('data/values.json')//1024} KB")
+    print(f"{len(V)} players with values; file {OUT} {os.path.getsize(OUT)//1024} KB")
 
 
 if __name__ == "__main__":
