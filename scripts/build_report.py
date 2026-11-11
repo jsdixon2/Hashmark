@@ -16,7 +16,7 @@ Labels: interval width relative to projection; HIGH / MEDIUM / LOW cut at the 1/
 Tested 2025-26 (4,826 player-weeks): 80% range held 81.0%; relative miss HIGH .44 / MEDIUM .52 / LOW .74, coverage
 78% / 80% / 84%."""
 import gzip, json, math, os, csv, io, statistics, collections, datetime, urllib.request
-OUT = "data/report.json"
+OUT = os.environ.get("HM_OUT", "data/report.json")   # HM_OUT: write elsewhere when testing
 WP = {"k": .16, "c": 5, "b": 1.01}
 
 def load_pjc():
@@ -192,6 +192,19 @@ def main():
               "trades": {"fit_lineup_up": .80, "baseline": .44, "src": "3,413 dynasty/keeper trades 2022-25", "backtest": "e11"}}
     out = {"built": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ"), "season": season, "projections": proj, "win_odds": odds,
            "games": games, "ranges": ranges, "tested": tested}
+    # ---------- plug-in sections: scripts/rpt_*.py, each with section(ctx) -> {key: value} merged into the report ----------
+    import glob
+    ctx = {"season": season, "weeks": weeks, "panel": panel, "rows_all": rows_all, "HM": HM, "SP": SP, "ST": ST, "leagues": L, "POS": POS, "PJC": C, "out": out,
+           "pts": pts, "hm_simple": hm, "win_prob": win_prob, "PP": PP}
+    for f in sorted(glob.glob("scripts/rpt_*.py")):
+        try:
+            sp_ = importlib.util.spec_from_file_location(os.path.basename(f)[:-3], f); mod = importlib.util.module_from_spec(sp_); sp_.loader.exec_module(mod)
+            add = mod.section(ctx) or {}
+            for k, v in add.items():
+                if isinstance(v, dict) and isinstance(out.get(k), dict): out[k].update(v)
+                else: out[k] = v
+        except Exception as e:
+            print("section failed:", f, str(e)[:200])
     json.dump(out, open(OUT, "w"), separators=(",", ":"))
     print(json.dumps({"proj": {k: proj[k] for k in ("mae_hm", "mae_sleeper", "weeks_beat", "n_weeks")}, "odds": {k: odds[k] for k in ("n", "brier", "acc")}, "calib": odds["calib"],
                       "games": {k: v for k, v in games.items() if k != "live_log"}, "ranges": {k: ranges[k] for k in ("test_coverage_80", "test_n", "labels", "cuts")}}, indent=1))

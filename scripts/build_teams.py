@@ -12,11 +12,22 @@ Fitted in backtest/e12_*.py (2002-2025 nflverse games):
   prices this week's line: adding it again tested worse): factor = 1 + beta_pos x (implied / team average - 1),
   beta QB .577, RB .535, WR .245, TE .224 (e12_env.json). Defense-vs-position adds ~0.02 pts MAE (e12_dvp.json):
   shown for context only.
-- Prediction log: every game's pregame home win chance is stored once and graded when final (Brier by source)."""
+- Prediction log: per game, `early` = the first pregame home win chance seen (source, date, days before kickoff) and
+  `final` = the latest pregame one (overwritten each run until kickoff, never after). Graded when final: card.final,
+  card.early (only first predictions made 7+ days before kickoff) and card.by_src (final prediction by line/rating).
+  Games already played before the log began are not back-filled (see report.json `games` for the replay).
+Env overrides for tests (defaults unchanged): HM_OUT_TEAMS (output + previous log), HM_GAMES_CSV (local games.csv,
+no download), HM_SCHED, HM_ODDS, HM_NOW (ISO UTC time)."""
 import csv, io, json, math, os, urllib.request, datetime, collections
+from zoneinfo import ZoneInfo
 URL = "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv"
 LOCAL = "backtest/dl/games.csv"
-OUT = "data/teams.json"
+OUT = os.environ.get("HM_OUT_TEAMS", "data/teams.json")
+GAMES_CSV = os.environ.get("HM_GAMES_CSV")
+SCHED = os.environ.get("HM_SCHED", "data/sched.json")
+ODDS = os.environ.get("HM_ODDS", "data/odds.json")
+ET, UTC = ZoneInfo("America/New_York"), datetime.timezone.utc
+EARLY_DAYS = 7
 K, HFA, PRIOR, CAP, SIG = .08, 2.0, .7, 28, 12.5
 BETA = {"QB": .577, "RB": .535, "WR": .245, "TE": .224}
 FPLAY = (15, 16, 17)
@@ -27,7 +38,36 @@ def num(x):
     try: return float(x)
     except Exception: return None
 
+def now_utc():
+    v = os.environ.get("HM_NOW")
+    return datetime.datetime.fromisoformat(v.replace("Z", "+00:00")).astimezone(UTC) if v else datetime.datetime.now(UTC)
+
+def kickoff(g, odds):
+    """Kickoff in UTC: odds.json "t" (UTC) when it is within 3 days of nflverse's date, else gameday + gametime (US Eastern)."""
+    ko = None
+    try:
+        d = g.get("gameday") or ""; tm = g.get("gametime") or "13:00"
+        if d: ko = datetime.datetime.strptime(f"{d} {tm}", "%Y-%m-%d %H:%M").replace(tzinfo=ET).astimezone(UTC)
+    except Exception: ko = None
+    o = odds.get(f"{g['away_team']}@{g['home_team']}") or {}
+    try:
+        t = datetime.datetime.fromisoformat(o["t"].replace("Z", "+00:00")).astimezone(UTC)
+        if ko is None or abs((t - ko).total_seconds()) < 3 * 86400: ko = t
+    except Exception: pass
+    return ko
+
+def grade(xs):
+    """xs: [(p, y)] -> {n, brier, acc}."""
+    return {"n": len(xs), "brier": round(sum((p - y) ** 2 for p, y in xs) / len(xs), 4) if xs else None,
+            "acc": round(sum((p > .5) == (y == 1) for p, y in xs) / len(xs), 3) if xs else None}
+
 def load():
+    if GAMES_CSV:
+        raw = open(GAMES_CSV).read()
+        rows = list(csv.DictReader(io.StringIO(raw)))
+        for r in rows:
+            for k in ("home_team", "away_team"): r[k] = CODE.get(r[k], r[k])
+        return rows
     try:
         raw = urllib.request.urlopen(urllib.request.Request(URL, headers={"User-Agent": "hashmark"}), timeout=60).read().decode()
     except Exception:
@@ -43,7 +83,7 @@ def main():
     season = max(int(r["season"]) for r in rows)
     sched = {}
     try:
-        sj = json.load(open("data/sched.json"))
+        sj = json.load(open(SCHED))
         for g in sj.get("games", []): sched[(g["wk"], g["a"], g["h"])] = g
     except Exception: pass
     r, last_season = {}, None
@@ -79,7 +119,9 @@ def main():
         if hs > as_: wl[g["home_team"]][0] += 1; wl[g["away_team"]][1] += 1
         elif as_ > hs: wl[g["away_team"]][0] += 1; wl[g["home_team"]][1] += 1
         else: wl[g["home_team"]][2] += 1; wl[g["away_team"]][2] += 1
-    games, by_team = [], collections.defaultdict(list)
+    games, by_team, kos = [], collections.defaultdict(list), {}
+    try: odds = json.load(open(ODDS)).get("games", {})
+    except Exception: odds = {}
     for g in cur:
         wk, h, a = int(g["week"]), g["home_team"], g["away_team"]; neu = g.get("location") == "Neutral"
         final = num(g["home_score"]) is not None
@@ -93,6 +135,7 @@ def main():
         ih, ia = tot / 2 + mu / 2, tot / 2 - mu / 2
         row = {"wk": wk, "h": h, "a": a, "p": round(phi(mu / SIG), 4), "mu": round(mu, 2), "src": src, "ih": round(ih, 1), "ia": round(ia, 1), "final": final}
         if final: row.update(hs=num(g["home_score"]), as_=num(g["away_score"]))
+        kos[(wk, a, h)] = kickoff(g, odds)
         games.append(row)
         for t, imp, o, p in ((h, ih, a, row["p"]), (a, ia, h, 1 - row["p"])):
             by_team[t].append({"wk": wk, "o": o, "home": t == h, "imp": round(imp, 1), "p": round(p, 3), "final": final})
@@ -107,17 +150,32 @@ def main():
                     "next": fut[:4], "fplay": fp, "env": env,
                     "sos_rest": round(sum(r.get(x["o"], 0) for x in fut) / max(1, len(fut)), 2), "sos_fplay": round(sum(r.get(x["o"], 0) for x in fp) / max(1, len(fp)), 2) if fp else None,
                     "dst_fplay": round(sum(next((g["ia"] if g["h"] == t else g["ih"]) for g in games if g["wk"] == x["wk"] and t in (g["h"], g["a"])) for x in fp) / max(1, len(fp)), 1) if fp else None}
-    # prediction log: first pregame prediction per game is kept; graded when final
+    # prediction log: early = first pregame prediction, final = latest pregame one; frozen at kickoff; graded when final
     log = {}
     try: log = json.load(open(OUT)).get("log", {})
     except Exception: pass
+    now = now_utc(); today = now.strftime("%Y-%m-%d"); stamp = now.strftime("%Y-%m-%dT%H:%MZ")
     for g in games:
-        k = f"{season}-{g['wk']}-{g['a']}@{g['h']}"
-        if not g["final"] and k not in log: log[k] = {"p": g["p"], "src": g["src"], "t": datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime("%Y-%m-%d")}
-        if g["final"] and k in log and "y" not in log[k] and g.get("hs") != g.get("as_"): log[k]["y"] = 1 if g["hs"] > g["as_"] else 0
+        k = f"{season}-{g['wk']}-{g['a']}@{g['h']}"; ko = kos.get((g["wk"], g["a"], g["h"]))
+        e = log.get(k)
+        if e is not None and "early" not in e and "p" in e:   # migrate the old one-prediction entry
+            t0 = e.get("t") or today
+            e = {"early": {"p": e["p"], "src": e.get("src"), "t": t0,
+                           "d": (ko.date() - datetime.date.fromisoformat(t0)).days if ko else None}, **({"y": e["y"]} if "y" in e else {})}
+            log[k] = e
+        pre = not g["final"] and (ko is None or now < ko)
+        if pre:
+            if e is None:
+                e = log[k] = {"early": {"p": g["p"], "src": g["src"], "t": today, "d": (ko.date() - now.date()).days if ko else None}}
+            f = e.get("final")
+            if not f or f["p"] != g["p"] or f["src"] != g["src"]: e["final"] = {"p": g["p"], "src": g["src"], "t": stamp}
+            if ko: e["ko"] = ko.strftime("%Y-%m-%dT%H:%MZ")
+        if g["final"] and e is not None and "y" not in e and g.get("hs") != g.get("as_"): e["y"] = 1 if g["hs"] > g["as_"] else 0
     graded = [v for v in log.values() if "y" in v]
-    card = {"n": len(graded), "brier": round(sum((v["p"] - v["y"]) ** 2 for v in graded) / len(graded), 4) if graded else None,
-            "acc": round(sum((v["p"] > .5) == (v["y"] == 1) for v in graded) / len(graded), 3) if graded else None}
+    fin = grade([(v["final"]["p"], v["y"]) for v in graded if v.get("final")])
+    card = {**fin, "final": fin,
+            "early": {**grade([(v["early"]["p"], v["y"]) for v in graded if v.get("early") and (v["early"].get("d") or 0) >= EARLY_DAYS]), "min_days": EARLY_DAYS},
+            "by_src": {src: grade([(v["final"]["p"], v["y"]) for v in graded if v.get("final") and v["final"]["src"] == src]) for src in ("line", "rating")}}
     out = {"built": datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat() + "Z", "season": season, "lg": round(lg, 1), "sigma": SIG, "hfa": HFA, "beta": BETA,
            "fplay_weeks": list(FPLAY), "teams": out_t, "games": games, "log": log, "card": card,
            "method": {"test_brier_rating": .2246, "test_brier_line": .2118, "old_power_rank": .230}}

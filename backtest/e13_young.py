@@ -1,4 +1,7 @@
-"""Engine 3 retest (v106): does the Hashmark production model undervalue young players in dynasty values?
+"""SUPERSEDED by e16_taper.py: the Superflex this-season list ("rsf") in bt/hv.json.gz is empty at the November dates used
+here, so every player got the same this-season value and the "this-season share" variants below are artifacts.
+
+Engine 3 retest (v106): does the Hashmark production model undervalue young players in dynasty values?
 Owner question (2026-11-11): Germie Bernard (rookie WR, ~#123 in every dynasty market) showed 955, well below the market,
 because the production model (20% of the Superflex dynasty blend) looks 2 seasons ahead from current points per game.
 Setup, each season 2021-24 at the early-November market date (hv.json.gz, FantasyPros dynasty SF / redraft SF ECR):

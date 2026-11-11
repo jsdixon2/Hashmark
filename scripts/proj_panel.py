@@ -34,16 +34,21 @@ def proj(c, base, ppg, l3, xs, x3, rk, imp):
          + c[8] * (ppg is not None) + c[9] * (xs is not None))
     return max(0.0, m)
 
-def props_pts(pr):   # the app's formula (index.html hmProj): yards, receptions ~ rec yards / 11.5, QB 1.6 TD, anytime TD
+def props_pts(pr, rec=1):   # the app's formula (index.html hmProj): yards, receptions ~ rec yards / 11.5 x league rec, QB 1.6 TD, anytime TD
     mk = k = 0
-    if pr.get("recyd") is not None: mk += pr["recyd"] * .1 + pr["recyd"] / 11.5; k += 1
+    if pr.get("recyd") is not None: mk += pr["recyd"] * .1 + pr["recyd"] / 11.5 * rec; k += 1
     if pr.get("rushyd") is not None: mk += pr["rushyd"] * .1; k += 1
     if pr.get("passyd") is not None: mk += pr["passyd"] * .04 + 1.6 * 4; k += 1
     if pr.get("td") is not None: mk += pr["td"] * 6
     return mk if k else None
 
-def build(seasons=range(2021, 2027)):
-    seasons = list(seasons)
+FMT = {"ppr": ("pts_ppr", 1), "half": ("pts_half_ppr", .5), "std": ("pts_std", 0)}
+
+def build(seasons=range(2021, 2027), scoring="ppr", C=None, feats=False):
+    """scoring: "ppr" (default), "half" or "std": Sleeper projection, PPG, last-3 and actual points in that scoring; expected
+    points (PPR) scaled by the player's PPG in this scoring / his PPR PPG, clamped .6-1.6, like the app (a.xfp x ppg/a.fp).
+    C: weights {pos: [10 coefs]} instead of index.html's PJC. feats=True adds the inputs to each row."""
+    seasons = list(seasons); PK, REC = FMT[scoring]
     norm = lambda s: re.sub(r"[^a-z]", "", re.sub(r"\b(jr|sr|ii|iii|iv|v)\b", "", s.lower()))
     ids = {}; g2s = {}; byname = collections.defaultdict(list)
     for r in csv.DictReader(open(_get("ids.csv", IDS), encoding="utf-8")):
@@ -106,9 +111,9 @@ def build(seasons=range(2021, 2027)):
                 n = P["names"].get(oid)
                 if not n: continue
                 last, _, first = n.partition(", "); c = byname.get(norm(first + " " + last)) or []
-                if len(c) == 1: props[(y, w, c[0])] = props_pts(pr)
+                if len(c) == 1: props[(y, w, c[0])] = props_pts(pr, REC)
     except Exception: pass
-    C, PW = load_app()
+    C0, PW = load_app(); C = C or C0
     rows = []; log = collections.defaultdict(list)
     for key in sorted(ST, key=lambda k: tuple(map(int, k.split("-")))):
         y, w = map(int, key.split("-"))
@@ -119,21 +124,27 @@ def build(seasons=range(2021, 2027)):
             if pos not in ("QB", "RB", "WR", "TE"): continue
             stt = S.get(pid)
             if not stt or not stt.get("gp"): continue
-            base = pr.get("pts_ppr") or 0; L = log[(y, pid)]
+            base = pr.get(PK) or 0; L = log[(y, pid)]
             ppg = st.mean(x[1] for x in L) if len(L) >= 2 else None; l3 = st.mean(x[1] for x in L[-3:]) if len(L) >= 3 else None
             xs_ = [x[2] for x in L if x[2] is not None]; xs = st.mean(xs_) if len(xs_) >= 2 else None; x3 = st.mean(xs_[-3:]) if len(xs_) >= 3 else None
+            if PK != "pts_ppr" and ppg is not None and xs is not None:
+                fp = st.mean(x[3] for x in L); sc = max(.6, min(1.6, ppg / fp)) if fp else 1
+                xs *= sc; x3 = x3 * sc if x3 is not None else None
             t = tm.get((y, w, pid)); rk = dvp_rank(y, w, t[1], pos) if t else None; ii = imp.get((y, w, t[0])) if t else None
             qq = (y, w, pid) in q
             hm = proj(C[pos], base, ppg, l3, xs, x3, rk, ii) * (.88 if qq else 1)
             mk = props.get((y, w, pid))
             if mk is not None: pwt = PW.get(pos, .2); hm = hm * (1 - pwt) + mk * pwt
-            rows.append({"s": y, "w": w, "pid": pid, "pos": pos, "base": base, "hm": hm, "a": stt.get("pts_ppr") or 0, "q": qq, "props": mk is not None})
+            row = {"s": y, "w": w, "pid": pid, "pos": pos, "base": base, "hm": hm, "a": stt.get(PK) or 0, "q": qq, "props": mk is not None}
+            if feats: row.update(ppg=ppg, l3=l3, xs=xs, x3=x3, rk=rk, imp=ii, mk=mk)
+            rows.append(row)
         for pid, stt in S.items():
-            if stt.get("gp"): log[(y, pid)].append((w, stt.get("pts_ppr") or 0, xfp.get((y, w, pid))))
+            if stt.get("gp"): log[(y, pid)].append((w, stt.get(PK) or 0, xfp.get((y, w, pid)), stt.get("pts_ppr") or 0))
     return rows
 
 if __name__ == "__main__":
-    rows = build(); print(len(rows))
+    import sys
+    rows = build(scoring=sys.argv[1] if len(sys.argv) > 1 else "ppr"); print(len(rows))
     for y in sorted({r["s"] for r in rows}):
         R = [r for r in rows if r["s"] == y and r["base"] >= 3]
         print(y, len(R), "sleeper", round(sum(abs(r["a"] - r["base"]) for r in R) / len(R), 3), "hashmark", round(sum(abs(r["a"] - r["hm"]) for r in R) / len(R), 3))
