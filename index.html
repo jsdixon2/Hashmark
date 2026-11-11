@@ -1955,7 +1955,7 @@ const NW={items:[],built:0,src:[],ixFor:null,ix:null};
 const NK={injury:"Injury",return:"Return",trade:"Trade",release:"Release",signing:"Signing",suspension:"Suspension",depth:"Role",coaching:"Coaching",status:"Status"};
 const nrm=x=>(x||"").toLowerCase().replace(/[.'’`]/g,"").replace(/\s+(jr|sr|ii|iii|iv|v)\b/g,"").replace(/[^a-z0-9 \-]/g," ").replace(/\s+/g," ").trim();
 function ago(ts){if(!ts)return "";const m=Math.max(0,Math.round((Date.now()-ts)/60000));return m<1?"just now":m<60?m+"m ago":m<1440?Math.round(m/60)+"h ago":Math.round(m/1440)+"d ago";}
-async function loadNews(){try{const r=await fetch("data/news.json?t="+Math.floor(Date.now()/120000),{cache:"no-store"});if(!r.ok)return;const j=await r.json();NW.items=Array.isArray(j.items)?j.items:[];NW.built=j.built||0;NW.src=j.sources||[];NW.ixFor=null;
+async function loadNews(){try{const r=await fetch("data/news.json",{cache:"no-cache"});if(!r.ok)return;const j=await r.json();NW.items=Array.isArray(j.items)?j.items:[];NW.built=j.built||0;NW.src=j.sources||[];NW.ixFor=null;
   computeAll();for(const l of S.leagues)l._sum=null;const r2=route();if(r2==="home"||r2==="news"||r2.startsWith("player-"))render();}catch(e){}}
 function newsIndex(){if(NW.ixFor===PL&&NW.ix)return NW.ix;const by=new Map(),dup=new Set();
   for(const p of Object.values(PL)){const k=nrm(p.name);if(!k||k.split(" ").length<2)continue;if(by.has(k)&&by.get(k)!==p.id)dup.add(k);else by.set(k,p.id);}
@@ -2038,7 +2038,7 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&Date.now(
 
 /* ===== v10: live slate, league/team switcher, trade-lab profiles ===== */
 let NFLS=null;
-async function liveSlate(){if(S.mode!=="live")return;try{const r=await fetch("data/sched.json?t="+Math.floor(Date.now()/600000),{cache:"no-store"});if(!r.ok)return;const j=await r.json();if(+j.season!==+S.season||!Array.isArray(j.games))return;NFLS=j.games;applySlate();}catch(e){}}
+async function liveSlate(){if(S.mode!=="live")return;try{const r=await fetch("data/sched.json",{cache:"no-cache"});if(!r.ok)return;const j=await r.json();if(+j.season!==+S.season||!Array.isArray(j.games))return;NFLS=j.games;applySlate();}catch(e){}}
 function applySlate(){const wk=S.week,gs=NFLS.filter(g=>g.wk===wk);if(!gs.length)return;
   const opp={};for(const g of NFLS){(opp[g.wk]=opp[g.wk]||{})[g.a]=g.h;opp[g.wk][g.h]=g.a;}
   const allow={},gp={};
@@ -2813,7 +2813,7 @@ vMatchup=(function(prev){return function(li){const L=S.leagues[li];return L&&L.g
 const _rl20=refreshLive;refreshLive=async function(){if(S.mode==="live"&&S.L&&S.L.gl){try{const mu=await sj(`${API}/league/${S.L.id}/matchups/${S.week}`);S.L.glMu=(mu||[]).filter(m=>(m.starters||[]).some(x=>x&&x!=="0")||m.points).map(m=>({rid:m.roster_id,pts:m.points||0,st:m.starters||[],pp:m.players_points||{}}));S.L._sum=null;chopCheck();render();}catch(e){}return;}return _rl20();};
 /* ===== v21: advanced metrics (nflverse, ffopportunity, NGS, PFR, FTN, QBR, official reports) ===== */
 let ADV={p:{},teams:{},asof:null,season:null};
-async function loadAdv(){try{const r=await fetch("data/adv.json?t="+Math.floor(Date.now()/36e5),{cache:"no-store"});if(!r.ok)return;const j=await r.json();if(!j||!j.p)return;ADV=j;ADVP=null;
+async function loadAdv(){try{const r=await fetch("data/adv.json",{cache:"no-cache"});if(!r.ok)return;const j=await r.json();if(!j||!j.p)return;ADV=j;ADVP=null;
   computeAll();for(const l of S.leagues){l._sum=null;l._ctx=null;l._dg=null;l._tr=null;}render();}catch(e){}}
 const advOf=p=>p&&ADV.p[p.id]||null;
 function xfpOf(a){if(!a||a.xfp==null)return null;return a.xfp3!=null&&a.g>=5?a.xfp*.65+a.xfp3*.35:a.xfp;}
@@ -2872,7 +2872,7 @@ function advPanel(id){const p=PL[id],a=advOf(p);if(!p||!a)return "";const M=ADVM
 vPlayer=(function(prev){return function(id){const h=prev(id),panel=advPanel(id);if(!panel)return h;const i=h.indexOf('<section class="pan mt"><div class="row sp"><h2>News</h2>');return i>=0?h.slice(0,i)+panel+h.slice(i):h+panel;};})(vPlayer);
 /* ===== v22: Devy Lab — college scouting from free play-level data ===== */
 let CFB=null,CFBst="idle";
-async function loadCfb(){if(CFBst!=="idle")return;CFBst="loading";try{const r=await fetch("data/cfb.json?t="+Math.floor(Date.now()/36e5),{cache:"no-store"});if(r.ok){CFB=await r.json();CFBst="ready";CFBP=null;}else CFBst="error";}catch(e){CFBst="error";}const rt=route();if(rt==="devy"||rt.startsWith("cfb-")||rt==="prep"||rt.startsWith("player-"))render();}
+async function loadCfb(){if(CFBst!=="idle")return;CFBst="loading";try{const r=await fetch("data/cfb.json",{cache:"no-cache"});if(r.ok){CFB=await r.json();CFBst="ready";CFBP=null;}else CFBst="error";}catch(e){CFBst="error";}const rt=route();if(rt==="devy"||rt.startsWith("cfb-")||rt==="prep"||rt.startsWith("player-"))render();}
 const CLS=c=>c==null?"":["","Fr","So","Jr","Sr","5th"][Math.min(5,Math.round(c))]||"";
 const ftin=h=>h?`${Math.floor(h/12)}'${Math.round(h%12)}"`:"";
 let CFBP=null;
@@ -3248,7 +3248,7 @@ returnEffect=function(p){const o={pct:0,why:[]},st=q=>statusWord(q.inj).replace(
 
 /* ---------- market value engine ---------- */
 let VAL={v:{},sources:[],asof:null};
-async function loadValues(){try{const r=await fetch("data/values.json?t="+Math.floor(Date.now()/36e5),{cache:"no-store"});if(!r.ok)return;const j=await r.json();if(!j||!j.v)return;VAL=j;VRK=null;
+async function loadValues(){try{const r=await fetch("data/values.json",{cache:"no-cache"});if(!r.ok)return;const j=await r.json();if(!j||!j.v)return;VAL=j;VRK=null;
   computeAll();for(const l of S.leagues){l._sum=null;l._ctx=null;l._dg=null;l._tr=null;l._yv=null;}render();}catch(e){}}
 const VANCH=[[1,10000],[12,7000],[50,4000],[150,1500],[300,500],[600,150],[1500,40],[4000,5]];
 function curve(rank){if(rank<=1)return 10000;for(let i=1;i<VANCH.length;i++){const [r1,v1]=VANCH[i-1],[r2,v2]=VANCH[i];if(rank<=r2){const t=(Math.log(rank)-Math.log(r1))/(Math.log(r2)-Math.log(r1));return Math.exp(Math.log(v1)+t*(Math.log(v2)-Math.log(v1)));}}return 5;}
@@ -3540,7 +3540,7 @@ document.addEventListener("keydown",e=>{const tg=e.target;if(tg&&(tg.matches("in
 
 /* ===== v27: sportsbook lines and props (The Odds API), college usage and EPA (CollegeFootballData) ===== */
 let ODDS=null;
-async function loadOdds(){try{const r=await fetch("data/odds.json?t="+Math.floor(Date.now()/9e5),{cache:"no-store"});if(!r.ok)return;ODDS=await r.json();const rt=route();if(PS.length||rt==="gameday")render();}catch(e){}}
+async function loadOdds(){try{const r=await fetch("data/odds.json",{cache:"no-cache"});if(!r.ok)return;ODDS=await r.json();const rt=route();if(PS.length||rt==="gameday")render();}catch(e){}}
 const propsOf=p=>{if(!ODDS||!ODDS.props||!p)return null;const a=Date.parse(ODDS.props_asof||0);if(!(Date.now()-a<8*864e5))return null;return ODDS.props[p.id]||null;};
 const agoTxt=iso=>{const m=(Date.now()-Date.parse(iso))/6e4;return m<90?`${Math.max(1,Math.round(m))} min ago`:m<2880?`${Math.round(m/60)} h ago`:`${Math.round(m/1440)} days ago`;};
 function propsCard(p){const x=propsOf(p);if(!x)return "";const cells=[];
@@ -3597,7 +3597,7 @@ vOverview=function(){const live=S.mode==="live",SM=sums(),dead=S.leagues.length-
   const tr=movesBy(/Sell high|Buy|Trade target/),wv=movesBy(/Free agent/),news=NW.items.length?feed("mine"):[],L0=liveSet(),G=typeof GAMES!=="undefined"?GAMES:[];
   const mine=new Set();SM.forEach(({L})=>{const t=L.teams[mineIdx(L)];if(t)t.players.forEach(id=>mine.add(id));});
   const myLive=[...mine].filter(id=>L0.has(id)).map(id=>({p:PL[id],v:L0.get(id)})).filter(x=>x.p).sort((a,b)=>(b.v||0)-(a.v||0));
-  let pros=null;if(CFB){pros=Object.values(CFB.p).filter(p=>!p.drafted&&p.proj&&p.dclass===+S.season+1).sort((a,b)=>a.proj.pick-b.proj.pick)[0];}else if(CFBst==="idle")setTimeout(loadCfb,50);
+  let pros=null;if(CFB){pros=Object.values(CFB.p).filter(p=>!p.drafted&&p.proj&&p.dclass===+S.season+1).sort((a,b)=>a.proj.pick-b.proj.pick)[0];}
   const T={
    matchup:tile("matchup","Matchups",ok.length?`${wins} of ${ok.length}`:"–",ok.length?`projected wins this week${ok.some(x=>x.d.live)?" · games live":""}`:"No matchups this week","week"),
    roster:tile("roster","Lineups",fixes?`${fixes} to fix`:"All set",fixes?`${urg?urg+" urgent · ":""}across ${SM.filter(x=>x.d.rev).length} team${SM.filter(x=>x.d.rev).length===1?"":"s"}`:"Every lineup is optimal","ros"),
@@ -4212,7 +4212,7 @@ const _hsU39=window.hsumUpdate;window.hsumUpdate=function(){_hsU39&&_hsU39();con
 const DIVS={"AFC East":["BUF","MIA","NE","NYJ"],"AFC North":["BAL","CIN","CLE","PIT"],"AFC South":["HOU","IND","JAX","TEN"],"AFC West":["DEN","KC","LV","LAC"],"NFC East":["DAL","NYG","PHI","WAS"],"NFC North":["CHI","DET","GB","MIN"],"NFC South":["ATL","CAR","NO","TB"],"NFC West":["ARI","LAR","SF","SEA"]};
 const DIVOF={};for(const [d,ts] of Object.entries(DIVS))ts.forEach(t=>DIVOF[t]=d);
 let SCHALL=null,SCHST="idle";
-async function loadSchAll(){if(SCHST!=="idle")return;SCHST="loading";try{const r=await fetch("data/sched.json?t="+Math.floor(Date.now()/9e5),{cache:"no-store"});const j=await r.json();SCHALL=(j.games||[]).map(g=>Object.assign({},g,{a:g.a==="LA"?"LAR":g.a,h:g.h==="LA"?"LAR":g.h}));SCHST="ready";}catch(e){SCHST="error";}if(route()==="nfl")render();}
+async function loadSchAll(){if(SCHST!=="idle")return;SCHST="loading";try{const r=await fetch("data/sched.json",{cache:"no-cache"});const j=await r.json();SCHALL=(j.games||[]).map(g=>Object.assign({},g,{a:g.a==="LA"?"LAR":g.a,h:g.h==="LA"?"LAR":g.h}));SCHST="ready";}catch(e){SCHST="error";}if(route()==="nfl")render();}
 function nflTable(upTo){const G=(typeof NFLS!=="undefined"&&NFLS&&NFLS.length?NFLS:SCHALL)||[];const T={};const mk=t=>T[t]=T[t]||{t,w:0,l:0,tie:0,pf:0,pa:0,dw:0,dl:0,cw:0,cl:0,hw:0,hl:0,aw:0,al:0,m:[],res:[],opp:[]};
   Object.keys(DIVOF).forEach(mk);
   for(const g of G){if(!g.final||g.as==null||g.hs==null)continue;if(upTo&&g.wk>upTo)continue;const A=mk(g.a),H=mk(g.h);
@@ -5956,7 +5956,7 @@ tradeOpts=(function(prev){return function(L,p,dir){const base=prev(L,p,dir);cons
    is pulled toward the middle by k = (1 - tau2) / tau2 seasons, so new accounts start near average. ===== */
 let MREF=null,MREFst="idle";
 async function loadMgrRef(){if(MREFst!=="idle")return;MREFst="loading";
-  try{const r=await fetch("data/mgr_ref.json?t="+Math.floor(Date.now()/864e5));if(!r.ok)throw 0;MREF=await r.json();MREFst="ready";}catch(e){MREFst="error";}
+  try{const r=await fetch("data/mgr_ref.json",{cache:"no-cache"});if(!r.ok)throw 0;MREF=await r.json();MREFst="ready";}catch(e){MREFst="error";}
   if(route()==="stats")render();}
 const mrSizeB=n=>n<=10?"10":n<=12?"12":"14";
 function mrRef(k,m){if(!MREF)return null;const t=k.split("|")[0];for(const kk of [k,t+"|*","*|*"]){const b=MREF.B[kk];if(b&&b[m])return b[m];}return null;}
@@ -6719,6 +6719,19 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .wst p{color:var(--ink)!important;opacity:.92}.wmore{display:block;margin-top:8px;color:var(--acc);font-weight:700;font-size:13.5px}
 </style>`);
 /* /v102 */
+/* ===== v103: lighter launches and instant history.
+   1) Data files: fixed URLs fetched with cache:"no-cache" (the browser revalidates with ETag/Last-Modified and GitHub
+      Pages answers 304 Not Modified when nothing changed) instead of time-stamped URLs with cache:"no-store" that
+      re-downloaded everything every 2 min - 1 h. The 1.6 MB college file no longer loads on Huddle (Scout tile shows
+      the top prospect only once Scout has loaded it).
+   2) Sleeper history: finished weeks never change, so matchups/transactions for weeks at least two weeks old are kept
+      on the phone (IndexedDB) for good, last week's for 6 hours; only the current week is fetched every session. ===== */
+hxGet=(function(prev){return async function(path){if(S.mode!=="live")return prev(path);
+  const m=/^\/league\/([^/]+)\/(matchups|transactions)\/(\d+)$/.exec(path),wk=m?+m[3]:0,cur=+S.week||0;
+  if(!m||!cur||wk>=cur)return prev(path);const k="hxw1:"+path,old=wk<=cur-2;
+  try{const c=await idbGet(k);if(c&&c.v!==undefined&&(old||Date.now()-c.t<6*3600e3))return c.v;}catch(e){}
+  const v=await prev(path);try{if(v!=null)idbPut(k,{t:Date.now(),v});}catch(e){}return v;};})(hxGet);
+/* /v103 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
