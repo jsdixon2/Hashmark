@@ -3460,7 +3460,7 @@ function vGMTrends(){const L=S.L;if(!L)return "";let tr=[];try{tr=leagueDigest(L
   const sells=new Set(G.sells.map(x=>x.p.id)),buys=new Set(G.buys.concat(G.pre).map(x=>x.p.id));const by=new Map();for(const x of tr)if(!by.has(x.id))by.set(x.id,x);
   const tag=id=>mine.has(id)?(sells.has(id)?`<span class="tt sell">Sell</span>`:""):buys.has(id)?`<span class="tt buy">Buy</span>`:"";
   const own=id=>{if(mine.has(id))return "Yours";const t=L.teams.find(t=>t.players.includes(id));return t?t.name:"Free agent";};
-  const br=[...by.values()].filter(x=>PL[x.id]).sort((a,b)=>b.brk-a.brk).map(x=>{const p=PL[x.id];return `<button class="tsr" data-go="player-${p.id}">${pos(p.pos)}<span class="tsn"><b class="ell">${esc(p.name)} ${tag(p.id)}</b><span class="sub ell">${esc(own(p.id))}${x.up?" · role rising in news":""}</span></span><span class="tsb"><span class="bar"><i style="width:${Math.min(100,PCT(p.brk)/.75)}%"></i></span><b class="num">${PCT(p.brk)}%</b></span></button>`;});
+  const br=[...by.values()].filter(x=>PL[x.id]&&(PL[x.id].brk||0)>=.1/* v121: honest odds, 10%+ only */).sort((a,b)=>b.brk-a.brk).map(x=>{const p=PL[x.id];return `<button class="tsr" data-go="player-${p.id}">${pos(p.pos)}<span class="tsn"><b class="ell">${esc(p.name)} ${tag(p.id)}</b><span class="sub ell">${esc(own(p.id))}${x.up?" · role rising in news":""}</span></span><span class="tsb"><span class="bar"><i style="width:${Math.min(100,PCT(p.brk)/.75)}%"></i></span><b class="num">${PCT(p.brk)}%</b></span></button>`;});
   const rost=new Set(L.teams.flatMap(t=>t.players));const uz=p=>{const a=p.adv||{};const dt=a.ts3!=null&&a.ts!=null?a.ts3-a.ts:0,ds=a.snap3!=null&&a.snap!=null?(a.snap3-a.snap)/100:0,dc=a.cs3!=null&&a.cs!=null?a.cs3-a.cs:0;return {dt,ds,dc,s:Math.max(dt*2,ds,dc*1.5)};};
   const pool=Object.values(PL).filter(p=>p.adv&&p.pos!=="QB"&&WV_OFF.has(p.pos)&&(rost.has(p.id)||rosPPG(p)>=4));
   const us=pool.map(p=>Object.assign({p,a:p.adv,gap:wvGap(p)},uz(p))).filter(x=>x.s>=.08).sort((a,b)=>b.s-a.s);
@@ -3470,7 +3470,7 @@ function vGMTrends(){const L=S.L;if(!L)return "";let tr=[];try{tr=leagueDigest(L
   const urSeg=`<div class="seg sm urseg">${[["buy","Buy first"],["jump","Biggest jump"],["avail","Available"],["mine","Yours"],["hot","Hot streaks"]].map(([k,n])=>`<button data-urs="${k}" class="${urS===k?"on":""}">${n}</button>`).join("")}</div>`;
   const ur=urS==="hot"?hot.map(({p,l3})=>`<button class="tsr" data-go="player-${p.id}">${pos(p.pos)}<span class="tsn"><b class="ell">${esc(p.name)} ${tag(p.id)}</b><span class="sub ell">${esc(own(p.id))} · snaps and targets flat, likely to cool</span></span><span class="urv"><b class="num">${f1(p.ppg)}→${f1(l3)}</b><span class="sub">pts, season → last 3</span></span></button>`)
    :us.map(({p,a,dt,ds,dc,gap})=>{const k=dt*2>=Math.max(ds,dc*1.5)?"t":dc*1.5>=ds?"c":"s";return `<button class="tsr" data-go="player-${p.id}">${pos(p.pos)}<span class="tsn"><b class="ell">${esc(p.name)} ${tag(p.id)}</b><span class="sub ell">${esc(own(p.id))}${gap!=null&&Math.abs(gap)>=1?` · usage says ${f1(Math.abs(gap))} pts/g ${gap>0?"above":"below"} his pace`:""}</span></span><span class="urv"><b class="num">${k==="t"?`${Math.round(a.ts*100)}→${Math.round(a.ts3*100)}%`:k==="c"?`${Math.round(a.cs*100)}→${Math.round(a.cs3*100)}%`:`${Math.round(a.snap)}→${Math.round(a.snap3)}%`}</b><span class="sub">${k==="t"?"target share":k==="c"?"carry share":"snap share"}</span></span></button>`;});
-  return `<section class="pan"><div class="row sp"><h2>Breakout odds</h2><span class="tag">Higher is better ${info("brk")}</span></div>${lst(br,5,"No candidates right now.")}</section>
+  return `<section class="pan"><div class="row sp"><h2>Breakout odds</h2><span class="tag">Higher is better ${info("brk")}</span></div>${lst(br,5,"No one clears 10% breakout odds right now.")}</section>
   <section class="pan mt"><div class="row sp"><h2>${urS==="hot"?"Hot streaks":"Usage risers"}</h2><span class="tag">Last 3 games vs season</span></div>${urSeg}${lst(ur,5,urS==="hot"?"No hot streaks without the usage to back them.":urS==="avail"?"No free agents with rising usage.":urS==="mine"?"None of your players have rising usage.":"No meaningful usage changes.")}<p class="sub mt">${urS==="hot"?"Tested on 2024–25: hot streaks without more snaps, targets or carries scored 1.7 fewer points a game over the next month than their season pace.":"Tested on 2024–25: rising snaps, targets or carries held their gains, while hot streaks without them faded. Sorted by the gap between what usage says he’ll score and his season pace."}</p></section>${trackCard(L)}
   <p class="sub mt"><span class="tt buy">Buy</span> only appears on other teams’ players and <span class="tt sell">Sell</span> only on yours. Details live in Trade Lab.</p>`;}
 
@@ -6901,6 +6901,92 @@ vReport=(function(prev){return function(...a){let h=prev(...a);try{const G=(RPT&
   const row=(l,x)=>`<tr><td>${l} <span class="sub">${f0(x.n)}</span></td><td class="num">${gpP120(x.acc)}</td><td class="num">${x.brier}</td></tr>`;
   h=h.replace(at,row("Hashmark live, before kickoff",F)+(E?row("Hashmark live, a week or more ahead",E):"")+at);}catch(e){}return h;};})(vReport);
 /* /v120 */
+/* ===== v122: Streamers text (e19). D/ST and K factors kept: fitted 2021-24 elasticities (D/ST -0.45 to -0.70 on opp implied/22) match the hand-set .6, no refit beat the shipped rule on 2025-26 (all within 1-2 SE). Tag fixed: the factor covers this week + next 2 games. Tested 2021-26 (81 weeks): top-3 D/ST streamers beat the average free agent by 2.6 pts/week (81% of weeks) ===== */
+tmStreamers=(function(prev){return function(...a){let h=prev(...a);if(!h)return h;
+  h=h.replace('<span class="tag">this week + next 3</span>','<span class="tag">next 3 games</span>');
+  h=h.replace("Free agents by this week's projection, nudged by the next three weeks' scoring environment (D/ST: points the opponent is expected to score).",
+    "This week's projection, nudged by the next 3 games' scoring outlook. Tested 2021-26: D/ST picks beat the average free agent by 2.6 pts/week.");
+  return h;};})(tmStreamers);
+/* /v122 */
+/* ===== v121: risk score and breakout odds fitted on real outcomes (backtest/e18_data.py + e18_fit.py) =====
+   Breakout = a player who is not yet a top finisher (top-12 QB/TE, top-24 RB/WR in PPR points per game, this season so
+   far or last season) finishes there next season (min 8 games; dynasty/keeper) or over the rest of this season (min 4
+   games; redraft with 4+ weeks left). Logistic fits on 2017-21 seasons, tested on 2022-24 (next) / 2022-26 (rest):
+   AUC .72 -> .92 next season, .64 -> .93 rest of season; calls of 30%+ hit 5.5% before, 30% / 40% now (old odds said
+   18% on average for a 2.6% event). Shipped coefficients refit on 2017-24. Odds capped at 60% (no bucket above it held).
+   p.broke = already a top finisher (was: top-3 in season points); their p.brk keeps the old value (never shown as odds). Risk = expected share of his remaining games that he
+   misses or scores under half his average (ridge fit 2017-21), ranked within position against the ros>=5 pool as
+   before: held-out within-position rank correlation with that bust rate .255 -> .359 (every season 2022-26 better);
+   top tier busted 60% vs 30% for the safest (was 55% vs 34%). Inputs: p.age, p.inj, p.adv (g, fp, fp3, xfp, snap,
+   snap3, td, w, prev, draft), values.json injh. Players without adv data keep the old numbers; IDP unchanged. */
+const SG121={T:{QB:17.9,RB:12.2,WR:14.2,TE:9.4},N:{QB:12,RB:24,WR:24,TE:12},CL:{QB:34,RB:27,WR:28,TE:29},CAP:.6,
+  next:{b0:-6.0926,isRB:-1.1524,isWR:-2.2441,isTE:-1.9827,young:.2552,old:-.2073,rookie:1.123,r1:1.932,r2:1.5456,r3:1.341,r47:.5929,fp:2.2292,xfp:.0562,fp3:.5833,gsh:1.6004,snap:.5568,pfp:.6097,pg:.3552,xfpQB:-2.2826,xfpTE:.6791},
+  ros:{b0:-6.2751,isRB:-.8023,isWR:-1.6251,isTE:-1.4195,young:.0875,old:-.0623,rookie:.8899,r1:.7008,r2:.859,r3:.256,r47:.0849,fp:.2336,xfp:1.8261,fp3:1.2328,gsh:1.8553,snap:1.0494,pfp:1.1709,pg:-.1326,xfpQB:-2.339,xfpTE:.0015},
+  risk:{b0:.9504,isRB:-.018,isWR:.0474,isTE:.0481,cv:.1026,dud:-.0367,td:.224,trend:-.0817,snap3:-.2257,lowsnap:-.009,gsh:-.5171,missr:-.3771,out:.2218,doubt:.1846,quest:.0513,pastcliff:.0055,fp:-.0298,xfpgap:-.0245}};
+function sg121Ctx(){const P=(ADV&&ADV.p)||{},tg={},now={},prv={};let gmax=0;
+  for(const a of Object.values(P)){if(!a||!a.g)continue;gmax=Math.max(gmax,a.g);if(a.team)tg[a.team]=Math.max(tg[a.team]||0,a.g);}
+  const mg=Math.max(2,Math.round(.4*gmax));
+  for(const pos of Object.keys(SG121.N)){const N=SG121.N[pos],es=Object.entries(P).filter(([,a])=>a&&a.pos===pos);
+    es.filter(([,a])=>a.g>=mg&&a.fp!=null).sort((x,y)=>y[1].fp-x[1].fp||(x[0]<y[0]?-1:1)).slice(0,N).forEach(([id])=>now[id]=1);
+    es.filter(([,a])=>a.prev&&a.prev.g>=8&&a.prev.fp!=null).sort((x,y)=>y[1].prev.fp-x[1].prev.fp||(x[0]<y[0]?-1:1)).slice(0,N).forEach(([id])=>prv[id]=1);}
+  return {tg,now,prv};}
+function sg121Age(p){return p.age==null?26:(Number.isInteger(p.age)?p.age+.5:p.age);}
+function sg121Brk(p,a,C,W){const T=SG121.T[p.pos],age=Math.max(20,Math.min(38,sg121Age(p))),has=!!(a&&a.g>0),d=(a&&a.draft)||{};
+  const dm=/R(\d)/.exec(p.draft||""),dr=d.r||(dm?+dm[1]:null),dy=d.y||(/^\d{4}/.test(p.draft||"")?+p.draft.slice(0,4):null);
+  const rookie=dy?dy===+(ADV.season||S.season):/rookie/i.test(p.draft||"");
+  const fp=has?(a.fp||0)/T:0,xfp=has?(a.xfp!=null?a.xfp:(a.fp||0))/T:0,pv=a&&a.prev;
+  const x={isRB:p.pos==="RB",isWR:p.pos==="WR",isTE:p.pos==="TE",young:Math.max(0,25-age),old:Math.max(0,age-27),rookie,r1:dr===1,r2:dr===2,r3:dr===3,r47:dr>=4&&dr<=7,
+    fp,xfp,fp3:has?(a.fp3!=null?a.fp3:a.fp||0)/T:0,gsh:has?Math.min(1,a.g/Math.max(1,C.tg[a.team]||a.g)):0,snap:has?(a.snap||0)/100:0,
+    pfp:pv&&pv.g>=4&&pv.fp!=null?pv.fp/T:0,pg:Math.min(1,((pv&&pv.g)||0)/17),xfpQB:p.pos==="QB"?xfp:0,xfpTE:p.pos==="TE"?xfp:0};
+  let z=W.b0;for(const k in x)z+=(W[k]||0)*(+x[k]);return Math.min(SG121.CAP,1/(1+Math.exp(-z)));}
+function sg121Bust(p,a,C){const lg=(a.w||[]).map(r=>r[1]).filter(v=>v!=null),n=lg.length;if(n<1||a.fp==null)return null;
+  const T=SG121.T[p.pos],m=lg.reduce((s,v)=>s+v,0)/n,prior={QB:.38,RB:.5,WR:.55,TE:.6}[p.pos];
+  const sd=Math.sqrt(lg.reduce((s,v)=>s+(v-m)**2,0)/n),cv=m>0?(sd/Math.max(2,m)*n+prior*3)/(n+3):prior;
+  const tg=Math.max(1,C.tg[a.team]||a.g||n),h=typeof VAL!=="undefined"&&VAL&&VAL.v&&VAL.v[p.id]&&VAL.v[p.id].injh,miss=Array.isArray(h)?(h[2]||0):0;
+  const inj=p.inj||"",sn3=a.snap3!=null?a.snap3/100:.6,l3=lg.slice(-3);
+  const x={isRB:p.pos==="RB",isWR:p.pos==="WR",isTE:p.pos==="TE",cv,dud:m>0?lg.filter(v=>v<.5*m).length/n:1,
+    td:m>0?Math.min(1,(a.td||0)*(p.pos==="QB"?4:6)/(m*n)):0,trend:n>=5?(l3.reduce((s,v)=>s+v,0)/3-m)/Math.max(4,m):0,
+    snap3:sn3,lowsnap:sn3<.5,gsh:Math.min(1,(a.g||n)/tg),missr:Math.min(1,miss/tg),out:/\bout\b|\bir\b|pup|sus/i.test(inj),doubt:/doubt/i.test(inj),quest:/quest/i.test(inj),
+    pastcliff:Math.max(0,sg121Age(p)-SG121.CL[p.pos]+2),fp:a.fp/T,xfpgap:((a.xfp!=null?a.xfp:a.fp)-a.fp)/T};
+  let z=SG121.risk.b0;for(const k in x)z+=(SG121.risk[k]||0)*(+x[k]);return z;}
+function sg121(){if(!ADV||!ADV.p||!Object.keys(ADV.p).length)return;const C=sg121Ctx();
+  const ros=S.fmt.type==="redraft"&&(18-(S.week||1))>=4,W=ros?SG121.ros:SG121.next,pr={};
+  for(const p of Object.values(PL)){if(!SG121.T[p.pos])continue;const a=advOf(p);
+    p.broke=!!(C.now[p.id]||C.prv[p.id]);p._brkH=ros?"ros":"next";
+    if(!p.broke)try{p.brk=sg121Brk(p,a,C,W);}catch(e){}  /* arrived players keep the old number: shown as "Arrived", only used as a small weight elsewhere */
+    if(a&&a.g>0){const b=sg121Bust(p,a,C);if(b!=null){p._bust=Math.max(0,Math.min(1,b));(pr[p.pos]=pr[p.pos]||[]);if((p.ros||0)>=5)pr[p.pos].push(b);}}}
+  for(const k in pr)pr[k].sort((x,y)=>x-y);
+  for(const p of Object.values(PL)){if(p._bust==null||!SG121.T[p.pos])continue;const arr=pr[p.pos]||[];if(arr.length<5)continue;
+    const b=p._bust;let lo=0,eq=0;for(const v of arr){if(v<b)lo++;else if(v===b)eq++;}
+    p.risk=clamp(Math.round(100*(lo+eq/2)/arr.length),2,98);try{p.tier=archetype(p);}catch(e){p.tier=tierOf(p.risk);}}}
+computeAll=(function(prev){return function(...a){const r=prev(...a);try{sg121();}catch(e){console.error(e);}return r;};})(computeAll);
+DEFS.brk=["Breakout odds","Chance a player who isn't a top-12 QB/TE or top-24 RB/WR (points per game, this season or last) finishes there next season (dynasty, keeper) or over the rest of this season (redraft). Fitted on 2017-21 seasons; on 2022-24, calls of 30% or more came true 30% of the time."];
+DEFS.risk=["Risk","0–100, lower is safer. Ranks the expected share of his remaining games that he misses or scores under half his average (injury reports, games played, snap share, weekly swings, touchdown reliance), against fantasy-relevant players at his position. Top tier busted 60% of games in 2022-26 tests, the safest 30%."];
+vPlayer=(function(prev){return function(id){const h=prev(id),p=PL[id];if(!p||!SG121.N[p.pos])return h;
+  return h.replace("Already a top-3 finisher",`Already a top-${SG121.N[p.pos]} ${p.pos}`);};})(vPlayer);
+/* coordinator: with honest odds most players sit under 10%; Trend spotter lists only show 10%+ (empty state otherwise) */
+const BRK_MIN121=.1;
+trendRow=(function(prev){return function(x){if(x&&x.brk!=null&&x.brk<BRK_MIN121)return "";return prev(x);};})(trendRow);
+/* /v121 */
+/* ===== v123: live projections lean on the score; live odds' spread fitted on real games (backtest e20) =====
+   Replayed on nflverse play-by-play (2023-25) and 1.19M live states of real league matchups; fitted 2023-24, tested 2025.
+   1) A started QB/RB/WR/TE's points still to come = pregame x share of game left x (1 + g x his team's margin / 10),
+      clamped .4-1.6 (g QB -.14, RB -.06, WR -.2, TE -.2: players on teams ahead score less of what's left).
+      2025 player MAE across 11 checkpoints 3.622 -> 3.564 (better at every one; halftime 3.715 -> 3.658, n 3,609).
+   2) Each side's live variance = 1.1 x (proj x .16 + 5)^2 x share left^1.2 (was x share left).
+      2025 live Brier .1269 -> .1264, log loss .3840 -> .3824 (better in every share-left bucket; bootstrap 300/300).
+   Before kickoff and after finals nothing changes; no score from ESPN (kickoff-time estimate) = margin 0 = old rule. */
+const LV123={g:{QB:-.14,RB:-.06,WR:-.2,TE:-.2},p:1.2,s:1.1};
+wkProj=(function(prev){return function(p){const v=prev(p);try{if(!p||S.mode!=="live")return v;const g=LV123.g[p.pos];if(g==null)return v;const gs=gameState(p.team);
+  if(!gs||gs.st!=="in"||gs.pf==null||gs.pa==null||!isFinite(gs.pf)||!isFinite(gs.pa))return v;const lp=livePtsMap();if(!lp.has(p.id))return v;const pts=lp.get(p.id),rest=v-pts;if(!(rest>0))return v;
+  return pts+rest*Math.min(1.6,Math.max(.4,1+g*(gs.pf-gs.pa)/10));}catch(e){return v;}};})(wkProj);
+myMatchup=(function(prev){return function(L){const M=prev(L);try{if(!M||S.mode!=="live"||!M.left)return M;const [ra,rb]=M.left;if(ra>.999&&rb>.999)return M;
+  const va=LV123.s*(M.A.proj*WP.k+WP.c)**2*Math.pow(Math.max(0,ra),LV123.p),vb=LV123.s*(M.B.proj*WP.k+WP.c)**2*Math.pow(Math.max(0,rb),LV123.p),sd=Math.sqrt(va+vb),d=M.A.proj-M.B.proj;
+  M.wpA=sd<.25?(d>0?1:d<0?0:.5):1/(1+Math.exp(-1.7*WP.b*d/sd));if(ra>0||rb>0)M.wpA=Math.max(.001,Math.min(.999,M.wpA));}catch(e){}return M;};})(myMatchup);
+/* report card row from data/report.json `live` (scripts/rpt_live.py, held-out 2025) */
+e8Rows=(function(prev){return function(...a){let h=prev(...a);try{const V=RPT&&RPT.live,m=V&&V.moments&&V.moments["Sunday early games at halftime"];if(!m)return h;
+  h+=e8Row("matchup","Live win odds",["Tested","good"],`Sunday early games at halftime: favourites said ${Math.round(m.said*100)}%, won ${Math.round(m.won*100)}%`,`Brier ${(V.odds.brier||0).toFixed(3)} live · ${f0(V.odds.matchups)} matchups in ${V.season_tested}, not fitted on`);}catch(e){}return h;};})(e8Rows);
+/* /v123 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
