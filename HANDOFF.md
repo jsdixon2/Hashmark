@@ -110,7 +110,8 @@ Built so far:
   already the most accurate (690 / 1106 vs market 780 / 1337). The 2-season production outcome can't see years 3+,
   which is exactly where young players' value sits, so it understates the case for youth.
   Recommendation to owner: young (<=23.5) players get a 4-season model horizon at .8 discount and a 10% this-season
-  share (rest to market). Awaiting go.
+  share (rest to market). Owner said go -> shipped as v107 (age <= 23 since Sleeper ages are whole years; 1QB gets the
+  same horizon and its 25% this-season share halved to 12.5%).
 - **v105 page resets while scrolling (owner bug report).** Live leagues only: `pollQuiet` (45 s) -> `refreshLive` ->
   `render()` redrew any route, incl. GM › Waivers/Players; "See all" is DOM-only (`.lmore.clip` + `[data-more]`), so the
   list collapsed, the page shrank and the scroll jumped. Demo mode never polls, which is why QA missed it. Reproduced on
