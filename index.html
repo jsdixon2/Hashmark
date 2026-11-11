@@ -6901,6 +6901,13 @@ vReport=(function(prev){return function(...a){let h=prev(...a);try{const G=(RPT&
   const row=(l,x)=>`<tr><td>${l} <span class="sub">${f0(x.n)}</span></td><td class="num">${gpP120(x.acc)}</td><td class="num">${x.brier}</td></tr>`;
   h=h.replace(at,row("Hashmark live, before kickoff",F)+(E?row("Hashmark live, a week or more ahead",E):"")+at);}catch(e){}return h;};})(vReport);
 /* /v120 */
+/* ===== v122: Streamers text (e19). D/ST and K factors kept: fitted 2021-24 elasticities (D/ST -0.45 to -0.70 on opp implied/22) match the hand-set .6, no refit beat the shipped rule on 2025-26 (all within 1-2 SE). Tag fixed: the factor covers this week + next 2 games. Tested 2021-26 (81 weeks): top-3 D/ST streamers beat the average free agent by 2.6 pts/week (81% of weeks) ===== */
+tmStreamers=(function(prev){return function(...a){let h=prev(...a);if(!h)return h;
+  h=h.replace('<span class="tag">this week + next 3</span>','<span class="tag">next 3 games</span>');
+  h=h.replace("Free agents by this week's projection, nudged by the next three weeks' scoring environment (D/ST: points the opponent is expected to score).",
+    "This week's projection, nudged by the next 3 games' scoring outlook. Tested 2021-26: D/ST picks beat the average free agent by 2.6 pts/week.");
+  return h;};})(tmStreamers);
+/* /v122 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
