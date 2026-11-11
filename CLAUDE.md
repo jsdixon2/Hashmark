@@ -149,11 +149,23 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    verdict when picks are involved); waiver bids vs the league's median winning bid; standings (rank, PF rank,
    all-play, luck, odds, next opponent, core, track-record notes); playoff race table; Week in review; Injury report;
    Who's hot (last 3 weeks). Huddle shows the top story brief with "Full story".
-6. **NFL team ratings and matchups — next, awaiting "go".** Plan: Elo + EPA with opponent adjustment and a
-   last-season prior, blended ~65% with closing spreads (`data/odds.json`); opponent-adjusted, shrunk
-   defense-vs-position (raw DVP only ~15-33% real, see `backtest/e10_dvp.py`); matchup effect into projections;
-   streaming view for QB/TE/DST/K; schedule strength in expected points incl. fantasy playoffs; prediction log.
-   Target: Brier ≤ 0.218 (current power rank 0.230, Vegas 0.218).
+   v103 lighter launches: data files go through the service worker (`sw.js` `dataFetch`: keeps each file with its
+   ETag/Last-Modified, sends If-None-Match, reuses the copy on 304, works offline); app fetches use fixed URLs with
+   cache:"no-cache" (no more ?t= busting with no-store); the 1.6 MB college file only loads in Scout; finished Sleeper
+   weeks (>= 2 weeks old) cached in IndexedDB for good, last week for 6 h (`hxGet` wrapper, key hxw1:<path>).
+   Note for QA: Playwright disables the HTTP cache whenever page.route is used; test caching without routes.
+   Cleanup: 21 provably dead items removed (superseded definitions never called before being replaced, captures of
+   old versions never used; acorn analysis, see HANDOFF). Only ~2% of the code was dead; most size is live features.
+6. NFL team ratings and matchups — done (v104, `scripts/build_teams.py` -> `data/teams.json`, run by news.yml every 30 min,
+   writes only when something changed). Backtests `backtest/e12_*.py` (games 2002-2025, player weeks 2021-25):
+   points-margin Elo (K .08, home 2.0, prior x.7, cap 28, sigma 12.5) Brier .2246 on 1,355 games 2021-25 (old power
+   rank .230); closing line .2118 -> odds use the line when posted, the rating otherwise (fitted blend weight on the
+   line = 1.0). 1-6 weeks ahead the rating beat market-implied ratings (.220-.227 vs .226-.232). Defense-vs-position,
+   opponent-adjusted and shrunk, improves player MAE by only ~0.02 (context only). Implied team total moves players
+   (QB best/worst 10% of environments +3.5/-2.5 pts) but Sleeper's projection already prices it (adding it on top
+   tested worse) -> this week's projections unchanged; the environment factor (beta QB .577 RB .535 WR .245 TE .224)
+   is used only for future weeks: Scout › NFL teams Power rankings + Fantasy playoffs table, GM › Waivers Streamers
+   (QB/TE/DST/K), Team › Roster Fantasy playoffs for your starters. Prediction log graded in teams.json `log`/`card`.
 7. College prospect (devy) score — untested, hand-set weights; fit on 2015-23 classes incl. draft capital.
 8. Confidence labels + live model report card.
 

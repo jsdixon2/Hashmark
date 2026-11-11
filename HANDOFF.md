@@ -90,6 +90,21 @@ Built so far:
     were still coloured on some lists (specificity) -> neutral; My teams card showed 0.0-0.0 before kickoff -> the
     projection with "proj", win chance below.
   - Data spot checks: Huddle and Matchup win chance agree; last-week line, Week N awards and The Wire agree.
+- **2026-11-11: owner asked for items 1-4 of the optimization list.**
+  1. Launch data (v103): measured ~1.1 MB compressed / 4.7 MB parsed per launch. Causes: every data file fetched with
+     no-store + a time-stamped URL (re-download every 2 min-1 h) and Huddle loading the college file for one tile.
+     Fix: service-worker conditional requests (verified with an ETag server: second launch = all 304s), fixed URLs,
+     college file only in Scout. Launch 1 drops the 1.5 MB college file; later launches download only changed files.
+  2. History (v103): finished weeks of the current season cached on the phone (IndexedDB); only the current week and
+     (every 6 h) last week are fetched.
+  3. Cleanup: my "30-40% smaller" estimate was wrong. Measured: minifying without renaming saves 12% (code is already
+     compact); strictly superseded code ~9 KB; captured-but-unused old versions a few KB more. Removed 21 items
+     (~14 KB) with an iterative acorn analysis (a definition is dead when the next definition of the same name doesn't
+     reference it and nothing references the name in between; unused `const _x=fn` captures). Runtime coverage over a
+     full demo tour leaves ~214 KB never run, but much of it is live-mode only (Sleeper connect, live league load),
+     so it is NOT safe to delete by coverage. The real size win is code splitting (load Devy Lab, War Room, guillotine,
+     trade calculator on demand): a planned project, not done.
+  4. Engine 6 (v104): see CLAUDE.md engine 6. Team code map nflverse -> Sleeper (LA->LAR, OAK->LV, SD->LAC).
 - **v102 The Wire in depth** (owner: "excerpts are small and useless; be informative"). Every story now has a lead,
   a fact panel and detail bullets; new story types Week in review, Injury report, Who's hot. Guard rails: trade value
   and projection comparisons only when every player has a number; with picks in the deal it says so instead of
