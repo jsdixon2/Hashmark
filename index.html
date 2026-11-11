@@ -6987,6 +6987,29 @@ myMatchup=(function(prev){return function(L){const M=prev(L);try{if(!M||S.mode!=
 e8Rows=(function(prev){return function(...a){let h=prev(...a);try{const V=RPT&&RPT.live,m=V&&V.moments&&V.moments["Sunday early games at halftime"];if(!m)return h;
   h+=e8Row("matchup","Live win odds",["Tested","good"],`Sunday early games at halftime: favourites said ${Math.round(m.said*100)}%, won ${Math.round(m.won*100)}%`,`Brier ${(V.odds.brier||0).toFixed(3)} live · ${f0(V.odds.matchups)} matchups in ${V.season_tested}, not fitted on`);}catch(e){}return h;};})(e8Rows);
 /* /v123 */
+/* ===== v114: rest-of-season pts/wk = 25% shipped rosPPG + 75% fitted blend (backtest/e26_*: per team game incl. missed games, held out 2025 ROS MAE 3.82 -> 3.50, 2026 wk4/8 to date 4.24 -> 3.94; every position better both seasons) ===== */
+/* Fitted per position (OLS, weighted by team games left) on 2021-25 checkpoints, inputs known before the week's games:
+   Sleeper's projection for this week, season PPG, last 3, xFP, last-3 xFP, last season, games played, injury status,
+   depth chart, recent games missed, age, week. Share .75 chosen by leave-one-season-out inside 2021-24. Worked in PPR
+   units and rescaled to league scoring (wvScale). The waiver 4-week rate (wvRate) stays: it wins its own horizon. */
+const ROS114={A:.75,M:{QB:[0.3781,0.6324,-0.0938,0.2509,-0.1053,0.1739,0.0711,1.5828,-6.8051,6.4013,-0.5958,-0.9433,-0.1965,-0.0841,-0.2981,-0.034,0.1402],RB:[0.0272,0.5969,0.1856,0.0789,-0.0717,0.1698,0.0541,0.9665,0.4343,1.034,-0.2951,0.7686,0.0174,-0.1558,-0.2468,-0.1235,-0.0878],WR:[-0.236,0.2893,0.2125,-0.0006,0.0689,-0.0488,0.5793,0.9192,-0.0068,0.6428,-0.2671,-0.5328,-0.0189,-0.1889,-0.3686,-0.2438,0.2423],TE:[-1.2023,0.4351,0.3414,-0.1653,-0.4768,0.4285,0.5979,1.118,2.1384,0.5116,-0.2766,-0.502,0.0405,-0.1647,-0.1399,-0.1137,0.0698]}};
+function ros114Fit(p){const c=ROS114.M[p&&p.pos];if(!c)return null;
+  const sc=typeof wvScale==="function"?(wvScale(p)||1):1,a=(typeof advOf==="function"&&advOf(p))||null,log=(p.log||[]).filter(x=>x&&x.pts!=null),gp=log.length;
+  if(!gp&&(p.g||0)>0)return null;  /* fitted on weekly logs: without one (demo snapshot) keep the shipped estimate */
+  const h=(p.hist||[]).find(x=>x.yr===S.season-1&&x.gp>=4),prv=h?h.ppg/sc:null;
+  const bye=typeof gameOf==="function"&&(gameOf(p)||{}).bye;
+  const ppg=log.length?log.reduce((s,x)=>s+x.pts,0)/log.length/sc:(p.ppg!=null?p.ppg/sc:null);
+  if(ppg==null&&p.proj==null&&prv==null)return null;
+  const pg=ppg!=null?ppg:(p.proj!=null?p.proj/sc:prv),pj=p.proj!=null&&!bye?p.proj/sc:pg;
+  const l3=log.length?log.slice(-3).reduce((s,x)=>s+x.pts,0)/Math.min(3,log.length)/sc:pg;
+  const hasA=!!(a&&(a.g||0)>=1&&a.xfp!=null),x=hasA?a.xfp:pg,x3=hasA&&a.xfp3!=null?a.xfp3:x;
+  const k=gp/(gp+3),inj=String(p.inj||""),out=/^(out|doubt)/i.test(inj)?1:0,q=/^quest/i.test(inj)?1:0,dc=+(p.dc||(a&&a.dc)||1);
+  const cw=S.week||1,played=new Set([...log.map(x=>+x.wk),...((a&&a.w)||[]).map(x=>+x[0])]),rec=[1,2,3,4].map(j=>cw-j).filter(w=>w>=1);
+  const miss=rec.length?1-rec.filter(w=>played.has(w)).length/rec.length:0,age=Math.max(20,Math.min(40,p.age||26));
+  const f=[pj,k*pg,k*l3,k*x,k*x3,(1-k)*(prv!=null?prv:pg),prv!=null?1:0,k,out,out*pj,q,dc===2?pj:0,dc>=3?pj:0,miss*pj,(age-26)*pj/10,cw*pj/10];
+  let v=c[0];for(let i=0;i<f.length;i++)v+=c[i+1]*(f[i]||0);return Math.max(0,v)*sc;}
+rosPPG=(function(prev){return function(p){const v=prev(p);let f=null;try{f=ros114Fit(p);}catch(e){}return f==null||!isFinite(f)?v:(1-ROS114.A)*v+ROS114.A*f;};})(rosPPG);
+/* /v114 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
