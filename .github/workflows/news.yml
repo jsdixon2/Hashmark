@@ -13,9 +13,10 @@ jobs:
       - run: python3 scripts/build_odds.py || true
         env: {ODDS_API_KEY: "${{ secrets.ODDS_API_KEY }}", FORCE_ODDS: "${{ github.event_name == 'workflow_dispatch' && '1' || '' }}"}
       - run: python3 scripts/build_sched.py || true
+      - run: python3 scripts/build_teams.py || true
       - run: |
           git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
-          for f in data/news.json data/sched.json data/odds.json; do [ -f $f ] && git add $f; done
+          for f in data/news.json data/sched.json data/odds.json data/teams.json; do [ -f $f ] && git add $f; done
           git diff --staged --quiet && exit 0
           git commit -m "news refresh"
           for i in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep 5; done

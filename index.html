@@ -6732,6 +6732,56 @@ hxGet=(function(prev){return async function(path){if(S.mode!=="live")return prev
   try{const c=await idbGet(k);if(c&&c.v!==undefined&&(old||Date.now()-c.t<6*3600e3))return c.v;}catch(e){}
   const v=await prev(path);try{if(v!=null)idbPut(k,{t:Date.now(),v});}catch(e){}return v;};})(hxGet);
 /* /v103 */
+/* ===== v104: Engine 6 in the app (data/teams.json from scripts/build_teams.py).
+   - Scout › NFL teams: "Power rankings" = the fitted rating (points better than an average team on a neutral field),
+     record, offense/defense vs league average, next game with win chance (betting line when posted, rating otherwise);
+     "Fantasy playoffs" table: weeks 15-17 opponents, schedule strength and implied points; Hashmark's game-pick record.
+   - GM › Waivers: Streamers for QB, TE, D/ST and K: this week's projection plus the next 3 weeks' scoring environment.
+   - Team › Roster: Fantasy playoffs (weeks 15-17) for your starters: opponent, implied team points and the fitted
+     environment effect per position. This week's projections are NOT changed (Sleeper already prices the line;
+     adding it again tested worse, backtest/e12_env_vs_sleeper.json). ===== */
+let TM=null,TMst="idle";
+async function loadTeams(){if(TMst!=="idle")return;TMst="loading";try{const r=await fetch("data/teams.json",{cache:"no-cache"});if(!r.ok)throw 0;TM=await r.json();TMst="ready";}catch(e){TMst="error";}
+  if(["nfl","waivers","roster","myteam"].includes(route()))render();}
+const tmN=t=>(typeof TEAMS!=="undefined"&&TEAMS[t]&&TEAMS[t][0])||t;
+const envCls=f=>f>=1.04?"good":f<=.96?"bad":"";
+const envTxt=f=>`${f>=1?"+":""}${Math.round((f-1)*100)}%`;
+function tmPower(){const T=TM.teams,rows=Object.entries(T).sort((a,b)=>a[1].rank-b[1].rank),c=TM.card||{};
+  return `<section class="pan mt tm104"><div class="row sp"><h2>Power rankings</h2><span class="tag">Hashmark rating</span></div>
+   <p class="sub" style="margin-top:2px">Points better than an average team on a neutral field. Next-game chances use the betting line once it's posted.</p>
+   <div class="tw"><table><thead><tr><th>#</th><th>Team</th><th>Rating</th><th>Rec</th><th>Off</th><th>Def</th><th>Next</th></tr></thead><tbody>
+   ${rows.map(([t,v])=>{const nx=v.next&&v.next[0];return `<tr class="tap" data-go="nfl-${t}"><td>${v.rank}</td><td><b>${esc(t)}</b></td><td class="num ${v.r>=0?"good":"bad"}">${v.r>=0?"+":""}${f1(v.r)}</td><td class="num">${v.rec[0]}–${v.rec[1]}${v.rec[2]?"–"+v.rec[2]:""}</td><td class="num">${v.off>=0?"+":""}${f1(v.off)}</td><td class="num">${v.def<=0?"":"+"}${f1(v.def)}</td><td class="num">${nx?`${nx.home?"":"@"}${esc(nx.o)} ${pc(nx.p)}`:"–"}</td></tr>`;}).join("")}
+   </tbody></table></div>
+   <p class="sub mt">Off/Def: points scored and allowed per game vs the league average (${f1(TM.lg)}); negative Def = stingy. ${c.n?`Hashmark's game picks this season: ${c.n} graded, ${Math.round(c.acc*100)}% right, Brier ${c.brier}.`:"Tested on 1,355 games (2021–25): rating Brier .225, closing line .212."}</p></section>`;}
+function tmFplay(){const T=TM.teams,rows=Object.entries(T).filter(([,v])=>v.fplay&&v.fplay.length).sort((a,b)=>(a[1].sos_fplay??0)-(b[1].sos_fplay??0));if(!rows.length)return "";
+  return `<section class="pan mt"><div class="row sp"><h2>Fantasy playoffs</h2><span class="tag">Weeks ${TM.fplay_weeks.join("–").replace(/–\d+–/,"–")}</span></div>
+   <p class="sub" style="margin-top:2px">Easiest schedules first. Implied points = what the team is expected to score that week.</p>
+   <div class="tw"><table><thead><tr><th>Team</th>${TM.fplay_weeks.map(w=>`<th>Wk ${w}</th>`).join("")}<th>Opp avg</th></tr></thead><tbody>
+   ${rows.map(([t,v])=>`<tr class="tap" data-go="nfl-${t}"><td><b>${esc(t)}</b></td>${TM.fplay_weeks.map(w=>{const g=v.fplay.find(x=>x.wk===w);return `<td class="num">${g?`${g.home?"":"@"}${esc(g.o)}<br><span class="sub" style="margin:0">${f1(g.imp)} pts</span>`:"bye"}</td>`;}).join("")}<td class="num ${v.sos_fplay<=-1.5?"good":v.sos_fplay>=1.5?"bad":""}">${v.sos_fplay>=0?"+":""}${f1(v.sos_fplay)}</td></tr>`).join("")}
+   </tbody></table></div></section>`;}
+vNflIndex=(function(prev){return function(){let h=prev();if(!TM){if(TMst==="idle")setTimeout(loadTeams,0);return h;}try{
+  const i=h.indexOf("<h2>Power rankings</h2>");if(i>=0){const a=h.lastIndexOf("<section",i),b=h.indexOf("</section>",i)+10;h=h.slice(0,a)+tmPower()+h.slice(b);}else h=tmPower()+h;
+  const j=h.indexOf("<h2>Remaining schedule</h2>");const fp=tmFplay();if(j>=0){const a=h.lastIndexOf("<section",j);h=h.slice(0,a)+fp+h.slice(a);}else h+=fp;}catch(e){console.error(e);}return h;};})(vNflIndex);
+/* streamers */
+function tmEnv(p,n){const T=TM&&TM.teams[p.team];if(!T)return [];const pos=p.pos==="DEF"||p.pos==="K"?null:p.pos;
+  return (T.next||[]).slice(0,n).map(x=>{const f=pos&&T.env[pos]?((T.env[pos].find(e=>e.wk===x.wk)||{}).f||1):null;const opp=TM.teams[x.o];
+    const oppImp=(TM.games.find(g=>g.wk===x.wk&&(g.h===p.team||g.a===p.team))||{});const allowed=p.team===oppImp.h?oppImp.ia:oppImp.ih;
+    return {wk:x.wk,o:x.o,home:x.home,imp:x.imp,f,allowed};});}
+function tmStreamers(){const L=S.L;if(!L||!TM)return "";let fa=[];try{fa=freeAgents();}catch(e){return "";}const want=["QB","TE","DEF","K"].filter(pos=>(L.slots||[]).some(s=>s===pos||(pos==="QB"&&s==="SUPER_FLEX")));
+  const blocks=want.map(pos=>{const xs=fa.filter(p=>p.pos===pos&&p.proj>0).map(p=>{const e=tmEnv(p,3);const fs=e.map(x=>pos==="DEF"?(x.allowed?1+(21.5-x.allowed)/21.5*.6:1):pos==="K"?(x.imp?1+(x.imp/22-1)*.5:1):(x.f||1));return {p,e,score:p.proj*(.6+.4*avgx(fs.length?fs:[1]))};}).sort((a,b)=>b.score-a.score).slice(0,3);
+    if(!xs.length)return "";return `<div class="sm104"><div class="eyebrow" style="margin:10px 0 4px">${pos==="DEF"?"D/ST":pos}</div>${xs.map(({p,e})=>`<div class="rbr"><div><div class="rbl"><span data-go="player-${p.id}">${esc(p.name)}</span> <span class="sub" style="margin:0">${esc(p.team||"")}</span></div><div class="rbs">${e.map(x=>`Wk ${x.wk} ${x.home?"":"@"}${esc(x.o)}${pos==="DEF"?` · opp ${f1(x.allowed)} pts`:pos==="K"?` · team ${f1(x.imp)} pts`:x.f?` · <span class="${envCls(x.f)}">${envTxt(x.f)}</span>`:""}`).join(" · ")}</div></div><b class="num">${f1(p.proj)}</b></div>`).join("")}</div>`;}).join("");
+  return blocks?`<section class="pan mt"><div class="row sp"><h2>Streamers</h2><span class="tag">this week + next 3</span></div><p class="sub" style="margin-top:2px">Free agents by this week's projection, nudged by the next three weeks' scoring environment (D/ST: points the opponent is expected to score).</p>${blocks}</section>`:"";}
+vWaivers=(function(prev){return function(){let h=prev();try{if(!TM){if(TMst==="idle")setTimeout(loadTeams,0);return h;}if((S.plT||"wire")!=="wire")return h;const s=tmStreamers();if(!s)return h;
+  const i=h.indexOf("<h2>Free agent guide</h2>");if(i>=0){const a=h.lastIndexOf("<section",i);return h.slice(0,a)+s+h.slice(a);}return h+s;}catch(e){console.error(e);return h;}};})(vWaivers);
+/* roster: fantasy playoffs for your starters */
+function tmRosterFplay(){const L=S.L;if(!L||!TM)return "";const t=L.teams[mineIdx(L)];if(!t)return "";let ids=[];try{ids=startIds(L,t);}catch(e){ids=t.players.slice(0,9);}
+  const W=TM.fplay_weeks,rows=ids.map(id=>PL[id]).filter(p=>p&&TM.teams[p.team]).map(p=>{const T=TM.teams[p.team],fp=T.fplay||[];const f=p.pos&&T.env[p.pos]?W.map(w=>(T.env[p.pos].find(e=>e.wk===w)||{}).f).filter(Boolean):[];return {p,fp,f:f.length?avgx(f):null};});
+  if(!rows.length)return "";
+  return `<section class="pan mt"><div class="row sp"><h2>Fantasy playoffs</h2><span class="tag">Weeks ${W[0]}–${W[W.length-1]}</span></div><p class="sub" style="margin-top:2px">Your starters' playoff schedule. The % is the fitted effect of each game's expected scoring on players at that position.</p>
+   ${rows.map(({p,fp,f})=>`<div class="rbr"><div><div class="rbl">${esc(p.pos)} <span data-go="player-${p.id}">${esc(p.name)}</span></div><div class="rbs">${W.map(w=>{const g=fp.find(x=>x.wk===w);return g?`${w}: ${g.home?"":"@"}${esc(g.o)} (${f1(g.imp)})`:`${w}: bye`;}).join(" · ")}</div></div><b class="num ${f!=null?envCls(f):""}">${f!=null?envTxt(f):"–"}</b></div>`).join("")}</section>`;}
+vRoster=(function(prev){return function(){let h=prev();try{if(!TM){if(TMst==="idle")setTimeout(loadTeams,0);return h;}const s=tmRosterFplay();if(!s)return h;const i=h.indexOf("<h2>Start/Sit</h2>");if(i>=0){const a=h.lastIndexOf("<section",i);return h.slice(0,a)+s+h.slice(a);}return h+s;}catch(e){console.error(e);return h;}};})(vRoster);
+document.head.insertAdjacentHTML("beforeend",`<style>.tm104 td,.tm104 th{white-space:nowrap}</style>`);
+/* /v104 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
