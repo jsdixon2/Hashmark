@@ -60,31 +60,23 @@ CLAUDE.md under each engine; agent reports with full tables are in `.build/agent
   replace the callers instead.
 - data/report.json conflicts on every merge (data.yml rebuilds it twice daily): keep the newer-code build.
 
-### To-do list, fully explained (in order)
-5. **Trades + IDP (B6).** Trade grades (`TC` d .75 / g 1.3; win odds .5 + .21 tanh(gap/.25)) were fitted on 7,656
-   trades 2021-24 on the value scale of that time; values since changed (v118, v121 risk feeds stability()). Replay
-   grade calibration on trades it can be replayed on, hold out 2025, split by young players / 2-for-1 / picks; refit
-   only if miscalibrated 3+ pts with n >= 200. IDP retest with 2026 data; keep IDP out of trade ideas unless it caught
-   up. Deliver scripts/rpt_trades.py (tested.trade_grades) and v119 if constants change.
-6. **Playoff/title odds (B5).** Never graded. Replay 2021-25 from weeks 4, 8, 11 with the app's season simulation
-   (draws use WP.k/WP.c, `PO` constants) on archived leagues; calibration "said X% made playoffs / won title". Fix the
-   draw spread if off. Report key + report-card row.
-7. **Snapshot + leak check (C4).** First check when scripts/fetch_bt.py captures each week's Sleeper projection: if
-   after kickoff/inactives, projections in bt/sleeper_proj.json.gz are cleaner than what a manager saw, and every
-   projection backtest (e14, e15, e24, e26, e28, e30, e31) is optimistic. Report to the owner immediately if so. Then
-   snapshot Hashmark's projection before each kickoff in Actions (scripts/snapshot_proj.py, frozen per game) and grade
-   it (scripts/rpt_snapshot.py); coordinator adds the workflow step.
-8. **Locker ranks (C1).** Repeatability tau2: trades .06, drafts .035, waivers .21. Show "Top X%" + grade only when
-   reliability n/(n+k) >= .5 (k = (1-tau2)/tau2), "small sample" tag between .25 and .5, raw record below; read tau2
-   from mgr_ref.json. One line per skill in the breakdown sheet on how repeatable it is.
-9. **Devy (B11, engine 7).** Fit the prospect score on 2015-23 draft classes against NFL fantasy hits (top-24 RB/WR,
-   top-12 QB/TE within 4 years). College stats need CFBD_API_KEY (Actions only): build what is testable now (draft
-   capital, age, athleticism, recruiting) and a ready Actions script for the rest.
-10. **Report card rows** for ros, projections_fmt, projections_kd, signals, live, trade grades, playoff odds.
-11. **Follow-ups:** verdict card "expected" (`neutral(p)`) worse than season PPG; `repl()` levels after v114;
-    kickers with no Sleeper projection show 0; verify v121/v123 in a real league; QB/TE range coverage 77%/75% in 2026;
-    half-PPR odds slightly overconfident.
-12. **Final pass:** QA, docs, merge, report to the owner.
+### Items 5-11, done 2026-11-12 (each checked by the coordinator before merge)
+- **5 Trades (v119, e25):** grades refit (TC d .9 / g 1.0). The coordinator held the first result (all-PAR outcome can't
+  see lineup slots) and had it re-scored on points scored only while starting: same answer, smaller margin. Owner
+  approved after demo before/after (Allen for Prescott + Flowers: star side 59% -> 47%; for two lesser players 63% ->
+  59%; close 1-for-1 unchanged). IDP: 30 trades, too few; stays out of trade ideas.
+- **6 Playoff odds (v116, e32):** constants kept; three live-league bugs fixed (see CLAUDE.md engine 2).
+- **7 Snapshots + leak check (C4/e27):** no result leak; inactives reflected. snapshot.yml added (first Sleeper call
+  from Actions; check its first run). Finding: ~30% of questionable regulars sit -> v127 play-rate line.
+- **8 Locker (v125):** owner chose to hide Sleeper-wide trade/draft ranks (screenshots shown first).
+- **9 Devy (v124, e23):** starter odds shipped; recruiting test run in Actions (devy-test.yml, manual) wins on every
+  check; constants being added as DVM124.pwr. build_cfb: '?'/'NA' position fallback (5 prospects back on the board),
+  recruiting classes back to cur-7 (192 older 2027 prospects had no rating).
+- **10 Report card rows (v126).**
+- **11 Follow-ups (v127, e33; v128):** verdict "expected" per game played (coordinator rejected the first version: it
+  compared per-game pace with a per-team-game estimate and doubled sell calls); questionable play rates; half-PPR b
+  .849; playoff sim uses final week results; Clutch ungraded on All leagues. Replacement levels, kicker fallback: no change.
+- Owner decisions added: trade settings shipped; Locker trade/draft ranks hidden.
 
 ---
 
