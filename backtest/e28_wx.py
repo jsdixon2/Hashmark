@@ -1,12 +1,18 @@
 """e28: weather. Actual / replayed Hashmark projection (before multipliers, players who played, pre >= 3) by game wind
 (nflverse schedules: game-time wind, roof). Kickers: actual / Sleeper projection (the app shows Sleeper for K).
-Rain: optional, from the gamebook weather text in nflverse play-by-play (backtest/dl/wx_YYYY.json if present, built by
-e28_wx.py --rain). Fit 2021-24, check 2025-26."""
+Rain and missing wind: from the gamebook weather text in nflverse play-by-play (column "weather", first play of each
+game), saved as .build/agents/b3/wx_YYYY.json {game_id: {rain, wind}} (rain = rain/shower/drizzle/snow/sleet/storm
+in the conditions; observed at kickoff, the app uses a forecast chance of rain >= 60%). Fit 2021-24, check 2025-26."""
 import csv, gzip, json, os, sys, collections, statistics as stt
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(ROOT); sys.path.insert(0, os.path.join(ROOT, "backtest")); sys.path.insert(0, os.path.join(ROOT, "scripts"))
 import proj_panel as PP
 FIX = {"LA": "LAR", "OAK": "LV", "SD": "LAC", "STL": "LAR"}; fx = lambda t: FIX.get(t, t)
+
+PBP = {}
+for _y in range(2021, 2027):
+    _f = f".build/agents/b3/wx_{_y}.json"
+    if os.path.exists(_f): PBP.update(json.load(open(_f)))
 
 def games():
     G = {}
@@ -16,7 +22,8 @@ def games():
         dome = r["roof"] in ("dome", "closed")
         wind = None if r["wind"] in ("", "NA") else float(r["wind"])
         temp = None if r["temp"] in ("", "NA") else float(r["temp"])
-        rain = None
+        px = PBP.get(r["game_id"]) or {}
+        if wind is None and not dome and px.get("wind") is not None: wind = px["wind"]   # gamebook text fills nflverse gaps (2022, 2026)
         for t in (fx(r["home_team"]), fx(r["away_team"])): G[(y, w, t)] = {"dome": dome, "roof": r["roof"], "wind": wind, "temp": temp, "gid": r["game_id"]}
     return G
 
@@ -53,7 +60,7 @@ def main():
     rain = {}
     for y in range(2021, 2027):
         f = f".build/agents/b3/wx_{y}.json"
-        if os.path.exists(f): rain.update(json.load(open(f)))
+        if os.path.exists(f): rain.update({k: v["rain"] for k, v in json.load(open(f)).items()})
     for r in R:
         t = T.get((r["s"], r["w"], r["pid"])); g = G.get((r["s"], r["w"], t)) if t else None
         r["band"] = band(g); r["g"] = g; r["rain"] = rain.get(g["gid"]) if g else None
@@ -97,4 +104,32 @@ def main():
         print(f"  {pos} fitted 2021-24 multiplier (wind>=15 rows only): {mfit:.3f}; calm outdoor (<10) 2021-24 {wmed([r for r in S if r['band']=='wind 0-9' and r['s']<=2024],'pre'):.3f}")
     json.dump(out, open(".build/agents/b3/e28_wx.json", "w"), indent=1)
 
-if __name__ == "__main__": main()
+if __name__ == "__main__" and "kb" not in sys.argv: main()
+
+def k_bands():
+    """Kicker multiplier by roof / wind band, fitted 2021-24 (weighted median), tested 2025 and 2026 on ALL kicker weeks."""
+    import e28_kd as EK
+    G = games()
+    K = [dict(r, pre=r["proj"], a=r["pts"], s=r["y"]) for r in EK.panel() if r["pos"] == "K" and r["proj"] and r["played"]]
+    def kb(r):
+        g = G.get((r["y"], r["w"], r["team"]))
+        if not g: return "?"
+        if g["dome"]: return "dome"
+        w = g["wind"]
+        return "out?" if w is None else "out<10" if w < 10 else "out10-14" if w < 15 else "out15+"
+    for r in K: r["kb"] = kb(r)
+    for spec in ("dome/outdoor", "wind15 only", "bands"):
+        f = {"dome/outdoor": lambda b: "dome" if b == "dome" else "out", "wind15 only": lambda b: "w15" if b == "out15+" else "rest", "bands": lambda b: b}[spec]
+        tr = [r for r in K if r["s"] <= 2024]; M = {}
+        for b in sorted({f(r["kb"]) for r in tr}):
+            X = [r for r in tr if f(r["kb"]) == b]; M[b] = round(wmed(X, "pre"), 3) if len(X) >= 30 else 1.0
+        if spec == "wind15 only": M["rest"] = 1.0; M["w15"] = round(M["w15"] / wmed([r for r in tr if r["kb"] == "out<10"], "pre") * 1, 3)  # relative to calm
+        line = f"  K {spec:12s} {M}"
+        for y in (2025, 2026):
+            X = [r for r in K if r["s"] == y]; wk = collections.defaultdict(lambda: [0, 0])
+            for r in X: m = M.get(f(r["kb"]), 1.0); wk[r["w"]][0] += abs(r["a"] - r["pre"] * m); wk[r["w"]][1] += abs(r["a"] - r["pre"])
+            a = sum(v[0] for v in wk.values()) / len(X); b = sum(v[1] for v in wk.values()) / len(X)
+            line += f" | {y} n={len(X)} {a:.3f} vs Sleeper {b:.3f} ({sum(1 for v in wk.values() if v[0] < v[1])}/{len(wk)} wks)"
+        print(line)
+
+if __name__ == "__main__" and "kb" in sys.argv: k_bands()
