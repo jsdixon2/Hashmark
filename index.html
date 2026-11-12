@@ -2938,8 +2938,8 @@ function insights(p){if(!p)return [];const a=advOf(p),pos=p.pos,X=[];const add=(
   if(a&&a.g>=3){
     if(a.ts3!=null&&a.ts!=null&&pos!=="QB"&&Math.abs(a.ts3-a.ts)>=.04){const up=a.ts3>a.ts;add(Math.abs(a.ts3-a.ts)*40,up?1:-1,`Target share ${pc(a.ts3)} over his last 3 games, ${up?"up":"down"} from ${pc(a.ts)} on the season${up?rk(advRank(pos,"ts3",a.ts3),pos):""}`);}
     if(a.snap3!=null&&a.snap!=null&&pos!=="QB"&&Math.abs(a.snap3-a.snap)>=10){const up=a.snap3>a.snap;add(Math.abs(a.snap3-a.snap)/8,up?1:-1,`Snap share ${Math.round(a.snap3)}% over his last 3, ${up?"up":"down"} from ${Math.round(a.snap)}%`);}
-    if(a.fpoe!=null&&Math.abs(a.fpoe)>=2){const up=a.fpoe<0,o=advRank(pos,"fpoe",a.fpoe,up),r=o&&o.r<=10?` — ${ordn(o.r)}-${up?"biggest shortfall":"most"} among ${pos}s`:"";add(Math.abs(a.fpoe)/1.2,up?1:-1,up?`Falling short of his expected points by ${f1(-a.fpoe)} PPR a game${r}`:`Outscoring his expected points by ${f1(a.fpoe)} PPR a game${r}`);}
-    if(a.td!=null&&a.xtd!=null&&Math.abs(a.td-a.xtd)>=2){const hot=a.td>a.xtd;add(Math.abs(a.td-a.xtd)*.9,hot?-1:1,`${a.td} TDs on ${f1(a.xtd)} expected from ${pos==="QB"?"where his throws and runs ended":"where his touches happened"}${hot?"; TD rate rarely holds":"; positive regression likely"}`);}
+    if(a.fpoe!=null&&Math.abs(a.fpoe)>=2){const up=a.fpoe<0,o=advRank(pos,"fpoe",a.fpoe,up),r=o&&o.r<=10?` — ${ordn(o.r)}-${up?"biggest shortfall":"most"} among ${pos}s`:"";add(Math.abs(a.fpoe)/1.2,up?1:-1,up?`Due to rise: scoring ${f1(-a.fpoe)} PPR a game less than his usage supports${r}`:`Running hot: scoring ${f1(a.fpoe)} PPR a game more than his usage supports${r}`);}
+    if(a.td!=null&&a.xtd!=null&&Math.abs(a.td-a.xtd)>=2){const hot=a.td>a.xtd;add(Math.abs(a.td-a.xtd)*.9,hot?-1:1,`${hot?"TD rate likely to cool":"More TDs likely"}: ${a.td} TDs on ${f1(a.xtd)} expected from ${pos==="QB"?"where his throws and runs ended":"where his touches happened"}`);}
     if(a.xfp3!=null&&a.xfp!=null&&Math.abs(a.xfp3-a.xfp)>=3){const up=a.xfp3>a.xfp;add(Math.abs(a.xfp3-a.xfp)/1.5,up?1:-1,`Opportunity ${up?"rising":"falling"}: ${f1(a.xfp3)} expected PPR a game over his last 3 vs ${f1(a.xfp)} on the season`);}
     if(a.fp3!=null&&a.fp!=null&&a.xfp3!=null&&a.xfp!=null&&a.fp3-a.fp>=4&&a.xfp3-a.xfp<1)add(2.2,-1,`Hot streak without more volume: ${f1(a.fp3)} PPR over his last 3, but expected points flat at ${f1(a.xfp3)}`);
     if(a.fp3!=null&&a.fp!=null&&a.xfp3!=null&&a.xfp!=null&&a.fp-a.fp3>=4&&a.xfp3>=a.xfp-.5)add(2.2,1,`Cold stretch with volume intact: ${f1(a.fp3)} PPR over his last 3 on ${f1(a.xfp3)} expected`);
@@ -3353,7 +3353,7 @@ vTrade=function(){const L=S.L;if(!L)return `<div class="empty">No league loaded.
   ${tile("trade-pre","Pre-breakout",G.pre[0]?esc(G.pre[0].p.name):"–",G.pre[0]?`${PCT(G.pre[0].g.brk)}% breakout odds`:"No candidates","edge")}
   ${tile("trade-partners","Trade partners",parts?esc(parts.c.t.name):"–",parts?esc(parts.line):"No obvious fits","lg")}
   ${tile("trade-finder","Trade finder",fd.length?`${fd.length} ideas`:"–",fd[0]?`Best: ${esc(fd[0].title)}`:"No win-win trades found","waiv")}</div>
-  <p class="sub mt">You are ${statusLbl(me).toLowerCase()==="middle"?"in the middle of the pack":statusLbl(me).toLowerCase()} in ${esc(L.name)} (${recOf(me.t)}). Every suggestion weighs your lineup now${S.fmt.type!=="redraft"?" and the next three seasons":""}.</p>`;};
+  <p class="sub mt">You're ${(x=>x==="middle"?"in the middle of the pack":x==="contender"?"contending":x)(statusLbl(me).toLowerCase())} in ${esc(L.name)} (${recOf(me.t)}). Every suggestion weighs your lineup now${S.fmt.type!=="redraft"?" and the next three seasons":""}.</p>`;};
 function vTradeSub(k){const L=S.L;if(!L)return `<div class="empty">No league loaded.</div>`;
   if(k==="calc")return vCalc();if(k==="buy")return vBuyLow();if(k==="sell")return vSellHigh();if(k==="pre")return vPre();if(k==="partners")return vPartners();if(k==="finder")return vFinder();return vTrade();}
 const pchip=p=>`<span class="vchip num">${f0(p.val)}</span>`;
@@ -6051,7 +6051,7 @@ function hdMove(){let mv=[];try{mv=mergedMoves();}catch(e){}const m=mv[0];if(!m)
   return `<button class="hdmove" data-go="${esc(m.go||"gm")}"${L?` data-golg="${esc(L.id)}"`:""}><span class="hdk">Your move · ${esc(when)}</span><b>${esc(m.t)}</b><span class="hds">${esc(m.s||"")}${L&&!L.demo?` · ${esc(n>1?n+" leagues":L.name)}`:""}</span><span class="hdgo">Open</span></button>`;}
 function hdMatchups(P){const SM=sums().filter(x=>x.d&&x.d.ok);if(!SM.length)return "";
   const rows=SM.map(({L,d})=>{const need=P.live&&d.live?Math.max(0,(d.bs||0)-(d.la||0)):null;
-    return `<button class="hdrow" data-go="mymatch" data-golg="${esc(L.id)}"><span class="hdl"><span class="ell">${esc(lgS(L))}</span><em class="ell">vs ${esc(d.b||"")}</em></span><span class="hdsc num">${f1(d.as)}<i>–</i>${f1(d.bs)}</span><span class="hdwp num ${d.wp>=.5?"good":"bad"}">${pc(d.wp)}</span></button>`;}).join("");
+    return `<button class="hdrow" data-go="mymatch" data-golg="${esc(L.id)}"><span class="hdl"><span class="ell">${esc(lgS(L))}</span><em class="ell">vs ${esc(d.b||"")}</em></span><span class="hdsc num">${f1(d.as)}<i>vs</i>${f1(d.bs)}</span><span class="hdwp num ${d.wp>=.5?"good":"bad"}">${pc(d.wp)}</span></button>`;}).join("");
   return `<section class="pan hdm"><div class="row sp"><h2>This week</h2><span class="tag">${P.live?"Live":"Projected"} · win chance</span></div>${rows}</section>`;}
 function vHuddle(){const P=hdPhase();
   return `<div class="hdhero"><div class="eyebrow">${P.live?'<span class="hdlive"></span>Live · ':""}${P.day} · Week ${S.week}</div><h1 class="hdh">${P.greet}</h1><p class="sub" style="margin:4px 0 0">${P.note}</p></div>${hdMove()}${hdMatchups(P)}`;}
@@ -7360,6 +7360,32 @@ async function lv130Refresh(){if(S.mode!=="live"||!S.L||document.hidden)return;L
 LV130.tick=setInterval(()=>{if(S.mode!=="live"||!S.L||document.hidden)return;const need=lv130Live()?30000:180000;if(Date.now()-LV130.last>=need)lv130Refresh();},5000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&Date.now()-LV130.last>=15000)lv130Refresh();});
 /* /v130 */
+/* ===== v131: owner review fixes (an outside review of the app as a new user).
+   2) Huddle repeated one move up to four times (hero card + Moves, Trade Lab and Waivers tiles). Tiles now skip whatever
+      the hero card shows and name the next item.
+   3) Trade Lab hub: empty tiles said "–"; they now say "None right now" and what will appear there.
+   5) The hero card for a buy/sell move leads with the call ("Sell high: X"), since the hero has no tag pill.
+   (4: "105.3 vs 82.0"; 3: "You're contending in"; 5: insight texts lead with the conclusion -> .build/p131.py) ===== */
+const HD131={hero:null};
+hdMove=(function(prev){return function(){let h=prev();try{let mv=[];try{mv=mergedMoves();}catch(e){}const m=mv[0];HD131.hero=m||null;
+  if(m&&/^(Sell high|Buy low)$/.test(m.k)&&!/^(Sell high|Buy low):/.test(m.t))h=h.replace(`<b>${esc(m.t)}</b>`,`<b>${esc(m.k)}: ${esc(m.t)}</b>`);}catch(e){}return h;};})(hdMove);
+function hd131Same(a,b){return !!(a&&b&&a.t===b.t&&(a.go||"")===(b.go||""));}
+vOverview=(function(prev){return function(){let h=prev();try{const i=h.indexOf('<h2 class="hdmore">');if(i<0)return h;let mv=[];try{mv=mergedMoves();}catch(e){}const hero=mv[0];if(!hero)return h;
+  let top=h.slice(0,i),rest=h.slice(i);
+  const swap=(go,fn)=>{const a=rest.indexOf(`<button class="tile" data-go="${go}"`);if(a<0)return;const b=rest.indexOf("</button>",a);if(b<0)return;rest=rest.slice(0,a)+fn(rest.slice(a,b))+rest.slice(b);};
+  const setTile=(s,big,sub)=>s.replace(/<div class="tb ell">[\s\S]*?<\/div><div class="tsb">[\s\S]*?<\/div>/,`<div class="tb ell">${big}</div><div class="tsb">${sub}</div>`);
+  const others=mv.filter(m=>!hd131Same(m,hero));
+  swap("moves",s=>setTile(s,String(mv.length),others[0]?`Next: ${esc(others[0].t)}`:"Nothing else pressing"));
+  const tr=movesBy(/Sell high|Buy|Trade target/).filter(m=>!hd131Same(m,hero)),wv=movesBy(/Free agent/).filter(m=>!hd131Same(m,hero));
+  if(movesBy(/Sell high|Buy|Trade target/).some(m=>hd131Same(m,hero)))swap("trade",s=>setTile(s,tr[0]?esc(tr[0].t):"More ideas",tr[0]?esc(tr[0].k):"Open the finder for trade ideas"));
+  if(movesBy(/Free agent/).some(m=>hd131Same(m,hero)))swap("waivers",s=>setTile(s,wv[0]?esc(wv[0].t.replace(/^Add /,"")):"More adds",wv[0]?"Next best add":"Open the wire for more"));
+  return top+rest;}catch(e){console.error(e);return h;}};})(vOverview);
+/* Trade Lab hub: empty tiles explain themselves */
+const TL131={"trade-buy":"Players whose usage beats their scoring","trade-sell":"Your players scoring above their usage","trade-pre":"Young players gaining a bigger role","trade-partners":"Teams whose plans fit yours"};
+vTrade=(function(prev){return function(){let h=prev();try{if(route()!=="trade")return h;
+  h=h.replace(/(<button class="tile" data-go="(trade-[a-z]+)"[^>]*>(?:(?!<\/button>)[\s\S])*?)<div class="tb ell">–<\/div><div class="tsb">(?:(?!<\/button>)[\s\S])*?<\/div>/g,(m0,a,go)=>`${a}<div class="tb ell tb131">None right now</div><div class="tsb">${esc(TL131[go]||"Nothing to show yet")}</div>`);}catch(e){}return h;};})(vTrade);
+document.head.insertAdjacentHTML("beforeend",`<style>.tb131{font-size:17px!important;color:var(--muted)}</style>`);
+/* /v131 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
