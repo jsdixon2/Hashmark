@@ -1,0 +1,13 @@
+name: devy-recruiting-test
+# Manual only. Engine 7 (backtest/e23): does the recruiting rating (CFBD, key in secrets) add to the fitted devy model
+# on held-out draft classes? Results are printed in the log; nothing is committed.
+on: {workflow_dispatch: {}}
+permissions: {contents: read}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 backtest/e23_cfbd_pull.py && bash backtest/e23_run.sh && cat /tmp/e23_fit_out.json | head -c 4000
+        env: {CFBD_API_KEY: "${{ secrets.CFBD_API_KEY }}"}

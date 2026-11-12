@@ -7236,6 +7236,38 @@ openSheet=(function(prev){return function(t,h){try{if(route()==="stats"&&statsSc
    rows would be noise. Their tiles keep the record and Hashmark's own trade grades, plus "mostly luck season to season". */
 (function(){for(let i=MR_SK.length-1;i>=0;i--)if(MR_SK[i][0]==="tr"||MR_SK[i][0]==="dr")MR_SK.splice(i,1);})();
 /* /v125 */
+/* ===== v124: Devy Lab starter odds from a fitted model (backtest/e23_*: draft classes 2016-20 fitted, 2021-23 held out;
+   hit = top-24 RB/WR or top-12 QB/TE PPR season within 3 NFL seasons; AUC .903 -> .918 final season, .839 -> .865 one
+   season earlier, .697 -> .743 two seasons earlier vs the hand-set score; drafted rookies use the pick too: AUC .835) ===== */
+const DVM124={pw:{b:{QB:-5.0977,RB:-4.8908,TE:-4.4627,WR:-5.6515},w:{bo:0.865,g5:-0.4286,p5:0.5479,prod:4.907,wtd:0.3264,yrs:-0.5089}},
+  cap:{b:{QB:2.3686,RB:3.6588,TE:3.4881,WR:2.8964},w:{bo:0.1762,g5:-0.245,lpick:-0.9593,p5:0.245,prod:1.2168,wtd:0.7361,yrs:-0.4346}}};
+const DV124_P5=new Set(["SEC","Big Ten","Big 12","ACC"]),DV124_FBS=new Set(["SEC","Big Ten","Big 12","ACC","Pac-12","American Athletic","Mountain West","Sun Belt","Mid-American","Conference USA","FBS Independents"]);
+const DV124_IDEAL={QB:220,RB:210,WR:200,TE:245};
+/* features exactly as in backtest/e23_fit.py "pw"/"cpw": production rebuilt from the shipped score (score minus breakout,
+   conference and size factors), breakout class, seasons in college at the draft (>= 3 for underclassmen), conference, size */
+function dvOdds(p){try{if(!p||!CFB||!DV124_IDEAL[p.pos]||p.score==null)return null;const yr=+CFB.season,pos=p.pos,t=p.teams||[],first=t.length?+t[0][0]:yr;
+  const cn=Math.min(5,p.drafted?(+p.drafted.y-first):(yr-first+1)),yrs=p.drafted?cn:Math.max(3,cn);
+  const bc=p.bo?Math.max(1,cn-(yr-p.bo.y)):null,bo=!p.bo?0:bc<=1?1:bc===2?.8:bc===3?.55:.3;
+  const p5=DV124_P5.has(p.conf),fbs=DV124_FBS.has(p.conf),cm=p5?1:fbs?.9:.8,wt=p.wt,I=DV124_IDEAL[pos];
+  const wm=pos!=="QB"&&wt?1-Math.min(.08,Math.abs(wt-I)/400):1,W=pos==="WR"||pos==="TE"?.8:.85;
+  const x={prod:(p.score/100/cm/wm-(1-W)*bo)/W,bo,yrs,p5:p5?1:0,g5:fbs&&!p5?1:0,wtd:Math.abs((wt||I)-I)/25};
+  let M=DVM124.pw;if(p.drafted&&p.drafted.p){M=DVM124.cap;x.lpick=Math.log(p.drafted.p);}
+  let z=M.b[pos];for(const k in M.w)z+=M.w[k]*x[k];return 1/(1+Math.exp(-z));}catch(e){return null;}}
+function dvOddsTxt(o){return o==null?"–":o<.02?"<2%":o<.1?Math.round(o*100)+"%":Math.round(o*20)*5+"%";}
+const dvBar124=pos=>pos==="QB"||pos==="TE"?"top-12":"top-24";
+vDevyLab=(function(prev){return function(){let h=prev();if(!CFB||!h)return h;
+  h=h.replace(/(<button class="dvr" data-go="cfb-([^"]+)"[\s\S]*?<span class="dvs"><b class="num">[^<]*<\/b><em>score<\/em>)/g,(m,a,id)=>{const o=dvOdds(CFB.p[id]);return o==null?a:a+`<em class="dvo">${dvOddsTxt(o)} starter</em>`;});
+  return h.replace(/(Scores rank production within each position:[^<]*?not mock drafts\.)/,`$1 Starter odds: how often 2016–23 draft prospects with a similar profile (production, breakout age, seasons in college, conference, size; drafted players also by draft pick) had a top-24 RB/WR or top-12 QB/TE PPR season within their first 3 NFL seasons. Fitted on the 2016–20 classes; on the 2021–23 classes it picked out the eventual starters better than the score alone (AUC .92 vs .90 in the final college season, .74 vs .70 two seasons earlier). Calibration on those held-out classes: prospects given 15–35% became starters 24% of the time (83 players, 22% predicted).`);};})(vDevyLab);
+vCollege=(function(prev){return function(id){const h=prev(id);const p=CFB&&CFB.p[id];const o=dvOdds(p);if(o==null)return h;
+  const tile=`<div><b class="num">${dvOddsTxt(o)}</b><span>Starter odds</span><em>${dvBar124(p.pos)} ${esc(p.pos)} season in 3 NFL years</em></div>`;
+  const k='<span>Devy score</span>';const i=h.indexOf(k);if(i<0)return h;const j=h.indexOf("</div>",i)+6;
+  const line=`<p class="sub mt">${p.drafted?"Rookies drafted with a profile like his":"Prospects like him"} became fantasy starters ${dvOddsTxt(o)} of the time (2016–23 draft classes).</p>`;
+  const out=h.slice(0,j)+tile+h.slice(j);
+  // line goes after the tile grid (end of .hxk)
+  const hx=out.indexOf('<div class="hxk">');if(hx<0)return out;let d=0,q=hx;const re=/<div\b|<\/div>/g;re.lastIndex=hx;let m;while((m=re.exec(out))){d+=m[0]==="</div>"?-1:1;if(d===0){q=m.index+6;break;}}
+  return out.slice(0,q)+line+out.slice(q);};})(vCollege);
+(function(){const st=document.createElement("style");st.textContent=".dvs .dvo{display:block;margin-top:2px;color:var(--acc)}";document.head.appendChild(st);})();
+/* /v124 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
