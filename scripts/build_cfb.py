@@ -286,7 +286,7 @@ def main():
 
         def f_rec():
             rec = {}
-            for y in range(cur - 5, cur + 1):
+            for y in range(cur - 7, cur + 1):   # e23: older seniors / 5th-years need HS classes back to cur-7
                 xs = jl(f"https://api.collegefootballdata.com/recruiting/players?year={y}&classification=HighSchool")
                 if xs is None:
                     return None

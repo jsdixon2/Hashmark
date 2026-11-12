@@ -57,8 +57,27 @@ def main():
                      "snap1": E.evaluate([r for r in S if r["ahead"] == 1 and r["D"] >= 2021], E.pred(M, [r for r in S if r["ahead"] == 1 and r["D"] >= 2021], kind), ""),
                      "snap2": E.evaluate([r for r in S if r["ahead"] == 2 and r["D"] >= 2021], E.pred(M, [r for r in S if r["ahead"] == 2 and r["D"] >= 2021], kind), ""),
                      "coef": dict(zip(M["names"], [round(c, 3) for c in M["coef"]]))}
-    print(json.dumps(out, indent=1))
+    for k, v in out.items():
+        print(k, json.dumps({s_: {"auc": v[s_]["auc"], "ll": v[s_]["ll"], "topk": v[s_]["topk_hit"]} for s_ in ("test", "snap1", "snap2")}))
     print("SHIP recruiting only if pwr beats pw on test AND both snapshots (AUC and log loss).")
+    # rated share by position (the app must see a similar share: unrated = no CFBD rating found)
+    print("rated share by pos", json.dumps({p: round(sum(1 for r in R if r["pos"] == p and rating(r)) / max(1, sum(1 for r in R if r["pos"] == p)), 3) for p in E.POS}))
+    # final model for the app: fit on ALL classes 2016-2023 is NOT used; ship the 2016-2020 fit that was tested above
+    M = E.fit(tr, "pwr", 1.0)
+    import numpy as np
+    p_ = E.pred(M, te, "pwr"); y = np.array([r["o3"]["hit"] for r in te])
+    cal = []
+    for lo, hi in ((0, .05), (.05, .15), (.15, .35), (.35, 1.01)):
+        ix = (p_ >= lo) & (p_ < hi)
+        if ix.sum():
+            cal.append([lo, hi, int(ix.sum()), round(float(p_[ix].mean()), 3), round(float(y[ix].mean()), 3)])
+    print("pwr test calibration [lo,hi,n,pred,actual]", json.dumps(cal))
+    c = dict(zip(M["names"], M["coef"])); mu = dict(zip(M["names"], M["mu"])); sd = dict(zip(M["names"], M["sd"]))
+    raw = {n: c[n] / sd[n] for n in M["names"] if not n.startswith("i_")}
+    b0 = sum(c[n] * mu[n] / sd[n] for n in raw)
+    app = {"b": {p: round(c["i_" + p] - b0, 4) for p in E.POS}, "w": {n: round(v, 4) for n, v in sorted(raw.items())},
+           "feat": "rec = CFBD recruiting 'rating' (0-1 composite, as in cfb.json p.rec.rating) if truthy else 0; unrated = 1 if no rating else 0; other features as pw"}
+    print("DVM_pwr " + json.dumps(app, separators=(",", ":")))
 
 
 if __name__ == "__main__":
