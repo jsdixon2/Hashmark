@@ -19,13 +19,21 @@ SPLITS_2025 = {  # held-out season, v119 grade (brier before v119 in brackets)
     "picks": {"n": 3147, "won": .661, "said": .632, "brier": .2221, "brier_before": .2298},
     "players_only": {"n": 542, "won": .554, "said": .623, "brier": .2516, "brier_before": .2547},
 }
+STARTED = {  # same trades, PAR counted only in weeks the player started for the team holding him (lineup-slot check)
+    "holdout_2025": {"n": 3082, "said": .632, "won": .648, "brier": .2242, "said60_won": .62, "said70_won": .71, "said80_won": .75,
+                     "before_v119": {"brier": .2258, "said70_won": .69, "said80_won": .74}},
+    "fit_2021_24": {"n": 9795, "brier": .2210, "before_v119": .2243},
+    "two_seasons_2021_23": {"n": 6035, "brier": .2095, "before_v119": .2147},
+    "2for1_2025": {"n": 883, "brier": .2130, "before_v119": .2161},
+    "3for1_2025": {"n": 258, "brier": .2188, "before_v119": .2209},
+}
 IDP = {"n_idp": 24, "idp_won": .708, "idp_said": .709, "n_off": 2538, "off_won": .578, "off_said": .654,
        "note": "production proxy (no IDP rank history); player-only trades 2021-26; too few IDP trades to change anything"}
 
 def section(ctx=None):
     t = dict(said60_won=HOLD["said60_won"], said70_won=HOLD["said70_won"], said80_won=HOLD["said80_won"], n=HOLD["n"],
              won=HOLD["won"], said=HOLD["said"], brier=HOLD["brier"],
-             holdout_2025=HOLD, fit_2021_24=FIT, splits_2025=SPLITS_2025, idp=IDP,
+             holdout_2025=HOLD, fit_2021_24=FIT, splits_2025=SPLITS_2025, started=STARTED, idp=IDP,
              src="real dynasty/keeper trades 2021-25, app's day-one grade replayed; 2025 held out", backtest="e25",
              unit="favoured side ahead in points above replacement, rest of season + next season wks 1-9")
     return {"tested": {"trade_grades": t}}
