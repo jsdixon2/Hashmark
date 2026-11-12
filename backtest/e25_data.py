@@ -8,7 +8,7 @@ Grade replayed the way the app grades a past trade on the day it was made (`hvDa
   (The dynasty grade also adds a contender lineup term; it needs full weekly rosters (2022-25 only) and is left out.)
 Outcome: points above replacement (PAR) received minus sent, from the trade week (week 1 for offseason deals) to the end
   of that regular season (wk 17) plus next season weeks 1-9 ("H9", the window 2025 trades can be followed through 2026
-  wk 9); also "HF" = through all of next season (2021-24 trades only). Weekly replacement = k-th best score at the
+  wk 9); also "HF" = through all of next season (2021-24 trades only) and "HL" = through two more full seasons (2021-23). Weekly replacement = k-th best score at the
   position that week (QB 14 / 26 SF, RB 30, WR 42, TE 14; IDP DL 30, LB 30, DB 40) under the league's scoring key.
   Picks: average PAR of rookies taken in that round in real rookie drafts in the archive over a window of the same
   length (rookie season + next season wks 1-9), i.e. what that round has produced; no timing noise.
@@ -30,6 +30,9 @@ POSD = {str(int(s)): p for s, p in zip(ids.sleeper_id, ids.position)}
 for w in PJ.values():
     for pid, s in w.items():
         if s.get("pos"): POSD[pid] = s["pos"]
+IDPMAP = {"DE": "DL", "DT": "DL", "DL": "DL", "NT": "DL", "LB": "LB", "ILB": "LB", "OLB": "LB", "MLB": "LB", "CB": "DB", "S": "DB", "SS": "DB", "FS": "DB", "DB": "DB"}
+for pid in list(POSD):
+    if POSD[pid] in IDPMAP: POSD[pid] = IDPMAP[POSD[pid]]
 for pid, (ps, bd, ex) in IP.items():
     POSD[pid] = ps
     if bd and pid not in BD: BD[pid] = bd
@@ -161,22 +164,24 @@ for lg in LG.values():
         nidp = sum(1 for p in allp if POSD.get(p) in IDP)
         if nidp and not idl: continue
         wl9 = weeks(s, w0, 9); wlF = weeks(s, w0, 17) if s <= 2024 else None
+        wlL = wlF + [(s + 2, k) for k in range(1, 18)] if s <= 2023 else None
         if not wl9: continue
         def side(rid):
             got = inc[rid]
             v = [ecr_val(x[1], ts, sf, ty) if x[0] == "p" else pick_val(*x[1], s, sf, ty) for x in got]
             o9 = sum(par_sum(x[1], wl9, key, sf, sck) if x[0] == "p" else RAVG.get(min(5, x[1][1]), 0) for x in got)
             oF = None if wlF is None else sum(par_sum(x[1], wlF, key, sf, sck) if x[0] == "p" else RAVG.get(min(5, x[1][1]), 0) * len(wlF) / len(wl9) for x in got)
+            oL = None if wlL is None else sum(par_sum(x[1], wlL, key, sf, sck) if x[0] == "p" else RAVG.get(min(5, x[1][1]), 0) * len(wlL) / len(wl9) for x in got)
             pp = [par_pg(x[1], s, w0, key, sf, sck) for x in got if x[0] == "p"]
             ags = [age(x[1], ts) for x in got if x[0] == "p"]
             idpv = sum(vv for x, vv in zip(got, v) if x[0] == "p" and POSD.get(x[1]) in IDP)
-            return dict(v=v, o9=o9, oF=oF, pp=pp, ages=ags, npl=sum(1 for x in got if x[0] == "p"), npk=sum(1 for x in got if x[0] == "k"),
+            return dict(v=v, o9=o9, oF=oF, oL=oL, pp=pp, ages=ags, npl=sum(1 for x in got if x[0] == "p"), npk=sum(1 for x in got if x[0] == "k"),
                         nunr=sum(1 for x in got if x[0] == "p" and POSD.get(x[1]) in OFF and not ranked(x[1], ts, sf)),
                         idp=sum(1 for x in got if x[0] == "p" and POSD.get(x[1]) in IDP))
         A_, B_ = side(a), side(b)
         rows.append(dict(lg=lg["id"], s=s, w=w, w0=w0, ty=ty, sf=sf, idl=idl, ts=str(ts),
                          vA=A_["v"], vB=B_["v"], agA=A_["ages"], agB=B_["ages"], ppA=A_["pp"], ppB=B_["pp"],
-                         o9=A_["o9"] - B_["o9"], oF=None if A_["oF"] is None else A_["oF"] - B_["oF"],
+                         o9=A_["o9"] - B_["o9"], oF=None if A_["oF"] is None else A_["oF"] - B_["oF"], oL=None if A_["oL"] is None else A_["oL"] - B_["oL"],
                          nplA=A_["npl"], nplB=B_["npl"], npkA=A_["npk"], npkB=B_["npk"], idpA=A_["idp"], idpB=B_["idp"],
                          nunr=A_["nunr"] + B_["nunr"]))
 D = pd.DataFrame(rows); D.to_pickle(B + "/e25_trades.pkl")
