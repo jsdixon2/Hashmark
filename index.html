@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hashmark</title>
-<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0B0C0E"><link rel="icon" href="icon.svg" type="image/svg+xml"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Hashmark"><link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0B0C0E"><link rel="icon" href="icon.svg" type="image/svg+xml"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Hashmark"><link rel="apple-touch-icon" href="icon-180-p2.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -6366,7 +6366,7 @@ const NF_DEF={swing:true,urgent:true,waivers:true,trades:true,wire:false,qs:"23:
 const nfGet=()=>{try{return Object.assign({},NF_DEF,JSON.parse(LS.get("hm_notif")||"{}"));}catch(e){return {...NF_DEF};}};
 const nfSet=o=>LS.set("hm_notif",JSON.stringify(o));
 function nfQuiet(o){const now=new Date(),m=now.getHours()*60+now.getMinutes(),t=s=>{const [h,mm]=s.split(":").map(Number);return h*60+mm;},a=t(o.qs),b=t(o.qe);return a>b?(m>=a||m<b):(m>=a&&m<b);}
-async function nfSend(title,body,tag){try{if(!("Notification" in window)||Notification.permission!=="granted")return;const opt={body,tag,icon:"icon-192.png",badge:"icon-192.png"};
+async function nfSend(title,body,tag){try{if(!("Notification" in window)||Notification.permission!=="granted")return;const opt={body,tag,icon:"icon-192-p2.png",badge:"icon-192-p2.png"};
   const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();if(reg&&reg.showNotification)await reg.showNotification(title,opt);else new Notification(title,opt);}catch(e){}}
 const NF_ST=(()=>{try{return JSON.parse(sessionStorage.getItem("hm_nfst")||"{}");}catch(e){return {};}})();const nfSave=()=>{try{sessionStorage.setItem("hm_nfst",JSON.stringify(NF_ST));}catch(e){}};
 function nfCheck(){const o=nfGet();if(S.mode!=="live")return;const quiet=nfQuiet(o),gameDay=[0,1,4].includes(new Date().getDay()),now=Date.now();
