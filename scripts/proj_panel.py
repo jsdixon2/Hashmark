@@ -4,7 +4,8 @@ projection uses (hmProj in index.html) and the projection rebuilt from them, sta
 Inputs per player-week: Sleeper projection (PPR), season PPG and last-3 PPG before the week, season / last-3 expected
 fantasy points (ffopportunity), opponent defense-vs-position rank to date (1 = gives up the most), team implied points
 from the closing line (bt/nfl/schedules), questionable flag (bt/nfl/injuries), betting props when archived
-(bt/props_hist, current season). Projection = PJC formula (read from index.html) x .88 if questionable, then blended with
+(bt/props_hist, current season). Projection = PJC formula (read from index.html) x the questionable multiplier (read from
+index.html's hmProj; .97 since e28, was .88) if questionable, then blended with
 the props estimate (PJ_PROPS_POS). Wind/rain and practice tweaks are not replayed (no archive)."""
 import csv, gzip, io, json, os, re, statistics as st, collections, urllib.request
 NV = "https://github.com/nflverse/nflverse-data/releases/download/"
@@ -25,6 +26,8 @@ def load_app():
     C = json.loads(re.search(r"const PJC=(\{.*?\});", s).group(1))
     m = re.search(r"PJ_PROPS_POS=(\{[^}]*\})", s)
     pw = json.loads(re.sub(r":\.", ":0.", re.sub(r"(\w+):", r'"\1":', m.group(1)))) if m else {}
+    q = re.findall(r"/quest/\.test\(s\)\)\{m\*=([\d.]+)", s)   # questionable multiplier in the live (last) hmProj
+    global QMULT; QMULT = float(q[-1]) if q else .88
     return C, pw
 
 def proj(c, base, ppg, l3, xs, x3, rk, imp):
@@ -42,6 +45,7 @@ def props_pts(pr, rec=1):   # the app's formula (index.html hmProj): yards, rece
     if pr.get("td") is not None: mk += pr["td"] * 6
     return mk if k else None
 
+QMULT = .88   # replaced by the value in index.html's hmProj when load_app() runs (e28: measured .97)
 FMT = {"ppr": ("pts_ppr", 1), "half": ("pts_half_ppr", .5), "std": ("pts_std", 0)}
 
 def build(seasons=range(2021, 2027), scoring="ppr", C=None, feats=False):
@@ -113,7 +117,7 @@ def build(seasons=range(2021, 2027), scoring="ppr", C=None, feats=False):
                 last, _, first = n.partition(", "); c = byname.get(norm(first + " " + last)) or []
                 if len(c) == 1: props[(y, w, c[0])] = props_pts(pr, REC)
     except Exception: pass
-    C0, PW = load_app(); C = C or C0
+    C0, PW = load_app(); C = C or C0; QM = QMULT
     rows = []; log = collections.defaultdict(list)
     for key in sorted(ST, key=lambda k: tuple(map(int, k.split("-")))):
         y, w = map(int, key.split("-"))
@@ -132,7 +136,7 @@ def build(seasons=range(2021, 2027), scoring="ppr", C=None, feats=False):
                 xs *= sc; x3 = x3 * sc if x3 is not None else None
             t = tm.get((y, w, pid)); rk = dvp_rank(y, w, t[1], pos) if t else None; ii = imp.get((y, w, t[0])) if t else None
             qq = (y, w, pid) in q
-            hm = proj(C[pos], base, ppg, l3, xs, x3, rk, ii) * (.88 if qq else 1)
+            hm = proj(C[pos], base, ppg, l3, xs, x3, rk, ii) * (QM if qq else 1)
             mk = props.get((y, w, pid))
             if mk is not None: pwt = PW.get(pos, .2); hm = hm * (1 - pwt) + mk * pwt
             row = {"s": y, "w": w, "pid": pid, "pos": pos, "base": base, "hm": hm, "a": stt.get(PK) or 0, "q": qq, "props": mk is not None}

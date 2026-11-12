@@ -3811,8 +3811,8 @@ function hmProj(p){if(!p)return null;const g=gameOf(p);if(g&&g.bye)return {m:0,s
     if(n){m=m*.7+mk*.3;const d=(mk-base)/Math.max(5,base);if(Math.abs(d)>=.1)add(d*.8,`Sportsbooks imply about ${f1(mk)} points${pr.atd!=null?` (${Math.round(pr.atd*100)}% to score)`:""}`);}
     else if(pr.atd!=null&&pr.atd>=.45)add(.08,`${Math.round(pr.atd*100)}% anytime-TD odds`);}
   // availability
-  if(p.inj){const s=p.inj.toLowerCase();if(/doubt/.test(s)){m*=.35;add(-.6,"Listed doubtful");}else if(/quest/.test(s)){m*=.88;add(-.12,"Listed questionable");}}
-  const pr2=String(p.prac||"").toUpperCase();if(/DNP|DID NOT/.test(pr2)){m*=.9;add(-.1,"Did not practice");}else if(/LIMITED/.test(pr2)){m*=.97;add(-.03,"Limited in practice");}
+  if(p.inj){const s=p.inj.toLowerCase();if(/doubt/.test(s)){m*=.02;add(-.98,"Listed doubtful");}else if(/quest/.test(s)){m*=.97;add(-.03,"Listed questionable");}}
+  const pr2=String(p.prac||"").toUpperCase();if(/DNP|DID NOT/.test(pr2)){m*=.9;add(-.1,"Did not practice");}
   const sd=Math.max(2.5,m*Math.min(.75,Math.max(.3,p.cv||.45)));return {m:Math.max(0,m),sd,f:F,base};}
 function locked(p){if(!p)return false;const g=gameOf(p);if(g&&g.final)return true;try{return liveSet().has(p.id);}catch(e){return false;}}
 const phiSS=x=>1/(1+Math.exp(-1.702*x));
@@ -4524,8 +4524,8 @@ hmProj=function(p){if(!p)return null;const g=gameOf(p);if(g&&g.bye)return {m:0,s
     if(k){const d=mk-m,PW=PJ_PROPS_POS[p.pos]??PJ_PROPS;m=m*(1-PW)+mk*PW;if(Math.abs(d)>=1.5)add(d*PW/Math.max(5,base),`Sportsbooks imply about ${f1(mk)} points${pr.atd!=null?` (${Math.round(pr.atd*100)}% to score)`:""}`);}
     else if(pr.atd!=null&&pr.atd>=.45)add(.08,`${Math.round(pr.atd*100)}% anytime-TD odds`);}
   const w=mu&&mu.g;if(w&&w.w!=null&&p.pos!=="RB"&&(w.w>=15||(w.g||0)>=25)){m*=.94;add(-.06,`Wind ${w.w} mph at kickoff`);}if(w&&w.pop>=60&&p.pos!=="RB"){m*=.97;add(-.03,`${w.pop}% chance of rain`);}
-  if(p.inj){const s=p.inj.toLowerCase();if(/doubt/.test(s)){m*=.35;add(-.6,"Listed doubtful");}else if(/quest/.test(s)){m*=.88;add(-.12,"Listed questionable");}}
-  const pr2=String(p.prac||"").toUpperCase();if(/DNP|DID NOT/.test(pr2)){m*=.9;add(-.1,"Did not practice");}else if(/LIMITED/.test(pr2)){m*=.97;add(-.03,"Limited in practice");}
+  if(p.inj){const s=p.inj.toLowerCase();if(/doubt/.test(s)){m*=.02;add(-.98,"Listed doubtful");}else if(/quest/.test(s)){m*=.97;add(-.03,"Listed questionable");}}
+  const pr2=String(p.prac||"").toUpperCase();if(/DNP|DID NOT/.test(pr2)){m*=.9;add(-.1,"Did not practice");}
   m=Math.max(0,m);const R=pjRange(p.pos,m);
   return {m,sd:Math.max(1.5,(R.hi-R.lo)/2.563),...R,f:F,base};};
 /* matchup projections use the same engine (finished games keep the real score) */
