@@ -4,7 +4,8 @@ Team total = sum of the starters actually set (known after the fact; fine for ca
   old  = exactly what scripts/build_report.py does (full replayed projection for full-PPR leagues, simple hm() otherwise,
          no custom pass-TD / INT adjustment on the full projection)
   new  = full replayed projection in the league's own scoring (scripts/proj_panel.py scoring ppr/half/std) plus the league's
-         pass-TD / INT difference from Sleeper's projected stats (same adjustment pts() applies); K/DST/IDP = Sleeper's projection
+         scoring difference from Sleeper's projected stat line (`adj`: yardage/TD/INT/fumble values, any reception value,
+         TE/RB/WR reception bonuses, rush/pass attempt points); K/DST/IDP = Sleeper's projection
 Writes .build/agents/a2/e29_rows.json: [season, week, league, teams, rec, old_a, old_b, new_a, new_b, won_a, actual_a, actual_b]."""
 import gzip, json, collections, importlib.util, os, sys
 sys.path.insert(0, "scripts")
@@ -18,6 +19,19 @@ for sc in ("ppr", "half", "std"):
     for r in PP.build(range(2021, 2027), scoring=sc): HM[(sc, r["s"], r["w"], r["pid"])] = r["hm"]
     print(sc, "done", flush=True)
 FK = {"ppr": "pts_ppr", "half": "pts_half_ppr", "std": "pts_std"}
+DEF_SC = {"pass_yd": .04, "pass_td": 4, "pass_int": -1, "rush_yd": .1, "rush_td": 6, "rec_yd": .1, "rec_td": 6, "fum_lost": -2}
+BONUS = {"TE": "bonus_rec_te", "RB": "bonus_rec_rb", "WR": "bonus_rec_wr"}
+def adj(p, sc, pos, f):
+    """league scoring minus Sleeper's format points, from the projected stat line (stats the archive keeps)"""
+    d = 0.0
+    for k, v0 in DEF_SC.items():
+        if sc.get(k) is not None and p.get(k) is not None: d += (sc[k] - v0) * p[k]
+    if p.get("rec") is not None:
+        d += ((sc.get("rec", 1) or 0) - {"ppr": 1, "half": .5, "std": 0}[f]) * p["rec"]
+        if pos in BONUS and sc.get(BONUS[pos]): d += sc[BONUS[pos]] * p["rec"]
+    for k in ("rush_att", "pass_att"):
+        if sc.get(k) and p.get(k) is not None: d += sc[k] * p[k]
+    return d
 def fmt(rec): return "ppr" if rec >= .75 else "half" if rec >= .25 else "std"
 L = json.load(gzip.open("bt/leagues.json.gz", "rt"))["leagues"]
 out = []
@@ -36,7 +50,7 @@ for lid in sorted(L):
             new = 0.0
             for x in hit:
                 h = HM.get((f, s, w, x))
-                new += BR.pts(P[x], sc) if h is None else h + BR.pts(P[x], sc) - (P[x].get(FK[f]) or 0)
+                new += (P[x].get(FK[f]) or 0 if h is None else h) + adj(P[x], sc, POS.get(x), f)
             tot[rid] = (old, new, mid, pt)
         by = collections.defaultdict(list)
         for rid in sorted(tot):
