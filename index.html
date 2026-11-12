@@ -7016,6 +7016,81 @@ rosPPG=(function(prev){return function(p){const v=prev(p);let f=null;try{f=ros11
 vMatchup=(function(prev){return function(...a){let h=prev(...a);try{h=h.replace(/(<div class="big mt">)([\d.,]+)(<\/div><div class="sub">Projected points<\/div><div class="sub num e8tr">)likely [^<]*(<\/div>)/g,(m0,x,v,y,z)=>{const m=parseFloat(v.replace(/,/g,""));if(!(m>0))return m0;
   const sd=(m*WP.k+WP.c)/(WP.b||1),q=1.2816;return `${x}${v}${y}likely ${Math.round(Math.max(0,m-q*sd))}–${Math.round(m+q*sd)}${z}`;});}catch(e){}return h;};})(vMatchup);
 /* /v112 */
+/* ===== v113: projection ranges from a smooth fitted model + labels that say what they mean + matchup range from the starters (backtest e30)
+   - Range: 10th-90th percentile of real points as a piecewise-linear function of the projection per position (RPT.ranges.model,
+     fitted 2021-24): held 80.1% of 2025-26 player-weeks (n 4,835; below 9.7% / above 10.1%), pinball 2.409 vs the v108 cells
+     2.426; never narrower for a bigger projection. Old cell table stays as the fallback.
+   - Labels: a player's own week-to-week swings, games played and the questionable tag did NOT separate real misses on held-out
+     seasons (relative miss .94-1.08x of the same-level average in every group), so the label says what does: the range's
+     width in % of the projection (HIGH: misses 39% of proj, MEDIUM 57%, LOW 81%), and `why` names the projection level.
+   - Matchup "likely X-Y": starters' means + variances with measured correlations (QB with his WR/TE .23, QB-RB .07,
+     opponents .04), K/D-ST fitted sd; asymmetric because real scores land above summed median projections more often.
+     2026 lineups (n 26,987): 82.1% inside, 9.1% below / 8.9% above (v112: 76.1%, 2.1% / 21.8%). ===== */
+const E30={ev(c,k,m){let s=1;if(m>=k[k.length-1]){s=m/k[k.length-1];m=k[k.length-1];}else if(m<k[0]){s=m/k[0];m=k[0];}
+    let j=0;while(j<k.length-2&&m>=k[j+1])j++;const t=(m-k[j])/(k[j+1]-k[j]);return s*((1-t)*c[j]+t*c[j+1]);},
+  mod(pos){const R=RPT&&RPT.ranges;return R&&R.model&&R.model[pos]||null;},
+  player(pos,m){const e=E30.mod(pos);if(e)return {mu:E30.ev(e.mu,e.k,m),sd:E30.ev(e.sd,e.k,m)};
+    const T=RPT&&RPT.ranges&&RPT.ranges.team,kd=T&&T.kd&&T.kd[pos];if(kd)return {mu:m+(kd.bias||0),sd:Math.sqrt(Math.max(1,kd.var[0]+kd.var[1]*m))};return {mu:m,sd:Math.max(1.5,.16*m+3)};}};
+e8Range=(function(prev){return function(p,m){try{const e=p&&E30.mod(p.pos);if(!e||!(m>0))return prev(p,m);
+  const lo=E30.ev(e.q10,e.k,m),hi=Math.max(E30.ev(e.q90,e.k,m),m),c=RPT.ranges.rel_cuts||[.736,1.164],w=(hi-lo)/2/m,lab=w<=c[0]?"HIGH":w<=c[1]?"MEDIUM":"LOW";
+  const why=lab==="HIGH"?"big projection: misses are smaller in % terms":lab==="LOW"?"low projection: one play swings it":`typical range for a ${Math.round(m)}-point ${p.pos}`;
+  return {lo,hi,lab,why,q25:E30.ev(e.q25,e.k,m),q75:E30.ev(e.q75,e.k,m),mu:E30.ev(e.mu,e.k,m),sd:E30.ev(e.sd,e.k,m),q:/quest/i.test(p.inj||"")?1:0};}catch(err){return prev(p,m);}};})(e8Range);
+/* team range from the starters (pregame totals only: the "likely" line sits under "Projected points") */
+function e30Team(L,W){const T=RPT&&RPT.ranges&&RPT.ranges.team;if(!T||!T.z||!RPT.ranges.model||!W)return null;const rho=T.rho||{},parts=[];let mu=0;
+  for(const r of W.rows||[]){const p=r.p;if(!p)continue;const g=gameOf(p);if(g&&g.bye)continue;const m=wkProj(p);if(g&&g.final){mu+=m;continue;}if(!(m>0))continue;
+    const x=E30.player(p.pos,m);mu+=x.mu;parts.push({pos:p.pos,t:p.team,o:g&&g.opp||null,sd:x.sd});}
+  const kd=[];if(W.ls&&W.ls.starters&&L.allSlots)L.allSlots.forEach((s,k)=>{if(KDEF[s]){const id=W.ls.starters[k];if(id&&id!=="0")kd.push({pos:s,t:kdTeam(id),m:kdPts(L,id,W.ls)});}});
+  else for(const x of W.kdRows||[])if(x.m)kd.push({pos:x.slot,t:x.m.team,m:x.m.wk||0});
+  for(const x of kd){const g=x.t?gameOf({team:x.t}):null;if(g&&g.bye)continue;if(g&&g.final){mu+=x.m;continue;}if(!(x.m>0))continue;const y=E30.player(x.pos,x.m);mu+=y.mu;parts.push({pos:x.pos,t:x.t,o:g&&g.opp||null,sd:y.sd});}
+  if(!parts.length)return null;const R=(a,b)=>{if(a.t&&a.t===b.t&&a.pos!=="DEF"&&b.pos!=="DEF"){if(a.pos==="QB"||b.pos==="QB"){const o=a.pos==="QB"?b.pos:a.pos;return o==="WR"||o==="TE"?rho["QB-WR/TE"]:o==="RB"?rho["QB-RB"]:rho.all_pairs;}return rho.same_team;}
+    if(a.t&&a.o&&a.o===b.t)return rho.opponents;return rho.all_pairs;};
+  let v=0;for(let i=0;i<parts.length;i++){v+=parts[i].sd**2;for(let j=i+1;j<parts.length;j++)v+=2*(R(parts[i],parts[j])||0)*parts[i].sd*parts[j].sd;}
+  mu+=W.cal||0;const sd=Math.sqrt(Math.max(v,1));return {lo:Math.max(0,mu+T.z[0]*sd),hi:mu+T.z[1]*sd,mu,sd};}
+vMatchup=(function(prev){return function(...a){let h=prev(...a);try{const L=S.leagues[a[0]];const M=L&&myMatchup(L);if(!M)return h;const rs=[M.A,M.B].map(W=>({W,R:e30Team(L,W)}));
+  h=h.replace(/(<div class="big mt">)([\d.,]+)(<\/div><div class="sub">Projected points<\/div><div class="sub num e8tr">)likely [^<]*(<\/div>)/g,(m0,x,v,y,z)=>{const m=parseFloat(v.replace(/,/g,""));
+    const it=rs.find(o=>o.R&&!o.used&&Math.abs(o.W.proj-m)<.06);if(!it)return m0;it.used=1;return `${x}${v}${y}likely ${Math.round(it.R.lo)}–${Math.round(it.R.hi)}${z}`;});}catch(e){}return h;};})(vMatchup);
+/* owner decision (2026-11-12, after a side-by-side): no HIGH/MEDIUM/LOW labels. Past steadiness, games played and the
+   questionable tag did not predict misses; the only separating factor was projection size, which the range already shows.
+   The player card shows the projection and its tested range; the report card shows range accuracy by position. */
+e8PlayerSec=function(p){if(!p||!PJC[p.pos]||!S.L)return "";let h=null;try{if(locked(p))return "";h=hmProj(p);}catch(e){return "";}if(!h||!h.conf||h.bye||h.out)return "";const c=h.conf;
+  return `<section class="pan mt e8p"><div class="row sp"><h2>Week ${S.week} projection</h2></div>
+   <div class="e8big"><b class="num">${f1(h.m)}</b><span class="sub">likely ${f1(c.lo)}–${f1(c.hi)}</span></div>${e8Bar(c.lo,h.m,c.hi)}
+   <p class="sub" style="margin-top:8px">The real score lands inside this range 8 times in 10. <span class="lnk" data-go="report">How Hashmark is graded</span></p></section>`;};
+vReport=(function(prev){return function(...a){let h=prev(...a);try{const R=RPT&&RPT.ranges,C=R&&R.coverage;const i=h.indexOf("<h2>Projection labels</h2>");if(i<0)return h;
+  const s0=h.lastIndexOf("<section",i),s1=h.indexOf("</section>",i)+10;if(!C||!C.all){return h.slice(0,s0)+h.slice(s1);}
+  const pc0=x=>x==null?"–":Math.round(x*100)+"%",rows=["QB","RB","WR","TE"].filter(k=>C[k]).map(k=>`<tr><td><b>${k}</b></td><td class="num">${f0(C[k].n)}</td><td class="num">${pc0(C[k].inside)}</td><td class="num">${pc0(C[k].below)}</td><td class="num">${pc0(C[k].above)}</td></tr>`).join("");
+  const sec=`<section class="pan mt"><div class="row sp"><h2>Projection ranges</h2><span class="tag">${f0(C.all.n)} player-weeks</span></div><div class="tw"><table><thead><tr><th>Pos</th><th>n</th><th>Inside</th><th>Below</th><th>Above</th></tr></thead><tbody>${rows}<tr><td><b>All</b></td><td class="num">${f0(C.all.n)}</td><td class="num">${pc0(C.all.inside)}</td><td class="num">${pc0(C.all.below)}</td><td class="num">${pc0(C.all.above)}</td></tr></tbody></table></div><p class="sub mt">An honest 80% range holds about 80% of real scores, with misses split evenly above and below. Graded on this season, which the ranges were not fitted on.</p></section>`;
+  return h.slice(0,s0)+sec+h.slice(s1);}catch(e){return h;}};})(vReport);
+/* /v113 */
+/* ===== v115: waiver re-test on today's projections (e31) — a WR whose best game is 45%+ of his season points doesn't count as a move; waiver track-record lines quote one test ===== */
+/* e31 (516 real leagues, exact weekly rosters 2024-25, lineups set by Hashmark's weekly projection, real points over the next
+   3 weeks): WR adds were the weak spot (redraft +3.0, 34% hurt; dynasty -1.1, 42% hurt). Most of the misses were receivers
+   riding one big game. Rule chosen on 2024 (cut-offs 30-60%), checked on 2025: all shown moves +6.75 -> +7.51 pts, hurt
+   24.0% -> 22.3%, total points gained up 6%; WR adds +1.4 -> +7.6, hurt 39% -> 25%; dynasty +4.7 -> +6.1, hurt 25% -> 21%.
+   Same rule at RB/TE/QB tested worse, so WR only. The old "73% helped" was a hindsight-lineup number next to a +8.8 from the
+   set-before-games test; both waiver lines now read helped/hurt/managers from report.json tested.waivers (scripts/rpt_waivers.py). */
+const WV_SPIKE=.45;
+function wvSpike(p){if(!p||p.pos!=="WR")return false;const xs=(p.log||[]).filter(x=>x&&x.pts!=null).map(x=>+x.pts||0);if(xs.length<2)return false;
+  const t=xs.reduce((a,b)=>a+b,0);return t>0&&Math.max(...xs)>=WV_SPIKE*t;}
+wireRecs=(function(prev){return function(L,n=6){const all=prev(L,999);if(!all||!all.length)return all||[];const bar=wvBar();let ch=false;
+  for(const r of all){if(r._v115===bar)continue;r._v115=bar;if(r.g0==null&&wvSpike(r.p)){r.spk=1;r.g0=r.g;}
+    if(r.spk&&r.g0>=bar){r.g=Math.min(r.g0,bar-.1);r.tier="One big game";try{r.bid=faabBid(L,r.p,r.g);}catch(e){}ch=true;}}
+  if(ch)all.sort((a,b)=>b.g-a.g);return all.slice(0,n);};})(wireRecs);
+/* the row still shows his real lift; the pill says why it isn't a suggested move */
+wvRow=(function(prev){return function(r,L){const h=prev(r,L);if(!r||!r.spk||r.g0==null||r.g0===r.g)return h;return h.replace(/<div class="num">[^<]*<\/div>/,`<div class="num">${r.g0>=0?"+":""}${f1(r.g0)}</div>`);};})(wvRow);
+/* waiver numbers for this league's format, all from the same test */
+function wv115T(){const T=RPT&&RPT.tested&&RPT.tested.waivers;if(!T)return null;const ty=S.fmt&&S.fmt.type,F=T.by_fmt&&T.by_fmt[ty];
+  return F?Object.assign({},T,F,{fmt:ty}):Object.assign({},T,{fmt:"redraft"});}
+const wv115P=x=>Math.round(x*100)+"%";
+e8Row=(function(prev){return function(go,title,pill,metric,bench){if(title==="Waiver calls"){const W=wv115T();if(W){
+    metric=W.hurt!=null?`+${f1(W.pts)} lineup pts over 3 weeks · helped ${wv115P(W.helped)}, hurt ${wv115P(W.hurt)}`:`+${f1(W.pts)} lineup pts per move`;
+    bench=`Managers’ own claims +${f1(W.managers_pts)} · ${W.hurt!=null?`${esc(W.fmt)} 2024–25, 516 leagues`:esc(W.src||"")}`;}}
+  return prev(go,title,pill,metric,bench);};})(e8Row);
+vWaivers=(function(prev){return function(){let h=prev();try{const W=wv115T();if(!W||W.hurt==null)return h;
+  h=h.replace(/<p class="sub e8tk">Track record: moves like these[\s\S]*?<\/p>/,`<p class="sub e8tk">Track record: moves like these added ${f1(W.pts)} lineup pts over 3 weeks; helped ${wv115P(W.helped)}, hurt ${wv115P(W.hurt)}. Managers’ own claims +${f1(W.managers_pts)} (${esc(W.fmt)}, 2024–25).</p>`);
+  h=h.replace(/<p class="sub mt">Tested on 516 real Sleeper leagues[\s\S]*?<\/p>/,`<p class="sub mt">Tested on 516 real Sleeper leagues (2024–25, exact weekly rosters), lineups set before each game by Hashmark’s projections: in ${esc(W.fmt)} leagues, moves shown here gained ${f1(W.pts)} real lineup points over the next three weeks, helped ${wv115P(W.helped)} of the time and hurt ${wv115P(W.hurt)}; managers’ own waiver claims gained ${f1(W.managers_pts)} (helped ${wv115P(W.managers_helped)}, hurt ${wv115P(W.managers_hurt)}). A drop who still scores counts against the move, players on the wire are judged a little cautiously, and a receiver whose season is mostly one big game isn’t suggested.</p>`);
+  }catch(e){}return h;};})(vWaivers);
+/* /v115 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
