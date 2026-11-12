@@ -9,5 +9,6 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
+      - run: pip install numpy
       - run: python3 backtest/e23_cfbd_pull.py && bash backtest/e23_run.sh && cat /tmp/e23_fit_out.json | head -c 4000
         env: {CFBD_API_KEY: "${{ secrets.CFBD_API_KEY }}"}
