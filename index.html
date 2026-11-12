@@ -7156,6 +7156,86 @@ simTitle=function(L,str,N=3000,seed=7){const n=L.teams.length,mean=str.reduce((a
     const ord=[...Array(n).keys()].sort((a,b)=>w[b]-w[a]||pf[b]-pf[a]),seeds=ord.slice(0,P);seeds.forEach(i=>po[i]++);ch[bracketWin(seeds,s,r,L.prt!=null?L.prt:+((L.lset||{}).playoff_round_type)||0)]++;}
   return {po:po.map(x=>x/N),ch:ch.map(x=>x/N)};};
 /* /v116 */
+/* ===== v125: Locker Sleeper-wide ranks only as confident as the data. Each skill's reliability = n / (n + k), n = seasons
+   the metric is based on (a live season counts games/13), k = (1 - tau2) / tau2 from data/mgr_ref.json (measured
+   season-to-season repeatability: S .28, ap .26, lu .17, sc .28, cons .23, out .20, wv .21, tr .06, dr .035).
+   reliability >= .5: "Top X%" + letter grade (v100 rule); .25-.5: "~Top X%" muted, "small sample", no grade; below .25:
+   the raw record only ("17 trades · too few to rank"). Before: with 1 season at +1.5 SD a draft tile showed B / "Top ~39%",
+   3 seasons B+ / "Top 22%", 6 seasons A+ / "Top 8%" (k = 27.7 seasons: reliability .03 / .10 / .18). Now trades need
+   ~5 seasons for a muted rank and ~16 for a grade, drafts ~9 / ~28, waivers ~1.3 / ~4. The sheet says how repeatable
+   each skill is. League views (league-mate ranks) unchanged. ===== */
+const REL125={hi:.5,lo:.25};
+const MR125_Z={all:"S",ap:"z_ap",lu:"z_lu",sc:"z_sc",cons:"z_cons",out:"z_out",wv:"z_wv",tr:"z_tr",dr:"z_dr"};
+const mr125k=key=>{const t2=(MREF&&MREF.tau2&&MREF.tau2[key==="all"?"S":key])||.25;return (1-t2)/t2;};
+/* counts behind the raw record: distinct pickups and non-keeper draft picks per season */
+mrSeasons=(function(prev){return function(G,uid){const rows=prev(G,uid);try{const byKey=new Map(G.LS.map(x=>[x.season+"|"+x.chain,x]));
+  for(const r of rows){if(r.skip)continue;const x=byKey.get(r.s+"|"+r.chain);if(!x)continue;const rid=(x.rosters.find(q=>q.uid===uid||(q.co||[]).includes(uid))||{}).rid;if(rid==null)continue;
+    const ad=new Set();for(const t of (x.tx||[]))if(t.type==="waiver"||t.type==="free_agent")for(const [pid,rr] of Object.entries(t.adds||{}))if(+rr===+rid)ad.add(pid);r.nadd=ad.size;
+    const d=(x.drafts||[]).find(d=>+d.season===+x.season);r.npk=d&&r.dr!=null?d.picks.filter(p=>p.pid&&!p.kp&&+p.rid===+rid).length:0;}}catch(e){console.error(e);}return rows;};})(mrSeasons);
+mrCareer=(function(prev){return function(G,uid){const C=prev(G,uid);if(!C||C.none||!MREF)return C;try{C.rel={};
+  for(const [key,zk] of Object.entries(MR125_Z)){const xs=C.ok.filter(r=>r[zk]!=null),ns=xs.reduce((s,r)=>s+(r.live?Math.min(1,(r.g||0)/13):1),0),k=mr125k(key),rel=ns/(ns+k);
+    const q={ns,seasons:xs.length,k,rel,lvl:!C[key]||rel<REL125.lo?"few":rel<REL125.hi?"small":"ok"};C.rel[key]=q;if(C[key])Object.assign(C[key],q);}
+  C.cnt={tr:C.ok.reduce((s,r)=>s+(r.ntr||0),0),dr:C.ok.reduce((s,r)=>s+(r.npk||0),0),wv:C.ok.reduce((s,r)=>s+(r.nadd||0),0),g:C.ok.reduce((s,r)=>s+(r.g||0),0)};}catch(e){console.error(e);}return C;};})(mrCareer);
+const mr125pl=(n,w)=>`${n} ${w}${n===1?"":"s"}`;
+/* the raw record for a skill: what the rank would be based on */
+function mr125Raw(C,key){const c=C.cnt||{},q=(C.rel||{})[key]||{seasons:0};
+  return key==="tr"?mr125pl(c.tr||0,"trade"):key==="dr"?mr125pl(c.dr||0,"pick"):key==="wv"?mr125pl(c.wv||0,"pickup"):q.seasons===1&&key==="all"?mr125pl(c.g||0,"game"):mr125pl(q.seasons,"season");}
+/* {t: rank text, g: letter grade allowed, lvl, raw} */
+function mr125Rank(C,key){const v=C[key],q=(C.rel||{})[key]||{lvl:"few"};
+  if(!v||q.lvl==="few")return {t:"Unranked",g:false,lvl:"few",raw:mr125Raw(C,key)};
+  if(q.lvl==="small")return {t:topTxt(v.p,true),g:false,lvl:"small"};return {t:topTxt(v.p,C.prov),g:true,lvl:"ok"};}
+const mr125Need=(C,key,lvl)=>{const q=(C.rel||{})[key]||{k:mr125k(key)};const n=lvl==="few"?q.k*REL125.lo/(1-REL125.lo):q.k*REL125.hi/(1-REL125.hi);return Math.max(1,Math.ceil(n-.05));};
+const mr125Cell=(C,key)=>{const R=mr125Rank(C,key);return R.lvl==="ok"?R.t:R.lvl==="small"?`${R.t}<small class="mr125s">small sample</small>`:`<span class="mr125f">Unranked</span><small class="mr125s">${R.raw}</small>`;};
+const mr125Bar=(C,key)=>{const v=C[key],R=mr125Rank(C,key);if(R.lvl==="few")return `<span class="bar"><i style="width:0%"></i></span>`;return `<span class="bar"><i class="${R.lvl==="ok"?mrCls(v.p):"mr125m"}" style="width:${Math.max(3,Math.round(v.p))}%"></i></span>`;};
+const mr125Rep=key=>{const t2=MREF.tau2[key==="all"?"S":key];return t2==null?"":`How repeatable is this? Managers keep about ${Math.max(1,Math.round(t2*100))}% of their edge season to season.`;};
+document.head.insertAdjacentHTML("beforeend",`<style>.mr125s{display:block;font:500 11px/1.2 var(--fb);color:var(--muted);white-space:nowrap}.mr125f{color:var(--muted)}.bar i.mr125m{opacity:.45}
+.stcmp.sm125{color:var(--muted);font-weight:600}.stfew{color:var(--muted)}.mrd .rkr em .mr125r{display:block;margin-top:2px}</style>`);
+mrPanel=function(G){if(MREFst==="idle")setTimeout(loadMgrRef,0);if(!MREF)return MREFst==="error"?"":`<section class="pan mt"><p class="sub">Loading Sleeper-wide comparison…</p></section>`;
+  const C=mrCareer(G,G.uid);if(!C||C.none)return `<section class="pan mt"><div class="eyebrow">Sleeper-wide</div><p class="sub">No season yet that can be compared fairly (8+ teams, head-to-head, standard-range scoring).</p></section>`;
+  const N=MREF.n||{},H=mr125Rank(C,"all"),g=H.g&&C.all?SKG(Math.round(C.all.p)):null;
+  return `<section class="pan mt mrpan" data-mr="1" role="button" tabindex="0" aria-label="Sleeper-wide ranking details" style="cursor:pointer">
+   <div class="row sp"><div class="eyebrow">Sleeper-wide</div>${H.lvl!=="ok"?`<span class="tag">Small sample · ${mr125Raw(C,"all")}</span>`:C.prov?`<span class="tag">Provisional · ${f1(C.effN)} seasons</span>`:`<span class="tag">${C.done} seasons</span>`}</div>
+   <div class="row" style="gap:10px;align-items:center;margin-top:6px"><div class="hxlab" style="font:800 clamp(28px,8vw,40px)/1.05 var(--fd)${H.lvl==="ok"?"":";color:var(--muted)"}">${H.lvl==="few"?"Not ranked yet":H.t}</div>${g?`<span class="grd ${gcl(g)}">${g}</span>`:""}</div>
+   <p class="sub" style="margin:2px 0 0">${H.lvl==="few"?"too few games to compare yet":"of Sleeper managers"} · ${(N.team_seasons||0).toLocaleString()} team-seasons in ${(N.leagues||0).toLocaleString()} leagues</p>
+   <div class="rkb mrk mt">${MR_SK.map(([k,n])=>`<div class="rkr"><span>${n}</span>${mr125Bar(C,k)}<b class="num">${mr125Cell(C,k)}</b></div>`).join("")}</div>
+   <div class="hxk mt">${[[C.titles,"Titles"],[C.finals,"Finals"],[C.ptTitles,"Points titles"],[`${C.pw}-${C.pl}`,"Playoff record",`${C.poN} trips`]].map(([v,l,e])=>`<div><b class="num">${v}</b><span>${l}</span>${e?`<em>${e}</em>`:""}</div>`).join("")}</div>
+   <p class="sub mt" style="margin-bottom:0">Luck: ${C.luck>=0?"+":""}${f1(C.luck)} wins a season vs all-play · not part of the ranking · tap for the breakdown</p></section>`;};
+mrOpen=function(){const G=HX.data;const C=mrCareer(G,G&&G.uid);if(!C||C.none)return;const N=MREF.n||{},ex=MREF.excluded||{};
+  const zc=v=>{if(v==null)return "–";const t=Math.abs(v)<.05?"0.0":(v>0?"+":"−")+Math.abs(v).toFixed(1);return `<span class="${v>=.5?"good":v<=-.5?"bad":""}">${t}</span>`;};
+  const rows=C.rows.slice().sort((a,b)=>b.s-a.s||String(a.lg).localeCompare(String(b.lg)));
+  const ty=t=>["Redraft","Keeper","Dynasty"][t]||"Redraft",H=mr125Rank(C,"all");
+  const note=k=>{const R=mr125Rank(C,k),q=(C.rel||{})[k]||{};const s=R.lvl==="few"?`${R.raw}${(k==="tr"||k==="dr"||k==="wv")&&q.seasons?` in ${mr125pl(q.seasons,"season")}`:""} · too few to rank (a rank needs about ${mr125pl(mr125Need(C,k,"few"),"season")})`
+    :R.lvl==="small"?`Small sample: ${mr125pl(q.seasons,"season")} · a firm rank needs about ${mr125pl(mr125Need(C,k,"small"),"season")}`:"";return (s?`<span class="mr125r">${s}</span>`:"")+`<span class="mr125r">${mr125Rep(k)}</span>`;};
+  openSheet("Sleeper-wide",`<div class="sdbody"><h2 class="sdt1">${H.lvl==="few"?"Not ranked yet":`${H.t} of Sleeper managers`}</h2>
+   <div class="eyebrow">${C.ok.length} league-season${C.ok.length===1?"":"s"} compared${H.lvl!=="ok"?" · small sample":C.prov?" · provisional":""}</div>
+   <div class="rkb mrd mt">${MR_SK.map(([k,n,d])=>`<div class="rkr"><span>${n}</span><b class="num">${mr125Cell(C,k)}</b>${mr125Bar(C,k)}<em>${d}${note(k)}</em></div>`).join("")}</div>
+   <h3 class="mt">Season by season</h3><p class="sub" style="margin-top:2px">Season score in standard deviations from the average Sleeper team (0 = average).</p>
+   <div class="mrs">${rows.map(r=>r.skip?`<div><span>${r.s} · ${esc(r.lg)}</span><span class="sub">Left out</span><span class="sub">${r.size}-team ${ty(r.type)} · ${esc(r.skip)}</span></div>`:
+     `<div><span>${r.s} · ${esc(r.lg)}${r.live?" · live":""}</span><b class="num">${zc(r.S)}</b><span class="sub">${r.size}-team ${ty(r.type)} · all-play ${pcx(r.ap)} · ${r.out==null?"season in progress":r.champ?"Champion":r.place===2?"Runner-up":r.place===3||r.place===4?"Semifinal":r.po?"Playoffs":"Missed playoffs"}${r.ptTitle?" · points title":""}${r.pw||r.pl?` · playoffs ${r.pw}-${r.pl}`:""}${r.lu==null?"":` · lineups ${pcx(r.lu)}`}</span><span class="sub">${r.wt===1?"":`counts ${r.wt.toFixed(2)}×${r.why?" · "+r.why:" · partial season"}`}</span></div>`).join("")}</div>
+   <h3 class="mt">How it works</h3><ul class="why">
+    <li>Each season gets a score from results (all-play win %, ${Math.round(MREF.W.ap*100)}%), hardware (${Math.round(MREF.W.out*100)}%) and lineup efficiency (${Math.round(MREF.W.lu*100)}%), each compared with teams in the same format (league type and size).</li>
+    <li>Hardware weighs most: each season's finish (title 1, runner-up .45, semis .2–.25, playoffs .1) plus .1 per playoff win and .3 for the league's points title. Title seasons count 1.5×, points-title seasons 1.15×.</li>
+    <li>Off years don't erase hardware: once you've won a title or points title, below-average seasons count .75×; a keeper or dynasty rebuild that led to a title within 2 seasons counts .5×.</li>
+    <li>New accounts start near average: your seasons are pulled toward the middle by about ${f1((1-MREF.tau2.S)/MREF.tau2.S)} seasons' worth of average until enough history builds up. Under 2 seasons is marked provisional.</li>
+    <li>A skill is ranked only when your seasons outweigh luck: reliability = seasons ÷ (seasons + k), where k is that pull toward average (less repeatable skills need more seasons). From ${REL125.hi} you get a rank and grade, from ${REL125.lo} a rank marked small sample, below that only your record.</li>
+    <li>Outliers are removed before comparing: ${Object.entries(ex).map(([k,v])=>`${v} ${esc(k)}`).join(", ")}. Every metric is capped at the 2.5th and 97.5th percentile of its format.</li>
+    <li>Reference: ${(N.team_seasons||0).toLocaleString()} team-seasons, ${(N.leagues||0).toLocaleString()} Sleeper leagues, seasons ${(N.seasons||[]).join(", ")}. Lineup efficiency from ${(N.with_lineups||0).toLocaleString()} team-seasons with exact weekly rosters. ${MREF.tau2_src==="measured"?`Career persistence measured on ${(N.managers_multi_season||0).toLocaleString()} managers seen in 2+ seasons.`:"Career persistence is a conservative estimate until the archive has enough repeat managers; it is measured automatically once it does."}</li>
+    <li>League views (pick a league above) rank you against that league's managers instead.</li></ul></div>`);};
+/* Locker tiles on "All leagues": grade only from a reliable Sleeper rank; muted small-sample rank; otherwise the record alone */
+stTiles=(function(prev){return function(D){let h=prev(D);try{if(statsScope()!=="all"||!MREF||!HX.data)return h;const C=mrCareer(HX.data,HX.data.uid);if(!C||C.none)return h;
+  for(const [tk,mk] of Object.entries(MR_TILE)){const a=h.indexOf(`data-stc="${tk}"`);if(a<0)continue;const b=h.indexOf("</button>",a);if(b<0)continue;let s=h.slice(a,b);const R=mr125Rank(C,mk);if(R.lvl==="ok")continue;
+    s=s.replace(/<span class="grd [^"]*">[^<]*<\/span>/,"");
+    if(R.lvl==="small")s=s.replace(/<span class="stcmp">[^<]*<\/span>/,`<span class="stcmp sm125">${R.t} on Sleeper · small sample</span>`);
+    else{s=s.replace(/<span class="stcmp">[^<]*<\/span> · /,"");const luck=mk==="tr"||mk==="dr";s=s.replace(/(<div class="stsub">[\s\S]*?)(<\/div>)/,`$1 · <span class="stfew">${luck?"mostly luck season to season, so not ranked on Sleeper":"too few to rank on Sleeper"}</span>$2`);}
+    h=h.slice(0,a)+s+h.slice(b);}}catch(e){console.error(e);}return h;};})(stTiles);
+/* tile sheets on "All leagues": their grade and percentile are vs league mates (the tile itself follows the Sleeper rule above) */
+openSheet=(function(prev){return function(t,h){try{if(route()==="stats"&&statsScope()==="all"&&typeof h==="string")h=h.replace(/(<div class="sdh">[\s\S]*?<b>\d+(?:st|nd|rd|th) percentile)<\/b>/,"$1 vs league mates</b>");}catch(e){}return prev(t,h);};})(openSheet);
+
+/* owner decision (2026-11-12): trades and drafts are hidden from the Sleeper-wide panel and sheet. Managers keep ~6% (trades)
+   and ~3.5% (drafts) of their edge season to season, so an honest rank would need ~16 / ~28 seasons: permanent "Unranked"
+   rows would be noise. Their tiles keep the record and Hashmark's own trade grades, plus "mostly luck season to season". */
+(function(){for(let i=MR_SK.length-1;i>=0;i--)if(MR_SK[i][0]==="tr"||MR_SK[i][0]==="dr")MR_SK.splice(i,1);})();
+/* /v125 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
