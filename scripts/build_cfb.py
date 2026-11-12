@@ -160,10 +160,18 @@ def main():
     if cur not in seasons:
         cur -= 1
     # every skill-position player on an FBS roster (current or last season), plus anyone with real FBS production
+    # roster positions are sometimes '?' / 'NA' / 'ATH': fall back to the player's position in any other roster year
+    # of the window (backtest/e23 found this dropped real prospects, e.g. older rosters listing Chubb and Michel as '?')
+    UNK = {"?", "NA", "", "ATH", None}
+    PS = {}
+    for y in sorted(rosters, reverse=True):
+        for aid, r in rosters[y].items():
+            if r.get("position") in POS:
+                PS.setdefault(aid, r["position"])
     ids = set()
     for y in (cur, cur - 1):
         for aid, r in rosters.get(y, {}).items():
-            if r.get("position") in POS:
+            if r.get("position") in POS or (r.get("position") in UNK and aid in PS):
                 ids.add(aid)
     out = {}
     for aid in ids:
@@ -185,7 +193,9 @@ def main():
         last = lines[-1]
         if last.get("conf") not in FBS and not any(l.get("conf") in FBS for l in lines):
             continue
-        pos = ro.get("position")
+        pos = ro.get("position") if ro.get("position") in POS else PS.get(aid)
+        if pos not in POS:
+            continue
         vol = sum(l.get("tgt", 0) + l.get("car", 0) + l.get("att", 0) for l in lines)
         if vol < 25:
             continue

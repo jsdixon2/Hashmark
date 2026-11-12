@@ -7320,6 +7320,11 @@ function po127Apply(L,fn){const M=po127Final(L);if(!M)return fn();const med=po11
 simLeague=(function(prev){return function(L){const a=arguments;return po127Apply(L,()=>prev.apply(this,a));};})(simLeague);
 simTitle=(function(prev){return function(L){const a=arguments;return po127Apply(L,()=>prev.apply(this,a));};})(simTitle);
 /* /v127 */
+/* ===== v128: Locker "All leagues": the Clutch tile has no Sleeper-wide metric, so it is ungraded there like Luck and
+   Activity (v100 rule: grades on All leagues come only from the Sleeper-wide percentile). League views keep its grade. ===== */
+stTiles=(function(prev){return function(D){let h=prev(D);try{if(statsScope()!=="all")return h;const a=h.indexOf('data-stc="clutch"');if(a<0)return h;const b=h.indexOf("</button>",a);if(b<0)return h;
+  return h.slice(0,a)+h.slice(a,b).replace(/<span class="grd [^"]*">[^<]*<\/span>/,"")+h.slice(b);}catch(e){return h;}};})(stTiles);
+/* /v128 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
