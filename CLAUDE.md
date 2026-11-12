@@ -231,6 +231,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    only redraw live pages (`UI105_LIVE`: home, matchup, league, team, roster, gameday, tx); they wait 1.5 s after the last
    touch/scroll; every same-route redraw restores expanded `.lmore` lists (marked data-open), open details, table
    side-scroll and scrollY. New timers that redraw must call `bgRender()`, never `render()`.
+   v130 (owner: 30 s live, 3 min otherwise): one scheduler (`LV130`, 5 s tick) refreshes scores every 30 s while any game
+   is live (liveSet or ESPN st "in"), every 180 s otherwise, and on return to the app (15 s+). The old 45 s / 60 s timers
+   and the forced ESPN-clock timer still exist but their automatic calls are skipped; pull to refresh (touch event) runs.
+   New refresh logic must go through lv130Refresh(), not new setIntervals.
 6. NFL team ratings and matchups — done (v104, `scripts/build_teams.py` -> `data/teams.json`, run by news.yml every 30 min,
    writes only when something changed). Backtests `backtest/e12_*.py` (games 2002-2025, player weeks 2021-25):
    points-margin Elo (K .08, home 2.0, prior x.7, cap 28, sigma 12.5) Brier .2246 on 1,355 games 2021-25 (old power

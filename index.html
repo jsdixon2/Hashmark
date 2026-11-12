@@ -7343,6 +7343,23 @@ e8Range=(function(prev){return function(p,m){const r=prev(p,m);try{if(r&&p&&p.po
 stTiles=(function(prev){return function(D){let h=prev(D);try{if(statsScope()!=="all")return h;const a=h.indexOf('data-stc="skills"');if(a<0)return h;const b=h.indexOf("</button>",a);if(b<0)return h;
   return h.slice(0,a)+h.slice(a,b).replace(/<span class="grd [^"]*">[^<]*<\/span>/,"")+h.slice(b);}catch(e){return h;}};})(stTiles);
 /* /v129 */
+/* ===== v130: one live-score scheduler (owner: 30 s while games are live, 3 min otherwise).
+   Before: three overlapping timers: pollQuiet every 45 s all week (refreshLive -> Sleeper matchups + stat lines + ESPN
+   clock), refreshLive again every 60 s during live games, and the ESPN clock every 60 s during games: new scores every
+   ~20-45 s at irregular times with duplicate requests, and a Sleeper call every 45 s on days with no games.
+   Now: a 5 s tick refreshes when 30 s (any game live: liveSet() or an ESPN game "in") or 180 s (otherwise) have passed
+   since the last refresh, and on return to the app if 15 s have passed. The old timers still fire but their automatic
+   refreshes are skipped (the scheduler forces the ESPN clock each time, past its own 40 s gap); a user's pull to refresh (inside a touch event) always runs. ===== */
+const LV130={last:0,tick:null,run:0};
+function lv130Live(){try{if(liveSet().size)return true;}catch(e){}try{return Object.values(GCLK.m||{}).some(x=>x&&x.st==="in");}catch(e){return false;}}
+const pq130=pollQuiet;pollQuiet=function(){};          /* the old 45 s timer and visibility hook call this: now handled below */
+refreshLive=(function(prev){return function(...a){const auto=!LV130.run&&!(typeof window!=="undefined"&&window.event);
+  if(auto)return Promise.resolve();LV130.last=Date.now();return prev(...a);};})(refreshLive);
+loadGameClock=(function(prev){return function(force,...a){if(force&&!LV130.run&&!(typeof window!=="undefined"&&window.event))return Promise.resolve();return prev(force,...a);};})(loadGameClock);
+async function lv130Refresh(){if(S.mode!=="live"||!S.L||document.hidden)return;LV130.run=1;try{try{await loadGameClock(true);}catch(e){}await pq130();}catch(e){}finally{LV130.run=0;}}
+LV130.tick=setInterval(()=>{if(S.mode!=="live"||!S.L||document.hidden)return;const need=lv130Live()?30000:180000;if(Date.now()-LV130.last>=need)lv130Refresh();},5000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&Date.now()-LV130.last>=15000)lv130Refresh();});
+/* /v130 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
