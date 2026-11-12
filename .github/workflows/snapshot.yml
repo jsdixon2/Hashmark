@@ -1,0 +1,18 @@
+name: projection-snapshot
+on:
+  schedule: [{cron: "20 14 * * *"}, {cron: "40 21 * * 4"}, {cron: "40 15 * * 0"}, {cron: "20 19 * * 0"}, {cron: "20 20 * * 1"}]
+  workflow_dispatch: {}
+permissions: {contents: write}
+concurrency: {group: data-snapshot, cancel-in-progress: false}
+jobs:
+  snap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 scripts/snapshot_proj.py
+      - run: |
+          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
+          [ -d bt/proj_log ] && git add bt/proj_log
+          git diff --staged --quiet && exit 0
+          git commit -m "pregame projection snapshot"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep 5; done
