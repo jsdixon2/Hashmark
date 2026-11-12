@@ -182,5 +182,28 @@ for cl, cv in [("shipped", cand["shipped"]), ("v119", cand["d.9 g1 PVT"])]:
             o = score(m & (D.grp == g_), Y=cv["Y"], d=cv["d"], g=cv["g"]); summ[f"{cl}|{g_}|{lab}"] = o
             print(f"  {cl:8s} {g_} {lab:14s} n={o['n']:5d} acc {o['won']:.1%} said {o['said']:.1%} brier {o['brier']:.4f} said60 won {o['60']['won']} said70 won {o['70']['won']} said80 won {o['80']['won']} (n80 {o['80']['n']})")
 res["summary"] = summ
+print("\n8) STARTED outcome (PAR only in weeks started for the team holding him): TC grid, choose on 2021-24, check 2025")
+D["pc"] = [tuple(sorted((len(r.vA), len(r.vB)))) for r in D.itertuples()]
+D["has_s9"] = D.s9.notna()
+grid8 = []
+for d in (.75, .8, .85, .9, 1.0):
+    for g in (1.0, 1.1, 1.2, 1.3):
+        a1 = score(OFFm & (D.grp == "2021-24"), d=d, g=g, out="s9"); a2 = score(OFFm & (D.grp == "2025"), d=d, g=g, out="s9")
+        a3 = score(OFFm & (D.s <= 2023), d=d, g=g, out="sL")
+        grid8.append(dict(d=d, g=g, fit=a1["brier"], hold=a2["brier"], two=a3["brier"], acc_fit=a1["won"], acc_hold=a2["won"], n_fit=a1["n"], n_hold=a2["n"], n_two=a3["n"]))
+grid8.sort(key=lambda x: x["fit"])
+for x in grid8: print(f"  d={x['d']} g={x['g']}: 2021-24 {x['fit']:.4f} (acc {x['acc_fit']:.1%}, n {x['n_fit']}) | 2025 {x['hold']:.4f} (acc {x['acc_hold']:.1%}, n {x['n_hold']}) | 2021-23 two seasons {x['two']:.4f} (n {x['n_two']})")
+res["started_grid"] = grid8
+b8 = grid8[0]; print("  best on 2021-24 started:", b8["d"], b8["g"])
+print("  same trades, all-PAR outcome (apples to apples):")
+for d, g in [(.75, 1.3), (.9, 1.0), (b8["d"], b8["g"])]:
+    a1 = score(OFFm & D.has_s9 & (D.grp == "2021-24"), d=d, g=g); a2 = score(OFFm & D.has_s9 & (D.grp == "2025"), d=d, g=g)
+    print(f"    d={d} g={g}: 2021-24 {a1['brier']:.4f} | 2025 {a2['brier']:.4f}")
+st8 = {}
+for d, g in [(.75, 1.3), (.9, 1.0), (b8["d"], b8["g"])]:
+    for lab, m in [("all", OFFm), ("consolidation", OFFm & D.cons), ("2-for-1", OFFm & (D.pc == (1, 2))), ("3-for-1", OFFm & (D.pc == (1, 3))), ("equal counts", OFFm & ~D.cons), ("players only", OFFm & ~D.picks), ("player <=23", OFFm & D.young)]:
+        for g_, out, gm in [("2021-24", "s9", D.grp == "2021-24"), ("2025", "s9", D.grp == "2025"), ("2021-23 two seasons", "sL", D.s <= 2023)]:
+            o = score(m & gm, d=d, g=g, out=out); st8[f"{d}/{g}|{lab}|{g_}"] = o; print(line(f"{d}/{g} {lab} {g_}"[:34], o))
+res["started_splits"] = st8
 res["cand"] = c6; res["pvt_refit"] = dict(d=.9, g=1.0, X=list(X0), Y=list(Y9))
 json.dump(res, open(B + "/e25.json", "w"), indent=1, default=float)

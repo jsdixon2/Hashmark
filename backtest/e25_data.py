@@ -12,6 +12,9 @@ Outcome: points above replacement (PAR) received minus sent, from the trade week
   position that week (QB 14 / 26 SF, RB 30, WR 42, TE 14; IDP DL 30, LB 30, DB 40) under the league's scoring key.
   Picks: average PAR of rookies taken in that round in real rookie drafts in the archive over a window of the same
   length (rookie season + next season wks 1-9), i.e. what that round has produced; no timing noise.
+"Started" outcomes (s9 / sL, coordinator check): PAR counted only in weeks the player was in the starting lineup of the
+  team holding him from the trade (received players on the receiver, sent players on their new team), following the
+  league into later seasons by its prev link (same roster id); picks = round's average started PAR for the drafting team.
 IDP: positions from bt/idp/players.json.gz, weekly points from bt/idp/weekly.json.gz with each league's idp_* scoring.
   No IDP rank history exists (bt/idp/ecr.json is today's only), so IDP trades are also graded with a production proxy
   (PAR per game at the time: season-to-date if 4+ games, else prior season, blended), the same proxy for offense, to
@@ -119,8 +122,30 @@ def par_pg(pid, s, w, key, sf, sck):
     if a is None: return b
     if b is None: return a
     wt = g1 / 4; return wt * a + (1 - wt) * b
+# ---- starting lineups: "started PAR" counts a player's PAR only in weeks he started for the team that holds him ----
+NXT = {l["prev"]: l["id"] for l in LG.values() if l.get("prev")}
+SCACHE = {}
+def starters(lid, w, rid):
+    k = (lid, w)
+    if k not in SCACHE:
+        rows = ((LG.get(lid) or {}).get("weeks") or {}).get(str(w)) or []
+        SCACHE[k] = {r[0]: set(str(x) for x in (r[3] or [])) for r in rows}
+    return SCACHE[k].get(rid, set())
+def chain(lid, s, yr):
+    while s < yr and lid: lid = NXT.get(lid); s += 1
+    return lid
+def started_sum(pid, wl, key, sf, sck, lid, s, rid):
+    """None if a season in the window has no next-season league to follow"""
+    tot = 0.0; cl = {}
+    for yr, w in wl:
+        if yr not in cl: cl[yr] = chain(lid, s, yr)
+        l2 = cl[yr]
+        if l2 is None: return None
+        if pid in starters(l2, w, rid):
+            tot += (idp_par(sck, yr, w) if POSD.get(pid) in IDP else off_par(key, sf, yr, w)).get(pid, 0.0)
+    return tot
 # ---- rookie-draft round averages (what each round has produced) ----
-RD = collections.defaultdict(list)
+RD = collections.defaultdict(list); RDS = collections.defaultdict(list)
 for lg in LG.values():
     if lg.get("type") != 2 or not lg.get("prev") or any(p in IDP + ("IDP_FLEX",) for p in lg.get("pos") or []): continue
     d = lg.get("draft") or {}; s = lg["season"]
@@ -131,8 +156,12 @@ for lg in LG.values():
     if (s + 1, 9) > LAST: continue
     for pk in d["picks"]:
         rnd, pid = pk[0], pk[2]
-        if pid and POSD.get(str(pid)) in OFF: RD[min(5, rnd)].append(par_sum(str(pid), wl, key, sf, ()))
-RAVG = {r: float(np.mean(v)) for r, v in RD.items()}
+        if pid and POSD.get(str(pid)) in OFF:
+            RD[min(5, rnd)].append(par_sum(str(pid), wl, key, sf, ()))
+            st_ = started_sum(str(pid), wl, key, sf, (), lg["id"], s, pk[3])
+            if st_ is not None: RDS[min(5, rnd)].append(st_)
+RAVG = {r: float(np.mean(v)) for r, v in RD.items()}; RAVGS = {r: float(np.mean(v)) for r, v in RDS.items()}
+print("rookie round STARTED PAR:", {r: (round(v), len(RDS[r])) for r, v in sorted(RAVGS.items())})
 print("rookie round PAR (rookie yr + next yr wk1-9):", {r: (round(v), len(RD[r])) for r, v in sorted(RAVG.items())})
 TC = dict(d=.75, g=1.3)
 def effV(vs):
@@ -172,16 +201,28 @@ for lg in LG.values():
             o9 = sum(par_sum(x[1], wl9, key, sf, sck) if x[0] == "p" else RAVG.get(min(5, x[1][1]), 0) for x in got)
             oF = None if wlF is None else sum(par_sum(x[1], wlF, key, sf, sck) if x[0] == "p" else RAVG.get(min(5, x[1][1]), 0) * len(wlF) / len(wl9) for x in got)
             oL = None if wlL is None else sum(par_sum(x[1], wlL, key, sf, sck) if x[0] == "p" else RAVG.get(min(5, x[1][1]), 0) * len(wlL) / len(wl9) for x in got)
+            def st_o(wl):
+                if wl is None: return None
+                t_ = 0.0
+                for x in got:
+                    if x[0] == "p":
+                        v_ = started_sum(x[1], wl, key, sf, sck, lg["id"], s, rid)
+                        if v_ is None: return None
+                        t_ += v_
+                    else: t_ += RAVGS.get(min(5, x[1][1]), 0) * len(wl) / len(wl9)
+                return t_
+            s9, sL = st_o(wl9), st_o(wlL)
             pp = [par_pg(x[1], s, w0, key, sf, sck) for x in got if x[0] == "p"]
             ags = [age(x[1], ts) for x in got if x[0] == "p"]
             idpv = sum(vv for x, vv in zip(got, v) if x[0] == "p" and POSD.get(x[1]) in IDP)
-            return dict(v=v, o9=o9, oF=oF, oL=oL, pp=pp, ages=ags, npl=sum(1 for x in got if x[0] == "p"), npk=sum(1 for x in got if x[0] == "k"),
+            return dict(v=v, o9=o9, oF=oF, oL=oL, s9=s9, sL=sL, pp=pp, ages=ags, npl=sum(1 for x in got if x[0] == "p"), npk=sum(1 for x in got if x[0] == "k"),
                         nunr=sum(1 for x in got if x[0] == "p" and POSD.get(x[1]) in OFF and not ranked(x[1], ts, sf)),
                         idp=sum(1 for x in got if x[0] == "p" and POSD.get(x[1]) in IDP))
         A_, B_ = side(a), side(b)
         rows.append(dict(lg=lg["id"], s=s, w=w, w0=w0, ty=ty, sf=sf, idl=idl, ts=str(ts),
                          vA=A_["v"], vB=B_["v"], agA=A_["ages"], agB=B_["ages"], ppA=A_["pp"], ppB=B_["pp"],
                          o9=A_["o9"] - B_["o9"], oF=None if A_["oF"] is None else A_["oF"] - B_["oF"], oL=None if A_["oL"] is None else A_["oL"] - B_["oL"],
+                         s9=None if A_["s9"] is None or B_["s9"] is None else A_["s9"] - B_["s9"], sL=None if A_["sL"] is None or B_["sL"] is None else A_["sL"] - B_["sL"],
                          nplA=A_["npl"], nplB=B_["npl"], npkA=A_["npk"], npkB=B_["npk"], idpA=A_["idp"], idpB=B_["idp"],
                          nunr=A_["nunr"] + B_["nunr"]))
 D = pd.DataFrame(rows); D.to_pickle(B + "/e25_trades.pkl")
