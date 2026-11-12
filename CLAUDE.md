@@ -254,7 +254,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    held out; hit = top-24 RB/WR or top-12 QB/TE PPR season within 3 NFL seasons): fitted "starter odds" (`dvOdds`,
    `DVM124`): AUC .903 -> .918 final season, .839 -> .865 one season earlier, .697 -> .743 two earlier, vs the hand-set
    score (kept for board order). Recruiting rating (CFBD, Actions only via manual .github/workflows/devy-test.yml) wins
-   everywhere (.930 / .880 / .772, log loss better too): `DVM124.pwr` being filled from that run. build_cfb: position
+   everywhere (.930 / .880 / .772, log loss better too): `DVM124.pwr` shipped (undrafted prospects; rating = p.rec.rating,
+   else unrated flag); pre-draft odds display capped at "40%+" (35%+ bin said 42%, happened 31%, n 16). Note: TEs lead the
+   40%+ group (top-12 TE is an easier bar; few TE hits behind it). Rated share train 62% / test 51% / app 2027 62%. build_cfb: position
    fallback for '?'/'NA' rosters; recruiting classes cur-7..cur.
 8. Confidence labels + live model report card — done (v108). `scripts/build_report.py` -> `data/report.json` (data.yml,
    twice daily) grades the app's full projection replayed by `scripts/proj_panel.py` (stdlib; downloads nflverse weekly +
@@ -281,8 +283,7 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    Report plug-ins: scripts/rpt_*.py each `section(ctx)` merged into report.json by build_report.py (HM_OUT env to test).
 
 ## Open items
-- Audit list 2026-11-11/12: all items done (see HANDOFF.md). Devy recruiting constants (`DVM124.pwr`) pending the
-  devy-test run output.
+- Audit list 2026-11-11/12: all items done (see HANDOFF.md).
 - Watch the first real runs: snapshot.yml (first call to Sleeper from Actions), build_cfb with cur-7 recruiting.
 - Not verifiable here (no Sleeper/ESPN access): v121 breakout/risk and v123 live-score term in a real league; Sleeper's
   practice-status field format for the v127 questionable line.

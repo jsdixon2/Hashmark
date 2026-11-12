@@ -7241,6 +7241,9 @@ openSheet=(function(prev){return function(t,h){try{if(route()==="stats"&&statsSc
    season earlier, .697 -> .743 two seasons earlier vs the hand-set score; drafted rookies use the pick too: AUC .835) ===== */
 const DVM124={pw:{b:{QB:-5.0977,RB:-4.8908,TE:-4.4627,WR:-5.6515},w:{bo:0.865,g5:-0.4286,p5:0.5479,prod:4.907,wtd:0.3264,yrs:-0.5089}},
   cap:{b:{QB:2.3686,RB:3.6588,TE:3.4881,WR:2.8964},w:{bo:0.1762,g5:-0.245,lpick:-0.9593,p5:0.245,prod:1.2168,wtd:0.7361,yrs:-0.4346}}};
+/* pwr = pw + HS recruiting rating (CFBD 0-1 composite; unrated flag). Raw-scale constants from e23_fit_rec.py "DVM_pwr"
+   (Actions run 43156943532): held out 2021-23 AUC .918 -> .930, 1 season earlier .865 -> .880, 2 seasons .743 -> .772. */
+DVM124.pwr={b:{QB:-7.3389,RB:-7.1536,TE:-6.6684,WR:-7.8902},w:{bo:0.825,g5:-0.288,p5:0.5331,prod:4.7878,rec:2.6929,unrated:2.1113,wtd:0.3581,yrs:-0.5051}};
 const DV124_P5=new Set(["SEC","Big Ten","Big 12","ACC"]),DV124_FBS=new Set(["SEC","Big Ten","Big 12","ACC","Pac-12","American Athletic","Mountain West","Sun Belt","Mid-American","Conference USA","FBS Independents"]);
 const DV124_IDEAL={QB:220,RB:210,WR:200,TE:245};
 /* features exactly as in backtest/e23_fit.py "pw"/"cpw": production rebuilt from the shipped score (score minus breakout,
@@ -7252,16 +7255,17 @@ function dvOdds(p){try{if(!p||!CFB||!DV124_IDEAL[p.pos]||p.score==null)return nu
   const wm=pos!=="QB"&&wt?1-Math.min(.08,Math.abs(wt-I)/400):1,W=pos==="WR"||pos==="TE"?.8:.85;
   const x={prod:(p.score/100/cm/wm-(1-W)*bo)/W,bo,yrs,p5:p5?1:0,g5:fbs&&!p5?1:0,wtd:Math.abs((wt||I)-I)/25};
   let M=DVM124.pw;if(p.drafted&&p.drafted.p){M=DVM124.cap;x.lpick=Math.log(p.drafted.p);}
+  else if(DVM124.pwr){const rt=p.rec&&+p.rec.rating;M=DVM124.pwr;x.rec=rt>0?rt:0;x.unrated=rt>0?0:1;}
   let z=M.b[pos];for(const k in M.w)z+=M.w[k]*x[k];return 1/(1+Math.exp(-z));}catch(e){return null;}}
-function dvOddsTxt(o){return o==null?"–":o<.02?"<2%":o<.1?Math.round(o*100)+"%":Math.round(o*20)*5+"%";}
+function dvOddsTxt(o,cap){if(cap&&o!=null&&o>=.4)return "40%+";return o==null?"–":o<.02?"<2%":o<.1?Math.round(o*100)+"%":Math.round(o*20)*5+"%";}
 const dvBar124=pos=>pos==="QB"||pos==="TE"?"top-12":"top-24";
 vDevyLab=(function(prev){return function(){let h=prev();if(!CFB||!h)return h;
-  h=h.replace(/(<button class="dvr" data-go="cfb-([^"]+)"[\s\S]*?<span class="dvs"><b class="num">[^<]*<\/b><em>score<\/em>)/g,(m,a,id)=>{const o=dvOdds(CFB.p[id]);return o==null?a:a+`<em class="dvo">${dvOddsTxt(o)} starter</em>`;});
-  return h.replace(/(Scores rank production within each position:[^<]*?not mock drafts\.)/,`$1 Starter odds: how often 2016–23 draft prospects with a similar profile (production, breakout age, seasons in college, conference, size; drafted players also by draft pick) had a top-24 RB/WR or top-12 QB/TE PPR season within their first 3 NFL seasons. Fitted on the 2016–20 classes; on the 2021–23 classes it picked out the eventual starters better than the score alone (AUC .92 vs .90 in the final college season, .74 vs .70 two seasons earlier). Calibration on those held-out classes: prospects given 15–35% became starters 24% of the time (83 players, 22% predicted).`);};})(vDevyLab);
+  h=h.replace(/(<button class="dvr" data-go="cfb-([^"]+)"[\s\S]*?<span class="dvs"><b class="num">[^<]*<\/b><em>score<\/em>)/g,(m,a,id)=>{const o=dvOdds(CFB.p[id]);return o==null?a:a+`<em class="dvo">${dvOddsTxt(o,!CFB.p[id].drafted)} starter</em>`;});
+  return h.replace(/(Scores rank production within each position:[^<]*?not mock drafts\.)/,`$1 Starter odds: how often 2016–23 draft prospects with a similar profile (production, breakout age, seasons in college, conference, size, recruiting rating; drafted players also by draft pick) had a top-24 RB/WR or top-12 QB/TE PPR season within their first 3 NFL seasons. Fitted on the 2016–20 classes; on the 2021–23 classes it picked out the eventual starters better than the score alone (AUC .93 vs .90 in the final college season, .77 vs .70 two seasons earlier). Prospects also count their high-school recruiting rating (CollegeFootballData). On those held-out classes, prospects given 15–35% became starters 28% of the time (81 players, 22% predicted); the few above 35% hit 31%, so pre-draft odds show at most 40%+.`);};})(vDevyLab);
 vCollege=(function(prev){return function(id){const h=prev(id);const p=CFB&&CFB.p[id];const o=dvOdds(p);if(o==null)return h;
-  const tile=`<div><b class="num">${dvOddsTxt(o)}</b><span>Starter odds</span><em>${dvBar124(p.pos)} ${esc(p.pos)} season in 3 NFL years</em></div>`;
+  const tile=`<div><b class="num">${dvOddsTxt(o,!p.drafted)}</b><span>Starter odds</span><em>${dvBar124(p.pos)} ${esc(p.pos)} season in 3 NFL years</em></div>`;
   const k='<span>Devy score</span>';const i=h.indexOf(k);if(i<0)return h;const j=h.indexOf("</div>",i)+6;
-  const line=`<p class="sub mt">${p.drafted?"Rookies drafted with a profile like his":"Prospects like him"} became fantasy starters ${dvOddsTxt(o)} of the time (2016–23 draft classes).</p>`;
+  const line=`<p class="sub mt">${p.drafted?"Rookies drafted with a profile like his":"Prospects like him"} became fantasy starters ${dvOddsTxt(o,!p.drafted)} of the time (2016–23 draft classes).</p>`;
   const out=h.slice(0,j)+tile+h.slice(j);
   // line goes after the tile grid (end of .hxk)
   const hx=out.indexOf('<div class="hxk">');if(hx<0)return out;let d=0,q=hx;const re=/<div\b|<\/div>/g;re.lastIndex=hx;let m;while((m=re.exec(out))){d+=m[0]==="</div>"?-1:1;if(d===0){q=m.index+6;break;}}
