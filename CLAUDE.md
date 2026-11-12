@@ -295,6 +295,13 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   TE left as is (78-80% every season 2021-25 on the report population, 2026 75% at n 271 = edge of noise; recheck as
   2026 fills in); Skills tile ungraded on All leagues.
 - WR waiver adds largely fixed by v115; dynasty waiver test still can't replay value-protected drops.
+- v131 + p131 (outside new-user review, owner said fix 1-5): Huddle tiles skip the hero's move (`hd131Same`: same t + go;
+  Moves tile shows "Next: …"); hero for Sell high/Buy low reads "Sell high: X"; insights lead with the call ("Running
+  hot: scoring X a game more than his usage supports", "TD rate likely to cool: …", "Due to rise", "More TDs likely");
+  "105.3 vs 82.0" on Huddle; "You're contending in …"; empty Trade Lab hub tiles say "None right now" + what appears
+  there (`TL131`). Review item 1 (dock covering the last tile) was a full-page-screenshot artifact: main already pads
+  96px + --dockb. Review items 6-12 (44% vs 0% win check, sign-in pitch/theme, contrast, roster rank vs value, jargon
+  explanations, trust line, greeting) proposed, not done yet.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
