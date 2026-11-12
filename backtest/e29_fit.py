@@ -90,6 +90,6 @@ for S in ("2021-24", 2025, 2026):
         print(f"    {a[0]:.3f}->{a[1]:.3f} n{a[2]:5d} | {b_[0]:.3f}->{b_[1]:.3f} n{b_[2]:5d} | {c_[0]:.3f}->{c_[1]:.3f} n{c_[2]:5d}")
     for lab in ("size", "scoring", "week"):
         for key in d["old"][lab]:
-            o, f_ = d["old"][lab][key], d["fit"][lab][key]
-            print(f"    {lab:7s} {key:5s} n{o['n']:6d}  old Brier {o['brier']:.4f} fav {o['fav_said_won']}  | fit {f_['brier']:.4f} fav {f_['fav_said_won']}")
+            o, f_, wd = d["old"][lab][key], d["fit"][lab][key], d["widen"][lab][key]
+            print(f"    {lab:7s} {key:5s} n{o['n']:6d}  old Brier {o['brier']:.4f} fav {o['fav_said_won']}  | fit {f_['brier']:.4f} fav {f_['fav_said_won']}  | widen {wd['brier']:.4f} fav {wd['fav_said_won']}")
 json.dump(res, open(f".build/agents/a2/e29_{TOT}.json", "w"), indent=1)

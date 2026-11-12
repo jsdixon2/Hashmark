@@ -17,7 +17,7 @@ Tested 2025-26 (4,826 player-weeks): 80% range held 81.0%; relative miss HIGH .4
 78% / 80% / 84%."""
 import gzip, json, math, os, csv, io, statistics, collections, datetime, urllib.request
 OUT = os.environ.get("HM_OUT", "data/report.json")   # HM_OUT: write elsewhere when testing
-WP = {"k": .16, "c": 5, "b": 1.01}
+WP = {"k": .16, "c": 5, "b": .918}   # e29: b fitted on 2021-24 league matchups
 
 def load_pjc():
     import re
@@ -45,6 +45,18 @@ def hm(v, c, w):
 def win_prob(pa, pb):
     sd = math.sqrt((pa * WP["k"] + WP["c"]) ** 2 + (pb * WP["k"] + WP["c"]) ** 2) or 1
     return 1 / (1 + math.exp(-1.7 * WP["b"] * (pa - pb) / sd))
+
+SC0 = {"pass_yd": .04, "pass_td": 4, "pass_int": -1, "rush_yd": .1, "rush_td": 6, "rec_yd": .1, "rec_td": 6, "fum_lost": -2}
+FMTK = {"ppr": ("pts_ppr", 1), "half": ("pts_half_ppr", .5), "std": ("pts_std", 0)}
+def fmt_of(sc): r = sc.get("rec", 1) or 0; return "ppr" if r >= .75 else "half" if r >= .25 else "std"
+def sc_adj(p, sc, pos, f):
+    """league scoring minus Sleeper's format points, from the projected stat line (e29)"""
+    d = sum((sc[k] - v) * p[k] for k, v in SC0.items() if sc.get(k) is not None and p.get(k) is not None)
+    if p.get("rec") is not None:
+        d += ((sc.get("rec", 1) or 0) - FMTK[f][1]) * p["rec"]
+        b = {"TE": "bonus_rec_te", "RB": "bonus_rec_rb", "WR": "bonus_rec_wr"}.get(pos)
+        if b and sc.get(b): d += sc[b] * p["rec"]
+    return d + sum(sc[k] * p[k] for k in ("rush_att", "pass_att") if sc.get(k) and p.get(k) is not None)
 
 def phi(x): return .5 * (1 + math.erf(x / math.sqrt(2)))
 
@@ -77,10 +89,12 @@ def main():
     proj["method"] = "replayed from the same inputs the app uses (Sleeper projection, recent scoring, expected points, matchup, team total, injury, props)"
     # ---------- win odds ----------
     L = json.load(gzip.open("bt/leagues.json.gz", "rt"))["leagues"]
+    HMF = {"ppr": HM}   # full projection in each league's own scoring (e29)
+    for f in ("half", "std"): HMF[f] = {(r["s"], r["w"], r["pid"]): r["hm"] for r in PP.build([season], scoring=f)}
     wo = []
     for lg in L.values():
         if lg.get("guillotine") or int(lg["season"]) != season: continue
-        sc = lg.get("sc") or {}; pws = lg.get("pws") or 15
+        sc = lg.get("sc") or {}; pws = lg.get("pws") or 15; f = fmt_of(sc); H = HMF[f]; K = FMTK[f][0]
         for wk, rows in lg["weeks"].items():
             w = int(wk); P = SP.get(f"{season}-{w}")
             if not P or w >= pws: continue
@@ -88,7 +102,7 @@ def main():
             for rid, mid, pt, st in rows:
                 hit = [x for x in st if x in P]
                 if not st or len(hit) / len(st) < .9: continue
-                tot[rid] = (sum(HM.get((season, w, x)) if HM.get((season, w, x)) is not None and (sc.get("rec", 1) or 0) >= .75 else hm(pts(P[x], sc), C.get(POS.get(x)), w) for x in hit), mid, pt)
+                tot[rid] = (sum((H[(season, w, x)] if (season, w, x) in H else P[x].get(K) or 0) + sc_adj(P[x], sc, POS.get(x), f) for x in hit), mid, pt)
             by = collections.defaultdict(list)
             for rid, (t, mid, pt) in tot.items():
                 if mid is not None: by[mid].append((t, pt))

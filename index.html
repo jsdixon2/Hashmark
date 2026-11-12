@@ -4540,7 +4540,7 @@ ssCard=function(x,close){const ln=p=>esc(p.name.replace(/\s+(Jr\.?|Sr\.?|II|III|
 /* ===== v47: win-odds engine — fitted on real Sleeper matchups (2021–24), tested on 2025–26 =====
    WP: each team's weekly spread = k·projection + c; the projected margin is scaled by b (projections run slightly wide).
    PO: playoff simulation adds uncertainty in each team's true strength (u) and pulls strengths toward the league mean (sh). */
-const WP={k:.16,c:5,b:1.01},PO={u:.04,sh:.5};
+const WP={k:.16,c:5,b:.918},PO={u:.04,sh:.5};
 winProb=function(pa,pb){const sd=Math.sqrt((pa*WP.k+WP.c)**2+(pb*WP.k+WP.c)**2)||1;return 1/(1+Math.exp(-1.7*WP.b*(pa-pb)/sd));};
 simLeague=function(L,N=2500){const n=L.teams.length;const raw=L.teams.map(t=>lineup(t.players,L.slots).pts);const mean=raw.reduce((s,x)=>s+x,0)/Math.max(1,n);const str=raw.map(x=>x*(1-PO.sh)+mean*PO.sh);
   const wks=L.future&&L.future.length?L.future:[...Array(L.remWeeks||6)].map(()=>null);
@@ -6976,7 +6976,7 @@ trendRow=(function(prev){return function(x){if(x&&x.brk!=null&&x.brk<BRK_MIN121)
    2) Each side's live variance = 1.1 x (proj x .16 + 5)^2 x share left^1.2 (was x share left).
       2025 live Brier .1269 -> .1264, log loss .3840 -> .3824 (better in every share-left bucket; bootstrap 300/300).
    Before kickoff and after finals nothing changes; no score from ESPN (kickoff-time estimate) = margin 0 = old rule. */
-const LV123={g:{QB:-.14,RB:-.06,WR:-.2,TE:-.2},p:1.2,s:1.1};
+const LV123={g:{QB:-.14,RB:-.06,WR:-.2,TE:-.2},p:1.2,s:.909};
 wkProj=(function(prev){return function(p){const v=prev(p);try{if(!p||S.mode!=="live")return v;const g=LV123.g[p.pos];if(g==null)return v;const gs=gameState(p.team);
   if(!gs||gs.st!=="in"||gs.pf==null||gs.pa==null||!isFinite(gs.pf)||!isFinite(gs.pa))return v;const lp=livePtsMap();if(!lp.has(p.id))return v;const pts=lp.get(p.id),rest=v-pts;if(!(rest>0))return v;
   return pts+rest*Math.min(1.6,Math.max(.4,1+g*(gs.pf-gs.pa)/10));}catch(e){return v;}};})(wkProj);
@@ -7010,6 +7010,12 @@ function ros114Fit(p){const c=ROS114.M[p&&p.pos];if(!c)return null;
   let v=c[0];for(let i=0;i<f.length;i++)v+=c[i+1]*(f[i]||0);return Math.max(0,v)*sc;}
 rosPPG=(function(prev){return function(p){const v=prev(p);let f=null;try{f=ros114Fit(p);}catch(e){}return f==null||!isFinite(f)?v:(1-ROS114.A)*v+ROS114.A*f;};})(rosPPG);
 /* /v114 */
+/* ===== v112: matchup "likely X-Y" team range reads the fitted win-odds spread (backtest e29) =====
+   Per-team sd = (proj x WP.k + WP.c) / WP.b, the spread winProb uses (was .16m+5 hard-coded). With p112 (WP.b .918) the
+   80% range held 75.3% -> 78.9% of 2025 team scores (n 48,400) and 71.2% -> 75.2% in 2026 (n 32,700). */
+vMatchup=(function(prev){return function(...a){let h=prev(...a);try{h=h.replace(/(<div class="big mt">)([\d.,]+)(<\/div><div class="sub">Projected points<\/div><div class="sub num e8tr">)likely [^<]*(<\/div>)/g,(m0,x,v,y,z)=>{const m=parseFloat(v.replace(/,/g,""));if(!(m>0))return m0;
+  const sd=(m*WP.k+WP.c)/(WP.b||1),q=1.2816;return `${x}${v}${y}likely ${Math.round(Math.max(0,m-q*sd))}–${Math.round(m+q*sd)}${z}`;});}catch(e){}return h;};})(vMatchup);
+/* /v112 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
