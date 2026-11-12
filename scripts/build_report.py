@@ -42,9 +42,9 @@ def pts(st, sc=None):
 def hm(v, c, w):
     return max(0.0, c[0] + sum(c[1:6]) * v + (0 if w <= 2 else c[8] + c[9])) if c else v
 
-def win_prob(pa, pb):
+def win_prob(pa, pb, b=None):   # b: e33 half-PPR leagues use .849 (app v127)
     sd = math.sqrt((pa * WP["k"] + WP["c"]) ** 2 + (pb * WP["k"] + WP["c"]) ** 2) or 1
-    return 1 / (1 + math.exp(-1.7 * WP["b"] * (pa - pb) / sd))
+    return 1 / (1 + math.exp(-1.7 * (WP["b"] if b is None else b) * (pa - pb) / sd))
 
 SC0 = {"pass_yd": .04, "pass_td": 4, "pass_int": -1, "rush_yd": .1, "rush_td": 6, "rec_yd": .1, "rec_td": 6, "fum_lost": -2}
 FMTK = {"ppr": ("pts_ppr", 1), "half": ("pts_half_ppr", .5), "std": ("pts_std", 0)}
@@ -108,7 +108,7 @@ def main():
                 if mid is not None: by[mid].append((t, pt))
             for pair in by.values():
                 if len(pair) != 2 or pair[0][1] == pair[1][1] or min(pair[0][1], pair[1][1]) <= 0: continue
-                (ta, pa), (tb, pb) = pair; wo.append((w, win_prob(ta, tb), 1 if pa > pb else 0))
+                (ta, pa), (tb, pb) = pair; wo.append((w, win_prob(ta, tb, .849 if sc.get("rec", 1) == .5 else None), 1 if pa > pb else 0))
     def brier(xs): return round(sum((p - y) ** 2 for _, p, y in xs) / len(xs), 4) if xs else None
     buckets = []
     for i in range(10):
