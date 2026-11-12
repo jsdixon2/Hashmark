@@ -10,5 +10,5 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: pip install numpy scikit-learn
-      - run: python3 backtest/e23_cfbd_pull.py && bash backtest/e23_run.sh && cat /tmp/e23_fit_out.json | head -c 4000
+      - run: python3 backtest/e23_cfbd_pull.py && bash backtest/e23_run.sh > /tmp/run.log 2>&1; tail -c 2500 /tmp/run.log
         env: {CFBD_API_KEY: "${{ secrets.CFBD_API_KEY }}"}
