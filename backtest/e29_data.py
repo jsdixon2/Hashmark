@@ -5,7 +5,7 @@ Team total = sum of the starters actually set (known after the fact; fine for ca
          no custom pass-TD / INT adjustment on the full projection)
   new  = full replayed projection in the league's own scoring (scripts/proj_panel.py scoring ppr/half/std) plus the league's
          pass-TD / INT difference from Sleeper's projected stats (same adjustment pts() applies); K/DST/IDP = Sleeper's projection
-Writes .build/agents/a2/e29_rows.json: [season, week, league, teams, rec, old_a, old_b, new_a, new_b, won_a]."""
+Writes .build/agents/a2/e29_rows.json: [season, week, league, teams, rec, old_a, old_b, new_a, new_b, won_a, actual_a, actual_b]."""
 import gzip, json, collections, importlib.util, os, sys
 sys.path.insert(0, "scripts")
 spec = importlib.util.spec_from_file_location("br", "scripts/build_report.py"); BR = importlib.util.module_from_spec(spec); spec.loader.exec_module(BR)
@@ -46,5 +46,5 @@ for lid in sorted(L):
             pair = by[mid]
             if len(pair) != 2 or pair[0][2] == pair[1][2] or min(pair[0][2], pair[1][2]) <= 0: continue
             (oa, na, pa), (ob, nb, pb) = pair
-            out.append([s, w, lid, lg.get("n") or 0, rec, round(oa, 3), round(ob, 3), round(na, 3), round(nb, 3), 1 if pa > pb else 0])
+            out.append([s, w, lid, lg.get("n") or 0, rec, round(oa, 3), round(ob, 3), round(na, 3), round(nb, 3), 1 if pa > pb else 0, pa, pb])
 json.dump(out, open(OUT, "w")); print(len(out), collections.Counter(r[0] for r in out))
