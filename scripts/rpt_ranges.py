@@ -30,7 +30,8 @@ def ev(c, k, m):
     while j < len(k) - 2 and m >= k[j + 1]: j += 1
     t = (m - k[j]) / (k[j + 1] - k[j]); return s * ((1 - t) * c[j] + t * c[j + 1])
 
-def rng(pos, m): e = MODEL[pos]; return ev(e["q10"], e["k"], m), ev(e["q90"], e["k"], m)
+HI_ADJ = {"QB": 1.03}   # v129: QB top end x1.03 (chosen on 2024-25, held out 2026 77.1% -> 80.4% inside)
+def rng(pos, m): e = MODEL[pos]; return ev(e["q10"], e["k"], m), max(m, ev(e["q90"], e["k"], m) * HI_ADJ.get(pos, 1.0))
 def label(pos, m):
     lo, hi = rng(pos, m); w = (hi - lo) / 2 / m if m > 0 else 9; return "HIGH" if w <= CUT[0] else "MEDIUM" if w <= CUT[1] else "LOW"
 def player(pos, m):

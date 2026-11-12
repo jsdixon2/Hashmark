@@ -287,8 +287,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 - Watch the first real runs: snapshot.yml (first call to Sleeper from Actions), build_cfb with cur-7 recruiting.
 - Not verifiable here (no Sleeper/ESPN access): v121 breakout/risk and v123 live-score term in a real league; Sleeper's
   practice-status field format for the v127 questionable line.
-- Small: QB/TE range coverage 77%/75% on 2026 (small n); `topTxt` rounding (50.6 -> "Top 49%"); Skills tile on All
-  leagues still shows a league-mate grade (labelled "vs league mates").
+- v129: topTxt "Average" = 45th-55th percentile; QB range top x1.03 (chosen 2024-25, held out 2026 77.1% -> 80.4%);
+  TE left as is (78-80% every season 2021-25 on the report population, 2026 75% at n 271 = edge of noise; recheck as
+  2026 fills in); Skills tile ungraded on All leagues.
 - WR waiver adds largely fixed by v115; dynasty waiver test still can't replay value-protected drops.
 
 ## Owner's leagues

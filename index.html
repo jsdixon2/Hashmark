@@ -7329,6 +7329,20 @@ simTitle=(function(prev){return function(L){const a=arguments;return po127Apply(
 stTiles=(function(prev){return function(D){let h=prev(D);try{if(statsScope()!=="all")return h;const a=h.indexOf('data-stc="clutch"');if(a<0)return h;const b=h.indexOf("</button>",a);if(b<0)return h;
   return h.slice(0,a)+h.slice(a,b).replace(/<span class="grd [^"]*">[^<]*<\/span>/,"")+h.slice(b);}catch(e){return h;}};})(stTiles);
 /* /v128 */
+/* ===== v129: small fixes.
+   - topTxt: "Average" covers the 45th-55th percentile (was 49.5-50.5, so 50.6 read "Top 49%"). Ranks that close to the
+     middle are noise; first ranked label is "Top 45%" / "Bottom 45%".
+   - QB projection ranges: top end x1.03. Quarterbacks scored above the 80% range more often in recent seasons (above:
+     2024 13%, 2025 11%, 2026 16%; coverage 78/78/77%). Factor chosen on 2024-25 (79.8% inside, 10.2% above); held out
+     2026 77.1% -> 80.4% inside. TE checked: 81-83% every season 2021-25, 2026 78% (n 399) within noise: no change.
+   - Locker "All leagues": Skills tile ungraded (its grade compares with league mates; v100 rule: grades on All leagues
+     only from the Sleeper-wide percentile). League views keep it. ===== */
+topTxt=function(p,prov){if(p==null)return "–";const t=prov?"~":"";if(p>=55)return `Top ${t}${Math.max(1,Math.round(100-p))}%`;if(p<=45)return `Bottom ${t}${Math.max(1,Math.round(p))}%`;return "Average";};
+const QBHI129=1.03;
+e8Range=(function(prev){return function(p,m){const r=prev(p,m);try{if(r&&p&&p.pos==="QB"&&r.hi!=null)r.hi=Math.max(r.hi*QBHI129,m);}catch(e){}return r;};})(e8Range);
+stTiles=(function(prev){return function(D){let h=prev(D);try{if(statsScope()!=="all")return h;const a=h.indexOf('data-stc="skills"');if(a<0)return h;const b=h.indexOf("</button>",a);if(b<0)return h;
+  return h.slice(0,a)+h.slice(a,b).replace(/<span class="grd [^"]*">[^<]*<\/span>/,"")+h.slice(b);}catch(e){return h;}};})(stTiles);
+/* /v129 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
