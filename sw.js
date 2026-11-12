@@ -1,4 +1,4 @@
-const C="hashmark-v12",D="hashmark-data-v1",SHELL=["./","index.html","manifest.webmanifest","icon-192.png","icon.svg"];
+const C="hashmark-v13",D="hashmark-data-v1",SHELL=["./","index.html","manifest.webmanifest","icon-192-p2.png","icon.svg"];
 self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(SHELL)));});
 self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C&&x!==D).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
 /* data files: conditional requests. The worker keeps each file with its ETag / Last-Modified and asks the server
