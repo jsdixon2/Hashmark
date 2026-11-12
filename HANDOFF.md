@@ -1,8 +1,90 @@
-# Hashmark — session handoff (2026-11-08)
+# Hashmark — session handoff (updated 2026-11-12)
 
 What this session did, so the next Claude agent can carry on. Read `CLAUDE.md` first: it has the owner's standing
 instructions, code conventions and the status of every engine. This file adds the detail behind the latest changes.
 Newest session at the top.
+
+---
+
+## 2026-11-11/12: engine audit and fixes (v109-v123, p111/p112), on main
+Owner asked: "Find all issues with existing engines and report here. Give plan for fixing each", then "Do them all",
+then (after usage limits) "one agent at a time", then "Run 2-12. Be detailed, check your work, ask questions if needed".
+Every fix was tested on seasons the fit never saw; nothing ships unless it beats what was live. Per-fix numbers are in
+CLAUDE.md under each engine; agent reports with full tables are in `.build/agents/<name>/REPORT.md` (local only).
+
+### Owner decisions this session
+- Confidence labels (HIGH/MEDIUM/LOW): REMOVED. Shown a side-by-side (player card with and without the chip); chose
+  "drop labels, keep ranges". Reason: past steadiness, games played and the questionable tag did not predict how far
+  off a projection would be (checked by the coordinator too: at the same projection level "steady" players missed as
+  much as volatile ones); the only thing that separated labels was projection size, and in points HIGH missed MORE
+  (6.3) than LOW (4.2).
+- Run ONE fix agent at a time (parallel Opus agents hit the 5-hour usage limit twice).
+- App icon: files renamed `icon-180-p2.png` / `icon-192-p2.png` / `icon-512-p2.png` and sw.js cache `hashmark-v13` so
+  phones fetch the Pylon mark; a saved home-screen bookmark must be deleted and re-added (iOS copies the icon once).
+
+### Audit list and status (A = wrong now, B = never tested, C = smaller)
+| Item | What | Result |
+|---|---|---|
+| A1 | Waiver line mixed two tests ("+8.8" set-before-games with "73% helped" hindsight) | Fixed in v115 (one test) |
+| A2 | Win odds overconfident after refit | p112 WP.b .918 |
+| A3 | Labels restated projection size | v113: labels removed (owner), ranges refit |
+| A4 | Young-player value cliff at 24 | v118 taper; v107 removed (its this-season cut was an artifact) |
+| A5 | NFL picks log stored only the first prediction | v120 early + final |
+| B1 | Projections in half-PPR/standard | Already beat Sleeper; report section only |
+| B2 | QB projection | No change (nothing beat it on both seasons) |
+| B3 | K/DST + hand-set multipliers | p111 injury multipliers; K/DST = Sleeper |
+| B4 | Rest-of-season never graded | v114 blend (miss -8%) |
+| B5 | Playoff odds never graded | TO DO |
+| B6 | Trade grades on old value scale + IDP | TO DO (agent paused) |
+| B7 | Waivers on new projections; WR/dynasty hurt rates | v115 one-big-game WR rule |
+| B8 | Risk / breakout hand-set | v121 fitted (AUC .72 -> .92) |
+| B9 | Streamers D/ST/K factors | Kept (match the fit); text fixed (v122) |
+| B10 | Live in-game projections/odds | v123 score term + live spread |
+| B11 | Devy score | TO DO |
+| C1 | Locker trade/draft ranks are noise | TO DO |
+| C2 | Dead FFC ADP feeds | build_values keeps last good board or drops |
+| C3 | Matchup team range | v113 from starters (82% inside on 2026) |
+| C4 | Report replays projections instead of recording them | TO DO (also leak check) |
+| C5 | 1QB young-player + props weights on thin evidence | 1QB tested in e16 (helps); QB props in e24 (keep .1) |
+
+### Things found along the way (check before relying on old numbers)
+- e13_young.py is superseded: bt/hv.json.gz has NO Superflex redraft list ("rsf") at November dates, so its
+  "this-season share" variants were artifacts. Use e16_taper.py.
+- The report card graded a simplified stand-in projection until v108; since then scripts/proj_panel.py replays the
+  full formula (and since p111 reads the questionable factor from index.html).
+- Replayed TEAM totals run 8-11% below real team scores (median-regression projections + scoring the archive lacks).
+  Head-to-head odds are unaffected; v113's team range is asymmetric to absorb it.
+- Demo league deals rosters by player value: value changes reshuffle demo teams (the demo matchup went 49% -> 82%
+  after v118; not a bug).
+- `e8Chip` is a const (v108): reassigning it throws "Assignment to constant variable" and blanks the app. Wrap or
+  replace the callers instead.
+- data/report.json conflicts on every merge (data.yml rebuilds it twice daily): keep the newer-code build.
+
+### To-do list, fully explained (in order)
+5. **Trades + IDP (B6).** Trade grades (`TC` d .75 / g 1.3; win odds .5 + .21 tanh(gap/.25)) were fitted on 7,656
+   trades 2021-24 on the value scale of that time; values since changed (v118, v121 risk feeds stability()). Replay
+   grade calibration on trades it can be replayed on, hold out 2025, split by young players / 2-for-1 / picks; refit
+   only if miscalibrated 3+ pts with n >= 200. IDP retest with 2026 data; keep IDP out of trade ideas unless it caught
+   up. Deliver scripts/rpt_trades.py (tested.trade_grades) and v119 if constants change.
+6. **Playoff/title odds (B5).** Never graded. Replay 2021-25 from weeks 4, 8, 11 with the app's season simulation
+   (draws use WP.k/WP.c, `PO` constants) on archived leagues; calibration "said X% made playoffs / won title". Fix the
+   draw spread if off. Report key + report-card row.
+7. **Snapshot + leak check (C4).** First check when scripts/fetch_bt.py captures each week's Sleeper projection: if
+   after kickoff/inactives, projections in bt/sleeper_proj.json.gz are cleaner than what a manager saw, and every
+   projection backtest (e14, e15, e24, e26, e28, e30, e31) is optimistic. Report to the owner immediately if so. Then
+   snapshot Hashmark's projection before each kickoff in Actions (scripts/snapshot_proj.py, frozen per game) and grade
+   it (scripts/rpt_snapshot.py); coordinator adds the workflow step.
+8. **Locker ranks (C1).** Repeatability tau2: trades .06, drafts .035, waivers .21. Show "Top X%" + grade only when
+   reliability n/(n+k) >= .5 (k = (1-tau2)/tau2), "small sample" tag between .25 and .5, raw record below; read tau2
+   from mgr_ref.json. One line per skill in the breakdown sheet on how repeatable it is.
+9. **Devy (B11, engine 7).** Fit the prospect score on 2015-23 draft classes against NFL fantasy hits (top-24 RB/WR,
+   top-12 QB/TE within 4 years). College stats need CFBD_API_KEY (Actions only): build what is testable now (draft
+   capital, age, athleticism, recruiting) and a ready Actions script for the rest.
+10. **Report card rows** for ros, projections_fmt, projections_kd, signals, live, trade grades, playoff odds.
+11. **Follow-ups:** verdict card "expected" (`neutral(p)`) worse than season PPG; `repl()` levels after v114;
+    kickers with no Sleeper projection show 0; verify v121/v123 in a real league; QB/TE range coverage 77%/75% in 2026;
+    half-PPR odds slightly overconfident.
+12. **Final pass:** QA, docs, merge, report to the owner.
 
 ---
 

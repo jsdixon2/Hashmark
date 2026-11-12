@@ -20,7 +20,12 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 - Syntax check: extract all inline `<script>` blocks into one file and run `node --check`.
 - QA: `python3 -m http.server 8765` in the repo, then Playwright (Chromium is preinstalled in the cloud sessions);
   the demo league ("Open demo league") works offline.
-- Pushing: `git pull --rebase && git push` (workflows commit data to `main` often).
+- Pushing: `git pull --rebase && git push` (workflows commit data to `main` often). data/report.json conflicts on merge
+  are normal (data.yml rebuilds it): keep the newer-code version or rebuild it with `python3 scripts/build_report.py`.
+- Fix agents (2026-11-11/12): brief in `.build/AGENT_BRIEF.md`; tools `.build/tools/mkapp.sh NAME PORT` (private app copy)
+  and `.build/tools/asplice.py NAME vNNN`. Agents never edit index.html/CLAUDE.md/HANDOFF/data; the coordinator splices.
+  Owner: run ONE agent at a time (several Opus agents at once hit the 5-hour usage limit twice). Agent reports are kept
+  in `.build/agents/<name>/REPORT.md` (git-ignored, local to the session).
 
 ## Engine status (see the "Hashmark analytics engine review" doc for the original audit)
 1. Projections — done. v108 refit (`backtest/e14_data.py` -> `e14_fit.py`, `e14_props.py`): median regression per position
@@ -29,16 +34,53 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    better (4.977 / 5.075). Shipped weights refit on 2021-25 (2026: 5.059); QB keeps the old PJC (refit worse for QBs both
    years). Props share by position `PJ_PROPS_POS` QB .1 / RB-WR-TE .3 (2026, 1,214 player-weeks: .2 -> 5.322, .3 -> 5.31).
    Full replay incl. props, 2026: Hashmark 5.037 vs Sleeper 5.186, 8 of 9 weeks.
+   2026-11-12 audit fixes (each tested on held-out seasons; see HANDOFF.md "2026-11-11/12 engine audit"):
+   - e15 (no change): PPR weights already beat Sleeper in half-PPR (2025 4.60 vs 4.90, 2026 4.69 vs 4.88) and standard
+     (4.40 vs 4.73; 4.45 vs 4.67); format-specific weights gained <0.3%, not shipped. proj_panel `build(seasons,
+     scoring="ppr"|"half"|"std", C=None, feats=False)`; report key `projections_fmt` (scripts/rpt_formats.py).
+   - e24 (no change): nothing beat the QB formula on both 2025 and 2026; on clean 2026 it only ties Sleeper (5.94 vs
+     6.00, CI includes 0). QB props: keep PJ_PROPS_POS.QB .1 and the flat 1.6 pass TDs (pass-TD line tested worse).
+   - p111 (e28): hand-set multipliers measured. Questionable x.88 -> x.97 (Sleeper itself discounts Q tags since 2025, so
+     .88 double counted); doubtful x.35 -> x.02 (1 of 278 doubtful players played); limited-practice x.97 removed;
+     did-not-practice x.9 kept (.888 held out); wind x.94 and rain x.97 kept (fitted .928; rain only from gamebook
+     text). Patched in BOTH hmProj definitions. proj_panel reads the questionable factor from index.html.
+   - e28 K and D/ST (no change): the app shows Sleeper's number (kdPts / hmProj wrapper); no correction beat Sleeper on
+     both seasons. Report key `projections_kd` (scripts/rpt_kd.py). 71 kicker-weeks had no Sleeper projection (shows 0).
+   - v114 (e26) rest-of-season points/wk: `ROS114` = 25% shipped rosPPG + 75% per-position fitted model (Sleeper proj,
+     PPG, last 3, xFP, last-3 xFP, last season, games, injury, depth chart, missed games, age, week); held out 2025
+     3.82 -> 3.50 pts per team game (best simple method 4.51), 2026 4.24 -> 3.94. wvRate kept (wins its 4-week horizon).
+     Report key `ros` (scripts/rpt_ros.py). Shipped estimate ran 1-4 pts/wk high for starters before.
 2. Win odds / playoff odds — done (fitted on 44k Sleeper matchups).
+   p112 (e29, 99,975 league matchups 2021-26, fit 2021-24): `const WP={k:.16,c:5,b:.918}` (b was 1.01: favourites were
+   overconfident after the projection refit). Held out: 2025 Brier .2138 -> .2135, 2026 .2105 -> .2103; top decile 2026
+   said .937 won .927 (was said .939 won .916). k/c kept so season/playoff simulations (use k,c only) are unchanged.
+   build_report grades every league in its own scoring (half/std panels + `sc_adj` from Sleeper's projected stat line).
+   v123 (e20, play-by-play 2023-25, fit 2023-24, test 2025): live player projection = shipped rule x (1 + g x team
+   margin/10), g QB -.14 RB -.06 WR/TE -.2, held .4-1.6 (MAE 3.62 -> 3.56); live spread `LV123` {p 1.2, s .909} (s was
+   1.1; changed with p112 so live odds stay as tested). Only when ESPN supplies live scores. Report key `live`.
+   v112/v113 matchup "likely X-Y": v113 builds each team's 80% range from its starters (E30.player per position, measured
+   correlations QB-WR/TE .23, QB-RB .07, opponents .04, K/DST fitted sd, asymmetric z -1.086/+1.735): 2026 lineups 82.1%
+   inside (was 76.1%, 21.8% above). Note: replayed team totals run 8-11% below real scores (median projections +
+   scoring the archive lacks); head-to-head odds are unaffected, the range's skew absorbs it.
+   NOT YET GRADED: playoff/title odds (to-do).
 3. Value engine — done (fitted on 2020-24 dynasty markets vs production; measured age curves; pick values).
    v106: Value card breakdown (`vb106`): Dynasty market 60% / This season 20% / Hashmark model 20% (SF; 1QB .6/.25/.15),
    keeper = keeper value 50% + this season 50%, redraft = experts 62% + model 38%; footer names the adjustment (league
    size, TE premium, catch scoring, injury, smoothing; `vb106Why`). Young-player retest `backtest/e13_young.py`
    (owner: Germie Bernard 955 vs market ~1,250): see HANDOFF.
-   v107 (owner go): players aged <= 23 in dynasty/keeper (`YNG107`): production model looks 4 seasons ahead at .8
-   discount (`hmModelVal` wrapper), this-season share halved with the rest to the dynasty market (`blendFor` wrapper).
-   Test: young miss vs next-year market 871 -> 762, vs 2-season production 1,142 -> 1,193; all 695 -> 670 / 1,061 -> 1,072.
-   Demo: young players +2-12% (Jeanty #21 -> #16), others < 1% lower.
+   v107 (removed) -> v118 (e16): young-player adjustment fades with age: production model looks 4 seasons ahead at .8
+   discount with weight 1 at <= 23, 2/3 at 24, 1/3 at 25, 0 from 26 (`YW118`, hmModelVal wrapper); NO this-season cut.
+   e13's Superflex this-season input was empty (bt/hv.json.gz "rsf" has no November lists), so v107's cut was an
+   artifact. Held out 2023-24: SF all 722/1,178 -> 722/1,174 (miss vs next-year market / 2-season production), <= 23
+   697/1,162 -> 694/1,136; 1QB helps too (713/1,169 -> 711/1,165). Largest one-year value step 9% -> 3%.
+   Demo league deals rosters by value, so value changes reshuffle demo teams (matchup odds there move; not a bug).
+   C2: FFC ADP feeds (adp_ppr/dyn/rook) are near-empty in-season; build_values keeps the last good board (same season,
+   <= 150 days, `carried:true`) or drops the source; nothing in the app reads those keys.
+   v121 (e18, nflverse 2016-26, fit 2017-21, held out 2022+): breakout odds = logistic model (next season for
+   dynasty/keeper, rest of season for redraft), capped 60%; AUC .72 -> .92, 30%+ calls came true 5.5% -> 30% (old odds
+   said 18% on average for a 2.6% event). `p.broke` = top-12 QB/TE or top-24 RB/WR this or last season. Risk = within-
+   position percentile of predicted bust share (rank corr .26 -> .36; top tier busts 60%, safest 30%). Players without
+   adv data and IDP keep old numbers. Trend lists show 10%+ breakout odds only. Report key `signals`.
 4. Trades — done. Grades from 7,656 real trades; redraft graded on championship odds; keeper leagues blend this season
    with next season's keeper value (weight fitted on 1,657 keeper trades: ~25% at 1 keeper per 10 roster spots,
    ~35% at 2, levelling near 38%; contender ×0.75, rebuilder ×1.3); keeper pick costs; IDP kept out of trade ideas.
@@ -51,6 +93,12 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    managers' claims +7.6 / 66% / 17%. No position correction: position effects flip between seasons. See HANDOFF.md.
    v67: free agents' outlook trimmed 1.5 pts/game when picking (`WV_FAH`, winner's-curse guard). With lineups set before
    games (`r3s`), redraft shown moves +8.8 / 25% hurt (v65 +7.2 / 32%); keeper +7.3 / 25%; dynasty +4.3 / 34%.
+   v115 (e31, 516 leagues 2024-25, lineups set by today's projection, real points over the next 3 weeks): a WR add whose
+   best game is >= 45% of his season points (`WV_SPIKE`, `wvSpike`) no longer counts as a move ("One big game" tier).
+   Chosen on 2024, checked 2025: all formats +6.75 -> +7.51 pts, hurt 24.0% -> 22.3%; redraft +8.38 helped 62% hurt 23%;
+   keeper +7.18 59/23; dynasty +6.08 50/21; WR dynasty -1.1 -> +8.4. Managers' own claims (honest measure) redraft +3.79,
+   keeper +3.08, dynasty +1.16. The old "73% helped" and "managers +7.6" were hindsight-lineup numbers: both waiver lines
+   now read report.json `tested.waivers` (scripts/rpt_waivers.py, by_fmt). No 2026 check (roster archive lacks 2026).
 4a. Trade finder (v68): ideas must fit BOTH teams' plans. Plan from record + playoff odds (dynasty/keeper: rebuilding if
    po<=.15 or win%<=.3 after 4 games; contender if po>=.5 with win%>=.45, or win%>=.65), user can set Contend/Rebuild
    (localStorage `hm_plan_<league>`). Contender side: starting lineup +0.3 pts/wk or more; rebuilder side: no players at
@@ -184,6 +232,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    tested worse) -> this week's projections unchanged; the environment factor (beta QB .577 RB .535 WR .245 TE .224)
    is used only for future weeks: Scout › NFL teams Power rankings + Fantasy playoffs table, GM › Waivers Streamers
    (QB/TE/DST/K), Team › Roster Fantasy playoffs for your starters. Prediction log graded in teams.json `log`/`card`.
+   v120 (A5): log keeps per game `early` (first prediction, with days before kickoff) and `final` (last pregame, rewritten
+   until kickoff, frozen after); card {final, early (7+ days out only), by_src line/rating}. build_teams.py env overrides
+   HM_OUT_TEAMS, HM_GAMES_CSV, HM_SCHED, HM_ODDS, HM_NOW for testing. Nothing graded on real games before 2026-11-12.
+   v122 (e19): Streamers' D/ST (.6) and K (.5) factors match the fitted elasticities; no rule beat them on 2025-26. Tag
+   fixed to "next 3 games"; top-3 D/ST streamers beat the average free agent by 2.6 pts/wk (81% of weeks, 2021-26).
 7. College prospect (devy) score — untested, hand-set weights; fit on 2015-23 classes incl. draft capital.
 8. Confidence labels + live model report card — done (v108). `scripts/build_report.py` -> `data/report.json` (data.yml,
    twice daily) grades the app's full projection replayed by `scripts/proj_panel.py` (stdlib; downloads nflverse weekly +
@@ -193,13 +246,38 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
    relabelled "Sleeper's Wk N projection"), matchup "likely X-Y" under team totals (sd = .16m+5), start/sit "Coin flip"
    under 58%, Report card page (route `report`, `vReport`, link card at the bottom of the Locker, in search), track-record
    lines on Waivers (Best adds) and Trade finder (dynasty/keeper).
+   v113 (e30, owner decision 2026-11-12): ranges from per-position piecewise-linear quantile curves (RPT.ranges.model,
+   `E30`, new `e8Range`; old cell table = fallback): held out 2025-26 80.1% inside (9.7% below / 10.1% above). Past
+   volatility, games played and questionable did NOT predict misses, so HIGH/MEDIUM/LOW labels were REMOVED (owner chose
+   "drop labels" after a side-by-side). Player card: projection + range + "lands inside 8 times in 10". Report card
+   "Projection ranges" table by position (inside/below/above). Start/sit keeps "Coin flip" (<58%).
+   Report plug-ins: scripts/rpt_*.py each `section(ctx)` merged into report.json by build_report.py (HM_OUT env to test).
 
-## Open items
-- Done: `bt/rosters.json.gz` (900 leagues, exact weekly rosters). Waiver test 2024-25, 516 leagues / 62,616 team-weeks,
-  and the v65 fixes from it (see engine 5 above and HANDOFF.md).
-- Waivers still to improve: WR adds gain least (no WR-specific fix held across seasons, see HANDOFF.md);
-  dynasty test can't replay the app's value-protected drops (no historical dynasty values in the archive).
-- Retest IDP trade grades with a few more weeks of 2026 data (owner asked); if still below offense, keep IDP out of trade ideas.
+## Open items (audit to-do list, 2026-11-12; owner said "run 2-12", one agent at a time; full detail in HANDOFF.md)
+Done so far: 1 (ROS + injury to main), 2 (win odds), 3 (ranges, labels dropped), 4 (waivers). Next in this order:
+5. Trades + IDP retest (B6): trade grades (TC d .75/g 1.3, tanh .21/.25) were fitted 2021-24 on an older value scale;
+   replay grade calibration on 2025 trades (said 60/70/80% -> won?), split young-player / consolidation / picks; refit
+   only if off by 3+ pts with n >= 200. IDP: rerun with 2026 data; keep IDP out of trade ideas unless it caught up.
+   Report key tested.trade_grades (scripts/rpt_trades.py). Agent was paused mid-task (backtest/e25_data.py exists).
+6. Playoff/title odds grading (B5): replay 2021-25 seasons from weeks 4/8/11 with the app's simulation (WP.k/c draws,
+   PO constants) and check "said 60% made playoffs -> 60%?"; fix the simulation spread if off. Needs item 2 (done).
+7. Weekly projection snapshot + leak check (C4): FIRST verify whether bt/sleeper_proj.json.gz stores projections
+   fetched after kickoff (scripts/fetch_bt.py) — if so every projection backtest is optimistic; tell the owner at once.
+   Then scripts/snapshot_proj.py (stdlib, runs in Actions before kickoff, frozen per game), scripts/rpt_snapshot.py
+   (key projections_live), and the workflow step for the coordinator.
+8. Locker trade/draft ranks (C1): tau2 tr .06 / dr .035 means Sleeper-wide "Top X%" for trades/drafts is mostly noise.
+   Show rank+grade only when reliability n/(n+k) >= .5, "small sample" tag .25-.5, raw record below; thresholds from
+   mgr_ref.json tau2. Add "how repeatable" line in mrOpen.
+9. Devy score (B11, engine 7): fit on 2015-23 classes vs NFL fantasy hits; CFBD key only in Actions, so testable parts
+   now (draft capital/age/athleticism) + a ready Actions script for college stats. Largest task.
+10. Report card rows for new keys: ros, projections_fmt, projections_kd, signals, live (v123 added a row),
+    tested.trade_grades, playoff odds. Data exists in report.json; vReport needs rows.
+11. Follow-ups found by agents: verdict card "expected" (`neutral(p)`) is worse than season PPG (2025 4.63 vs 4.51) —
+    test and fix; `repl()` replacement levels not recalibrated after v114 lowered ROS ~0.6/wk; kickers with no Sleeper
+    projection show 0; check v121 breakout/risk and v123 live scores in a real league; QB/TE range coverage 77%/75%
+    on 2026 (slightly under 80%); half-PPR win odds still slightly overconfident.
+12. Final pass: full QA, docs, merge, final report to the owner.
+Older items: WR waiver adds (largely addressed by v115); dynasty waiver test can't replay value-protected drops.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
