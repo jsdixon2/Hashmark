@@ -7761,6 +7761,60 @@ render=(function(prev){let last=0,pend=0;return function(){const bg=!window.even
   if(bg&&Date.now()-last<400){if(!pend)pend=setTimeout(()=>{pend=0;last=Date.now();prev();},400-(Date.now()-last));return;}
   last=Date.now();return prev.apply(this,arguments);};})(render);
 /* /v149 */
+/* ===== v150 (owner: The Wire - filters by story type; keep the data but read like written news).
+   - Filter chips under the masthead: All · Games · Trades · Waivers · Standings · Playoff race · Injuries · Who's hot (only
+     the types that have stories this week; choice kept per session in S.wireF).
+   - Each story: headline, a lede, then a written paragraph built from the story's details (fragments such as "Core: …",
+     "Clinched: …", "Lifetime: …" rewritten as sentences), then the numbers in a compact "By the numbers" box.
+   - Playoff race rewritten: "clinched" only at 100%; near-locks (>99%) and teams already out named in the text.
+   - Injury report and Who's hot get a written lede naming the players.
+   - Story headlines keep their capitals (v140 lowercased the h3 inside .wst). ===== */
+const W150G={"Upset":"Games","Blowout":"Games","Photo finish":"Games","Week in review":"Games","Trade":"Trades","Waivers":"Waivers","Standings":"Standings","Streak":"Standings","Slump":"Standings","Playoff race":"Playoff race","Injury report":"Injuries","Who's hot":"Who's hot"};
+const W150O=["Games","Trades","Waivers","Standings","Playoff race","Injuries","Who's hot"];
+function w150List(xs){xs=xs.filter(Boolean);return xs.length<=1?(xs[0]||""):xs.slice(0,-1).join(", ")+" and "+xs[xs.length-1];}
+function w150Sent(d){let t=String(d||"").trim();if(!t)return "";
+  t=t.replace(/^Core: (.*?)\.?$/,"The lineup runs through $1.")
+   .replace(/^Standings: (.*)$/,(m,s)=>"Top of the table: "+w150List(s.replace(/ …$/,"").split(" · ").map(x=>x.replace(/^\d+\.\s*/,"").replace(/\s+(\d+[–-]\d+(?:[–-]\d+)?)$/," ($1)")))+".")
+   .replace(/^Clinched: (.*?)\.?$/,(m,s)=>{const n=s.split(", ");return w150List(n)+(n.length>1?" have":" has")+" already clinched.";})
+   .replace(/^Eliminated: (.*?)\.?$/,(m,s)=>{const n=s.split(", ");return w150List(n)+(n.length>1?" are":" is")+" out of the running.";})
+   .replace(/^Lifetime: (.*?) is (\d+)[–-](\d+) against (.*?)\.?$/,(m,a,w,l,b)=>`All-time, ${a} ${+w>=+l?"leads":"trails"} the series with ${b} ${w}–${l}.`)
+   .replace(/^(.*?)'s? biggest miss: (.*?) scored (.*)$/,"The biggest letdown for $1 was $2, who scored $3")
+   .replace(/^Injury status: (.*?)\.?$/,"He is listed as $1.")
+   .replace(/^Season average: (.*)$/,"He averages $1");
+  t=t.replace(/\bYou gets\b/g,"You get").replace(/\bYou adds\b/g,"You add").replace(/^(.+?) adds? (.+?) \((.*)\)\.?$/,(m,a,b,c)=>{const f=c.split(", "),g=re=>{const x=f.find(y=>re.test(y));return x?x.match(re)[1]:null;};
+      const tm=f[0]&&!/\d/.test(f[0])?f[0]:null,age=g(/^(\d+) yrs$/),pg=g(/^([\d.]+) pts\/g$/),pj=g(/^([\d.]+) proj\/wk$/),vl=g(/^value ([\d,]+)$/);
+      return `${a} ${a==="You"?"land":"lands"} ${b}${tm==="FA"?", a free agent":""}${age?`, ${/^[8]|^1[18]$/.test(age)?"an":"a"} ${age}-year-old`:""}${pg?` averaging ${pg} points a game`:""}${pj?`${pg?" and":""} projected for ${pj} a week the rest of the way`:""}${vl?` (dynasty value ${vl})`:""}.`;});
+  if(t.includes("; ")){const parts=t.replace(/\.$/,"").split("; "),nm=((parts[0].match(/^(.*?)(?:'s | is | leaves | does )/)||[])[1]||"");
+    if(nm){const rest=parts.slice(1).map(x=>x.split(nm+"'s ").join("their ").split(nm+" is ").join("they are ").split(nm+" leaves ").join("they leave ").split(nm+" does ").join("they do "));
+      t=parts[0]+(rest.length?", "+(rest.length>1?rest.slice(0,-1).join(", ")+" and ":"")+rest[rest.length-1]:"")+".";}}
+  return /[.!?]$/.test(t)?t:t+".";}
+function w150Rewrite(s){try{s=Object.assign({},s);const F=s.facts||[];const yv=t=>String(t||"").replace(/\bYou (posts|stays|falls|wins|loses|spends|edges|routs|stuns|leads|sits|has|is|gets|adds)\b/g,(m,v)=>"You "+({has:"have",is:"are"}[v]||v.replace(/s$/,"")));s.head=yv(s.head);s.lead=yv(s.lead);
+  if(s.tag==="Playoff race"){const rows=F.map(([k,v])=>({n:String(k).replace(/\s*\([^)]*\)\s*$/,""),v:String(v)}));
+    const pct=v=>v==="100%"?1:v===">99%"?.995:v==="<1%"?.005:v==="0%"?0:(parseFloat(v)||0)/100;
+    const cl=rows.filter(r=>pct(r.v)>=1),near=rows.filter(r=>pct(r.v)>=.95&&pct(r.v)<1),out=rows.filter(r=>pct(r.v)<=0),long=rows.filter(r=>pct(r.v)>0&&pct(r.v)<=.05),bub=rows.filter(r=>pct(r.v)>.05&&pct(r.v)<.95);
+    const left=(/(\d+) weeks? left/.exec(s.lead||"")||[])[1];
+    if(!bub.length&&cl.length){s.head=cl.length+near.length>=rows.length/2?`The playoff field is all but set${left?` with ${left} weeks left`:""}`:`${w150List(cl.map(r=>r.n))} ${cl.length>1?"have":"has"} clinched`;
+      s.lead=`${w150List(cl.map(r=>r.n))} ${cl.length>1?"have":"has"} clinched a playoff spot${near.length?`, and ${w150List(near.map(r=>`${r.n} (${r.v})`))} ${near.length>1?"are":"is"} a formality away from joining ${cl.length>1?"them":"it"}`:""}.`;
+      const b=[];if(long.length)b.push(`${w150List(long.map(r=>r.n))} ${long.length>1?"need":"needs"} a miracle (${w150List(long.map(r=>r.v))}).`);if(out.length)b.push(`${w150List(out.map(r=>r.n))} ${out.length>1?"are":"is"} mathematically out.`);s.det=b;}
+    else if(bub.length){s.lead=(s.lead||"")+` ${w150List(bub.map(r=>`${r.n} (${r.v})`))} ${bub.length>1?"are":"is"} on the bubble.`;}}
+  if(s.tag==="Injury report"&&F.length){s.lead=`${s.head.replace(/ on the injury report$/,"")} on this week's injury report: ${w150List(F.slice(0,4).map(([t,v])=>{const [p,st]=String(v).split(" · ");return `${t==="You"?"your":t+"'s"} ${p} (${(st||"").toLowerCase()})`;}))}${F.length>4?`, among others`:""}. ${s.lead}`;}
+  if(s.tag==="Who's hot"&&F.length){const [k0,v0]=F[0],[p0,t0]=String(k0).split(" · ");s.lead=`${p0} has been the league's hottest starter, averaging ${String(v0).replace(/\/g.*/,"")} points a game for ${t0==="You"?"you":t0} over the last three weeks.${F.length>1?` Close behind: ${w150List(F.slice(1,4).map(([k,v])=>`${String(k).split(" · ")[0]} (${String(v).replace(/\/g.*/,"")})`))}.`:""}`;}
+  s.body=(s.det||[]).map(w150Sent).filter(Boolean).join(" ");return s;}catch(e){return s;}}
+wireStory=(function(prev){return function(s,brief){if(brief===true)return prev(s,brief);const r=w150Rewrite(s),F=(r.facts||[]);
+  return `<article class="wst" data-wg="${esc(W150G[r.tag]||"Other")}"><div class="row sp"><span class="wtag ${r.cls?"w-"+r.cls:""}">${esc(r.tag)}</span><span class="wwhen">${esc(r.when||"")}</span></div><h3>${esc(r.head)}</h3><p class="wlede">${esc(r.lead||r.body||"")}</p>${r.body&&r.lead?`<p class="wbody">${esc(r.body)}</p>`:""}${F.length?`<div class="wnum"><span class="eyebrow">By the numbers</span><div class="wfx">${F.map(([k,v])=>`<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("")}</div></div>`:""}</article>`;};})(wireStory);
+vWire=(function(prev){return function(){const h=prev();try{if(HX.st!=="ready")return h;const st=wireStories(),have=new Set(st.map(s=>W150G[s.tag]||"Other"));if(st.length<2)return h;
+  const opts=["All",...W150O.filter(g=>have.has(g))],f=opts.includes(S.wireF)?S.wireF:"All";
+  const chips=`<div class="seg sm w150f">${opts.map(o=>`<button data-wf="${esc(o)}" class="${o===f?"on":""}">${esc(o)}</button>`).join("")}</div>`;
+  let out=h.replace(/(<div class="wmast">[\s\S]*?<\/div>)/,`$1${chips}`);
+  if(f!=="All")out=out.replace(/<article class="wst" data-wg="([^"]*)"[\s\S]*?<\/article>/g,(m,g)=>g.replace(/&#39;/g,"'").replace(/&amp;/g,"&")===f?m:"");return out;}catch(e){console.error(e);return h;}};})(vWire);
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-wf]");if(!b)return;e.stopPropagation();S.wireF=b.dataset.wf;render();},true);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.wst h1,.wst h2,.wst h3{text-transform:none!important}
+.w150f{margin:4px 0 14px;overflow-x:auto;flex-wrap:nowrap;white-space:nowrap}
+.wst .wlede{font-size:15.5px;line-height:1.5;margin-top:6px}.wst .wbody{font-size:15px;line-height:1.55;margin-top:8px;color:var(--ink);opacity:.88}
+.wnum{margin-top:12px}.wnum .eyebrow{display:block;margin-bottom:2px}
+</style>`);
+/* /v150 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

@@ -409,6 +409,12 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   league/users/rosters/drafts calls were re-fetched every launch); (3) the Huddle's history read (hxLoad for pvCard) waits
   until 15 s after launch and 4 s without a touch (was 2.5 s), then runs at idle; (4) background renders (no
   window.event) in live mode during the first 40 s are merged to one per 400 ms. Cache test: scratchpad qa/v149.js.
+- v150 (owner: The Wire filters + read like news): chips All/Games/Trades/Waivers/Standings/Playoff race/Injuries/Who's hot
+  (`W150G` tag -> group, S.wireF, only groups with stories); wireStory renders headline, lede, written paragraph from the
+  details (`w150Sent` rewrites fragments: Core/Standings/Clinched/Eliminated/Lifetime/biggest miss/injury, trade player
+  lines as sentences, repeated team names -> they/their, "You posts" -> "You post"), then "By the numbers" facts box.
+  Playoff race (`w150Rewrite`): "clinched" only at 100%, near-locks / long shots / eliminated named in prose. Wire
+  headlines keep their case (.wst h3 text-transform none; v140 had lowercased them). Huddle brief unchanged.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
