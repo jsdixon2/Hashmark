@@ -476,6 +476,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 - p154 (owner: Burden card "Case Keenum is OUT; the passing game should improve when he returns" while Caleb Williams
   starts): returnEffect's QB line (both definitions) only counts the team's starting QB: skipped when he is below #1 on
   Sleeper's depth chart or another QB on the team has more value.
+- v155 (owner): roster depth-chart rows show this week's game under the projection ("vs BUF" / "@ CHI" / "BYE", `g155`
+  from gameOf, as kdGame) instead of "this wk"; BYE is amber when the player is in a starting slot; falls back to
+  "this wk" when the slate isn't current.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
