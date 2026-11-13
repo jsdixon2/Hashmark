@@ -428,6 +428,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   from the betting line, whose favourite lost). Report rows / NFL-teams line from the live log show a percentage only
   from 16 graded games; before that "N graded so far · from 16 games". Owner also asked to beat betting lines: plan
   given (see reply), not built - wait for go.
+- x13 (backtest/x13_line.py, owner "test 2"): closing line (de-vigged moneyline, spread logistic fallback) + adjustments
+  (backup QB, short week, off bye, rest difference, west-coast team at 1 pm ET, wind >= 15 x line, division x line),
+  fit 2006-22, test 2023-25 (815 games): line alone Brier .2103 / 68.5% right; with adjustments .2111 / 68.6% (gain
+  -0.0008, 95% CI -0.0024..+0.0008). One at a time: none beat the line by more than +0.0002 (west-coast early);
+  backup QB and wind made it worse (market already prices them). NOT shipped: the closing line stays the pick.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
