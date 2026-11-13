@@ -415,6 +415,13 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   lines as sentences, repeated team names -> they/their, "You posts" -> "You post"), then "By the numbers" facts box.
   Playoff race (`w150Rewrite`): "clinched" only at 100%, near-locks / long shots / eliminated named in prose. Wire
   headlines keep their case (.wst h3 text-transform none; v140 had lowercased them). Huddle brief unchanged.
+- v151 (owner: team-stat league insight, "doesn't have to be just the last 4 weeks"): Wire "Preview" story per game this week
+  (chip "Previews", `w151Stories`): form window = current streak if 3+, else the most extreme of the last 3-6 games
+  (`w151Form`, |win% - .5| x sqrt(games)), with points-per-game rank over the same weeks; stars = top-2 starters by
+  rosPPG on bye/out, other starters out/bye named, questionable listed; projected totals + winProb (teamWeek, as the
+  Matchup page), records/standings ranks. Interest order: top-2 clash, both top-4, close (<8 pts from 50%), hot vs cold,
+  star missing, streak length. Uses L.matchups, else pairs 0-1/2-3/... (demo). Demo records come from an archived league
+  (names don't match demo projections) - real leagues use their own.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
