@@ -657,3 +657,25 @@ owner as `hashmark-handoff.md`. It isn't committed, because the repo is public. 
 - Items 11-12: v135 proof line under the Huddle's top move (tested numbers from report.json), greeting uses the Sleeper
   display name in live mode.
 - Item 7 (tagline): brainstorm only, nothing shipped. Sign-in screen is hard-coded dark while the app follows the theme.
+
+## 2026-11-13 "outside the box" edge tests (backtest/x1-x8, numbers only; nothing shipped)
+1. Win-max lineups (x1, 2024-25 replay of 76,504 team-games, model fit 2022-23): lineup changed in 1.4% of games, said
+   +0.1-0.2 win pts, real net +7 wins of 1,087 changed (noise). Max-projection lineup is effectively optimal. DEAD.
+2. Manager habits (x2): FAAB overpay persists r .29 (top third of first-half overpayers bid 1.30x the median in the
+   second half, bottom third 0.67x); waiver activity r .53, trades r .51; repeat trade partner 45% vs 34% chance; no
+   tilt (moves after a big loss 0.94 vs 1.10 after a win). Usable: league-mate profiles for bids and trade targeting.
+3. Crowd (x3): the crowd is RIGHT, not overreacting. Mass-dropped (10%+ of leagues) with stable snaps: -1.43 pts/game
+   vs Sleeper projection next 3 weeks (n 277); mass-added: +0.7 to +1.9 (n 529). Candidate projection input (league
+   add/drop rate), needs a held-out test against Hashmark's projection.
+4. Role change (x4): snap/target-share changes are already priced by Hashmark's projection; only a 15+ point snap-share
+   drop carries ~0.5 pts/game extra (both 2022-23 and 2024-25). Route data not in the archive.
+5. Playoffs (x5): one game moves playoff odds 15-25 pts on average (0-72 by record in week 14). Week 15-17 schedule
+   strength as of week 10 explains 0.0% of playoff-week points (easiest fifth -0.57 vs hardest -0.82). Schedule chasing DEAD.
+6. Injuries (x6, 2021-25): Questionable players who play score ~0.5-1.2 below projection vs baseline -0.42 (hamstring
+   -1.59, plays 59%); first game back from hamstring -2.46 (n 67), concussion -1.47, groin/hip/quad/calf -1.28; over 3
+   games all ~-0.9. Candidate per-type projection factors (held-out test needed).
+7. Dynasty seasonal (x7, FantasyPros dynasty ECR 2019-26, VAN1 curve): Nov -> May value, every year: RB 27-29 -41%
+   (-26 to -56), WR 27-29 -34%, WR 30+ -56%, vs WR rookies -8%, RB rookies -15%, WR 24-26 -16%. The November market
+   underprices ageing: sell 27+ RB/WR before the offseason.
+8. News (x8, 10,109 team-seasons): starters who sat out with their team playing: 0.65/team-season listed Out/Doubtful
+   (ignored), 0.53 Questionable (decided late), 0.49 unlisted; best bench option scored ~14 pts each time.

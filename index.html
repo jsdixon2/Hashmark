@@ -7471,6 +7471,26 @@ valueCard=(function(prev){return function(p){let h=prev(p);try{const L=S.L;if(!h
   h=h.replace(`<span class="tag">${fmtLbl()}</span>`,`<span class="tag">${nm?nm+" · ":""}${fmtLbl()}</span>`);
   h=h.replace(/(<span class="vk">Value to you[\s\S]*?<em>)/,`$1${own?"On your roster here. ":"Not on your roster here. "}`);}catch(e){console.error(e);}return h;};})(valueCard);
 /* /v137 */
+/* ===== v138 (edge build A, owner "go"): sell ageing players before the offseason (dynasty + keeper).
+   backtest/x7_fit.py: FantasyPros dynasty consensus 2019-26, value via the app curve; November -> May log value change
+   by format x position x age band (rookie, <=23, 24-26, 27-29, 30+) x rank tier (top 60 / 61-200), shrunk to the market
+   median (n/(n+10)), stored relative to the market. Fit 2019-22, held out 2023-24: flagged players (expected 25%+ worse
+   than the market) lost 41% (1QB) / 46% (SF) by May vs 23% / 20% for the rest; 70-71% of flagged fell more than the
+   others' median. Shipped cells refit on all Novembers 2019-25. Shown Oct 1 - Mar 1: roster To do ("Sell before the
+   offseason", owned, expected -20% or worse, value >= 800) and a line on the player card when |change| >= 15%. ===== */
+const OFS138={"1qb|RB|26|a":0.157,"1qb|WR|29|a":-0.004,"1qb|WR|23|a":0.201,"1qb|RB|23|a":0.184,"1qb|WR|26|a":0.181,"1qb|RB|R|a":0.186,"1qb|TE|29|a":0.016,"1qb|TE|30|a":0.011,"1qb|WR|R|a":0.179,"1qb|QB|26|a":0.127,"1qb|TE|26|a":-0.006,"1qb|QB|23|a":0.017,"1qb|WR|30|a":-0.117,"1qb|QB|30|a":-0.01,"1qb|QB|29|a":0.145,"1qb|TE|23|b":0.081,"1qb|WR|26|b":-0.165,"1qb|TE|26|b":-0.01,"1qb|QB|R|b":0.348,"1qb|RB|26|b":-0.166,"1qb|WR|30|b":-0.487,"1qb|RB|23|b":-0.047,"1qb|QB|26|b":-0.084,"1qb|RB|29|b":-0.446,"1qb|RB|R|b":-0.087,"1qb|WR|R|b":0.082,"1qb|WR|29|b":-0.249,"1qb|WR|23|b":-0.169,"1qb|QB|29|b":-0.036,"1qb|TE|30|b":-0.214,"1qb|QB|30|b":0.052,"1qb|TE|29|b":-0.159,"1qb|QB|23|b":0.084,"1qb|TE|R|b":0.049,"1qb|RB|30|b":-0.502,"1qb|RB|29|a":-0.053,"1qb|TE|R|a":0.139,"1qb|TE|23|a":0.037,"1qb|RB|30|a":-0.005,"1qb|QB|R|a":0.068,"sf|RB|26|a":0.129,"sf|QB|26|a":0.164,"sf|QB|23|a":0.181,"sf|RB|23|a":0.177,"sf|WR|29|a":0.026,"sf|QB|29|a":0.15,"sf|QB|30|a":0.076,"sf|WR|26|a":0.125,"sf|RB|R|a":0.18,"sf|WR|23|a":0.211,"sf|TE|29|a":0.055,"sf|QB|R|a":0.229,"sf|WR|30|a":-0.144,"sf|TE|30|a":0.052,"sf|WR|R|a":0.15,"sf|TE|26|a":0.02,"sf|TE|23|a":0.009,"sf|QB|R|b":0.156,"sf|WR|26|b":-0.005,"sf|WR|23|b":-0.119,"sf|QB|30|b":-0.236,"sf|RB|R|b":-0.049,"sf|TE|26|b":0.056,"sf|TE|23|b":0.061,"sf|QB|29|b":-0.179,"sf|WR|29|b":-0.191,"sf|WR|R|b":0.028,"sf|RB|26|b":-0.128,"sf|RB|29|b":-0.283,"sf|WR|30|b":-0.38,"sf|QB|26|b":-0.587,"sf|RB|23|b":-0.016,"sf|QB|23|b":-0.25,"sf|TE|30|b":-0.229,"sf|TE|29|b":-0.144,"sf|TE|R|b":0.132,"sf|RB|30|b":-0.391,"sf|RB|29|a":-0.04,"sf|TE|R|a":0.155,"sf|RB|30|a":0.009};
+function ofs138(p){if(!p||S.fmt.type==="redraft"||!p.age||!["QB","RB","WR","TE"].includes(p.pos))return null;const m=new Date().getMonth();if(!(m>=9||m<=1))return null;
+  const rk=p.vrk||999;if(rk>200)return null;const rook=p.draft==="Rookie",a=p.age,b=rook?"R":a<24?"23":a<27?"26":a<30?"29":"30";
+  const k=[(S.fmt.qb==="sf"?"sf":"1qb"),p.pos,b,rk<=60?"a":"b"].join("|"),c=OFS138[k];if(c==null)return null;
+  const lab=rook?"rookie":b==="23"?"23 or younger":b==="26"?"aged 24-26":b==="29"?"aged 27-29":"aged 30+";
+  return {rel:Math.exp(c)-1,who:`${p.pos}s ${lab} ${rk<=60?"in the top 60":"outside the top 60"}`};}
+rosTodo=(function(prev){return function(L,t){const T=prev(L,t);rosSafe(()=>{if(S.fmt.type==="redraft")return;
+  t.players.map(id=>PL[id]).filter(p=>p&&(p.val||0)>=800).map(p=>({p,o:ofs138(p)})).filter(x=>x.o&&x.o.rel<=-.2).sort((a,b)=>a.o.rel*a.p.val-b.o.rel*b.p.val).slice(0,2)
+   .forEach(x=>T.push({lvl:"info",t:`Sell before the offseason: ${x.p.name}`,s:`${x.o.who} lost ${Math.round(-x.o.rel*100)}% more value than the market from November to May (2019–25)`,go:"trade-sell",b:"Trade Lab",id:x.p.id}));},0);return T;};})(rosTodo);
+valueCard=(function(prev){return function(p){let h=prev(p);try{const o=ofs138(p);if(!h||!o||Math.abs(o.rel)<.15)return h;
+  const line=`<p class="vnote${o.rel<0?" bad":""}">Offseason: ${o.who} ${o.rel<0?"lost":"gained"} ${Math.round(Math.abs(o.rel)*100)}% ${o.rel<0?"more":""} value ${o.rel<0?"than":"vs"} the market from November to May (2019–25).${o.rel<0?" Sell before the offseason if you can.":""}</p>`.replace("  "," ");
+  const i=h.indexOf('<div class="vb106">');h=i>=0?h.slice(0,i)+line+h.slice(i):h;}catch(e){console.error(e);}return h;};})(valueCard);
+/* /v138 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
