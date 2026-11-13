@@ -1,0 +1,13 @@
+name: msf-probe
+# Manual only. Data test 1: what the MySportsFeeds key returns (feeds, inactives in game lineups, update times).
+# Results print in the log; nothing is committed.
+on: {workflow_dispatch: {}}
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 scripts/probe_msf.py
+        env: {MSF_KEY: "${{ secrets.MSF_KEY }}"}
