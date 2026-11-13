@@ -328,6 +328,13 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   age band (rookie/<=23/24-26/27-29/30+) x rank tier (top 60 / 61-200). Held out 2023-24: flagged (-25%+) lost 41/46%
   by May vs 23/20% others (70% fell more); expected +15%+ held -3/-7% vs -26/-21%. Dynasty/keeper only, Oct 1-Mar 1:
   roster To do "Sell before the offseason" (owned, -20%+, value >= 800) and an "Offseason:" line on the Value card.
+- Build B (backtest/x3_fit.py, NOT shipped): crowd add/drop rank (900 leagues, window Monday -> first kickoff, no
+  post-game leak) did not improve Hashmark's projection held out 2024-25 (MAE 4.822 -> 4.828; 3-week residuals flat).
+  The x3 crowd edge was vs Sleeper's projection only; Hashmark's inputs already carry it.
+- v139 (build C, backtest/x2_fit.py): trade habits persist (2+ trades in weeks 1-8 -> 43% trade again in 9-17, 1 -> 26%,
+  0 -> 12%; previous partner 45% vs 34% chance). Trade partners + Trade finder cards: "Open to trades: N trades this
+  season · traded with you" (`tr139`, from L.tx); partners with equal fit sorted by trades. League-only FAAB bid style
+  does not persist (r .11) -> no bid profiling.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

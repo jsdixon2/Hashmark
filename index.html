@@ -7491,6 +7491,25 @@ valueCard=(function(prev){return function(p){let h=prev(p);try{const o=ofs138(p)
   const line=`<p class="vnote${o.rel<0?" bad":""}">Offseason: ${o.who} ${o.rel<0?"lost":"gained"} ${Math.round(Math.abs(o.rel)*100)}% ${o.rel<0?"more":""} value ${o.rel<0?"than":"vs"} the market from November to May (2019–25).${o.rel<0?" Sell before the offseason if you can.":""}</p>`.replace("  "," ");
   const i=h.indexOf('<div class="vb106">');h=i>=0?h.slice(0,i)+line+h.slice(i):h;}catch(e){console.error(e);}return h;};})(valueCard);
 /* /v138 */
+/* ===== v139 (edge build C, owner "go"): who actually trades. backtest/x2_fit.py, 900 real leagues 2022-25: managers with
+   2+ trades in weeks 1-8 made another trade in weeks 9-17 43% of the time, 1 trade 26%, none 12% (trade counts persist
+   r .51); trades go to a previous partner 45% of the time vs 34% by chance. League-only FAAB bid style did NOT persist
+   (r .11, no edge on big claims), so bids are not profiled. Trade partners + Trade finder cards say how often each team
+   trades this season and whether they've traded with you; partners with the same fit are listed most-likely-first. ===== */
+function tr139(L){if(!L)return null;const k=(L.tx||[]).length;if(L._tr139&&L._tr139.k===k)return L._tr139.v;const n={},w={},mine=L.teams[mineIdx(L)];
+  for(const t of L.tx||[]){if(t.type!=="trade"||t.status&&t.status!=="complete")continue;const rs=t.roster_ids||[];for(const r of rs){n[r]=(n[r]||0)+1;if(mine&&rs.includes(mine.id)&&r!==mine.id)w[r]=(w[r]||0)+1;}}
+  const v={n,w,has:!!(L.tx&&L.tx.length)};L._tr139={k,v};return v;}
+function tr139Line(L,ti){const T=tr139(L),t=L&&L.teams[ti];if(!T||!T.has||!t)return "";const n=T.n[t.id]||0,w=T.w[t.id]||0;
+  const a=n>=2?`<b>Open to trades</b>: ${n} trades this season`:n===1?"1 trade this season":"No trades yet this season";
+  return `<div class="sub tr139">${a}${w?` · traded with you${w>1?" "+w+" times":""}`:""}</div>`;}
+function tr139Inject(h){const L=S.L;if(!L||!h)return h;return h.split('<div class="scard">').map((seg,i)=>{if(!i)return seg;const m=seg.match(/data-bt="(\d+)"/);if(!m)return seg;
+  const line=tr139Line(L,+m[1]);if(!line)return seg;const j=seg.indexOf('<div class="row" style="gap:8px">');return j>=0?seg.slice(0,j)+line+seg.slice(j):line+seg;}).join('<div class="scard">');}
+partners=(function(prev){return function(){const ps=prev();try{const L=S.L,T=tr139(L);if(!T||!T.has)return ps;const sc=x=>{const id=L.teams[x.c.ti].id;return (T.n[id]||0)+(T.w[id]?1:0);};
+  return ps.map((x,i)=>({x,i})).sort((a,b)=>(b.x.s-a.x.s)||(sc(b.x)-sc(a.x))||(a.i-b.i)).map(o=>o.x);}catch(e){return ps;}};})(partners);
+vPartners=(function(prev){return function(){return tr139Inject(prev());};})(vPartners);
+vFinder=(function(prev){return function(){return tr139Inject(prev());};})(vFinder);
+document.head.insertAdjacentHTML("beforeend",`<style>.tr139{margin:6px 0 2px;font-size:12.5px}.tr139 b{color:var(--ink);font-weight:600}</style>`);
+/* /v139 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
