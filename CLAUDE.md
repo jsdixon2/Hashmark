@@ -301,7 +301,18 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   "105.3 vs 82.0" on Huddle; "You're contending in …"; empty Trade Lab hub tiles say "None right now" + what appears
   there (`TL131`). Review item 1 (dock covering the last tile) was a full-page-screenshot artifact: main already pads
   96px + --dockb. Review items 6-12 (44% vs 0% win check, sign-in pitch/theme, contrast, roster rank vs value, jargon
-  explanations, trust line, greeting) proposed, not done yet.
+  explanations, trust line, greeting): done in v132-v135 below; tagline (7) being brainstormed with the owner.
+- v132: leagueSummary cache (Huddle/My teams win chance) lives one redraw only (1.5 s); it used to survive projection
+  changes until a score changed, so Home could show 79% while Team showed 29% (review item 6, reproduced and fixed).
+- v133: light-mode text contrast to WCAG AA: --good #08795B, --bad #B8253F; small orange text (.hdk, .stcmp, .tag.good,
+  .wtag.w-acc, devy .dvo/.dvp/.dvr .up, active dock label) #BF4706; fills/buttons keep #E85A0C. Grey meta text already
+  passed. Contrast checker false positives: gradient pills (.pill.hot) and translucent pill backgrounds.
+- p134: roster rows show value rank ("WR6 value") instead of the raw number; Next 4 weeks lists slots empty every week
+  once ("Empty every week: FLEX").
+- v134: confidence notes in plain words (`CF134`); "Value to you" says why ("you'd start him less than most teams
+  would"); roster glance boxes explained behind one info button (DEFS.rosglance).
+- v135: proof line under the Huddle's top move (`hd135Proof`: waiver track record / sell 91% / buy 69% held-out 2025 /
+  projections vs Sleeper weeks); greeting uses the Sleeper display name in live mode; live note says 30 seconds.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
