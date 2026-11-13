@@ -313,6 +313,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   would"); roster glance boxes explained behind one info button (DEFS.rosglance).
 - v135: proof line under the Huddle's top move (`hd135Proof`: waiver track record / sell 91% / buy 69% held-out 2025 /
   projections vs Sleeper weeks); greeting uses the Sleeper display name in live mode; live note says 30 seconds.
+- v136 (owner: Luther Burden, concussion + questionable before a bye, showed Long term LOW "Uncertain injury
+  (Undisclosed)"): Sleeper's "Undisclosed" no longer counts as an uncertain (heart/spine-type) injury unless the player is
+  on IR/PUP/NFI with no named injury in 3 weeks of news; otherwise minor, named from the news (concussion, ankle ...).
+  Short term is capped at Medium while a player carries any injury tag ("but listed questionable (concussion)").
+  Matchup page win bar (.wp) now orange for you / plain track for them, like the other win bars (was mint/rose).
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
