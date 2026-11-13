@@ -361,6 +361,12 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   Now / Draft (or 6 mo) / 1 / 2 / 3 yrs; dotted = median x today's roster-fit ratio (implied() / market); headline names
   who's ahead now and the month the lines cross. Picks: today's value until their draft (May 1 of pick year), r1 uses
   the mid bucket. Not in the share image yet. Rebuild data: python3 backtest/x9_paths.py && python3 backtest/x9_ship.py 1.1.
+- x10 (owner: do pick values account for strong/weak draft classes? NO, by design now): backtest/x10_class.py on e23 rows
+  (classes 2016-23; run backtest/e23_run.sh first). Hits (top-24 RB/WR, top-12 QB/TE within 3 NFL seasons) among each
+  class's top 12 by NFL pick: 5-8 per class, sd 1.05 vs 1.71 expected from luck alone; top 24: 7-15, sd 2.24 vs 2.43.
+  Class-to-class differences are no bigger than chance; leave-one-class-out predictions correlate .25-.51 (n 8, not
+  significant). Picks stay flat by class. Aside (untested): market pick prices in values.json (dd) fall ~19%/yr
+  (2027 1st mid 6,165 -> 2028 4,991 -> 2029 4,235) vs the app's 7%/yr discount (pickVal).
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
