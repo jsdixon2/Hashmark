@@ -339,6 +339,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   back / games 2-3 back, fit 2021-23) made held-out 2024-25 worse: per type 4.103 -> 4.142 MAE (900 rows), pooled worse
   too (Q 4.366 -> 4.426, R1 3.871 -> 4.084); per-type patterns flip between periods. x6's effect was vs Sleeper only.
   Untested idea: injury type in the v127 questionable play-rate line (hamstring played 59% vs 63-73% others).
+- v140 (owner): My teams tiles size scores to the tile (container query on .lbx) so "proj" never runs past the edge;
+  h1/h2/h3 lowercase (wordmark style) except names (`hnm140Mark` MutationObserver adds .hnm when a heading equals a
+  league/team/owner/player name) and The Wire headlines (.wst). Trade calculator redesign (A tug of war / B verdict first
+  / C scoreboard) and trade sharing (1 image card / 2 link with trade in # / 3 short link + live preview via a worker)
+  shown as mockups; waiting for the owner's pick.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

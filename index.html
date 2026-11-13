@@ -7510,6 +7510,22 @@ vPartners=(function(prev){return function(){return tr139Inject(prev());};})(vPar
 vFinder=(function(prev){return function(){return tr139Inject(prev());};})(vFinder);
 document.head.insertAdjacentHTML("beforeend",`<style>.tr139{margin:6px 0 2px;font-size:12.5px}.tr139 b{color:var(--ink);font-weight:600}</style>`);
 /* /v139 */
+/* ===== v140 (owner): (1) My teams tiles: "proj" ran past the card edge (two 5-character scores at 32px + label in a
+   ~190px tile). Scores now size to the tile (container query) so score - score proj always fits.
+   (2) Headers lowercase to match the wordmark: h1/h2/h3 lowercased, except headings that are a name (league, team,
+   player: marked .hnm automatically) and The Wire's story headlines. ===== */
+document.head.insertAdjacentHTML("beforeend",`<style>
+.lbx{container-type:inline-size}
+@container (max-width:260px){.lbx .lsc{gap:3px}.lbx .lsc b{font-size:clamp(17px,12.5cqi,32px)!important}.lbx .lscp{margin-left:3px;font-size:11px}}
+h1,h2,h3{text-transform:lowercase}
+h1.hnm,h2.hnm,h3.hnm,.wst,.phm{text-transform:none}
+</style>`);
+function hnm140Names(){const k=(S.leagues||[]).length+"|"+Object.keys(PL).length;if(hnm140Names.k===k)return hnm140Names.v;const s=new Set();
+  for(const L of S.leagues||[]){s.add(String(L.name||"").trim());for(const t of L.teams||[]){s.add(String(t.name||"").trim());if(t.owner)s.add(String(t.owner).trim());}}
+  for(const p of Object.values(PL))if(p&&p.name)s.add(p.name.trim());hnm140Names.k=k;hnm140Names.v=s;return s;}
+function hnm140Mark(root){try{const N=hnm140Names();(root||document).querySelectorAll("h1,h2,h3").forEach(h=>{const t=h.textContent.trim();if(N.has(t)||N.has(t.replace(/\s*\(you\)$/,"")))h.classList.add("hnm");});}catch(e){}}
+new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.nodeType===1){if(/^H[123]$/.test(n.tagName))hnm140Mark(n.parentElement);else if(n.querySelector&&n.querySelector("h1,h2,h3"))hnm140Mark(n);}}).observe(document.documentElement,{childList:true,subtree:true});
+/* /v140 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
