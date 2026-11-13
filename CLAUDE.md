@@ -348,6 +348,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   comes-out-ahead line), You give + Add / You get from <team> + Add, lineup bars, what changes, Make it fair (`c141Fair`:
   their players that re-grade you to -2%..+12%, each tested with calcEval), Share (`c141Image` 1080x1350 card -> share
   sheet or download), old result under "Full breakdown". 3-4 team trades keep the old layout.
+- v142 (owner): every win-chance bar is the orange gradient (tlPaint wrapper: bar whose neighbouring text says win
+  chance/odds); other bars keep the green/yellow/red traffic light. Owner asked about a projected-value-over-time graph
+  for trades: plan given (comparable-player value paths from bt/hv, 80% bands, held-out 2023-24 test), NOT built - wait for go.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

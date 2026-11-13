@@ -7606,6 +7606,12 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .c141act{gap:8px}.c141act .btn.pri{background:var(--accg)!important;color:#0B0C0E!important;border:0!important}.c141act .btn{flex:1;justify-content:center}.c141d summary{font:600 14px var(--fb);cursor:pointer}
 </style>`);
 /* /v141 */
+/* ===== v142 (owner: "all win bars orange"): any bar showing a win chance (text next to it says "win chance" / "win
+   odds" / "to win") is painted with the orange gradient instead of the green/yellow/red traffic light. ===== */
+tlPaint=(function(prev){return function(root){prev(root);if(!root)return;try{root.querySelectorAll(".pbar>i,.bar>i").forEach(i=>{const pb=i.parentElement;
+  const ctx=((pb.previousElementSibling||{}).textContent||"")+" "+((pb.nextElementSibling||{}).textContent||"");
+  if(/win chance|win odds|to win\b|chance to win/i.test(ctx))i.style.setProperty("background","var(--accg)","important");});}catch(e){}};})(tlPaint);
+/* /v142 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
