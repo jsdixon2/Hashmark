@@ -31,3 +31,17 @@ for kind in ("pwr", "pwu"):
     for name, rows in (("test", te), ("snap1", [r for r in S if r["ahead"] == 1 and r["D"] >= 2021]), ("snap2", [r for r in S if r["ahead"] == 2 and r["D"] >= 2021])):
         ev = E.evaluate(rows, E.pred(M, rows, kind), ""); out[name] = {"auc": ev["auc"], "ll": ev["ll"], "n": len(rows)}
     print(kind, json.dumps(out)); print("  coef", json.dumps({k: round(c, 3) for k, c in zip(M["names"], M["coef"]) if k.startswith("u_")}))
+# app constants (raw scale) for the shipped pwu fit on 2016-20 (the model tested above), as e23_fit_rec.py prints DVM_pwr
+import numpy as np
+M = E.fit(tr, "pwu", 1.0)
+p_ = E.pred(M, te, "pwu"); y = np.array([r["o3"]["hit"] for r in te]); cal = []
+for lo, hi in ((0, .05), (.05, .15), (.15, .35), (.35, 1.01)):
+    ix = (p_ >= lo) & (p_ < hi)
+    if ix.sum(): cal.append([lo, hi, int(ix.sum()), round(float(p_[ix].mean()), 3), round(float(y[ix].mean()), 3)])
+print("pwu test calibration [lo,hi,n,pred,actual]", json.dumps(cal))
+c = dict(zip(M["names"], M["coef"])); mu = dict(zip(M["names"], M["mu"])); sd = dict(zip(M["names"], M["sd"]))
+raw = {n: c[n] / sd[n] for n in M["names"] if not n.startswith("i_")}; b0 = sum(c[n] * mu[n] / sd[n] for n in raw)
+print("DVM_pwu " + json.dumps({"b": {p: round(c["i_" + p] - b0, 4) for p in E.POS}, "w": {n: round(v, 6) for n, v in sorted(raw.items())}}, separators=(",", ":")))
+# what a partial season looks like: share of final-season usage rows by games (pro-rating check is done in the app)
+import collections
+print("final-season usage keys example", json.dumps(next(iter(U.values()))))
