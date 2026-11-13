@@ -7898,6 +7898,46 @@ rosRow=(function(prev){return function(L,t,p,slot){const h=prev.apply(this,argum
   return h.replace(/<span class="sub">this wk<\/span><\/span><\/button>$/,`<span class="sub${g==="BYE"&&slot?" g155b":""}">${esc(g)}</span></span></button>`);};})(rosRow);
 (function(){const s=document.createElement("style");s.textContent=`.rrv .sub.g155b{color:var(--amber);font-weight:600}`;document.head.appendChild(s);})();
 /* /v155 */
+/* ===== v156 (owner: the Trade finder led to the OLD calculator once a third team was in the trade; "update that and add
+   3-way trades to the new format"). 3-4 team trades get the v141 design: your grade + verdict hero, every other team's
+   grade, one card per team ("<team> sends": each player/pick with a tap-to-change destination chip, + Add, remove team),
+   lineup bars for every team, what changes, + Team (up to 4), Full breakdown (old view). Share stays two-team. ===== */
+function c156Nm(L,ti){const n=L.teams[ti]?L.teams[ti].name:"?";return n.length>16?n.slice(0,15)+"…":n;}
+vCalc=(function(prev){return function(){const L=S.L,K=calcInit();if(K.sides.length<=2)return prev();const mi=mineIdx(L);
+  if(K.sides[0]!==mi){const j=K.sides.indexOf(mi);if(j>0){K.sides.splice(j,1);K.sides.unshift(mi);}}
+  let R=null;try{R=calcEval();}catch(e){}const old=prev();const me=R&&R.find(r=>r.ti===mi);
+  const mv=xs=>xs.reduce((s,a)=>s+assetVal(a,L,null),0);
+  let hero;if(me){const pc_=Math.round(Math.abs(me.pct)*100),bits=[];
+    bits.push(me.pct>=.03?`You gain <b>${pc_}% more value</b>`:me.pct<=-.03?`You give up <b>${pc_}% more value</b>`:"The value is <b>about even</b>");
+    if(me.title)bits.push(`your title odds go ${pc(me.title.pre)} → <b>${pc(me.title.post)}</b>`);
+    else if(me.gw!=null&&Math.abs(me.gw)>=.05)bits.push(`your lineup ${me.gw>0?"gains":"drops"} <b>${f1(Math.abs(me.gw))} pts a week</b>`);
+    const others=R.filter(r=>r.ti!==mi).map(r=>`<span class="c156o">${esc(c156Nm(L,r.ti))} <span class="grd g${r.g[0]}">${r.g}</span></span>`).join("");
+    hero=`<div class="row sp"><span class="eyebrow">Your grade ${info("grade")} · ${K.sides.filter(x=>x!=null).length}-team trade</span><span class="grd g${me.g[0]} c141g">${me.g}</span></div><div class="c141v">${C141V[me.g]||"Fair trade."}</div><p class="sub c141s">${bits.join(" and ")}.${me.wp!=null?` You come out ahead ${Math.round(me.wp*100)}% of the time.`:""}</p>${others?`<div class="c156os">${others}</div>`:""}`;}
+  else hero=`<div class="eyebrow">Trade calculator · ${K.sides.length}-team trade</div><div class="c141v">Build a trade.</div><p class="sub c141s">Add what each team sends and tap the arrow to choose who gets it. Hashmark grades every team.</p>`;
+  const row=a=>{const ix=K.assets.indexOf(a),p=a.k==="p"?PL[a.id]:null,to=a.to===mi?"you":c156Nm(L,a.to);
+    return `<div class="c141r"><span class="ell">${p?pos(p.pos)+" ":""}<b>${esc(assetName(a,L))}</b> <span class="sub num">· ${f0(assetVal(a,L,null))}</span></span><span class="c156rr"><button class="c156to" data-cdest="${ix}" aria-label="Change who gets this">→ ${esc(to)}</button><button class="x" data-crm="${ix}" aria-label="Remove">×</button></span></div>`;};
+  const card=(ti,i)=>{if(ti==null)return `<section class="pan mt c156c"><div class="row sp"><span class="eyebrow">Team ${i+1}</span><button class="x" data-crmteam="${i}" aria-label="Remove team">×</button></div><button class="btn c141a" data-cteam="${i}">Choose a team</button></section>`;
+    const r=R&&R.find(x=>x.ti===ti),xs=K.assets.filter(a=>a.from===ti),inn=K.assets.filter(a=>a.to===ti);
+    const nm=ti===mi?`You send`:`<button class="c141t" data-cteam="${i}">${esc(L.teams[ti].name)} ▾</button> sends`;
+    return `<section class="pan mt c156c"><div class="row sp"><span class="eyebrow c156h">${nm}</span><span class="row" style="gap:6px">${r?`<span class="grd g${r.g[0]}">${r.g}</span>`:""}${i>=2?`<button class="x" data-crmteam="${i}" aria-label="Remove team">×</button>`:""}</span></div>
+      <p class="sub c156m">${esc(recOf(L.teams[ti]))} · gets ${f0(mv(inn))} · sends ${f0(mv(xs))}</p>${xs.map(row).join("")||`<p class="sub c141e">Nothing yet.</p>`}<button class="btn ghost sm c141a" data-cadd="${ti}">+ Add player${S.fmt.type!=="redraft"?" or pick":""}</button></section>`;};
+  const cards=K.sides.map(card).join("");
+  let lu="";const gws=R?R.filter(r=>r.gw!=null):[];if(gws.some(r=>Math.abs(r.gw)>=.05)){const mx=Math.max(1,...gws.map(r=>Math.abs(r.gw)));
+    const bar=(nm,v)=>`<div class="c141b"><span class="ell">${esc(nm)}</span><span class="c141bt"><i style="${v<0?`right:50%`:`left:50%`};width:${Math.abs(v)/mx*50}%;background:var(${v<0?"--bad":"--good"})"></i></span><b class="num" style="color:var(${v<0?"--bad":"--good"})">${v>0?"+":""}${f1(v)}</b></div>`;
+    lu=`<section class="pan mt"><div class="eyebrow">Lineup, points a week${S.fmt.type!=="redraft"?" this season":""}</div><div class="c141bs">${gws.map(r=>bar(r.ti===mi?"You":c156Nm(L,r.ti),r.gw)).join("")}</div></section>`;}
+  let ins=[];try{ins=R?calcInsights(R).filter(x=>!/projected points a week/.test(x)).slice(0,4):[];}catch(e){}
+  const why=ins.length?`<section class="pan mt"><div class="eyebrow">What changes</div><ul class="why">${ins.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section>`:"";
+  const i=old.indexOf('<section class="pan mt"><div class="row sp"><h2>Result');const full=R&&i>=0?`<details class="pan mt c141d"><summary>Full breakdown</summary>${old.slice(i).replace('<section class="pan mt">','<div>').replace(/<\/section>$/,"</div>")}</details>`:"";
+  const acts=`<div class="row mt c141act">${K.assets.length?`<button class="btn ghost" data-cclear>Clear</button>`:""}${K.sides.length<4?`<button class="btn ghost" data-caddteam>+ Team</button>`:""}</div>`;
+  return `<section class="c141hero">${hero}</section>`+cards+lu+why+acts+full;};})(vCalc);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.c156os{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.c156o{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border-radius:999px;padding:4px 6px 4px 12px;font:600 13px var(--fb)}
+.c156o .grd{min-width:30px;height:26px;border-radius:9px;display:grid;place-items:center;font-size:13px}
+.c156c .grd{min-width:34px;height:30px;border-radius:10px;display:grid;place-items:center}.c156h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.c156m{margin:4px 0 2px;font-size:13px}.c156rr{display:flex;align-items:center;gap:4px;flex:none}
+.c156to{background:var(--panel2);border-radius:999px;padding:5px 10px;font:600 12.5px var(--fb);color:var(--ink);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>`);
+/* /v156 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

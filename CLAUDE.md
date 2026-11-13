@@ -479,6 +479,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 - v155 (owner): roster depth-chart rows show this week's game under the projection ("vs BUF" / "@ CHI" / "BYE", `g155`
   from gameOf, as kdGame) instead of "this wk"; BYE is amber when the player is in a starting slot; falls back to
   "this wk" when the slate isn't current.
+- v156 (owner: Trade finder led to the OLD calculator once a third team got in - adding another team's player after both
+  sides are set pushes a side): 3-4 team trades use the v141 design (your grade + verdict, other teams' grades as chips,
+  one card per team "<team> sends" with tap-to-change destination chips `.c156to` (data-cdest), + Add, remove team,
+  lineup bars for all teams, what changes, + Team up to 4, Full breakdown = old view). Share image stays two-team.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
