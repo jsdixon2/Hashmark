@@ -1,0 +1,14 @@
+name: devy-usage-test
+# Manual only. Data test 3 (backtest/x20_*): do CFBD usage and play value (PPA) add to the devy starter odds on held-out
+# draft classes? Results print in the log; nothing is committed.
+on: {workflow_dispatch: {}}
+permissions: {contents: read}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - run: pip install numpy scikit-learn
+      - run: python3 backtest/e23_cfbd_pull.py && python3 backtest/x20_cfbd_pull.py && bash backtest/e23_run.sh > /tmp/run.log 2>&1; tail -c 1500 /tmp/run.log; python3 backtest/x20_fit.py
+        env: {CFBD_API_KEY: "${{ secrets.CFBD_API_KEY }}"}
