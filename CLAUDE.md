@@ -335,6 +335,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   0 -> 12%; previous partner 45% vs 34% chance). Trade partners + Trade finder cards: "Open to trades: N trades this
   season · traded with you" (`tr139`, from L.tx); partners with equal fit sorted by trades. League-only FAAB bid style
   does not persist (r .11) -> no bid profiling.
+- Build D (backtest/x6_fit.py, NOT shipped): injury-type multipliers on Hashmark's projection (questionable / first game
+  back / games 2-3 back, fit 2021-23) made held-out 2024-25 worse: per type 4.103 -> 4.142 MAE (900 rows), pooled worse
+  too (Q 4.366 -> 4.426, R1 3.871 -> 4.084); per-type patterns flip between periods. x6's effect was vs Sleeper only.
+  Untested idea: injury type in the v127 questionable play-rate line (hamstring played 59% vs 63-73% others).
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

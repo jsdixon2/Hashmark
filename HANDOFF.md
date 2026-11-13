@@ -679,3 +679,11 @@ owner as `hashmark-handoff.md`. It isn't committed, because the repo is public. 
    underprices ageing: sell 27+ RB/WR before the offseason.
 8. News (x8, 10,109 team-seasons): starters who sat out with their team playing: 0.65/team-season listed Out/Doubtful
    (ignored), 0.53 Questionable (decided late), 0.49 unlisted; best bench option scored ~14 pts each time.
+
+## 2026-11-13 edge builds (owner "go on all four, one at a time")
+- A shipped v138: offseason sell signal (x7_fit.py/json). Held out 2023-24 flagged -41/-46% vs -23/-20%.
+- B not shipped: crowd add/drop rank did not help Hashmark's projection (x3_fit.py; MAE 4.822 -> 4.828).
+- C shipped v139: trade-habit lines on Trade partners/finder (x2_fit.py: 43% vs 12% trade again); FAAB style not stable
+  within one league (r .11), so no bid profiling.
+- D not shipped: injury-type multipliers worse held out (x6_fit.py). Both B and D: the edge existed only against Sleeper's
+  projection; Hashmark's projection (last-3, xFP, questionable x.97) already contains it.
