@@ -468,7 +468,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   e23 ship rule (better AUC and log loss on test and both snapshots): test .930 -> .936 / .099 -> .095; 1 season earlier
   .880 -> .895 / .1229 -> .1179; 2 earlier .772 -> .804 / .1484 -> .1422. Usage found 97% train / 93% test. Coefs
   (standardised) total PPA .56, PPA/play .29, usage .09, missing .22. Portal not testable (CFBD portal from 2021 only).
-  To build (wait for go): build_cfb pulls /player/usage + /ppa/players/season into cfb.json, DVM refit as pwu.
+  v153 (owner "go"): `DVM124.pwu` (raw constants from x20_fit "DVM_pwu", Actions run 43502774236), `dv153Use`: this
+  season's use/ppa once the player has 6+ games (total PPA scaled to 12 games), else last season (cfb.json use1/ppa1,
+  new in build_cfb: CFBD cur-1 usage + PPA, 7-day cache), else the missing flag; drafted players keep the pick model.
+  Held-out calibration improved at the top (35%+: said 45%, hit 43.5%, n 23; pwr said 42 hit 31); display cap 40%+ kept.
+  Devy explanation text updated (AUC .94/.80, calibration). use1/ppa1 appear after the next data.yml build_cfb run.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

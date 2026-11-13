@@ -7862,6 +7862,34 @@ W150G["Preview"]="Previews";W150O.unshift("Previews");
 wireStories=(function(prev){return function(){const out=prev();try{const C=wxCtx();const xs=w151Stories(C);if(xs.length)return out.concat(xs).sort((a,b)=>b.pr-a.pr);}catch(e){console.error(e);}return out;};})(wireStories);
 w150Rewrite=(function(prev){return function(s){const r=prev(s);if(s&&s.tag==="Preview"&&s.body)r.body=s.body;return r;};})(w150Rewrite);
 /* /v151 */
+/* ===== v153 (owner "go on test 3"; backtest/x20_*, Actions run 43502774236): devy starter odds add CollegeFootballData
+   usage (share of team plays) and play value (PPA per play, total PPA) from the college season. Fit 2016-20 classes,
+   held out 2021-23: AUC .930 -> .936 final season, .880 -> .895 one season earlier, .772 -> .804 two earlier; log loss
+   better in all three. Season used: this season once 6+ games are in (total PPA scaled to 12 games), else last season
+   (cfb.json use1/ppa1), else the missing flag (as fitted; a 1-2 game sample is noise). Drafted players keep the pick model. ===== */
+DVM124.pwu={b:{QB:-7.9518,RB:-6.0206,TE:-5.7705,WR:-7.1539},w:{bo:0.661945,g5:-0.519022,p5:0.231332,prod:2.971293,rec:2.519928,u_none:1.266563,u_pa:0.720129,u_pt:0.013574,u_uo:0.551213,unrated:1.907701,wtd:0.447792,yrs:-0.524192}};
+function dv153Use(p){const yr=+CFB.season,sn=(p.seasons||[]).find(s=>+s.y===yr),g=sn?+sn.g||0:0;
+  const cur=p.use&&p.ppa&&p.ppa.avg&&p.use.overall!=null?{uo:+p.use.overall,pa:+p.ppa.avg.all||0,pt:+p.ppa.tot||0}:null;
+  const last=p.use1&&p.ppa1&&p.use1.overall!=null?{uo:+p.use1.overall,pa:+(p.ppa1.avg||{}).all||0,pt:+p.ppa1.tot||0}:null;
+  if(cur&&g>=6){if(g<12)cur.pt*=12/g;return cur;}
+  return last||null;}
+dvOdds=(function(prev){return function(p){try{
+  if(!p||!CFB||!DVM124.pwu||!DV124_IDEAL[p.pos]||p.score==null||(p.drafted&&p.drafted.p))return prev(p);
+  const yr=+CFB.season,pos=p.pos,t=p.teams||[],first=t.length?+t[0][0]:yr;
+  const cn=Math.min(5,p.drafted?(+p.drafted.y-first):(yr-first+1)),yrs=p.drafted?cn:Math.max(3,cn);
+  const bc=p.bo?Math.max(1,cn-(yr-p.bo.y)):null,bo=!p.bo?0:bc<=1?1:bc===2?.8:bc===3?.55:.3;
+  const p5=DV124_P5.has(p.conf),fbs=DV124_FBS.has(p.conf),cm=p5?1:fbs?.9:.8,wt=p.wt,I=DV124_IDEAL[pos];
+  const wm=pos!=="QB"&&wt?1-Math.min(.08,Math.abs(wt-I)/400):1,W=pos==="WR"||pos==="TE"?.8:.85;
+  const rt=p.rec&&+p.rec.rating,u=dv153Use(p);
+  const x={prod:(p.score/100/cm/wm-(1-W)*bo)/W,bo,yrs,p5:p5?1:0,g5:fbs&&!p5?1:0,wtd:Math.abs((wt||I)-I)/25,rec:rt>0?rt:0,unrated:rt>0?0:1,
+    u_uo:u?u.uo:0,u_pa:u?u.pa:0,u_pt:u?u.pt:0,u_none:u?0:1};
+  const M=DVM124.pwu;let z=M.b[pos];for(const k in M.w)z+=M.w[k]*x[k];return 1/(1+Math.exp(-z));}catch(e){return prev(p);}};})(dvOdds);
+vDevyLab=(function(prev){return function(){let h=prev();if(!h)return h;
+  return h.replace("conference, size, recruiting rating;","conference, size, recruiting rating, share of team plays and play value (PPA);")
+    .replace(/\(AUC \.93 vs \.90 in the final college season, \.77 vs \.70 two seasons earlier\)/,"(AUC .94 vs .90 in the final college season, .80 vs .70 two seasons earlier)")
+    .replace(/On those held-out classes, prospects given 15–35% became starters 28% of the time \(81 players, 22% predicted\); the few above 35% hit 31%, so pre-draft odds show at most 40%\+\./,
+      "On those held-out classes, prospects given 15–35% became starters 23% of the time (75 players, 23% predicted) and those above 35% hit 43% (23 players, 45% predicted); pre-draft odds still show at most 40%+.");};})(vDevyLab);
+/* /v153 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

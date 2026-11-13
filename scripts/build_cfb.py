@@ -303,14 +303,14 @@ def main():
                         pt[norm(f'{x.get("firstName","")} {x.get("lastName","")}')] = {"from": x.get("origin"), "to": x.get("destination"), "y": y, "stars": x.get("stars")}
             return pt
 
-        def f_usage():
-            xs = jl(f"https://api.collegefootballdata.com/player/usage?year={cur}&excludeGarbageTime=true")
+        def f_usage(yr=None):
+            xs = jl(f"https://api.collegefootballdata.com/player/usage?year={yr or cur}&excludeGarbageTime=true")
             if xs is None:
                 return None
             return {str(x["id"]): {k: round(v, 3) for k, v in (x.get("usage") or {}).items() if isinstance(v, (int, float))} for x in xs if x.get("position") in POS and x.get("id")}
 
-        def f_ppa():
-            xs = jl(f"https://api.collegefootballdata.com/ppa/players/season?year={cur}&excludeGarbageTime=true")
+        def f_ppa(yr=None):
+            xs = jl(f"https://api.collegefootballdata.com/ppa/players/season?year={yr or cur}&excludeGarbageTime=true")
             if xs is None:
                 return None
             return {str(x["id"]): {"avg": {k: round(v, 3) for k, v in (x.get("averagePPA") or {}).items() if isinstance(v, (int, float))},
@@ -320,6 +320,9 @@ def main():
         portal = cached("portal", 24, f_portal) or {}
         usage = cached("usage", 20, f_usage) or {}
         ppa = cached("ppa", 20, f_ppa) or {}
+        # x20 / v153 devy odds: last season's usage + PPA too, used while this season is short (< 6 games)
+        usage1 = cached("usage1", 24 * 7, lambda: f_usage(cur - 1)) or {}
+        ppa1 = cached("ppa1", 24 * 7, lambda: f_ppa(cur - 1)) or {}
         recA = {v["aid"]: v for v in rec.values() if v.get("aid")}
         for k, p in out.items():
             r0 = recA.get(str(k))
@@ -337,6 +340,9 @@ def main():
             q = ppa.get(str(k))
             if q:
                 p["ppa"] = q
+            u1, q1 = usage1.get(str(k)), ppa1.get(str(k))
+            if u1 and q1:
+                p["use1"] = {"overall": u1.get("overall")}; p["ppa1"] = {"avg": {"all": (q1.get("avg") or {}).get("all")}, "tot": q1.get("tot")}
         json.dump(cache, open(cpath, "w"), separators=(",", ":"))
         print(f"  CFBD: recruiting {sum(1 for p in out.values() if 'rec' in p)} matched; portal {sum(1 for p in out.values() if 'portal' in p)}; "
               f"usage {sum(1 for p in out.values() if 'use' in p)}; EPA {sum(1 for p in out.values() if 'ppa' in p)}")
