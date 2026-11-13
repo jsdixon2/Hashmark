@@ -1,0 +1,18 @@
+name: inactives-log
+# Data test 1 (timing): Sunday snapshots of Sleeper injury statuses (one player-list call each; Sleeper asks for
+# sparing use of that call). Results: backtest/x18_timing.py.
+# Manual only for now (owner to decide on a Sunday schedule: 16:00, 17:20, 19:55 UTC Sunday + 00:15 UTC Monday).
+on: {workflow_dispatch: {}}
+permissions: {contents: write}
+concurrency: {group: inactives-log, cancel-in-progress: false}
+jobs:
+  snap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 scripts/log_inactives.py
+        env: {MSF_KEY: "${{ secrets.MSF_KEY }}"}
+      - run: |
+          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
+          git add bt/inactives; git diff --staged --quiet || (git commit -m "inactives snapshot (data test 1)" && (git pull --rebase -q origin main; git push))
