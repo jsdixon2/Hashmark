@@ -382,6 +382,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   .918; fit on 2019-22 picked .93. Second-year slot lean: no gain. Pick level x1.1-1.2: right 65.8-66.3%, error flat.
   -> KEEP pickVal as is. The market's ~20%/yr discount is an inefficiency: future picks are underpriced (managers,
   contenders most, sell them cheap but they hold their value) = a buy signal, not something to copy.
+- v144 (owner "yes do that"): Trade Lab hub (dynasty only) "future picks on sale" card (`fp144`, `fp144Card`): other
+  teams' 1sts/2nds 2+ drafts out (picksOf), contenders first then most trades (tr139); price table per pick (Typical ask =
+  pickVal x (.8/.93)^years beyond next draft, Worth = pickVal); tap a pick chip -> calculator with that pick on the get
+  side. DEFS.fp144 explains x11/x12.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
