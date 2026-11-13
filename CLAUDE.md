@@ -422,6 +422,8 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   Matchup page), records/standings ranks. Interest order: top-2 clash, both top-4, close (<8 pts from 50%), hot vs cold,
   star missing, streak length. Uses L.matchups, else pairs 0-1/2-3/... (demo). Demo records come from an archived league
   (names don't match demo projections) - real leagues use their own.
+  Owner follow-up: previews ignore players missing from set lineups (bye/out/questionable not mentioned; managers will
+  swap them) and project each team's BEST available lineup (teamWeek with no Sleeper starters).
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
