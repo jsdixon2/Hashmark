@@ -646,3 +646,14 @@ runs on 4 cores in about 6 min, and writes `e9_exact2_rosters.pkl`) and `backtes
 ### Earlier history
 The previous session's full handoff (briefing, the original engine review, transcript) was given to this session by the
 owner as `hashmark-handoff.md`. It isn't committed, because the repo is public. `CLAUDE.md` holds its essentials.
+
+## 2026-11-13 new-user review, items 6-12
+- Item 6 (Home 44% vs Team 0%): reproduced. leagueSummary cached the win chance keyed on week/mode/scores only, so a
+  projection refresh left Huddle/My teams stale while Team recomputed. v132: cache lives one redraw (1.5 s).
+- Item 8 (contrast): grey meta text already passed WCAG AA. Failures were light-mode accent text. v133 darkens text-only
+  green/red/orange in light mode (#08795B / #B8253F / #BF4706); filled buttons and dark mode unchanged.
+- Item 9: p134 roster rows "WR6 value"; Next 4 weeks "Empty every week: FLEX" once.
+- Item 10: v134 confidence notes as sentences (CF134), "Value to you" explains itself, roster glance info button.
+- Items 11-12: v135 proof line under the Huddle's top move (tested numbers from report.json), greeting uses the Sleeper
+  display name in live mode.
+- Item 7 (tagline): brainstorm only, nothing shipped. Sign-in screen is hard-coded dark while the app follows the theme.
