@@ -473,6 +473,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   new in build_cfb: CFBD cur-1 usage + PPA, 7-day cache), else the missing flag; drafted players keep the pick model.
   Held-out calibration improved at the top (35%+: said 45%, hit 43.5%, n 23; pwr said 42 hit 31); display cap 40%+ kept.
   Devy explanation text updated (AUC .94/.80, calibration). use1/ppa1 appear after the next data.yml build_cfb run.
+- p154 (owner: Burden card "Case Keenum is OUT; the passing game should improve when he returns" while Caleb Williams
+  starts): returnEffect's QB line (both definitions) only counts the team's starting QB: skipped when he is below #1 on
+  Sleeper's depth chart or another QB on the team has more value.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

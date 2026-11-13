@@ -1783,7 +1783,7 @@ const pctOf=(arr,v)=>{let lo=0,hi=arr.length;while(lo<hi){const m=(lo+hi)>>1;if(
 function sigCtx(){const A=Object.values(PL);return {now:A.map(rosN).sort((a,b)=>a-b),long:A.map(p=>p.val).sort((a,b)=>a-b)};}
 function returnEffect(p){const o={pct:0,why:[]},st=q=>statusWord(q.inj).replace(/^is /,"");
   for(const q of Object.values(PL)){if(q.team!==p.team||q.id===p.id||!q.inj||!ABS.test(q.inj))continue;if(!(q.pos==="QB"||q.val>=p.val*.5))continue;
-    if(q.pos==="QB"&&p.pos!=="QB"){o.pct+=8;o.why.push({v:8,t:`${q.name} is ${st(q)}; the offense improves when he returns`});}
+    if(q.pos==="QB"&&p.pos!=="QB"){if((q.dc&&q.dc>1)||Object.values(PL).some(r=>r.team===q.team&&r.pos==="QB"&&r.id!==q.id&&(r.val||0)>(q.val||0)))continue;o.pct+=8;o.why.push({v:8,t:`${q.name} is ${st(q)}; the offense improves when he returns`});}
     else if(q.pos===p.pos&&p.pos!=="QB"){const hi=q.val>p.val*.8;o.pct-=hi?9:3;o.why.push({v:hi?-9:-3,t:hi?`He is absorbing volume while ${q.name} is ${st(q)}; expect fewer looks on his return`:`${q.name} is ${st(q)} but does not threaten his role`});}
     else if(p.pos!=="QB"){o.pct+=3;o.why.push({v:3,t:`${q.name} is ${st(q)}; the offense opens up when he returns`});}}
   o.pct=Math.max(-14,Math.min(14,o.pct));return o;}
@@ -3231,7 +3231,7 @@ function lastPlayedWk(q){const a=advOf(q);const w=(a&&a.w||[]).filter(x=>x[1]!=n
 function headlineTimeline(q){if(!NW.items.length)return null;const ln=q.name.split(" ").slice(-1)[0];for(const it of NW.items){if(!it.t.includes(ln))continue;const m=(it.t+" "+(it.s||"")).match(/(\d+)\s*(?:-|–|to)\s*(\d+)\s*weeks|out (?:at least )?(\d+) weeks|(week-to-week|day-to-day|out for the season|season-ending)/i);if(m)return m[0].toLowerCase();}return null;}
 returnEffect=function(p){const o={pct:0,why:[]},st=q=>statusWord(q.inj).replace(/^is /,"");
   for(const q of Object.values(PL)){if(q.team!==p.team||q.id===p.id||!q.inj||!ABS.test(q.inj))continue;if(!(q.pos==="QB"||q.val>=p.val*.5))continue;const ln=q.name.split(" ").slice(-1)[0];
-    if(q.pos==="QB"&&p.pos!=="QB"){o.pct+=8;o.why.push({v:8,t:`${q.name} is ${st(q)}; the passing game should improve when he returns`});continue;}
+    if(q.pos==="QB"&&p.pos!=="QB"){if((q.dc&&q.dc>1)||Object.values(PL).some(r=>r.team===q.team&&r.pos==="QB"&&r.id!==q.id&&(r.val||0)>(q.val||0)))continue;o.pct+=8;o.why.push({v:8,t:`${q.name} is ${st(q)}; the passing game should improve when he returns`});continue;}
     if(q.pos!==p.pos||p.pos==="QB"){if(p.pos!=="QB"){o.pct+=3;o.why.push({v:3,t:`${q.name} is ${st(q)}; the offense opens up when he returns`});}continue;}
     const hi=q.val>p.val*.8;if(!hi){o.pct-=3;o.why.push({v:-3,t:`${q.name} is ${st(q)} but doesn’t threaten his role`});continue;}
     const a=advOf(q)||{},ir=/\bIR\b|injured reserve/i.test(q.inj),hl=headlineTimeline(q),lp=lastPlayedWk(q);
