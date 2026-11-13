@@ -7386,6 +7386,13 @@ vTrade=(function(prev){return function(){let h=prev();try{if(route()!=="trade")r
   h=h.replace(/(<button class="tile" data-go="(trade-[a-z]+)"[^>]*>(?:(?!<\/button>)[\s\S])*?)<div class="tb ell">–<\/div><div class="tsb">(?:(?!<\/button>)[\s\S])*?<\/div>/g,(m0,a,go)=>`${a}<div class="tb ell tb131">None right now</div><div class="tsb">${esc(TL131[go]||"Nothing to show yet")}</div>`);}catch(e){}return h;};})(vTrade);
 document.head.insertAdjacentHTML("beforeend",`<style>.tb131{font-size:17px!important;color:var(--muted)}</style>`);
 /* /v131 */
+/* ===== v132: Home and Team always show the same win chance (owner review item 6).
+   leagueSummary (Huddle "This week", My teams, tiles) cached its result until a matchup SCORE changed, so a projection
+   change without a score change (injury news, props, projections loading later) left Home on the old win chance while
+   Team/Matchup recomputed (repro: demo, three starters ruled out -> Home 79%, Team 29%). The cache now lives for one
+   redraw only (1.5 s). ===== */
+leagueSummary=(function(prev){return function(L){if(L&&L._sum&&(!L._sum.at||Date.now()-L._sum.at>1500))L._sum=null;const r=prev(L);if(L&&L._sum&&!L._sum.at)L._sum.at=Date.now();return r;};})(leagueSummary);
+/* /v132 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
