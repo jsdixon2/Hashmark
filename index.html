@@ -7815,6 +7815,54 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .wnum{margin-top:12px}.wnum .eyebrow{display:block;margin-bottom:2px}
 </style>`);
 /* /v150 */
+/* ===== v151 (owner: team-stat news, e.g. "Team A is 4-0 over the last 4 weeks and the top scorer in that span, but its
+   star is on bye, two starters are hurt and it faces No. 1 Team B (8-1)"; "doesn't have to be just the last 4 weeks").
+   The Wire gets a "Preview" story for every game this week (filter chip "Previews"):
+   - form: the most telling recent stretch for each team - its current streak if 3+, else the best/worst of its last
+     3-6 games (whichever record is most extreme), with its points-per-game rank among all teams over the same weeks;
+   - this week: stars (top-2 starters by rest-of-season points) on bye or out, other starters on the injury report,
+     projected totals and win chance (same projections as the Matchup page), records and standings ranks;
+   - ordered by interest: top-of-table clashes, close games, hot vs cold, missing stars. ===== */
+function w151Form(C,rid){const g=C.rec(rid).g;if(!g.length)return null;const last=g[g.length-1];let n=0;for(let i=g.length-1;i>=0&&g[i].won===last.won&&!g[i].tie;i--)n++;
+  let best=null;const pick=k=>{const s=g.slice(-k),w=s.filter(q=>q.won).length;return {k,w,l:s.length-w,from:s[0].w,to:s[s.length-1].w,ext:Math.abs(w/s.length-.5)*Math.sqrt(s.length)};};
+  if(n>=3)best={k:n,w:last.won?n:0,l:last.won?0:n,from:g[g.length-n].w,to:last.w,streak:true};
+  else{for(let k=3;k<=Math.min(6,g.length);k++){const c=pick(k);if(!best||c.ext>best.ext)best=c;}if(!best)best=pick(g.length);}
+  const span=new Set();for(let wk=best.from;wk<=best.to;wk++)span.add(wk);
+  const ppg=C.teams.map(t=>{const s=t.g.filter(q=>span.has(q.w));return {rid:t.rid,v:s.length?s.reduce((a,q)=>a+q.v,0)/s.length:0};}).sort((a,b)=>b.v-a.v);
+  const me=ppg.find(q=>+q.rid===+rid);return {...best,ppg:me?me.v:0,prk:ppg.findIndex(q=>+q.rid===+rid)+1,n:ppg.length};}
+function w151Side(L,ti,ls){const W=teamWeek(L,ti,ls),st=W.rows.filter(r=>r.p).map(r=>r.p);const stars=st.slice().sort((a,b)=>(rosPPG(b)||0)-(rosPPG(a)||0)).slice(0,2);
+  const bye=st.filter(p=>{const g=gameOf(p);return g&&g.bye;}),out=st.filter(p=>p.inj&&ABS.test(p.inj)&&!bye.includes(p)),q=st.filter(p=>p.inj&&/quest/i.test(p.inj));
+  return {W,stars,bye,out,q,proj:W.proj};}
+function w151Stories(C){const L=S.L;if(!C||!(C.same||L&&L.demo)||!L||!L.teams)return [];const out=[],pairs=[];
+  if(L.matchups&&L.matchups.length)for(const pr of L.matchups){if(pr.length===2)pairs.push([pr[0].i,pr[1].i,pr[0],pr[1]]);}
+  if(!pairs.length)for(let i=0;i+1<L.teams.length;i+=2)pairs.push([i,i+1,null,null]);if(!pairs.length)return [];const {tn,ranked}=C,rk=rid=>ranked.findIndex(q=>+q.rid===+rid)+1,wk=S.week;
+  for(const [ia,ib,la,lb] of pairs){const ta=L.teams[ia],tb=L.teams[ib];if(!ta||!tb)continue;const ra=ta.id,rb=tb.id;
+    const A=w151Side(L,ia,la),B=w151Side(L,ib,lb),fa=w151Form(C,ra),fb=w151Form(C,rb);if(!fa||!fb)continue;
+    const wpa=winProb(A.proj,B.proj),RA=C.rec(ra),RB=C.rec(rb),kA=rk(ra),kB=rk(rb);
+    const fav=wpa>=.5?{r:ra,s:A,f:fa,k:kA,R:RA,wp:wpa}:{r:rb,s:B,f:fb,k:kB,R:RB,wp:1-wpa},dog=fav.r===ra?{r:rb,s:B,f:fb,k:kB,R:RB}:{r:ra,s:A,f:fa,k:kA,R:RA};
+    const formTxt=(r,f)=>f.streak?`${tn(r)} ${f.w?`${tn(r)==="You"?"have":"has"} won`:`${tn(r)==="You"?"have":"has"} lost`} ${f.k} straight`:`${tn(r)} ${tn(r)==="You"?"are":"is"} ${f.w}–${f.l} over the last ${f.k} games`;
+    const scoreTxt=f=>f.prk===1?`the league's top scorer in that stretch (${f1(f.ppg)} a game)`:f.prk===f.n?`the lowest-scoring team in that stretch (${f1(f.ppg)} a game)`:f.prk<=3?`${ordn(f.prk)} in scoring over that span (${f1(f.ppg)} a game)`:`${f1(f.ppg)} points a game over that span, ${ordn(f.prk)} in the league`;
+    const miss=(r,s)=>{const m=[];const sb=s.stars.filter(p=>s.bye.includes(p)),so=s.stars.filter(p=>s.out.includes(p));
+      if(sb.length)m.push(`${w150List(sb.map(p=>p.name))} ${sb.length>1?"are":"is"} on bye`);if(so.length)m.push(`${w150List(so.map(p=>p.name))} ${so.length>1?"are":"is"} out`);
+      const oth=[...s.bye.filter(p=>!s.stars.includes(p)).map(p=>p.name+" (bye)"),...s.out.filter(p=>!s.stars.includes(p)).map(p=>p.name+" (out)")];if(oth.length)m.push(`${oth.length>3?oth.length+" starters are missing, including "+w150List(oth.slice(0,2)):w150List(oth)+(oth.length>1?" are":" is")+" missing"}`);
+      if(s.q.length)m.push(`${s.q.length} ${s.q.length>1?"are":"is"} questionable (${w150List(s.q.slice(0,3).map(p=>p.name))})`);return m;};
+    const mF=miss(fav.r,fav.s),mD=miss(dog.r,dog.s);
+    const top=kA<=2&&kB<=2,close=Math.abs(wpa-.5)<.08,hotCold=(fa.streak&&fa.w&&fb.streak&&!fb.w)||(fb.streak&&fb.w&&fa.streak&&!fa.w);
+    const starOut=fav.s.stars.some(p=>fav.s.bye.includes(p)||fav.s.out.includes(p))||dog.s.stars.some(p=>dog.s.bye.includes(p)||dog.s.out.includes(p));
+    const pr=50+(top?18:kA<=4&&kB<=4?10:0)+(close?8:0)+(hotCold?6:0)+(starOut?6:0)+Math.max(fa.streak?fa.k:0,fb.streak?fb.k:0);
+    const lab=(r,k,R)=>`No. ${k} ${tn(r)} (${R.w}–${R.l}${R.t?"–"+R.t:""})`;
+    const head=top?`Top-of-the-table clash: ${tn(ra)} vs ${tn(rb)}`:starOut&&mF.length?`${tn(fav.r)} ${tn(fav.r)==="You"?"are":"is"} favoured, but short-handed`:hotCold?`${tn(fa.streak&&fa.w?ra:rb)} ${tn(fa.streak&&fa.w?ra:rb)==="You"?"bring":"brings"} a hot streak into Week ${wk}`:close?`Coin flip: ${tn(ra)} vs ${tn(rb)}`:`${tn(fav.r)} ${tn(fav.r)==="You"?"face":"faces"} ${tn(dog.r)}`;
+    const lead=`${lab(fav.r,fav.k,fav.R)} ${tn(fav.r)==="You"?"take":"takes"} on ${lab(dog.r,dog.k,dog.R)} in Week ${wk}, and Hashmark has ${tn(fav.r)==="You"?"you":tn(fav.r)} as ${fav.wp>=.7?"a clear":fav.wp>=.58?"the":"a slight"} favourite at ${pc(fav.wp)} (${f1(fav.s.proj)} to ${f1(dog.s.proj)} projected).`;
+    const body=[`${formTxt(fav.r,fav.f)}, ${scoreTxt(fav.f)}.`,mF.length?`But ${w150List(mF)}.`:"",`${formTxt(dog.r,dog.f)}, ${scoreTxt(dog.f)}.`,mD.length?`For ${tn(dog.r)==="You"?"you":tn(dog.r)}, ${w150List(mD)}.`:""].filter(Boolean).join(" ");
+    const fx=[["Records",`${tn(ra)} ${RA.w}–${RA.l} (No. ${kA}) · ${tn(rb)} ${RB.w}–${RB.l} (No. ${kB})`],["Form",`${tn(ra)} ${fa.w}–${fa.l} last ${fa.k} · ${tn(rb)} ${fb.w}–${fb.l} last ${fb.k}`],
+      ["Scoring in that form",`${f1(fa.ppg)} (${ordn(fa.prk)}) · ${f1(fb.ppg)} (${ordn(fb.prk)})`],["Projected",`${f1(A.proj)} – ${f1(B.proj)}`],["Win chance",`${tn(ra)} ${pc(wpa)} · ${tn(rb)} ${pc(1-wpa)}`],
+      (A.bye.length||A.out.length||B.bye.length||B.out.length)?["Out or on bye",`${tn(ra)} ${A.bye.length+A.out.length} · ${tn(rb)} ${B.bye.length+B.out.length}`]:null].filter(Boolean);
+    out.push({tag:"Preview",cls:"acc",head,lead,body,det:[],facts:fx,when:`Week ${wk}`,pr});}
+  return out;}
+W150G["Preview"]="Previews";W150O.unshift("Previews");
+wireStories=(function(prev){return function(){const out=prev();try{const C=wxCtx();const xs=w151Stories(C);if(xs.length)return out.concat(xs).sort((a,b)=>b.pr-a.pr);}catch(e){console.error(e);}return out;};})(wireStories);
+w150Rewrite=(function(prev){return function(s){const r=prev(s);if(s&&s.tag==="Preview"&&s.body)r.body=s.body;return r;};})(w150Rewrite);
+/* /v151 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
