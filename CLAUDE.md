@@ -483,6 +483,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   sides are set pushes a side): 3-4 team trades use the v141 design (your grade + verdict, other teams' grades as chips,
   one card per team "<team> sends" with tap-to-change destination chips `.c156to` (data-cdest), + Add, remove team,
   lineup bars for all teams, what changes, + Team up to 4, Full breakdown = old view). Share image stays two-team.
+- x21 (backtest/x21_three.py, owner: 3-way trade recommendations "if tested and proven"): the archive has 91 dynasty /
+  28 redraft / 1 keeper 3-team trades vs ~24,000 2-team (0.5%); player-only with consensus ranks at the trade and 1 yr
+  later: 2-team 2,319 (value at trade names the team ahead a year later 68.0%), 3-team only 2 -> cannot be tested or
+  proven. NOT built: no 3-way recommendations. Calculator supports 3-4 teams (v156) for trades users build themselves.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
