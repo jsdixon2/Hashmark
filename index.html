@@ -5700,7 +5700,7 @@ function rosTodo(L,t){const T=[],mi=mineIdx(L);
 function rosRow(L,t,p,slot,sig){const ir=(t.ir||[]).includes(p.id),tx=(t.taxi||[]).includes(p.id),wk=rosSafe(()=>wkProj(p),0),ros=rosSafe(()=>rosPPG(p),0);
   const chip=slot?`<span class="chip rsl">${esc(slotLabel(slot))}</span>`:`<span class="chip rsl mute">${ir?"IR":tx?"TX":"BN"}</span>`;
   const tags=[p.inj?`<span class="warn">⚑ ${esc(String(p.inj).split(/[;(]/)[0].trim())}</span>`:"",sig==="sell"?`<span class="pill sellp">SELL</span>`:sig==="buy"?`<span class="pill buyp">BUY</span>`:""].filter(Boolean).join(" ");
-  const meta=[p.age?`${Math.floor(p.age)} yrs`:"",`${f1(ros)}/wk`,S.fmt.type!=="redraft"?`value ${f0(p.val)}`:p.rank?`${p.pos}${p.rank}`:""].filter(Boolean).join(" · ");
+  const meta=[p.age?`${Math.floor(p.age)} yrs`:"",`${f1(ros)}/wk`,S.fmt.type!=="redraft"?(p.vprk?`${p.pos}${p.vprk} value`:`value ${f0(p.val)}`):p.rank?`${p.pos}${p.rank}`:""].filter(Boolean).join(" · ");
   return `<button class="rrow${slot?"":" bn"}" data-go="player-${p.id}">${chip}<span class="rrn"><b class="ell">${esc(p.name)}</b><span class="sub ell">${meta}${tags?" · "+tags:""}</span></span><span class="rrv"><b class="num">${f1(wk)}</b><span class="sub">this wk</span></span></button>`;}
 vRoster=function(){const L=S.L;if(!L)return `<div class="empty">No league loaded.</div>`;if(L.rip)return `<section class="pan"><div class="ripm" style="margin-top:0">R.I.P.</div><p class="sub">Your roster was released when you were chopped.</p></section>`;
   const mi=mineIdx(L),t=L.teams[mi];if(!t)return `<div class="empty">Team not found.</div>`;const n=L.teams.length;
@@ -5718,7 +5718,7 @@ vRoster=function(){const L=S.L;if(!L)return `<div class="empty">No league loaded
     const d=nd[ps];return `<div class="pan dcp"><div class="row sp"><h3>${pos(ps)} <span class="sub">${arr.length}</span></h3>${d!=null?`<span class="num ${d<0?"bad":"good"}">${d>0?"+":""}${f1(d)} vs avg</span>`:""}</div>${arr.map(p=>rosRow(L,t,p,slotOf[p.id],sig[p.id])).join("")||`<p class="sub">None rostered.</p>`}</div>`;}).join("");
   const kd=rosSafe(()=>kdLineup(L,t).filter(x=>x.m).map(x=>`<div class="rrow"><span class="chip rsl">${x.slot==="DEF"?"D/ST":x.slot}</span><span class="rrn"><b class="ell">${esc(x.m.name)}</b><span class="sub ell">${esc(kdGame(x.m)||x.m.team)}${x.m.ss?` · ${f1(x.m.ss.ppg)}/g`:""}</span></span><span class="rrv"><b class="num">${f1(x.m.wk)}</b><span class="sub">this wk</span></span></div>`).join(""),"");
   const dcs=`<section class="mt2"><div class="row sp"><h2>Depth chart</h2><span class="tag">this week · rest of season</span></div><div class="mt">${dc}${kd?`<div class="pan dcp"><h3>K / D/ST</h3>${kd}</div>`:""}</div></section>`;
-  const pl=holes.length?`<section class="pan mt"><div class="row sp"><h2>Next 4 weeks</h2><span class="tag">byes & injuries</span></div>${holes.map(h=>`<div class="wkr"><b class="wkn2">Wk ${h.w}</b><div class="wkd">${h.empty.length?`<span class="bad">No ${esc(h.empty.join(", "))} starter</span>`:(h.base&&h.base.length?`<span>No new holes</span> <span class="sub">· ${esc(h.base.join(", "))} still empty</span>`:`<span class="good">Full lineup</span>`)}${h.outS.length?`<div class="sub">Out: ${esc(h.outS.join(", "))}</div>`:""}</div><span class="num">${f1(h.pts)}</span></div>`).join("")}<p class="sub mt">Right column: projected starting lineup with the players available that week.</p></section>`:"";
+  const pl=holes.length?`<section class="pan mt"><div class="row sp"><h2>Next 4 weeks</h2><span class="tag">byes & injuries</span></div>${(holes[0]&&holes[0].base&&holes[0].base.length&&holes.every(h=>(h.base||[]).join()===holes[0].base.join()))?`<p class="sub" style="margin:2px 0 6px">Empty every week: ${esc(holes[0].base.join(", "))}</p>`:""}${holes.map(h=>`<div class="wkr"><b class="wkn2">Wk ${h.w}</b><div class="wkd">${h.empty.length?`<span class="bad">No ${esc(h.empty.join(", "))} starter</span>`:(h.base&&h.base.length?`<span>No new holes</span>${holes.every(x=>(x.base||[]).join()===h.base.join())?"":` <span class="sub">· ${esc(h.base.join(", "))} still empty</span>`}`:`<span class="good">Full lineup</span>`)}${h.outS.length?`<div class="sub">Out: ${esc(h.outS.join(", "))}</div>`:""}</div><span class="num">${f1(h.pts)}</span></div>`).join("")}<p class="sub mt">Right column: projected starting lineup with the players available that week.</p></section>`:"";
   const ss=rosSafe(()=>startSit(),"");
   return `<div class="row sp" style="flex-wrap:wrap"><div><h1>${esc(t.name)}</h1><div class="sub">${recOf(t)} · ${esc(t.owner)}</div></div></div>${kp}${td}${dcs}${pl}
     ${rosSafe(()=>rosterMoves(L,t),"")}${rosSafe(()=>keeperCard(L,t),"")}
@@ -7386,6 +7386,66 @@ vTrade=(function(prev){return function(){let h=prev();try{if(route()!=="trade")r
   h=h.replace(/(<button class="tile" data-go="(trade-[a-z]+)"[^>]*>(?:(?!<\/button>)[\s\S])*?)<div class="tb ell">–<\/div><div class="tsb">(?:(?!<\/button>)[\s\S])*?<\/div>/g,(m0,a,go)=>`${a}<div class="tb ell tb131">None right now</div><div class="tsb">${esc(TL131[go]||"Nothing to show yet")}</div>`);}catch(e){}return h;};})(vTrade);
 document.head.insertAdjacentHTML("beforeend",`<style>.tb131{font-size:17px!important;color:var(--muted)}</style>`);
 /* /v131 */
+/* ===== v132: Home and Team always show the same win chance (owner review item 6).
+   leagueSummary (Huddle "This week", My teams, tiles) cached its result until a matchup SCORE changed, so a projection
+   change without a score change (injury news, props, projections loading later) left Home on the old win chance while
+   Team/Matchup recomputed (repro: demo, three starters ruled out -> Home 79%, Team 29%). The cache now lives for one
+   redraw only (1.5 s). ===== */
+leagueSummary=(function(prev){return function(L){if(L&&L._sum&&(!L._sum.at||Date.now()-L._sum.at>1500))L._sum=null;const r=prev(L);if(L&&L._sum&&!L._sum.at)L._sum.at=Date.now();return r;};})(leagueSummary);
+/* /v132 */
+/* ===== v133: text contrast (owner review item 8). Measured WCAG AA (4.5:1 for small text) on every page, light and dark:
+   the grey meta text passes; failures were light-mode accent TEXT: Pylon orange #E85A0C 3.56:1 on white (3.2 on the cream
+   page), green #0B8A68 4.33, red pill text 4.29. Light mode only: green -> #08795B (5.4), red -> #B8253F (6.2; 4.8 on
+   its pink pill); small orange text (labels, "Top X% on Sleeper", tags, dock label, devy meta) -> #BF4706 (5.1 / 4.6 on
+   cream). Orange fills, buttons, borders and big numbers keep the brand #E85A0C. Dark mode passes everywhere. ===== */
+document.head.insertAdjacentHTML("beforeend",`<style>
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--good:#08795B;--bad:#B8253F}
+ :root:not([data-theme="dark"]) .hdk,:root:not([data-theme="dark"]) .stcmp,:root:not([data-theme="dark"]) .tag.good,:root:not([data-theme="dark"]) .wtag.w-acc,
+ :root:not([data-theme="dark"]) .dvo,:root:not([data-theme="dark"]) .dvp,:root:not([data-theme="dark"]) .dvr .up,:root:not([data-theme="dark"]) .dock button.on span{color:#BF4706!important}}
+:root[data-theme="light"]{--good:#08795B;--bad:#B8253F}
+:root[data-theme="light"] .hdk,:root[data-theme="light"] .stcmp,:root[data-theme="light"] .tag.good,:root[data-theme="light"] .wtag.w-acc,:root[data-theme="light"] .dvo,
+:root[data-theme="light"] .dvp,:root[data-theme="light"] .dvr .up,:root[data-theme="light"] .dock button.on span{color:#BF4706!important}
+</style>`);
+/* /v133 */
+/* ===== v134: plain-language explanations (owner review item 10).
+   - Value card confidence notes were internal phrasing ("experts closely agree on his rest-of-season rank, but sources
+     disagree on this season"); they now read as sentences.
+   - "Value to you −34% for your roster" says why: less (or more) of a lineup piece for you than for most teams.
+   - Roster at-a-glance boxes (Roster risk, Lineup holes, spots/IR/Taxi, Power rank, Playoff odds): one "What these
+     numbers mean" info button under the boxes (one info button per row; boxes are links, so no buttons inside them). ===== */
+const CF134=[[/^experts closely agree on his rest-of-season rank/,"experts agree where he ranks"],[/sources disagree on this season/,"value sites disagree about this season"],
+  [/expert ranks spread ±(\d+) spots/,"experts disagree on his rank (±$1 spots)"],[/(\d+) value sources agree within (\d+)%/,"$1 value sites agree within $2%"],
+  [/value sources disagree by (\d+)%/,"value sites differ by $1%"],[/(\d+)% of snaps lately/,"on the field for $1% of snaps lately"],
+  [/^small sample this season/,"only a few games this season"],[/, years before the (\w+) decline point/,", years before the usual $1 decline"]];
+function cf134(t){if(!t)return t;let s=String(t);for(const [a,b] of CF134)s=s.replace(a,b);return s.charAt(0).toUpperCase()+s.slice(1);}
+confShort=(function(prev){return function(...a){const r=prev(...a);if(r&&r.why)r.why=cf134(r.why);return r;};})(confShort);
+confLong=(function(prev){return function(...a){const r=prev(...a);if(r&&r.why)r.why=cf134(r.why);return r;};})(confLong);
+valueCard=(function(prev){return function(p){let h=prev(p);try{h=h.replace(/<em>([+−-]?\d+)% for your roster<\/em>/,(m0,d)=>{const n=parseInt(String(d).replace("−","-"),10);
+  return `<em>${n>0?"+":"−"}${Math.abs(n)}%: ${n>0?"fills a bigger need for you than for most teams":"you'd start him less than most teams would"}</em>`;});}catch(e){}return h;};})(valueCard);
+DEFS.rosglance=["Your roster at a glance","This week: your projected points and chance to win this matchup. Power rank: where your best lineup's strength ranks in the league. Playoff odds: the share of simulated seasons in which you make the playoffs. Players: roster size; open spot = room to add someone; IR and Taxi = slots used of slots allowed. Lineup holes: starting slots that would sit empty in the next 4 weeks because of byes or injuries. Roster risk: how likely your starters are to miss games or have a bust week, from injury history and week-to-week swings."];
+vRoster=(function(prev){return function(){let h=prev();try{const i=h.indexOf("<h2>To do</h2>");if(i<0)return h;const a=h.lastIndexOf("<section",i);if(a<0)return h;
+  return h.slice(0,a)+`<p class="sub rk134">What these numbers mean ${info("rosglance")}</p>`+h.slice(a);}catch(e){return h;}};})(vRoster);
+document.head.insertAdjacentHTML("beforeend",`<style>.rk134{margin:6px 2px 0;display:flex;align-items:center;gap:6px}</style>`);
+/* /v134 */
+/* ===== v135: owner review items 11-12 (+ a stale note).
+   11) One tested-accuracy line under the Huddle's top move, matched to the kind of move (numbers from data/report.json
+       where graded, held-out backtests otherwise): waiver adds -> tested.waivers; sell/buy calls -> verdict precision on
+       held-out 2025 (e33: sells right 91%, buys 69%); lineup items -> projections vs Sleeper this season. Links to the
+       Report card.
+   12) Greeting uses the user's Sleeper display name (owner name on their team) instead of "GM"; demo keeps "GM".
+   The live note said scores "update every minute"; since v130 it is every 30 seconds. ===== */
+function hd135Name(){try{for(const L of S.leagues||[]){if(L.demo)continue;const t=L.teams[mineIdx(L)];const o=t&&(Array.isArray(t.owner)?t.owner[0]:t.owner);if(o&&o!=="you")return String(o);}}catch(e){}return null;}
+hdPhase=(function(prev){return function(){const r=prev();try{const n=S.mode==="live"?hd135Name():null;if(n)r.greet=r.greet.replace(/GM\.$/,esc(n)+".");
+  if(r.focus==="live")r.note="Live scores and win odds update every 30 seconds.";}catch(e){}return r;};})(hdPhase);
+function hd135Proof(m){if(!m||!RPT)return "";const T=RPT.tested||{},P=RPT.projections||{},k=m.k||"";let t="";
+  if(/Free agent/.test(k)&&T.waivers){const w=(T.waivers.by_fmt||{})[S.fmt&&S.fmt.type]||T.waivers;t=`Waiver calls like this added ${f1(w.pts)} lineup pts over 3 weeks in testing; helped ${Math.round(w.helped*100)}%.`;}
+  else if(/Sell high/.test(k))t="Sell calls like this were right 91% of the time on 2025 games the model never saw.";
+  else if(/Buy/.test(k))t="Buy calls like this were right 69% of the time on 2025 games the model never saw.";
+  else if(P.mae_hm&&P.n_weeks)t=`Hashmark's projections beat Sleeper's in ${P.weeks_beat} of ${P.n_weeks} weeks this season.`;
+  return t?`<p class="sub hd135">${esc(t)} <span class="lnk" data-go="report">How it's graded</span></p>`:"";}
+hdMove=(function(prev){return function(){const h=prev();if(!h)return h;try{let mv=[];try{mv=mergedMoves();}catch(e){}return h+hd135Proof(mv[0]);}catch(e){return h;}};})(hdMove);
+document.head.insertAdjacentHTML("beforeend",`<style>.hd135{margin:-6px 4px 12px;font-size:12.5px}</style>`);
+/* /v135 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
