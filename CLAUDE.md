@@ -318,6 +318,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   on IR/PUP/NFI with no named injury in 3 weeks of news; otherwise minor, named from the news (concussion, ankle ...).
   Short term is capped at Medium while a player carries any injury tag ("but listed questionable (concussion)").
   Matchup page win bar (.wp) now orange for you / plain track for them, like the other win bars (was mint/rose).
+- v137 (owner: Burden "worth less to me" on his rebuilding keeper team; the card said REDRAFT): the player card values
+  for the league selected in the app. The Value tag now names the league and "Value to you" starts "On / Not on your
+  roster here." Value to you = market x (your lineup loss or gain / average other team's)^.6, clamped .5-1.6 (-34% is
+  the floor). Known asymmetry, not changed: valIn adds a breakout bonus for contenders that valOut never gets.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

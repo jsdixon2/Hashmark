@@ -7462,6 +7462,15 @@ injClass=(function(prev){return function(p){const r=prev(p);if(!r||r.c!=="unc"||
 confShort=(function(prev){return function(p,R){const r=prev(p,R);if(r&&r.lv==="High"&&p&&p.inj){r.lv="Medium";const w=p.ic&&p.ic.c==="min"&&p.ic.why&&!/undisclosed/.test(p.ic.why)?p.ic.why:"injury";if(!/questionable|injur|concussion/i.test(r.why))r.why+=`, but listed ${statusWord(p.inj).replace(/^is /,"").toLowerCase()} (${w})`;}return r;};})(confShort);
 document.head.insertAdjacentHTML("beforeend",`<style>.wp i:first-child{background:var(--accg)}.wp i:last-child{background:var(--panel2)}</style>`);
 /* /v136 */
+/* ===== v137 (owner: "he's my best receiver on a rebuilding team, why is he worth less to me?"). The player card values
+   a player for the league selected in the app, which may not be the league the owner was thinking of (card said
+   REDRAFT while his rebuilding team is in the keeper league). The Value tag now names the league, and "Value to you"
+   says whether he is on your roster there. ===== */
+valueCard=(function(prev){return function(p){let h=prev(p);try{const L=S.L;if(!h||!L||!p)return h;
+  const nm=esc(String(L.name||"").slice(0,24)),mi=mineIdx(L),own=mi>=0&&L.teams[mi].players.includes(p.id);
+  h=h.replace(`<span class="tag">${fmtLbl()}</span>`,`<span class="tag">${nm?nm+" · ":""}${fmtLbl()}</span>`);
+  h=h.replace(/(<span class="vk">Value to you[\s\S]*?<em>)/,`$1${own?"On your roster here. ":"Not on your roster here. "}`);}catch(e){console.error(e);}return h;};})(valueCard);
+/* /v137 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
