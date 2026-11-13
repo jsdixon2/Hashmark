@@ -1,0 +1,16 @@
+name: open-lines
+# Manual only. Test 1 (backtest/x14_open.py): ESPN's opening/closing NFL lines for 2019-25 regular-season games
+# -> bt/nfl/lines_espn.jsonl.gz (numbers only). Resumable: re-running fetches only missing games.
+on: {workflow_dispatch: {}}
+permissions: {contents: write}
+concurrency: {group: open-lines, cancel-in-progress: false}
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 scripts/fetch_open_lines.py
+      - run: |
+          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
+          git add bt/nfl/lines_espn.jsonl.gz; git diff --staged --quiet || (git commit -m "open/close NFL lines (ESPN) for test 1" && (git pull --rebase -q origin main; git push))
