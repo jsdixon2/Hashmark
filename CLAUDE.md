@@ -487,6 +487,15 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   28 redraft / 1 keeper 3-team trades vs ~24,000 2-team (0.5%); player-only with consensus ranks at the trade and 1 yr
   later: 2-team 2,319 (value at trade names the team ahead a year later 68.0%), 3-team only 2 -> cannot be tested or
   proven. NOT built: no 3-way recommendations. Calculator supports 3-4 teams (v156) for trades users build themselves.
+- x22 (backtest/x22_valpath.py, owner: chart too pessimistic for young players? e.g. Mendoza + Hampton vs Burden): cells
+  behind such players are small (rookie SF QB ranked 37-100: 11 players, Wilson/Pickett/Levis/Lance/Mac Jones...; WR/RB
+  <=23 ranked 37-100: 17-18). Tested A shipped vs B (kernel on log rank, no tier cliff, each player once, shrunk) vs C
+  (B + draft pick for 3rd-year-or-younger + last completed season PPG percentile); leave-one-start-season-out 2020-23 +
+  strict (fit ending <2023, test 2023+). Shipped median bias for young players ~0 (-.04..+.2; strict 2yr -.24): the drops
+  are what similar players really did. B/C order players a bit better at 2-3 yrs (young 3yr rank .60->.65 etc.) but
+  are MORE pessimistic (bias -.1..-.6), C's 1-yr error worse, and real trades: no consistent gain (strict 2yr A 65.2% vs
+  B 58.6 / C 60.4; 3yr 57.2 / 56.2 / 56.2; LOSO 2023 A best, 2022 B/C +1-2 pts). Today's values order young players
+  3 yrs out about as well as any model (strict flat .540 vs A .343). NOT shipped; chart kept.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
