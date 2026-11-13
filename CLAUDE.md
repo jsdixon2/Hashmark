@@ -353,7 +353,14 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   for trades: x9 test run (backtest/x9_paths.py -> x9_fit.json; train paths END before 2023, test starts 2023+):
   players: median beats "value stays flat" by 2% at 6 mo, 6.5% at 1 yr, 17% at 2 yrs, 23.5% at 3 yrs (60 days: tie);
   10-90% bands hold 76-80% (slightly narrow). 1,256 real keeper/dynasty trades 2023+: side ahead later picked 69.3% vs
-  67.9% flat at 1 yr, 65.6% vs 59.5% at 2 yrs, 57% vs 52% at 3 yrs (n 126). Preview shown; NOT built - wait for go.
+  67.9% flat at 1 yr, 65.6% vs 59.5% at 2 yrs, 57% vs 52% at 3 yrs (n 126).
+- v143 (owner "go": both sides' market value + dotted value to your team): calculator "Value over time" card for
+  dynasty/keeper two-team trades (under the lineup bars). data/valpath.json from backtest/x9_ship.py 1.1 (cells x 11
+  quantiles, bands widened x1.1: x9_cal.py held-out coverage 81-84%; pick buckets r1e/r1m/r1l/r2/r3/r4 = real 2020-24
+  rookies' values .5/1.5/2.5 yrs after the draft). `vp143Sim` 500 seeded draws per side (stable per trade), points
+  Now / Draft (or 6 mo) / 1 / 2 / 3 yrs; dotted = median x today's roster-fit ratio (implied() / market); headline names
+  who's ahead now and the month the lines cross. Picks: today's value until their draft (May 1 of pick year), r1 uses
+  the mid bucket. Not in the share image yet. Rebuild data: python3 backtest/x9_paths.py && python3 backtest/x9_ship.py 1.1.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

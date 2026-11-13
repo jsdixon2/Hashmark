@@ -7612,6 +7612,64 @@ tlPaint=(function(prev){return function(root){prev(root);if(!root)return;try{roo
   const ctx=((pb.previousElementSibling||{}).textContent||"")+" "+((pb.nextElementSibling||{}).textContent||"");
   if(/win chance|win odds|to win\b|chance to win/i.test(ctx))i.style.setProperty("background","var(--accg)","important");});}catch(e){}};})(tlPaint);
 /* /v142 */
+/* ===== v143 (owner: "go" on value over time, with both sides' market value + a dotted line for value to your team).
+   backtest/x9_paths.py: comparable-player value paths, FantasyPros dynasty consensus 2019-26; train paths ended before
+   2023, tested on 2023-26: players' median beat "value stays flat" by 6.5% at 1 yr, 17% at 2 yrs, 23.5% at 3 yrs; on
+   1,256 real keeper/dynasty trades the side ahead after 2 years was picked 65.6% vs 59.5% with today's values. Bands
+   widened x1.1 (x9_cal.py: held-out 10-90% coverage 76-78% -> 81-84%). data/valpath.json (x9_ship.py): cells
+   fmt|pos|age band|tier|phase|horizon -> 11 quantiles of log change, coarser fallbacks; picks = today's value until
+   their draft, then real 2020-24 rookies drafted in that range. Chart: dynasty/keeper two-team trades, under the lineup
+   bars; solid = market value (median + shaded 8-in-10 range), dotted = value to your team (market x today's roster-fit
+   ratio for that side). ===== */
+let VP143=null,VP143st="idle",VP143R=Math.random;function vp143Seed(str){let a=0;for(const c of str)a=(a*31+c.charCodeAt(0))|0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+async function vp143Load(){if(VP143st!=="idle")return;VP143st="loading";try{const r=await fetch("data/valpath.json",{cache:"no-cache"});if(r.ok){VP143=await r.json();VP143st="ready";}else VP143st="error";}catch(e){VP143st="error";}if(route()==="trade-calc")render();}
+const VP143Q=[.05,.1,.2,.3,.4,.5,.6,.7,.8,.9,.95],VP143H=[0,180,365,730,1095];
+function vp143Cell(p,h){const C=VP143.cells,f=S.fmt.qb==="sf"?"sf":"1qb",a=p.age||25,ab=p.draft==="Rookie"?"R":a<24?"23":a<27?"26":a<30?"29":"30",rk=p.vrk||250,ti=rk<=36?"a":rk<=100?"b":"c",m=new Date().getMonth(),ph=m>=8?"S":m<=3?"P":"U";
+  for(const k of [`0|${f}|${p.pos}|${ab}|${ti}|${ph}|${h}`,`1|${f}|${p.pos}|${ab}|${ti}|${h}`,`2|${f}|${p.pos}|${ab}|${h}`,`3|${f}|${p.pos}|${h}`,`4|${f}|${h}`])if(C[k])return C[k];return null;}
+function vp143Draw(q){const u=.05+VP143R()*.9;let i=0;while(i<VP143Q.length-2&&VP143Q[i+1]<u)i++;const t=(u-VP143Q[i])/(VP143Q[i+1]-VP143Q[i]);return q[i]+t*(q[i+1]-q[i]);}
+function vp143Asset(a,L,h){const v0=assetVal(a,L,null);if(!h)return v0;
+  if(a.k==="k"){const dr=new Date(+a.y,4,1),at=new Date(Date.now()+h*864e5);if(at<dr)return v0;const yrs=(at-dr)/3.15e10,ix=yrs<1?0:yrs<2?1:2;
+    const b=a.r===1?"r1m":a.r===2?"r2":a.r===3?"r3":"r4",xs=((VP143.picks[S.fmt.qb==="sf"?"sf":"1qb"]||{})[b]||[[],[],[]])[ix];return xs.length?xs[Math.floor(VP143R()*xs.length)]:v0;}
+  const p=PL[a.id];if(!p)return 0;const q=vp143Cell(p,h);return q?v0*Math.exp(vp143Draw(q)):v0;}
+function vp143Sim(L,K,mi,o){const key=JSON.stringify(K.assets)+"|"+mi+"|"+o+"|"+S.fmt.type+S.fmt.qb;if(vp143Sim.k===key)return vp143Sim.v;
+  const get=K.assets.filter(a=>a.from===o),give=K.assets.filter(a=>a.from===mi),N=500;VP143R=vp143Seed(key);
+  const side=xs=>VP143H.map(h=>{const s=[];for(let n=0;n<N;n++)s.push(xs.reduce((t,a)=>t+vp143Asset(a,L,h),0));s.sort((x,y)=>x-y);return [s[Math.floor(N*.1)],s[Math.floor(N*.5)],s[Math.floor(N*.9)]];});
+  const mk=xs=>xs.reduce((t,a)=>t+assetVal(a,L,null),0);
+  const fitG=mk(get)?get.reduce((t,a)=>t+(a.k==="k"?assetVal(a,L,mi):implied(L,mi,PL[a.id],false)),0)/mk(get):1;
+  const fitV=mk(give)?give.reduce((t,a)=>t+(a.k==="k"?assetVal(a,L,mi):implied(L,mi,PL[a.id],true)),0)/mk(give):1;
+  const v={G:side(get),V:side(give),fG:fitG,fV:fitV,nG:get,nV:give};vp143Sim.k=key;vp143Sim.v=v;return v;}
+function vp143Card(L,K,mi,o){if(S.fmt.type==="redraft"||o==null||K.sides.length>2)return "";const get=K.assets.filter(a=>a.from===o),give=K.assets.filter(a=>a.from===mi);if(!get.length||!give.length)return "";
+  if(VP143st!=="ready"){vp143Load();return VP143st==="error"?"":`<section class="pan mt"><div class="eyebrow">Value over time</div><p class="sub">Loading…</p></section>`;}
+  const R=vp143Sim(L,K,mi,o),G=R.G.map(x=>x[1]),V=R.V.map(x=>x[1]);
+  const nm=xs=>xs.length===1?(xs[0].k==="k"?assetName(xs[0],L):(PL[xs[0].id]||{}).name||"Player"):xs.map(a=>a.k==="k"?`${a.y} R${a.r}`:((PL[a.id]||{}).name||"").replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/,"").split(" ").slice(-1)[0]).join(" + ");
+  const gN=nm(get),vN=nm(give);let cross=null;for(let i=1;i<5;i++){const d0=G[i-1]-V[i-1],d1=G[i]-V[i];if(d0===0||Math.sign(d0)!==Math.sign(d1)){const t=d0/(d0-d1||1);cross=VP143H[i-1]+t*(VP143H[i]-VP143H[i-1]);break;}}
+  const when=d=>new Date(Date.now()+d*864e5).toLocaleDateString(undefined,{month:"long",year:"numeric"});
+  const head=cross!=null?`${esc(G[0]>=V[0]?gN:vN)} ${G[0]>=V[0]?(get.length>1?"are":"is"):(give.length>1?"are":"is")} worth more now. ${esc(G[0]>=V[0]?vN:gN)} pulls ahead around ${when(cross)}.`
+    :G[4]>=V[4]?`What you get (${esc(gN)}) is worth more now and for the next 3 years.`:`What you give (${esc(vN)}) is worth more now and for the next 3 years.`;
+  const W=340,Hh=200,l=8,r=10,t=12,b=24,mx=Math.max(...R.G.map(x=>x[2]),...R.V.map(x=>x[2]),G[0]*R.fG,V[0]*R.fV)*1.05||1;
+  const X=d=>l+(W-l-r)*d/1095,Y=v=>t+(Hh-t-b)*(1-v/mx);
+  const band=s=>"M"+s.map((x,i)=>`${X(VP143H[i]).toFixed(1)},${Y(x[2]).toFixed(1)}`).join(" L")+" L"+s.map((x,i)=>[i,x]).reverse().map(([i,x])=>`${X(VP143H[i]).toFixed(1)},${Y(x[0]).toFixed(1)}`).join(" L")+"Z";
+  const ln=(s,f)=>"M"+s.map((v,i)=>`${X(VP143H[i]).toFixed(1)},${Y(v*f).toFixed(1)}`).join(" L");
+  const m=new Date().getMonth(),labs=["Now",m>=8||m<=1?"Draft":"6 mo","1 yr","2 yrs","3 yrs"];
+  const svg=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" class="vp143"><g stroke="var(--line)" stroke-width="1">${VP143H.map(d=>`<line x1="${X(d).toFixed(1)}" x2="${X(d).toFixed(1)}" y1="${t}" y2="${Hh-b}"/>`).join("")}</g>
+    <path d="${band(R.V)}" fill="var(--muted)" fill-opacity=".16"/><path d="${band(R.G)}" fill="var(--acc)" fill-opacity=".18"/>
+    ${Math.abs(R.fV-1)>=.03?`<path d="${ln(V,R.fV)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4"/>`:""}${Math.abs(R.fG-1)>=.03?`<path d="${ln(G,R.fG)}" fill="none" stroke="var(--acc)" stroke-width="2" stroke-dasharray="4 4"/>`:""}
+    <path d="${ln(V,1)}" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linejoin="round"/><path d="${ln(G,1)}" fill="none" stroke="var(--acc)" stroke-width="3" stroke-linejoin="round"/>
+    ${G.map((v,i)=>`<circle cx="${X(VP143H[i]).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="3" fill="var(--acc)"/>`).join("")}${V.map((v,i)=>`<circle cx="${X(VP143H[i]).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="3" fill="var(--muted)"/>`).join("")}
+    ${cross!=null?`<circle cx="${X(cross).toFixed(1)}" cy="${Y((G[0]+V[0])/2>0?(()=>{const i=VP143H.findIndex(d=>d>=cross),i0=Math.max(1,i),tt=(cross-VP143H[i0-1])/(VP143H[i0]-VP143H[i0-1]);return G[i0-1]+tt*(G[i0]-G[i0-1]);})():0).toFixed(1)}" r="6" fill="none" stroke="var(--ink)" stroke-width="2"/>`:""}
+    ${labs.map((lb,i)=>`<text x="${X(VP143H[i]).toFixed(1)}" y="${Hh-7}" fill="var(--muted)" font-size="10" text-anchor="${i===0?"start":i===4?"end":"middle"}">${lb}</text>`).join("")}</svg>`;
+  const fitLine=(f,who)=>Math.abs(f-1)>=.03?`${who} ${f>1?"+":"−"}${Math.round(Math.abs(f-1)*100)}%`:"";const fl=[fitLine(R.fG,"what you get"),fitLine(R.fV,"what you give")].filter(Boolean).join(", ");
+  const rows=[0,2,3,4].map(i=>`<span>${["Now","","1 yr","2 yrs","3 yrs"][i]}</span><b class="num" style="color:var(--acc)">${f0(Math.round(G[i]))}</b><b class="num">${f0(Math.round(V[i]))}</b>`).join("");
+  return `<section class="pan mt vp143c"><div class="eyebrow">Value over time</div><div class="vp143h">${head}</div>
+    <div class="vp143lg"><span><i style="background:var(--acc)"></i>You get: ${esc(gN)}</span><span><i style="background:var(--muted)"></i>You give: ${esc(vN)}</span><span><i class="dot"></i>Value to your team</span></div>${svg}
+    <div class="vp143tb"><span></span><span class="sub">You get</span><span class="sub">You give</span>${rows}</div>
+    <p class="sub vp143f">Solid = market value, shaded = 8 in 10 likely range. Dotted = value to your team (today's roster fit${fl?`: ${fl}`:""}). Tested on 2023–26 trades: picked the side worth more after 2 years 66% of the time, vs 60% using today's values. ${info("vp143")}</p></section>`;}
+vCalc=(function(prev){return function(){let h=prev();try{const L=S.L,K=S.calc;if(!K||K.sides.length>2)return h;const mi=mineIdx(L),o=K.sides[1];const card=vp143Card(L,K,mi,o);if(!card)return h;
+  const i=h.indexOf('<section class="pan mt"><div class="eyebrow">What changes');const j=h.indexOf('<div class="row mt c141act">');const at=i>=0?i:j;return at>=0?h.slice(0,at)+card+h.slice(at):h+card;}catch(e){console.error(e);return h;}};})(vCalc);
+DEFS.vp143=["Value over time","Each player's line follows how 2019–26 players at the same position, age band, value tier and time of year actually moved in the dynasty market (FantasyPros consensus). The middle line is the typical path; the shaded band holds 8 in 10 outcomes (checked on 2023–26, which the model never saw). Draft picks keep today's value until their draft, then follow the real values of rookies taken in that range in 2020–24. Value to your team scales each side by how much it helps your roster today."];
+document.head.insertAdjacentHTML("beforeend",`<style>.vp143h{font:700 18px/1.25 var(--fd);margin:6px 0 4px}.vp143lg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;margin:8px 0 4px}.vp143lg i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:3px;margin-right:6px}.vp143lg i.dot{background:repeating-linear-gradient(90deg,var(--muted) 0 4px,transparent 4px 7px)}
+.vp143 text{font-family:var(--fb)}.vp143tb{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px 10px;font-size:13px;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}.vp143tb b,.vp143tb .sub{text-align:right;margin:0}.vp143f{font-size:12px;margin-top:10px}</style>`);
+/* /v143 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
