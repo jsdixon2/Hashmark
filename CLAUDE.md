@@ -503,6 +503,15 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   ranges overlap"); footnote says 2-3 yrs are ranges, not forecasts.
 - p158 (owner: "Waller and Kiner both projected 19 pts?"): the waiver "close call" note is about the DROP; now reads
   "close call: Mitchell still projects 19.8 pts over 4 weeks" (was "he still projects 19.8 pts").
+- x23 (backtest/x23_contracts.py, owner "test 1"): contracts (cap share, years left, guaranteed share, rookie deal; OTC
+  via nflverse, signed by that season) on top of the x17 per-position refit: production rank SF .639 -> .624, 1QB .565
+  -> .572; market 1 yr later worse (SF 672 -> 739 MAE, rank .830 -> .809). Vets 28+ with <=1 yr left and <35% guaranteed
+  did NOT lose more value than other vets (less, if anything). NOT shipped.
+- x24 (backtest/x24_vacated.py, owner "test 2"): vacated targets/carries (team's Y share held by players not on its
+  week-1 depth chart in Y+1; 2025 depth file = dated snapshots, last before week 1). Weeks 1-4 vs Sleeper, fit 2022-23,
+  test 2024-25: RB 4.875 -> 4.875, WR 5.362 -> 5.341, TE 4.125 -> 3.922 - but a plain median shift does better (RB
+  4.780, WR 5.156, TE 3.745: Sleeper's numbers are means, real points' median runs ~1.6 lower; Hashmark's median
+  regression already does this). Value Aug 20 -> Nov: RB worse (error 581 -> 690), WR/TE flat. NOT shipped.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
