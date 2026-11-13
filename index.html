@@ -7706,6 +7706,17 @@ function calc145Fix(){const K=S.calc;if(!K||!K.assets)return;const sides=K.sides
 calcEval=(function(prev){return function(){calc145Fix();return prev.apply(this,arguments);};})(calcEval);
 vCalc=(function(prev){return function(){calc145Fix();return prev.apply(this,arguments);};})(vCalc);
 /* /v145 */
+/* ===== v147 (owner: "the app is moving a little slow"). Profiling 10 Huddle redraws with 5 leagues: lostSeason() was
+   the top cost (~20 ms per redraw, before and after today's changes). It scans every news story for every player each
+   time any list is filtered (players x stories). injClass() does the same scan for every player when values are built.
+   Both are now cached per player until the news feed, injury status or report changes. ===== */
+const LS147={k:null,m:new Map()},IC147={k:null,m:new Map()};
+const nw147=()=>(NW.built||0)+"|"+((NW.items||[]).length);
+lostSeason=(function(prev){return function(p){if(!p)return false;const k=nw147();if(LS147.k!==k){LS147.k=k;LS147.m.clear();}
+  const key=p.id+"|"+(p.inj||"")+"|"+(p.offRep||"")+"|"+(p.news&&p.news.rep||"");const c=LS147.m.get(key);if(c!==undefined)return c;const v=prev(p);LS147.m.set(key,v);return v;};})(lostSeason);
+injClass=(function(prev){return function(p){if(!p)return prev(p);const k=nw147();if(IC147.k!==k){IC147.k=k;IC147.m.clear();}
+  const key=p.id+"|"+(p.inj||"")+"|"+(p.news&&p.news.rep||"");if(IC147.m.has(key))return IC147.m.get(key);const v=prev(p);IC147.m.set(key,v);return v;};})(injClass);
+/* /v147 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

@@ -393,6 +393,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   value + 50% this season; dynasty markets Burden ~5,200 avg vs Hubbard ~3,000 (ECR #31 vs #95), this season Hubbard RB8
   vs Burden WR15 so the halves pull them together). Fixed: (1) questionable + MINOR injury no longer trims long-term value
   x.9 in valueEngine (card already said long-term unchanged); (2) trade finder "▲ +-8 value" -> signed / "about even value".
+- v147 (owner: "app is moving a little slow"): profiled (CDP, 10 Huddle redraws, 5 leagues): lostSeason() scanned every
+  news story for every player on each filter (players x stories) = top cost before and after today's work. lostSeason
+  and injClass now cached per player (key id|inj|offRep|news.rep) until NW.built / NW.items.length changes. Huddle
+  redraw with 1,500 stories: 57 -> 6 ms; other pages equal or faster. Perf scripts: scratchpad qa/perf.js, perf3.js
+  (old build served on :8766 from git show <commit>:index.html).
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
