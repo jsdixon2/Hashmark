@@ -7695,6 +7695,17 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
   S.calc={lid:L.id,sides:[mi,ti],assets:[{k:"k",id:`${y}-${r}-${orig}`,y,r,orig,from:ti,to:mi}]};go("trade-calc");},true);
 document.head.insertAdjacentHTML("beforeend",`<style>.fp144r{padding:10px 0;border-top:1px solid var(--line)}.fp144r:first-of-type{border-top:0}.fp144t{display:grid;grid-template-columns:1fr auto auto;gap:6px 16px;font-size:14px;margin:10px 0 4px;padding:10px 0;border-top:1px solid var(--line)}.fp144t b,.fp144t .sub{text-align:right;margin:0}.fp144c{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.fp144b{background:var(--panel2);border-radius:999px;padding:7px 12px;font:600 13px var(--fb);color:var(--ink)}.fp144b .sub{font-weight:500}</style>`);
 /* /v144 */
+/* ===== v145 (owner: "trade grade looks wrong: one side is empty, both graded B, gets/sends wrong").
+   Cause: adding a player before choosing the other team stored him as going from you to you (tog: to = other side ??
+   from); choosing the team later (data-cset) only re-pointed assets whose `to` was the old side or null. The grader
+   then saw you sending and receiving the same player (Gets 3,703 · sends 3,703, B for both). Fix: before every grade
+   and render, any asset whose destination is its own team, or a team no longer in the trade, goes to the other side
+   (two teams) or the first other team. ===== */
+function calc145Fix(){const K=S.calc;if(!K||!K.assets)return;const sides=K.sides.filter(x=>x!=null);
+  for(const a of K.assets){if(a.to===a.from||a.to==null||!sides.includes(a.to)){const o=sides.find(x=>x!==a.from);a.to=o!=null?o:a.from;}}}
+calcEval=(function(prev){return function(){calc145Fix();return prev.apply(this,arguments);};})(calcEval);
+vCalc=(function(prev){return function(){calc145Fix();return prev.apply(this,arguments);};})(vCalc);
+/* /v145 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

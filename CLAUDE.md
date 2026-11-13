@@ -386,6 +386,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   teams' 1sts/2nds 2+ drafts out (picksOf), contenders first then most trades (tr139); price table per pick (Typical ask =
   pickVal x (.8/.93)^years beyond next draft, Worth = pickVal); tap a pick chip -> calculator with that pick on the get
   side. DEFS.fp144 explains x11/x12.
+- v145 (owner: Burden for nothing graded B for both, "Gets 3,703 · sends 3,703"): a player added before choosing the other
+  team was stored from you to you; choosing the team later didn't re-point it. `calc145Fix` (runs before calcEval and
+  vCalc) sends any asset whose destination is its own team or a team not in the trade to the other side.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
