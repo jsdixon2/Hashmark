@@ -438,6 +438,14 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   721 games. Hashmark rating vs the OPENING line: Brier 2024-25 .2188 vs .2097 (closing .2069); blend weight fit on 2023
   = 0 (rating adds nothing). Line moved toward the rating 55-58% when they differed by 2+ (corr .10-.18, weak). Rating's
   side against the opening spread 2024-25: 46-48% covered at 2-5+ point gaps (break-even 52.4%). No edge; nothing shipped.
+- x15 (backtest/x15_drift.py, value test A): shade today's dynasty value by the x9 expected 1-year drift (cells fit only
+  on paths ending before each test November 2022/23). Error vs next-year value -12..-16% at shade .5, but rank order
+  barely moves (rank corr -.013..+.011, SF 2022 worse; vs next 2 seasons' points +-.01). Marginal; NOT shipped (v138
+  offseason line already surfaces the drift).
+- x16 (backtest/x16_scoring.py, value test C): value in each league's own scoring (prior-season PPG in league scoring /
+  PPR PPG) vs fmtMult, 1,542 two-team player-only dynasty trades 2021-24, outcome = points above replacement in the
+  league's scoring to the end of next season. Held out 2023-24: side named right 56.5% -> 56.8%, Brier .2444 -> .2439;
+  custom-scoring leagues 56.1% -> 56.1%. No real gain; fmtMult stays.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
