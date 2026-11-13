@@ -446,6 +446,13 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   PPR PPG) vs fmtMult, 1,542 two-team player-only dynasty trades 2021-24, outcome = points above replacement in the
   league's scoring to the end of next season. Held out 2023-24: side named right 56.5% -> 56.8%, Brier .2444 -> .2439;
   custom-scoring leagues 56.1% -> 56.1%. No real gain; fmtMult stays.
+- x17 (backtest/x17_value.py, value tests B/D/E; e16 rows, fit 2021-22 dates, test 2023 production / 2023-24 market):
+  B blend weights per position x age band: production MAE 1,174 -> 1,129 (SF) but rank corr .627 -> .586 (1QB .552 ->
+  .497) and market fit worse (cells lean on the model, shrinking values) -> NOT shipped. D role signals (weeks 1-8 snap
+  share, target share, WOPR) on top of a per-position refit: SF MAE 1,163 -> 1,156, rank .639 -> .638; 1QB rank .565 ->
+  .573; market worse -> noise, NOT shipped (the per-position linear refit alone gave rank +.012, one test year, untested
+  further). E: only FantasyPros ECR has history (values.json's 16 sources since 2026-11-07, committed daily, so they can
+  be graded from late 2027); trusting the market less when experts disagree (ECR sd) gave nothing (k 1.5: rank down).
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
