@@ -350,7 +350,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   sheet or download), old result under "Full breakdown". 3-4 team trades keep the old layout.
 - v142 (owner): every win-chance bar is the orange gradient (tlPaint wrapper: bar whose neighbouring text says win
   chance/odds); other bars keep the green/yellow/red traffic light. Owner asked about a projected-value-over-time graph
-  for trades: plan given (comparable-player value paths from bt/hv, 80% bands, held-out 2023-24 test), NOT built - wait for go.
+  for trades: x9 test run (backtest/x9_paths.py -> x9_fit.json; train paths END before 2023, test starts 2023+):
+  players: median beats "value stays flat" by 2% at 6 mo, 6.5% at 1 yr, 17% at 2 yrs, 23.5% at 3 yrs (60 days: tie);
+  10-90% bands hold 76-80% (slightly narrow). 1,256 real keeper/dynasty trades 2023+: side ahead later picked 69.3% vs
+  67.9% flat at 1 yr, 65.6% vs 59.5% at 2 yrs, 57% vs 52% at 3 yrs (n 126). Preview shown; NOT built - wait for go.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
