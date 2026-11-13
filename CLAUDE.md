@@ -367,6 +367,15 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   Class-to-class differences are no bigger than chance; leave-one-class-out predictions correlate .25-.51 (n 8, not
   significant). Picks stay flat by class. Aside (untested): market pick prices in values.json (dd) fall ~19%/yr
   (2027 1st mid 6,165 -> 2028 4,991 -> 2029 4,235) vs the app's 7%/yr discount (pickVal).
+- x11 (backtest/x11_picks.py, 17,554 real keeper/dynasty trades with picks 2019-26, bt/leagues.json.gz; pick entries
+  are [season, round, original roster, previous owner, new owner]): implied 1st price (median players paid, app curve)
+  next draft 3,490 1QB / 3,246 SF, one more year out 2,870 / 2,672 (-18%), two more 1,985 / 2,133 (-25..-31% more);
+  Huber regression on all trades agrees (~-30% then -10..-14%). App: 3,772 / 3,508 / 3,262 (7%/yr) -> future picks
+  overvalued ~25-30% one year out, ~55% two out. Who pays: contenders receive 1sts ~10-20% cheaper (regression 1QB
+  2,427 vs 2,912 rebuilders / 3,354 middle; SF 2,769 vs 3,064 / 3,094), rebuilders do NOT pay more than middle teams
+  (app: contender x.85 supported, rebuilder x1.15 not). Landing: a contender's pick traded 1 draft out landed in the
+  late third 55% (avg slot .66), rebuilder's early third 40% (.50); 2 drafts out contender .61 / rebuilder .48 (n 71/29)
+  -> strength persists into the second year (app adjusts slot only for the next draft). Not built - owner decides.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
