@@ -453,6 +453,22 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   .573; market worse -> noise, NOT shipped (the per-position linear refit alone gave rank +.012, one test year, untested
   further). E: only FantasyPros ECR has history (values.json's 16 sources since 2026-11-07, committed daily, so they can
   be graded from late 2027); trusting the market less when experts disagree (ECR sd) gave nothing (k 1.5: rank down).
+- Data test 1 (inactives; backtest/x18_inactive.py on the x8 population, 10,109 team-seasons 2022-25): swapping an inactive
+  starter for the best bench player who played turns a loss into a win 0.112 times per team-season for late news
+  (questionable or unlisted, decided ~90 min before kickoff; 1 in 9 team-seasons) and 0.071 for Out/Doubtful. The app
+  re-reads Sleeper's player list (injury_status) only every 24 h (cachedPlayers 864e5). MSF_KEY is EMPTY in Actions
+  (scripts/probe_msf.py, msf-probe.yml: "no MSF_KEY"). Sunday logger (scripts/log_inactives.py + inactives-log.yml, 4
+  Sleeper player-list calls per Sunday) written but NOT pushed: blocked by the permission check, owner to decide.
+- Data test 2 (backtest/x19_adp.py): ADP from archived Sleeper drafts. Redraft 1QB (45-106 drafts/season): season-points
+  rank corr 2024-25 ADP .403 vs FantasyPros Aug ECR .450 (per game .449 vs .524) -> no. Rookie drafts: 2-season points
+  SF .625 vs .615, 1QB .596 vs .553 (n 116, drafts may run after the July ECR date); market 1 yr later FP slightly
+  better (.769 vs .756). Not shipped.
+- Data test 3 (backtest/x20_*, manual .github/workflows/devy-usage-test.yml, CFBD key): CFBD usage (share of team plays)
+  + PPA per play + total PPA from the final college season (snapshots: that season), on top of shipped pwr. PASSES the
+  e23 ship rule (better AUC and log loss on test and both snapshots): test .930 -> .936 / .099 -> .095; 1 season earlier
+  .880 -> .895 / .1229 -> .1179; 2 earlier .772 -> .804 / .1484 -> .1422. Usage found 97% train / 93% test. Coefs
+  (standardised) total PPA .56, PPA/play .29, usage .09, missing .22. Portal not testable (CFBD portal from 2021 only).
+  To build (wait for go): build_cfb pulls /player/usage + /ppa/players/season into cfb.json, DVM refit as pwu.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
