@@ -343,7 +343,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   h1/h2/h3 lowercase (wordmark style) except names (`hnm140Mark` MutationObserver adds .hnm when a heading equals a
   league/team/owner/player name) and The Wire headlines (.wst). Trade calculator redesign (A tug of war / B verdict first
   / C scoreboard) and trade sharing (1 image card / 2 link with trade in # / 3 short link + live preview via a worker)
-  shown as mockups; waiting for the owner's pick.
+  shown as mockups. Owner: B for the calculator, add buttons under each side, share = image only.
+- v141: two-team calculator = verdict card (`C141V` grade -> "Do it." ... "Don't send this.", value/lineup or title odds/
+  comes-out-ahead line), You give + Add / You get from <team> + Add, lineup bars, what changes, Make it fair (`c141Fair`:
+  their players that re-grade you to -2%..+12%, each tested with calcEval), Share (`c141Image` 1080x1350 card -> share
+  sheet or download), old result under "Full breakdown". 3-4 team trades keep the old layout.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

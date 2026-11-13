@@ -7526,6 +7526,86 @@ function hnm140Names(){const k=(S.leagues||[]).length+"|"+Object.keys(PL).length
 function hnm140Mark(root){try{const N=hnm140Names();(root||document).querySelectorAll("h1,h2,h3").forEach(h=>{const t=h.textContent.trim();if(N.has(t)||N.has(t.replace(/\s*\(you\)$/,"")))h.classList.add("hnm");});}catch(e){}}
 new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.nodeType===1){if(/^H[123]$/.test(n.tagName))hnm140Mark(n.parentElement);else if(n.querySelector&&n.querySelector("h1,h2,h3"))hnm140Mark(n);}}).observe(document.documentElement,{childList:true,subtree:true});
 /* /v140 */
+/* ===== v141 (owner picked mockup B "verdict first"; add buttons stay under each side; share = image only).
+   Two-team trades: hero card with your grade + a plain verdict ("Don't send this." ... "Do it."), what it does to your
+   value, lineup and odds; "You give" (your players + Add) then "You get · from <team>" (their players + Add); lineup
+   change bars; what changes; "Make it fair" (when you lose 2%+: up to 3 of their players that bring the trade to even
+   or slightly better for you, each re-graded with the real calculator); Share = trade card image (1080x1350, share
+   sheet or download). Full two-team breakdown kept under "Full breakdown". 3-4 team trades keep the old layout. ===== */
+const C141V={"A+":"Do it.","A":"Do it.","B+":"Good deal for you.","B":"Fair trade.","C":"Slightly against you.","D":"Think twice.","F":"Don't send this."};
+function c141Row(a,L){const ix=S.calc.assets.indexOf(a),p=a.k==="p"?PL[a.id]:null;
+  return `<div class="c141r"><span class="ell">${p?pos(p.pos)+" ":""}<b>${esc(assetName(a,L))}</b> <span class="sub num">· ${f0(assetVal(a,L,null))}</span></span><button class="x" data-crm="${ix}" aria-label="Remove">×</button></div>`;}
+function c141Fair(L,K,mi,o,me){if(!me||me.pct>-.02||o==null)return [];const key=JSON.stringify(K.assets)+"|"+mi+"|"+o;if(c141Fair.k===key)return c141Fair.v;
+  const gap=me.mOut-me.mIn,used=new Set(K.assets.filter(a=>a.k==="p").map(a=>a.id));
+  const cand=L.teams[o].players.map(id=>PL[id]).filter(p=>p&&!used.has(p.id)&&POSI.hasOwnProperty(p.pos)&&p.val>=150&&p.val<=Math.max(400,gap*1.6)).sort((a,b)=>Math.abs(a.val-gap*.8)-Math.abs(b.val-gap*.8)).slice(0,7);
+  const out=[];for(const p of cand){K.assets.push({k:"p",id:p.id,from:o,to:mi});let R2=null;try{R2=calcEval();}catch(e){}K.assets.pop();
+    const m2=R2&&R2.find(r=>r.ti===mi),t2=R2&&R2.find(r=>r.ti===o);if(m2&&m2.pct>=-.02&&m2.pct<=.12)out.push({p,pct:m2.pct,g:m2.g,tg:t2&&t2.g});}
+  out.sort((a,b)=>Math.abs(a.pct-.02)-Math.abs(b.pct-.02));c141Fair.k=key;c141Fair.v=out.slice(0,3);return c141Fair.v;}
+vCalc=(function(prev){return function(){const L=S.L,K=calcInit();if(K.sides.length>2)return prev();const mi=mineIdx(L);
+  if(K.sides[0]!==mi&&K.sides[1]===mi)K.sides.reverse();const o=K.sides[1],R=calcEval(),old=prev();
+  const me=R&&R.find(r=>r.ti===mi),th=R&&R.find(r=>r.ti===o);
+  const give=K.assets.filter(a=>a.from===mi),get=o!=null?K.assets.filter(a=>a.from===o):[];
+  const mv=xs=>xs.reduce((s,a)=>s+assetVal(a,L,null),0);
+  let hero;if(me){const pc_=Math.round(Math.abs(me.pct)*100),bits=[];
+    bits.push(me.pct>=.03?`You gain <b>${pc_}% more value</b>`:me.pct<=-.03?`You give up <b>${pc_}% more value</b>`:"The value is <b>about even</b>");
+    if(me.title){const d=me.title.d;bits.push(`your title odds go ${pc(me.title.pre)} → <b>${pc(me.title.post)}</b>`);}
+    else if(me.gw!=null&&Math.abs(me.gw)>=.05)bits.push(`your lineup ${me.gw>0?"gains":"drops"} <b>${f1(Math.abs(me.gw))} pts a week</b>`);
+    const wp=me.wp!=null?` You come out ahead ${Math.round(me.wp*100)}% of the time.`:"";
+    hero=`<div class="row sp"><span class="eyebrow">Your grade ${info("grade")}</span><span class="grd g${me.g[0]} c141g">${me.g}</span></div><div class="c141v">${C141V[me.g]||"Fair trade."}</div><p class="sub c141s">${bits.join(" and ")}.${wp}</p>`;}
+  else hero=`<div class="eyebrow">Trade calculator</div><div class="c141v">Build a trade.</div><p class="sub c141s">Add what you give and what you get. Hashmark grades it on value, your lineup and your odds.</p>`;
+  const side=(lab,xs,ti,sign)=>`<div class="c141h"><span class="eyebrow">${lab}</span>${xs.length?`<b class="num" style="color:var(${sign<0?"--bad":"--good"})">${sign<0?"−":"+"}${f0(mv(xs))}</b>`:""}</div>${xs.map(a=>c141Row(a,L)).join("")||`<p class="sub c141e">Nothing yet.</p>`}${ti!=null?`<button class="btn ghost sm c141a" data-cadd="${ti}">+ Add player${S.fmt.type!=="redraft"?" or pick":""}</button>`:""}`;
+  const getLab=o!=null?`You get from <button class="c141t" data-cteam="1">${esc(L.teams[o].name)} ▾</button>`:"You get";
+  const card1=`<section class="c141hero">${hero}<div class="c141gg">${side("You give",give,mi,-1)}<div class="c141sep"></div>${o==null?`<div class="c141h"><span class="eyebrow">You get</span></div><button class="btn c141a" data-cteam="1">Choose a team</button>`:side(getLab,get,o,1)}</div></section>`;
+  let lu="";if(me&&th&&me.gw!=null&&th.gw!=null&&(Math.abs(me.gw)>=.05||Math.abs(th.gw)>=.05)){const mx=Math.max(1,Math.abs(me.gw),Math.abs(th.gw));
+    const bar=(nm,v)=>`<div class="c141b"><span class="ell">${esc(nm)}</span><span class="c141bt"><i style="${v<0?`right:50%`:`left:50%`};width:${Math.abs(v)/mx*50}%;background:var(${v<0?"--bad":"--good"})"></i></span><b class="num" style="color:var(${v<0?"--bad":"--good"})">${v>0?"+":""}${f1(v)}</b></div>`;
+    lu=`<section class="pan mt"><div class="eyebrow">Lineup, points a week${S.fmt.type!=="redraft"?" this season":""}</div><div class="c141bs">${bar("You",me.gw)}${bar(L.teams[o].name,th.gw)}</div></section>`;}
+  const ins=R?calcInsights(R).filter(x=>!/projected points a week/.test(x)).slice(0,4):[];
+  const why=ins.length?`<section class="pan mt"><div class="eyebrow">What changes</div><ul class="why">${ins.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section>`:"";
+  const fair=me?c141Fair(L,K,mi,o,me):[];
+  const fairH=fair.length?`<section class="pan mt"><div class="row sp"><span class="eyebrow">Make it fair</span><span class="sub">ask for</span></div><div class="c141chips">${fair.map(f=>`<button class="c141chip" data-c141fair="${f.p.id}">+ ${esc(f.p.name)} <span class="sub">→ ${f.g}</span></button>`).join("")}</div></section>`:"";
+  const i=old.indexOf('<section class="pan mt"><div class="row sp"><h2>Result');const full=R&&i>=0?`<details class="pan mt c141d"><summary>Full breakdown</summary>${old.slice(i).replace('<section class="pan mt">','<div>').replace(/<\/section>$/,"</div>")}</details>`:"";
+  const acts=`<div class="row mt c141act">${R?`<button class="btn pri" data-c141share>Share</button>`:""}${K.assets.length?`<button class="btn ghost" data-cclear>Clear</button>`:""}<button class="btn ghost" data-caddteam>+ Team</button></div>`;
+  return card1+lu+why+fairH+acts+full;};})(vCalc);
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-c141fair]");if(!b)return;e.stopPropagation();const L=S.L,K=calcInit(),mi=mineIdx(L),o=K.sides[1];if(o==null)return;
+  K.assets.push({k:"p",id:b.dataset.c141fair,from:o,to:mi});render();},true);
+async function c141Image(){const L=S.L,K=S.calc,R=calcEval();if(!R||R.length!==2)return null;const mi=mineIdx(L),me=R.find(r=>r.ti===mi)||R[0],th=R.find(r=>r!==me);
+  const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;const g=c.getContext("2d");try{await document.fonts.ready;}catch(e){}
+  const F1='"Space Grotesk",system-ui,sans-serif',F2='Inter,system-ui,sans-serif',ink="#F2F1EC",mu="#9BA1A9";
+  g.fillStyle="#0B0C0E";g.fillRect(0,0,W,H);const rg=g.createRadialGradient(0,0,0,0,0,900);rg.addColorStop(0,"rgba(255,107,26,.20)");rg.addColorStop(1,"rgba(255,107,26,0)");g.fillStyle=rg;g.fillRect(0,0,W,H);
+  const mark=(x0,y0,s)=>{g.fillStyle=ink;g.beginPath();g.roundRect(x0+12*s,y0+44.5*s,76*s,11*s,5.5*s);g.fill();g.fillStyle="#FF6B1A";for(const [a,b] of [[20,12.5],[66,12.5],[20,60.5],[66,60.5]]){g.beginPath();g.roundRect(x0+a*s,y0+b*s,14*s,27*s,3*s);g.fill();}};
+  mark(70,64,.7);g.fillStyle=ink;g.font=`700 40px ${F1}`;g.fillText("hashmark",150,112);
+  g.fillStyle=mu;g.font=`600 26px ${F2}`;g.fillText(`TRADE CHECK · ${(S.fmt.type||"").toUpperCase()} · ${S.fmt.qb==="sf"?"SUPERFLEX":"1QB"}`,70,230);
+  const win=Math.abs(me.pct)<.03?null:me.pct>0?me:th,pct=Math.round(Math.abs(me.pct)*100);
+  const wrap=(t,x,y,mw,lh)=>{const ws=t.split(" ");let line="";for(const w of ws){const tl=line?line+" "+w:w;if(g.measureText(tl).width>mw&&line){g.fillText(line,x,y);y+=lh;line=w;}else line=tl;}g.fillText(line,x,y);return y;};
+  g.fillStyle=ink;g.font=`700 70px ${F1}`;let y=wrap(win?`${win.t.name} wins this trade by ${pct}%`:"Fair trade: within 3% either way",70,320,W-140,80);
+  y+=60;g.fillStyle="#1D2025";g.beginPath();g.roundRect(70,y,W-140,22,11);g.fill();const fit=(t,wt,sz,F,mw)=>{let z=sz;g.font=`${wt} ${z}px ${F}`;while(z>18&&g.measureText(t).width>mw){z-=1;g.font=`${wt} ${z}px ${F}`;}};const mid=W/2,half=(W-140)/2,w=Math.min(1,Math.abs(me.pct)/.5)*half;
+  if(w>2){const gr=g.createLinearGradient(0,0,W,0);gr.addColorStop(0,"#FF6B1A");gr.addColorStop(1,"#FF8A47");g.fillStyle=gr;g.beginPath();g.roundRect(me.pct>0?mid-w:mid,y,w,22,11);g.fill();}
+  g.fillStyle=ink;g.fillRect(mid-2,y-8,4,38);y+=62;g.font=`500 24px ${F2}`;g.fillStyle=mu;g.fillText(me.t.name.slice(0,24),70,y);g.textAlign="right";g.fillText(th.t.name.slice(0,24),W-70,y);g.textAlign="left";
+  y+=60;const colW=(W-140-30)/2,col=(x,r)=>{g.fillStyle="#15171B";g.beginPath();g.roundRect(x,y,colW,560,32);g.fill();let yy=y+62;g.fillStyle=mu;g.font=`600 24px ${F2}`;g.fillText("GETS",x+34,yy);
+    const gc={A:"#3DDBB4",B:"#F2F1EC",C:"#FFB23E",D:"#FF5470",F:"#FF5470"}[r.g[0]]||ink;g.fillStyle=gc;g.font=`700 92px ${F1}`;g.textAlign="right";g.fillText(r.g,x+colW-34,y+110);g.textAlign="left";
+    yy+=48;g.fillStyle=ink;fit(r.t.name,700,32,F1,colW-170);g.fillText(r.t.name,x+34,yy);yy+=24;
+    for(const a of r.inA.slice(0,6)){yy+=58;const p=a.k==="p"?PL[a.id]:null;g.fillStyle=mu;g.font=`700 22px ${F2}`;if(p)g.fillText(p.pos,x+34,yy);g.fillStyle=ink;const nm=assetName(a,L);fit(nm,600,32,F2,colW-(p?96:34)-30);g.fillText(nm,x+(p?96:34),yy);}
+    g.fillStyle=mu;g.font=`500 24px ${F2}`;g.fillText(r.gw!=null&&Math.abs(r.gw)>=.05?`Lineup ${r.gw>0?"+":""}${f1(r.gw)} pts/wk`:`Value ${f0(Math.round(r.mIn))}`,x+34,y+520);};
+  col(70,me);col(70+colW+30,th);
+  g.fillStyle=mu;g.font=`500 24px ${F2}`;g.fillText("Graded on value, lineup fit and odds · hashmark",70,H-70);
+  return await new Promise(r=>c.toBlob(r,"image/png"));}
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest("[data-c141share]");if(!b)return;e.preventDefault();e.stopPropagation();const blob=await c141Image();if(!blob)return;
+  const file=new File([blob],"hashmark-trade.png",{type:"image/png"});try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"Hashmark trade check"});return;}}catch(err){if(err&&err.name==="AbortError")return;}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="hashmark-trade.png";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);},true);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.c141hero{background:radial-gradient(120% 90% at 0% 0%,color-mix(in srgb,var(--acc) 20%,transparent),transparent 60%),var(--panel);border-radius:26px;padding:20px 18px 16px;margin-top:4px}
+.c141g{min-width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font:700 20px var(--fd)}
+.c141v{font:700 26px/1.15 var(--fd);letter-spacing:-.01em;margin-top:6px}.c141s{margin:6px 0 4px;font-size:14px;line-height:1.45}.c141s b{color:var(--ink)}
+.c141gg{margin-top:12px}.c141h{display:flex;justify-content:space-between;align-items:center;padding:12px 0 4px;border-top:1px solid var(--line)}
+.c141h .eyebrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.c141t{font:600 13px var(--fb);color:var(--ink);text-transform:none;letter-spacing:0;background:var(--panel2);border-radius:999px;padding:4px 10px}
+.c141r{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;font-size:15px}.c141r .x{width:32px;height:32px;border-radius:99px;color:var(--muted)}
+.c141e{margin:6px 0}.c141a{margin:6px 0 4px}.c141sep{height:6px}
+.c141bs{display:flex;flex-direction:column;gap:10px;margin-top:10px}.c141b{display:grid;grid-template-columns:96px 1fr 54px;gap:8px;align-items:center;font-size:13px}.c141b b{text-align:right}
+.c141bt{height:10px;border-radius:99px;background:var(--panel2);position:relative}.c141bt i{position:absolute;top:0;bottom:0;border-radius:99px}
+.c141chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.c141chip{background:var(--panel2);border-radius:999px;padding:8px 12px;font:600 13.5px var(--fb);color:var(--ink)}
+.c141act{gap:8px}.c141act .btn.pri{background:var(--accg)!important;color:#0B0C0E!important;border:0!important}.c141act .btn{flex:1;justify-content:center}.c141d summary{font:600 14px var(--fb);cursor:pointer}
+</style>`);
+/* /v141 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
