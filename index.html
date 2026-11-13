@@ -3284,7 +3284,7 @@ function valueEngine(){const ps=Object.values(PL).filter(p=>POSI.hasOwnProperty(
   const today=new Date().toISOString().slice(0,10);let st=ty==="redraft"?null:vemaLoad();if(st&&st.d!==today)st={d:today,base:st.cur||{},cur:{}};if(!st&&ty!=="redraft")st={d:today,base:{},cur:{}};
   for(const p of ps){const L=has?blendFor(p,dyn,p._mr):null,R=has?blendFor(p,ros,p._rr):null;
     let vl=L?L.v:curve(p._mr),vs=R?R.v:curve(p._rr);const ic=injClass(p);p.ic=ic;
-    {const st=String(p.inj||"");if(/\bout\b|\bir\b|doubt|\bpup\b|\bsus/i.test(st))vl*=.87;else if(/quest/i.test(st))vl*=.9;if(ic&&ic.c==="unc")vl*=.9;}
+    {const st=String(p.inj||"");if(/\bout\b|\bir\b|doubt|\bpup\b|\bsus/i.test(st))vl*=.87;else if(/quest/i.test(st)&&!(ic&&ic.c==="min"))vl*=.9;if(ic&&ic.c==="unc")vl*=.9;}
     if(ic&&(ic.c==="min"||ic.c==="maj")&&p.inj&&ABS.test(p.inj))vs*=ic.c==="maj"?.35:.8;
     let v=ty==="dynasty"?vl:ty==="keeper"?vl*.5+vs*.5:vs;
     const rank=ty==="redraft"?p._rr:(L&&L.parts.length?Math.round(L.parts.reduce((s,x)=>s+x.r*x.w,0)/L.parts.reduce((s,x)=>s+x.w,0)):p._mr);
@@ -5373,7 +5373,7 @@ vFinder=function(){const L=S.L,mi=mineIdx(L),all=finder(),rd=S.fmt.type==="redra
   const enc=(a,f,to)=>[a.k==="k"?"k:"+a.id:a.id,f,to];
   const mkt=x=>Math.abs(x.mg)<.03?"even on the market":x.mg>0?`market favors them ${Math.round(x.mg*100)}%`:`market favors you ${Math.round(-x.mg*100)}%`;
   const why=x=>rd?`<p class="sub">${x.tt?`Title odds ${pc(x.tt.pre)} → <b class="good">${pc(x.tt.post)}</b> · `:""}lineup <b class="good">${(x.lw||0)>=0?"+":""}${f1(x.lw||0)}</b>/wk · theirs ${(x.gThem||0)>=0?"+":""}${f1(x.gThem||0)}/wk${x.drops&&x.drops.length?` · drop ${x.drops.map(id=>esc(PL[id]?PL[id].name:"a bench player")).join(", ")}`:""}</p>`
-    :`<p class="sub"><b>You</b> · ${fitWhy(me.ts.st,x.fMe,true)} · <b class="good">+${f0(Math.round(x.gMe))}</b> value<br><b>Them</b> (${recOf(x.c.t)}, ${planLbl(x.c.ts.st)}) · ${fitWhy(x.c.ts.st,x.fTh,false)}${x.pTh>=.02?` · +${f0(Math.round(x.gThem))} value`:""} · ${mkt(x)}</p>`;
+    :`<p class="sub"><b>You</b> · ${fitWhy(me.ts.st,x.fMe,true)} · ${Math.abs(x.gMe)<25?`about even value`:x.gMe>0?`<b class="good">+${f0(Math.round(x.gMe))}</b> value`:`<b class="bad">−${f0(Math.round(-x.gMe))}</b> value`}<br><b>Them</b> (${recOf(x.c.t)}, ${planLbl(x.c.ts.st)}) · ${fitWhy(x.c.ts.st,x.fTh,false)}${x.pTh>=.02?` · +${f0(Math.round(x.gThem))} value`:""} · ${mkt(x)}</p>`;
   const card=x=>`<div class="scard"><div class="row sp"><b class="ell">${esc(x.c.t.name)}</b><span class="tag">${fdLbl[x.type]}</span></div>
     <div class="fx"><div><span class="eyebrow">You send</span>${x.send.map(a=>`<div class="fxa">${an(a,mi)}</div>`).join("")}</div><div><span class="eyebrow">You get</span>${x.get.map(a=>`<div class="fxa">${an(a,x.c.ti)}</div>`).join("")}</div></div>
     ${why(x)}<button class="btn ghost sm" data-build='${esc(JSON.stringify({a:x.send.map(a=>enc(a,mi,x.c.ti)),b:x.get.map(a=>enc(a,x.c.ti,mi))}))}' data-bt="${x.c.ti}">Open in calculator</button></div>`;
