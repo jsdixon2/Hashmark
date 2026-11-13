@@ -402,6 +402,13 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   pointerdown (before the page renders), tab fade .12 s from opacity .5 (was .22 s from 0), touch-action: manipulation on
   buttons, and m99Snap (live Huddle copy to localStorage, up to 180 KB, after EVERY Huddle redraw incl. 30 s refreshes)
   throttled to once a minute and only when the page changed.
+- v149 (owner: "reopening feels bogged down for 20-30 s"): (1) sj caches /stats/nfl/regular/<season>[/<week>] in
+  IndexedDB (key sj149:) for past seasons and weeks <= current-2 (connectSleeper re-downloaded every week's full stats
+  each launch); (2) hxGet caches every call under a league that is not one of this season's leagues for good (key
+  hx149:; v103 only cached this season's finished weeks, so past seasons' weeks >= the current week number and their
+  league/users/rosters/drafts calls were re-fetched every launch); (3) the Huddle's history read (hxLoad for pvCard) waits
+  until 15 s after launch and 4 s without a touch (was 2.5 s), then runs at idle; (4) background renders (no
+  window.event) in live mode during the first 40 s are merged to one per 400 ms. Cache test: scratchpad qa/v149.js.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

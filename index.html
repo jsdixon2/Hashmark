@@ -7733,6 +7733,34 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 #view.m-tab,.m-tab{animation:m148t .12s ease-out both!important}
 </style>`);
 /* /v148 */
+/* ===== v149 (owner: "load up when closing and reopening feels bogged down; tough to scroll/click for 20-30 s").
+   What runs on every launch in live mode:
+   1) connectSleeper downloads this season's weekly stats for EVERY week (weeks 1..now, ~1-2 MB each) and every past
+      season's full stats, then parses them on the main thread. Finished weeks and past seasons never change: they are
+      now kept in IndexedDB (weeks at least 2 old and past seasons for good; only the latest weeks are fetched).
+   2) 2.5 s after the Huddle appears, hxLoad() reads the whole Sleeper history (every league back to 2017) for the
+      "Last week" card. v103's cache only kept THIS season's finished weeks: past seasons' weeks >= the current week
+      number and all league/user/roster/draft calls of past seasons were re-downloaded on every launch. Every call under
+      a league that is not one of this season's leagues is now cached for good (past seasons can't change).
+   3) That history read now waits until the app has been open 15 s and the user hasn't touched it for 4 s.
+   4) Background redraws (data arriving, not taps) in the first 40 s are merged: at most one every 400 ms. ===== */
+const BOOT149=Date.now();
+sj=(function(prev){return async function(u){try{const m=/\/stats\/nfl\/regular\/(\d{4})(?:\/(\d+))?$/.exec(u);
+    if(m&&S.nfl){const yr=+m[1],wk=m[2]?+m[2]:0,cs=+(S.nfl.league_season||S.nfl.season),cw=+(S.nfl.display_week||S.nfl.week||0);
+      const forever=yr<cs||(wk&&yr===cs&&wk<=cw-2);
+      if(forever){const k="sj149:"+u.replace(/^https?:\/\/[^/]+/,"");const c=await idbGet(k);if(c&&c.v!==undefined)return c.v;const v=await prev(u);try{if(v&&Object.keys(v).length)idbPut(k,{t:Date.now(),v});}catch(e){}return v;}}}catch(e){}
+  return prev(u);};})(sj);
+hxGet=(function(prev){return async function(path){if(S.mode!=="live")return prev(path);try{const m=/^\/league\/([^/]+)\//.exec(path);
+    if(m&&S.leagues&&S.leagues.length&&!S.leagues.some(L=>String(L.id)===m[1])){const k="hx149:"+path;const c=await idbGet(k);if(c&&c.v!==undefined)return c.v;
+      const v=await prev(path);try{if(v!=null)idbPut(k,{t:Date.now(),v});}catch(e){}return v;}}catch(e){}return prev(path);};})(hxGet);
+vHuddle=(function(prev){return function(){if(S.mode==="live"&&HX.st==="idle"&&!S._pvBoot){S._pvBoot=1;
+    const tryLoad=()=>{if(HX.st!=="idle")return;if(Date.now()-BOOT149<15000||Date.now()-UI105T<4000){setTimeout(tryLoad,2000);return;}
+      (window.requestIdleCallback||setTimeout)(()=>hxLoad(),{timeout:3000});};setTimeout(tryLoad,15000);}
+  return prev.apply(this,arguments);};})(vHuddle);
+render=(function(prev){let last=0,pend=0;return function(){const bg=!window.event&&S.mode==="live"&&Date.now()-BOOT149<40000;
+  if(bg&&Date.now()-last<400){if(!pend)pend=setTimeout(()=>{pend=0;last=Date.now();prev();},400-(Date.now()-last));return;}
+  last=Date.now();return prev.apply(this,arguments);};})(render);
+/* /v149 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
