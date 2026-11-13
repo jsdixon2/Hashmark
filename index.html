@@ -7446,6 +7446,22 @@ function hd135Proof(m){if(!m||!RPT)return "";const T=RPT.tested||{},P=RPT.projec
 hdMove=(function(prev){return function(){const h=prev();if(!h)return h;try{let mv=[];try{mv=mergedMoves();}catch(e){}return h+hd135Proof(mv[0]);}catch(e){return h;}};})(hdMove);
 document.head.insertAdjacentHTML("beforeend",`<style>.hd135{margin:-6px 4px 12px;font-size:12.5px}</style>`);
 /* /v135 */
+/* ===== v136 (owner: Luther Burden, concussion + questionable before a bye, showed Long term LOW "Uncertain injury
+   (Undisclosed)" with a 45-100% value range). Sleeper writes "Undisclosed" when the team hasn't named the body part;
+   INJ_UNC treated that like a heart/spine/blood-clot case. Now "undisclosed" alone only counts as uncertain when the
+   player is on IR/PUP/NFI or out with no named injury in recent news; otherwise it is a normal (minor) injury named
+   from the news when possible (concussion, ankle ...). Questionable/doubtful status still lowers Short term.
+   Matchup page win bar: your side orange (like every other win bar), theirs the plain track. ===== */
+const INJ136_PART=["concussion","ankle","knee","hamstring","groin","quad","calf","shoulder","hip","foot","toe","wrist","hand","finger","thumb","elbow","ribs?","chest","oblique","illness"];
+injClass=(function(prev){return function(p){const r=prev(p);if(!r||r.c!=="unc"||!/undisclosed/i.test(r.why))return r;
+  const txt=[p.inj||"",...(NW.items||[]).filter(it=>it.ts&&Date.now()-it.ts<21*864e5&&it.t.includes(p.name)).map(it=>it.t+" "+(it.s||""))].join(" | ");
+  if(/blood clot|\bdvt\b|thrombo|heart|cardiac|\bneck\b|spinal|spine|mental health|retire/i.test(txt))return r;
+  const part=(INJ136_PART.find(w=>new RegExp("\\b"+w+"\\b","i").test(txt))||"").replace("s?","");
+  if(!part&&/\bir\b|\bpup\b|\bnfi\b/i.test(p.inj||""))return r;
+  return {c:"min",lab:"Minor injury, full recovery expected",long:1,why:part||"undisclosed, short-term"};};})(injClass);
+confShort=(function(prev){return function(p,R){const r=prev(p,R);if(r&&r.lv==="High"&&p&&p.inj){r.lv="Medium";const w=p.ic&&p.ic.c==="min"&&p.ic.why&&!/undisclosed/.test(p.ic.why)?p.ic.why:"injury";if(!/questionable|injur|concussion/i.test(r.why))r.why+=`, but listed ${statusWord(p.inj).replace(/^is /,"").toLowerCase()} (${w})`;}return r;};})(confShort);
+document.head.insertAdjacentHTML("beforeend",`<style>.wp i:first-child{background:var(--accg)}.wp i:last-child{background:var(--panel2)}</style>`);
+/* /v136 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
