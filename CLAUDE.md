@@ -389,6 +389,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 - v145 (owner: Burden for nothing graded B for both, "Gets 3,703 · sends 3,703"): a player added before choosing the other
   team was stored from you to you; choosing the team later didn't re-point it. `calc145Fix` (runs before calcEval and
   vCalc) sends any asset whose destination is its own team or a team not in the trade to the other side.
+- p146 (owner: Chuba Hubbard 27 RB ~ same value as Luther Burden in the keeper league): explained (keeper value = 50% keeper
+  value + 50% this season; dynasty markets Burden ~5,200 avg vs Hubbard ~3,000 (ECR #31 vs #95), this season Hubbard RB8
+  vs Burden WR15 so the halves pull them together). Fixed: (1) questionable + MINOR injury no longer trims long-term value
+  x.9 in valueEngine (card already said long-term unchanged); (2) trade finder "▲ +-8 value" -> signed / "about even value".
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
