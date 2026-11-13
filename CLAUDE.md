@@ -375,7 +375,13 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   2,427 vs 2,912 rebuilders / 3,354 middle; SF 2,769 vs 3,064 / 3,094), rebuilders do NOT pay more than middle teams
   (app: contender x.85 supported, rebuilder x1.15 not). Landing: a contender's pick traded 1 draft out landed in the
   late third 55% (avg slot .66), rebuilder's early third 40% (.50); 2 drafts out contender .61 / rebuilder .48 (n 71/29)
-  -> strength persists into the second year (app adjusts slot only for the next draft). Not built - owner decides.
+  -> strength persists into the second year (app adjusts slot only for the next draft).
+- x12 (backtest/x12_picktest.py, owner "go test"): 7,217 dynasty trades with picks traced to the real rookie draft (the
+  player actually picked), real value of each side at draft + 180 days. Which pick rule names the side that ended ahead?
+  Held out 2023+ (n 4,536): app 7%/yr 65.2% right / log error .922; market-like 20%/yr 64.2% / .933; no discount 65.5% /
+  .918; fit on 2019-22 picked .93. Second-year slot lean: no gain. Pick level x1.1-1.2: right 65.8-66.3%, error flat.
+  -> KEEP pickVal as is. The market's ~20%/yr discount is an inefficiency: future picks are underpriced (managers,
+  contenders most, sell them cheap but they hold their value) = a buy signal, not something to copy.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
