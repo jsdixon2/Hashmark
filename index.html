@@ -7717,6 +7717,22 @@ lostSeason=(function(prev){return function(p){if(!p)return false;const k=nw147()
 injClass=(function(prev){return function(p){if(!p)return prev(p);const k=nw147();if(IC147.k!==k){IC147.k=k;IC147.m.clear();}
   const key=p.id+"|"+(p.inj||"")+"|"+(p.news&&p.news.rep||"");if(IC147.m.has(key))return IC147.m.get(key);const v=prev(p);IC147.m.set(key,v);return v;};})(injClass);
 /* /v147 */
+/* ===== v148 (owner: "the button tabs on the bottom take very long to register"). In the demo a dock tap draws the next
+   page in 11-14 ms, so the lag is what the user sees around it: (1) the dock highlight moved only after the new page had
+   rendered, and the page then faded in from blank over .22 s; (2) in live mode every Huddle redraw (incl. each 30 s score
+   refresh) wrote a copy of the whole page (up to 180 KB) to localStorage 400 ms later, a synchronous write that blocks
+   taps on iOS. Now: the dock button lights up on touch-down, tab fades are .12 s from half opacity, buttons use
+   touch-action: manipulation (no double-tap-zoom wait), and the Huddle snapshot is saved at most once a minute and only
+   when it changed. ===== */
+document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest(".dock [data-hub]");if(!b)return;
+  document.querySelectorAll(".dock [data-hub]").forEach(x=>x.classList.toggle("on",x===b));},{capture:true,passive:true});
+m99Snap=(function(prev){let last=0,len=0;return function(){const v=$("#view");const n=v?v.innerHTML.length:0;if(Date.now()-last<60000&&Math.abs(n-len)<50)return;last=Date.now();len=n;return prev.apply(this,arguments);};})(m99Snap);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.dock button,.dock [data-hub],button,a,[data-go]{touch-action:manipulation}
+@keyframes m148t{from{opacity:.5}to{opacity:1}}
+#view.m-tab,.m-tab{animation:m148t .12s ease-out both!important}
+</style>`);
+/* /v148 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

@@ -398,6 +398,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   and injClass now cached per player (key id|inj|offRep|news.rep) until NW.built / NW.items.length changes. Huddle
   redraw with 1,500 stories: 57 -> 6 ms; other pages equal or faster. Perf scripts: scratchpad qa/perf.js, perf3.js
   (old build served on :8766 from git show <commit>:index.html).
+- v148 (owner: "bottom tabs take very long to register"): demo dock taps render in 11-14 ms, so: dock button lights up on
+  pointerdown (before the page renders), tab fade .12 s from opacity .5 (was .22 s from 0), touch-action: manipulation on
+  buttons, and m99Snap (live Huddle copy to localStorage, up to 180 KB, after EVERY Huddle redraw incl. 30 s refreshes)
+  throttled to once a minute and only when the page changed.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
