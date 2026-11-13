@@ -7890,6 +7890,14 @@ vDevyLab=(function(prev){return function(){let h=prev();if(!h)return h;
     .replace(/On those held-out classes, prospects given 15–35% became starters 28% of the time \(81 players, 22% predicted\); the few above 35% hit 31%, so pre-draft odds show at most 40%\+\./,
       "On those held-out classes, prospects given 15–35% became starters 23% of the time (75 players, 23% predicted) and those above 35% hit 43% (23 players, 45% predicted); pre-draft odds still show at most 40%+.");};})(vDevyLab);
 /* /v153 */
+/* ===== v155 (owner: label roster players "vs BUF" / "@ CHI" / "BYE"): the grey "this wk" under each roster row's
+   projection becomes this week's game from the slate (gameOf, as kdGame for K/DST); falls back to "this wk" when the
+   slate isn't this week's. "BYE" is amber when the player is in a starting slot. K/DST rows already show the game in their meta line. ===== */
+function g155(p){try{const g=gameOf(p);return !g?null:g.bye?"BYE":`${g.home?"vs":"@"} ${g.opp}`;}catch(e){return null;}}
+rosRow=(function(prev){return function(L,t,p,slot){const h=prev.apply(this,arguments),g=g155(p);if(!g)return h;
+  return h.replace(/<span class="sub">this wk<\/span><\/span><\/button>$/,`<span class="sub${g==="BYE"&&slot?" g155b":""}">${esc(g)}</span></span></button>`);};})(rosRow);
+(function(){const s=document.createElement("style");s.textContent=`.rrv .sub.g155b{color:var(--amber);font-weight:600}`;document.head.appendChild(s);})();
+/* /v155 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
