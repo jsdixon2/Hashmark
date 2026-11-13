@@ -322,6 +322,12 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   for the league selected in the app. The Value tag now names the league and "Value to you" starts "On / Not on your
   roster here." Value to you = market x (your lineup loss or gain / average other team's)^.6, clamped .5-1.6 (-34% is
   the floor). Known asymmetry, not changed: valIn adds a breakout bonus for contenders that valOut never gets.
+- Edge tests x1-x8 (2026-11-13, HANDOFF "outside the box"): win-max lineups and playoff schedules dead; owner said go on
+  4 builds, one at a time: A offseason sells, B crowd add/drop in projections, C league-mate profiles, D injury types.
+- v138 (build A, backtest/x7_fit.py -> x7_fit.json): `OFS138` Nov->May dynasty value drift vs the market by fmt x pos x
+  age band (rookie/<=23/24-26/27-29/30+) x rank tier (top 60 / 61-200). Held out 2023-24: flagged (-25%+) lost 41/46%
+  by May vs 23/20% others (70% fell more); expected +15%+ held -3/-7% vs -26/-21%. Dynasty/keeper only, Oct 1-Mar 1:
+  roster To do "Sell before the offseason" (owned, -20%+, value >= 800) and an "Offseason:" line on the Value card.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
