@@ -424,6 +424,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   (names don't match demo projections) - real leagues use their own.
   Owner follow-up: previews ignore players missing from set lineups (bye/out/questionable not mentioned; managers will
   swap them) and project each team's BEST available lineup (teamWeek with no Sleeper starters).
+- p152 (owner: "NFL live game picks at 0??"): report.json games.live_log had n 1 (logging began 2026-11-12; that pick came
+  from the betting line, whose favourite lost). Report rows / NFL-teams line from the live log show a percentage only
+  from 16 graded games; before that "N graded so far · from 16 games". Owner also asked to beat betting lines: plan
+  given (see reply), not built - wait for go.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

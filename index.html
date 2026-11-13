@@ -6895,11 +6895,11 @@ tmPower=(function(prev){return function(...a){const c=TM&&TM.card,{F,E,nw}=gp120
   const old=TM.card;let h;try{TM.card={n:0};h=prev(...a);}finally{TM.card=old;}
   const fb="Tested on 1,355 games (2021–25): rating Brier .225, closing line .212.";
   const t=`Hashmark's game picks this season: ${F.n} graded, ${gpP120(F.acc)} right, Brier ${gpB120(F.brier)}${nw?" (last pick before kickoff)":""}${E?`; a week or more ahead ${gpP120(E.acc)}, Brier ${gpB120(E.brier)} (${E.n})`:""}.`;
-  return h.includes(fb)?h.replace(fb,t):h;};})(tmPower);
+  return h.includes(fb)&&F.n>=16?h.replace(fb,t):h;};})(tmPower);
 vReport=(function(prev){return function(...a){let h=prev(...a);try{const G=(RPT&&RPT.games)||{},{F,E}=gp120(G.live_log);if(!F||!G.n)return h;
   const at='</tbody></table></div><p class="sub mt">The closing line is the best predictor';if(!h.includes(at))return h;
   const row=(l,x)=>`<tr><td>${l} <span class="sub">${f0(x.n)}</span></td><td class="num">${gpP120(x.acc)}</td><td class="num">${x.brier}</td></tr>`;
-  h=h.replace(at,row("Hashmark live, before kickoff",F)+(E?row("Hashmark live, a week or more ahead",E):"")+at);}catch(e){}return h;};})(vReport);
+  const few=x=>`<tr><td>${x===F?"Hashmark live, before kickoff":"Hashmark live, a week or more ahead"} <span class="sub">${f0(x.n)} graded so far</span></td><td class="num sub" colspan="2">from 16 games</td></tr>`;h=h.replace(at,(F.n>=16?row("Hashmark live, before kickoff",F):few(F))+(E?(E.n>=16?row("Hashmark live, a week or more ahead",E):few(E)):"")+at);}catch(e){}return h;};})(vReport);
 /* /v120 */
 /* ===== v122: Streamers text (e19). D/ST and K factors kept: fitted 2021-24 elasticities (D/ST -0.45 to -0.70 on opp implied/22) match the hand-set .6, no refit beat the shipped rule on 2025-26 (all within 1-2 SE). Tag fixed: the factor covers this week + next 2 games. Tested 2021-26 (81 weeks): top-3 D/ST streamers beat the average free agent by 2.6 pts/week (81% of weeks) ===== */
 tmStreamers=(function(prev){return function(...a){let h=prev(...a);if(!h)return h;
