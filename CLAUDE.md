@@ -496,6 +496,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   are MORE pessimistic (bias -.1..-.6), C's 1-yr error worse, and real trades: no consistent gain (strict 2yr A 65.2% vs
   B 58.6 / C 60.4; 3yr 57.2 / 56.2 / 56.2; LOSO 2023 A best, 2022 B/C +1-2 pts). Today's values order young players
   3 yrs out about as well as any model (strict flat .540 vs A .343). NOT shipped; chart kept.
+- v157 (owner "use range estimates"; edits inside .build/v143.js, re-spliced): Value over time shows 2- and 3-year
+  points as the 8-in-10 range ("3,984–12,007", "middle 8,154", label "likely range"), the median line past 1 yr is faded
+  with hollow dots, the crossing circle only within a year; headline names a crossing month only within 1 yr, otherwise
+  "worth more now and likely through next year. After that the ranges overlap: too close to call." (or "by year 3 the
+  ranges overlap"); footnote says 2-3 yrs are ranges, not forecasts.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
