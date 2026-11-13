@@ -5261,7 +5261,7 @@ wireRecs=(function(prev){return function(L,n=6){const ti=mineIdx(L),t=L.teams[ti
   out.sort((a,b)=>b.g-a.g);for(const r of out){r.bid=faabBid(L,r.p,r.g);r.tier=r.g>=12?"Strong add":r.g>=8?"Good add":r.g>=bar?"Worth a look":"Depth only";}
   L._wr={k:K,v:out};return out.slice(0,n);};})(wireRecs);
 /* a drop who still projects close to the add is flagged: those moves hurt about 4 times in 10 */
-wvRow=(function(prev){return function(r,L){let h=prev(r,L);if(r.risky&&r.d)h=h.replace(/(Drop [^<]*<span class="sub">[^<]*<\/span>)/,`$1 <span class="warn">close call: he still projects ${f1(r.dv)} pts</span>`);return h;};})(wvRow);
+wvRow=(function(prev){return function(r,L){let h=prev(r,L);if(r.risky&&r.d)h=h.replace(/(Drop [^<]*<span class="sub">[^<]*<\/span>)/,`$1 <span class="warn">close call: ${esc(String((r.d&&r.d.name)||"he").replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/,"").split(" ").slice(-1)[0])} still projects ${f1(r.dv)} pts over 4 weeks</span>`);return h;};})(wvRow);
 
 /* ===== v66: live in-game projections and win odds =====
    During games a started player's projection = points so far + pregame projection × share of his game still to play

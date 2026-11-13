@@ -501,6 +501,8 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   with hollow dots, the crossing circle only within a year; headline names a crossing month only within 1 yr, otherwise
   "worth more now and likely through next year. After that the ranges overlap: too close to call." (or "by year 3 the
   ranges overlap"); footnote says 2-3 yrs are ranges, not forecasts.
+- p158 (owner: "Waller and Kiner both projected 19 pts?"): the waiver "close call" note is about the DROP; now reads
+  "close call: Mitchell still projects 19.8 pts over 4 weeks" (was "he still projects 19.8 pts").
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
