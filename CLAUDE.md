@@ -548,6 +548,15 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 
 - v168 (owner: "make all the page headers orange"): page titles (`#view .pgtitle h1`, incl. the Huddle greeting) in the
   accent, light mode #BF4706; name headings (.hnm) keep the text colour.
+- v169 (owner: GM > Moves was "boring", links only): top 5 moves are action cards (`g169Card`): sell/buy/pre-breakout show
+  the best tradeOpts deal with its calculator grade (`g169Grade`: calcEval on a temporary S.calc) + Build trade / N more
+  options; free-agent adds show +gain over 4 wks, drop and bid; lineup alerts with no bench fix name the best free agent
+  for the slot (`g169FA`, distinct per alert). The rest fold under "N smaller moves".
+- v170 + p170 (owner: Players tab "No players match" in every league): the player card's tabs (Overview/Trends/...) also
+  use data-ptab and the global click handler copied them into S.ptab (position "tr"), emptying the list. p170: handler
+  ignores .ptabs; allPlayers falls back to All for unknown positions. Filters reworked (`pl170List`): switch + search on
+  one row, position chips, Show / Sort dropdowns (sorts: value, this week, rest of season, season points, per game,
+  breakout, safest, youngest), count line, Clear filters, rows show team · age · ppg.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
