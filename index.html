@@ -7956,6 +7956,14 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .rkp>div:first-child b,:root:not([data-theme="dark"]) .tag.t159{color:#BF4706!important}}
 </style>`);
 /* /v159 */
+/* ===== v160 (owner: preview "header tick" on the roster page): each section heading on the Roster tab (to do, depth
+   chart, next 4 weeks ...) gets a small rounded Pylon-orange tick before it, like the wordmark's posts. ===== */
+vRoster=(function(prev){return function(){const h=prev();return typeof h==="string"?`<div class="r160">${h}</div>`:h;};})(vRoster);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.r160 h2{display:flex;align-items:center;gap:8px}
+.r160 h2::before{content:"";flex:none;width:4px;height:.9em;border-radius:2px;background:var(--acc);box-shadow:0 0 8px color-mix(in srgb,var(--acc) 45%,transparent)}
+</style>`);
+/* /v160 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
