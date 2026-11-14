@@ -557,6 +557,14 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   ignores .ptabs; allPlayers falls back to All for unknown positions. Filters reworked (`pl170List`): switch + search on
   one row, position chips, Show / Sort dropdowns (sorts: value, this week, rest of season, season points, per game,
   breakout, safest, youngest), count line, Clear filters, rows show team · age · ppg.
+- v171 (owner: "do the same for any other boring pages"; audit of hubs/sub-pages in the demo): Trade Lab hub leads with
+  "Best deals right now" (top 3 finder ideas, one per team, `d171Deal`: calculator grade via `g171Eval`, lineup and value
+  change, Build trade; picks encoded "k:" and named "2028 1st"); Pre-breakout tile reads targetsAll (it said "None right
+  now" while its page listed targets); Trade partners tile names a team with a working deal. Trade partners cards show
+  the best deal with that team (teams with deals first) instead of an empty "Open in calculator". Scout hub adds "Rising
+  this season" (devy risers, else top devy scores) and redraws when cfb.json arrives (loadCfb wrapper; bgRender skips
+  non-live routes, so it calls render()). League rules hides sections with only a heading. Team/GM hubs, Gameday, News,
+  Trends, Locker, Devy, NFL teams already carry content: unchanged.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
