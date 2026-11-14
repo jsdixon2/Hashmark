@@ -7966,6 +7966,10 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 #view h2:not(.hnm)::before{content:"";display:inline-block;width:4px;height:.9em;margin-right:8px;vertical-align:-.08em;border-radius:2px;background:var(--acc);box-shadow:0 0 8px color-mix(in srgb,var(--acc) 45%,transparent)}
 </style>`);
 /* /v160 */
+/* ===== v162 (owner: the Huddle's "more" header "feels squished" after v161 added the tick): more room above (it sat
+   right under the This week card) and below (tiles started immediately). ===== */
+document.head.insertAdjacentHTML("beforeend",`<style>#view h2.hdmore{margin:28px 0 14px!important;padding-left:2px}</style>`);
+/* /v162 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
