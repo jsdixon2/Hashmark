@@ -578,6 +578,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   alone .52), top third said 40% happened 25%; only "already missing games" carries signal. (3) Market: current RB2s beat
   rank-matched peers on later points (+.15 log, CI just above 0) but NOT more behind fragile or 28+ starters (n 8-10,
   -.01..-.11); dynasty value a year later: no group differs (CIs span 0). NOT shipped: no handcuff bump.
+- v173 (owner: "Label with backup to X"): player card panel "Backup to <starter>" for RBs listed #2 on Sleeper's depth chart
+  (`bk173`: starter = team RB with dc 1, best rosPPG; "Clear #2" when no #3 or 1.5x the #3's rosPPG, else "Shared #2"),
+  x25 numbers (clear 11.8 vs 7.6 pts, 12+ 44%; crowded 7.1 vs 4.1; lead backs miss 3+ about 1 in 4, age/history barely
+  matter; age sentence only when the starter is 28+), "<starter> is listed Out: X is next in line" when he is
+  Out/Doubtful/IR. No value change. Demo players have no depth chart (tested on the fake Sleeper, qa/v173m.js).
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
