@@ -565,6 +565,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   this season" (devy risers, else top devy scores) and redraws when cfb.json arrives (loadCfb wrapper; bgRender skips
   non-live routes, so it calls render()). League rules hides sections with only a heading. Team/GM hubs, Gameday, News,
   Trends, Locker, Devy, NFL teams already carry content: unchanged.
+- v172 (owner: Huddle awards box overlapped Last week, and showed one league on the all-leagues page): with 2+ leagues the
+  Huddle awards card lists each league (`aw172All`): the award you won there (team first, "you" tag), else its top
+  score; "All N awards" sheet = each league's full list with its own Share buttons (`data-awlg` -> S._awLg, which awLS
+  now honours, set on pointerdown, cleared after 8 s). One league keeps the old card. Huddle cards get 14px between them.
+  Tested on the fake 5-league Sleeper (scratchpad qa/mk172.py -> v172.js, MOCK_DIR).
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
