@@ -514,6 +514,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   test 2024-25: RB 4.875 -> 4.875, WR 5.362 -> 5.341, TE 4.125 -> 3.922 - but a plain median shift does better (RB
   4.780, WR 5.156, TE 3.745: Sleeper's numbers are means, real points' median runs ~1.6 lower; Hashmark's median
   regression already does this). Value Aug 20 -> Nov: RB worse (error 581 -> 690), WR/TE flat. NOT shipped.
+- v159 (owner: roster page "bland on load up", add a touch of Pylon orange): first glance box (this week) gets the
+  soft orange corner glow (as .c141hero) and an orange number; To do "info" bullets in the accent with a soft ring; To do
+  count pill `.tag.t159` orange. Light mode uses #BF4706 for the orange text (v133 contrast rule).
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

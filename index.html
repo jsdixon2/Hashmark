@@ -7943,6 +7943,19 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .c156to{background:var(--panel2);border-radius:999px;padding:5px 10px;font:600 12.5px var(--fb);color:var(--ink);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>`);
 /* /v156 */
+/* ===== v159 (owner: roster page "looks bland on load up", add a touch of Pylon orange). Same restraint as the
+   calculator's verdict card: the at-a-glance grid gets the soft orange corner glow and this week's projection in
+   orange; To do bullets that aren't warnings use the accent instead of white; the To do count is an orange pill. ===== */
+vRoster=(function(prev){return function(){const h=prev();return typeof h==="string"?h.replace('<h2>To do</h2><span class="tag">','<h2>To do</h2><span class="tag t159">'):h;};})(vRoster);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.rkp>div:first-child{background:radial-gradient(140% 130% at 0% 0%,color-mix(in srgb,var(--acc) 24%,transparent),transparent 70%),var(--panel)!important}
+.rkp>div:first-child b{color:var(--acc)}
+.tdo .dot.info{background:var(--acc)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+.tag.t159{background:color-mix(in srgb,var(--acc) 16%,transparent)!important;color:var(--acc)!important;border-color:color-mix(in srgb,var(--acc) 40%,transparent)!important}
+:root[data-theme="light"] .rkp>div:first-child b,:root[data-theme="light"] .tag.t159{color:#BF4706!important}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .rkp>div:first-child b,:root:not([data-theme="dark"]) .tag.t159{color:#BF4706!important}}
+</style>`);
+/* /v159 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
