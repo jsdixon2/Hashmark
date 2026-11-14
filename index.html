@@ -7758,8 +7758,8 @@ hxGet=(function(prev){return async function(path){if(S.mode!=="live")return prev
     if(m&&S.leagues&&S.leagues.length&&!S.leagues.some(L=>String(L.id)===m[1])){const k="hx149:"+path;const c=await idbGet(k);if(c&&c.v!==undefined)return c.v;
       const v=await prev(path);try{if(v!=null)idbPut(k,{t:Date.now(),v});}catch(e){}return v;}}catch(e){}return prev(path);};})(hxGet);
 vHuddle=(function(prev){return function(){if(S.mode==="live"&&HX.st==="idle"&&!S._pvBoot){S._pvBoot=1;
-    const tryLoad=()=>{if(HX.st!=="idle")return;if(Date.now()-BOOT149<15000||Date.now()-UI105T<4000){setTimeout(tryLoad,2000);return;}
-      (window.requestIdleCallback||setTimeout)(()=>hxLoad(),{timeout:3000});};setTimeout(tryLoad,15000);}
+    const tryLoad=()=>{if(HX.st!=="idle")return;if(Date.now()-BOOT149<6000||Date.now()-UI105T<2000){setTimeout(tryLoad,1000);return;}
+      (window.requestIdleCallback||setTimeout)(()=>hxLoad(),{timeout:2000});};setTimeout(tryLoad,6000);}
   return prev.apply(this,arguments);};})(vHuddle);
 render=(function(prev){let last=0,pend=0;return function(){const bg=!window.event&&S.mode==="live"&&Date.now()-BOOT149<40000;
   if(bg&&Date.now()-last<400){if(!pend)pend=setTimeout(()=>{pend=0;last=Date.now();prev();},400-(Date.now()-last));return;}
@@ -8024,6 +8024,20 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .wtop{margin-top:14px!important}.wtop h2.w166h{margin:0 0 6px;font-size:inherit}
 </style>`);
 /* /v166 */
+/* ===== v167 (owner: The Wire, Last week and the week awards were invisible for ~30 s on the Huddle until league
+   history loaded). The last rendered copy of those three cards (same Sleeper user, season and week) is kept in
+   localStorage (hm_hx167) and shown straight away under the matchups card until history is ready; then the fresh cards
+   replace them. p167: history starts 6 s after launch (was 15 s) once 2 s pass without a touch (was 4 s). ===== */
+const HX167={wire:/<button class="wtop"[\s\S]*?<\/button>/,pv:/<section class="pan pvcard">[\s\S]*?<\/section>/,aw:/<section class="pan awcard">[\s\S]*?<\/section>/};
+function hx167Key(){return (LS.get("hm_user")||"")+"|"+S.season+"|"+S.week;}
+vHuddle=(function(prev){return function(){let h=prev();try{if(S.mode!=="live"||typeof h!=="string")return h;
+  if(HX.st==="ready"){const parts=["wire","pv","aw"].map(k=>(h.match(HX167[k])||[""])[0]).filter(Boolean).join("");
+    if(parts){const o={k:hx167Key(),h:parts};const prevS=localStorage.getItem("hm_hx167");const ns=JSON.stringify(o);if(prevS!==ns)localStorage.setItem("hm_hx167",ns);}return h;}
+  if(HX167.wire.test(h)&&HX167.pv.test(h))return h;
+  const o=JSON.parse(localStorage.getItem("hm_hx167")||"null");if(!o||o.k!==hx167Key()||!o.h)return h;
+  let add=o.h;if(HX167.wire.test(h))add=add.replace(HX167.wire,"");
+  const m=h.match(/<section class="pan hdm">[\s\S]*?<\/section>/);return m?h.replace(m[0],m[0]+add):h+add;}catch(e){return h;}};})(vHuddle);
+/* /v167 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

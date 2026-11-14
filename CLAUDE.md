@@ -541,6 +541,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   (orange tick) and 14px space above (was touching the matchups card). Greeting is already time-of-day (hdPhase: late
   night <5, morning <12, afternoon <18, evening; "Game on." while live). p166: roster To do week holes read
   "Week 13 (in 3 weeks): no TE starter".
+- v167 + p167 (owner: The Wire, Last week and week awards invisible for ~30 s on the Huddle until history loaded): the
+  last rendered copy of those cards (same user/season/week, LS `hm_hx167`) shows right under the matchups card until
+  HX is ready; history read now starts 6 s after launch once 2 s pass without a touch (v149 had 15 s / 4 s). Fake-Sleeper
+  test: cached cards visible from 2 s, history ready at ~8 s.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
