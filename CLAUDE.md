@@ -458,7 +458,8 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   (questionable or unlisted, decided ~90 min before kickoff; 1 in 9 team-seasons) and 0.071 for Out/Doubtful. The app
   re-reads Sleeper's player list (injury_status) only every 24 h (cachedPlayers 864e5). MSF_KEY is EMPTY in Actions
   (scripts/probe_msf.py, msf-probe.yml: "no MSF_KEY"). Sunday logger (scripts/log_inactives.py + inactives-log.yml, 4
-  Sleeper player-list calls per Sunday) written but NOT pushed: blocked by the permission check, owner to decide.
+  Sleeper player-list calls per Sunday) scheduled 2026-11-15 and -22 (owner "schedule the logger"); grade with a
+  backtest/x18_timing.py (to write) after Nov 23, then remove the schedule.
 - Data test 2 (backtest/x19_adp.py): ADP from archived Sleeper drafts. Redraft 1QB (45-106 drafts/season): season-points
   rank corr 2024-25 ADP .403 vs FantasyPros Aug ECR .450 (per game .449 vs .524) -> no. Rookie drafts: 2-season points
   SF .625 vs .615, 1QB .596 vs .553 (n 116, drafts may run after the July ECR date); market 1 yr later FP slightly
