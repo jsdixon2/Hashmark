@@ -8009,7 +8009,7 @@ function wl165Warm(){if(S.mode!=="live"||!S.leagues||S.leagues.length<2||!S.L)re
 render=(function(prev){return function(){try{if(route()==="home")wl165Warm();}catch(e){}return prev.apply(this,arguments);};})(render);
 /* /v165 */
 /* ===== v166 (owner, Huddle): "this week" heading is "Week N"; each score shows what it is: an orange LIVE tag once that
-   matchup has points (red pulsing dot while games are on: hdPhase P.live), otherwise "proj" under the projected scores; The Wire card on the Huddle gets a real section
+   matchup has points (red text + red pulsing dot while games are on: hdPhase P.live), otherwise "proj" under the projected scores; The Wire card on the Huddle gets a real section
    heading (orange tick like the others) and space above it instead of touching the matchups card. ===== */
 hdMatchups=function(P){const SM=sums().filter(x=>x.d&&x.d.ok);if(!SM.length)return "";
   const rows=SM.map(({L,d})=>`<button class="hdrow" data-go="mymatch" data-golg="${esc(L.id)}"><span class="hdl"><span class="ell">${esc(lgS(L))}</span><em class="ell">vs ${esc(d.b||"")}</em></span><span class="hdsc num"><span class="hd166s">${f1(d.as)}<i>vs</i>${f1(d.bs)}</span>${d.live?`<b class="hd166l${P.live?" on":""}">LIVE</b>`:`<b class="hd166p">proj</b>`}</span><span class="hdwp num ${d.wp>=.5?"good":"bad"}">${pc(d.wp)}</span></button>`).join("");
@@ -8018,7 +8018,7 @@ vHuddle=(function(prev){return function(){const h=prev();return typeof h==="stri
 document.head.insertAdjacentHTML("beforeend",`<style>
 .hdm .hdsc{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15}.hd166s{white-space:nowrap}
 .hd166p,.hd166l{display:block;font:600 10.5px var(--fb);letter-spacing:.06em;margin-top:2px;text-transform:uppercase;color:var(--muted)}
-.hd166l{color:var(--acc);display:inline-flex;align-items:center;gap:4px}.hd166l.on::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--bad);animation:hd166 1.4s ease-in-out infinite}
+.hd166l{color:var(--acc);display:inline-flex;align-items:center;gap:4px}.hd166l.on,:root .hd166l.on{color:var(--bad)!important}.hd166l.on::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--bad);animation:hd166 1.4s ease-in-out infinite}
 :root[data-theme="light"] .hd166l{color:#BF4706}@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .hd166l{color:#BF4706}}
 @keyframes hd166{50%{opacity:.3}}
 .wtop{margin-top:14px!important}.wtop h2.w166h{margin:0 0 6px;font-size:inherit}

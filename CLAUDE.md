@@ -537,7 +537,7 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   7.4 s reopen / 4.4 s first launch (4x); later work (history load ~15 s in, live refresh) now shows as separate 1-6 s
   freezes. Remaining per-league cost: rebuildLive + buildHistory + computeAll (~0.3-0.4 s per league at 1x).
 - v166 (owner, Huddle): matchups card heading "Week N" (was "This week"); each score line has "proj" or an orange LIVE
-  tag under it once points are scored (`hd166p`/`hd166l`, d.live), plus a red pulsing dot while games are on (P.live); The Wire brief on the Huddle gets an h2 "The Wire"
+  tag under it once points are scored (`hd166p`/`hd166l`, d.live), text red + pulsing red dot while games are on (P.live); The Wire brief on the Huddle gets an h2 "The Wire"
   (orange tick) and 14px space above (was touching the matchups card). Greeting is already time-of-day (hdPhase: late
   night <5, morning <12, afternoon <18, evening; "Game on." while live). p166: roster To do week holes read
   "Week 13 (in 3 weeks): no TE starter".
