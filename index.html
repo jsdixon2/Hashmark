@@ -7970,6 +7970,23 @@ document.head.insertAdjacentHTML("beforeend",`<style>
    right under the This week card) and below (tiles started immediately). ===== */
 document.head.insertAdjacentHTML("beforeend",`<style>#view h2.hdmore{margin:28px 0 14px!important;padding-left:2px}</style>`);
 /* /v162 */
+/* ===== v163 (owner: finder suggested 2-for-1 for George Kittle (33) while his roster has Brock Bowers and Tyler Warren
+   at TE; the +1.9 pts/wk came from Kittle starting at FLEX). Trade ideas (finder, bigger deals, sell-high/buy-low options)
+   are dropped when the most valuable incoming player would not start for you at his own position after the trade:
+   dedicated slots for his position (+ SUPER_FLEX for QB; + FLEX-type slots for RB/WR, which really start there); TEs and
+   QBs don't count FLEX. Ranked by rest-of-season points per week among your remaining players at that position. ===== */
+function dp163Flex(s,pos){return pos==="RB"?/^(FLEX|WRRB_FLEX|RB_FLEX)$/.test(s):pos==="WR"?/^(FLEX|WRRB_FLEX|REC_FLEX|WR_FLEX)$/.test(s):false;}
+function dp163(L,x){try{if(!L||!x||!x.get)return false;const mi=mineIdx(L),me=L.teams[mi],slots=L.slots||[];
+  const inc=x.get.filter(a=>a.k!=="k").map(a=>a.p||PL[a.id]).filter(Boolean);if(!inc.length)return false;
+  const p=inc.sort((a,b)=>(b.val||0)-(a.val||0))[0];if(!POSI.hasOwnProperty(p.pos))return false;
+  const allowed=slots.filter(s=>s===p.pos||(p.pos==="QB"&&s==="SUPER_FLEX")||dp163Flex(s,p.pos)).length;if(!allowed)return false;
+  const out=new Set((x.send||[]).filter(a=>a.k!=="k").map(a=>String(a.id))),ros=q=>{try{return rosPPG(q)||0;}catch(e){return 0;}};
+  const r=ros(p),ahead=me.players.filter(id=>!out.has(String(id))).map(id=>PL[id]).filter(q=>q&&q.pos===p.pos&&q.id!==p.id&&ros(q)>=r).length;
+  return ahead>=allowed;}catch(e){return false;}}
+finder=(function(prev){return function(){const v=prev();try{const L=S.L;return Array.isArray(v)?v.filter(x=>!dp163(L,x)):v;}catch(e){return v;}};})(finder);
+bigDeals=(function(prev){return function(L){const v=prev.apply(this,arguments);try{return Array.isArray(v)?v.filter(x=>!dp163(L,x)):v;}catch(e){return v;}};})(bigDeals);
+tradeOpts=(function(prev){return function(L,p,dir){const v=prev.apply(this,arguments);try{return Array.isArray(v)?v.filter(x=>!dp163(L,x)):v;}catch(e){return v;}};})(tradeOpts);
+/* /v163 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

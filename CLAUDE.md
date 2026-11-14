@@ -522,6 +522,10 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   name headings (.hnm) gets it, inline-block ::before (headings with pills/info buttons keep their layout); sheets and
   The Wire's h3 headlines don't.
 - v162 (owner: Huddle "more" header squished): `#view h2.hdmore` margin 28px above / 14px below.
+- v163 (owner: finder offered 2-for-1 for George Kittle, 33, while he has Bowers and Warren at TE; the +1.9 pts/wk was
+  Kittle in FLEX): `dp163` drops finder / bigDeals / tradeOpts ideas whose most valuable incoming player wouldn't start
+  at his own position after the trade (dedicated slots; + SUPER_FLEX for QB; + FLEX-type slots for RB/WR only), ranked by
+  rosPPG among your remaining players there. A rule, not backtested.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
