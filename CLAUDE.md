@@ -518,7 +518,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   soft orange corner glow (as .c141hero) and an orange number; To do "info" bullets in the accent with a soft ring; To do
   count pill `.tag.t159` orange. Light mode uses #BF4706 for the orange text (v133 contrast rule).
 - v160 (owner approved after a preview): Roster tab section headings (h2 inside `.r160`, vRoster wrapper) get a small
-  rounded orange tick before the text (4px x .9em, soft glow). Roster tab only.
+  rounded orange tick before the text (4px x .9em, soft glow). v161 (owner: other pages too): every `#view h2` except
+  name headings (.hnm) gets it, inline-block ::before (headings with pills/info buttons keep their layout); sheets and
+  The Wire's h3 headlines don't.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

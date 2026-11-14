@@ -7959,9 +7959,11 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 /* ===== v160 (owner: preview "header tick" on the roster page): each section heading on the Roster tab (to do, depth
    chart, next 4 weeks ...) gets a small rounded Pylon-orange tick before it, like the wordmark's posts. ===== */
 vRoster=(function(prev){return function(){const h=prev();return typeof h==="string"?`<div class="r160">${h}</div>`:h;};})(vRoster);
+/* v161 (owner: "add the tick to the other pages too"): every section heading (h2) in the main view gets the tick,
+   except headings that are a name (.hnm, v140); inline-block so headings with
+   info buttons or pills keep their layout. */
 document.head.insertAdjacentHTML("beforeend",`<style>
-.r160 h2{display:flex;align-items:center;gap:8px}
-.r160 h2::before{content:"";flex:none;width:4px;height:.9em;border-radius:2px;background:var(--acc);box-shadow:0 0 8px color-mix(in srgb,var(--acc) 45%,transparent)}
+#view h2:not(.hnm)::before{content:"";display:inline-block;width:4px;height:.9em;margin-right:8px;vertical-align:-.08em;border-radius:2px;background:var(--acc);box-shadow:0 0 8px color-mix(in srgb,var(--acc) 45%,transparent)}
 </style>`);
 /* /v160 */
 /* ===== boot ===== */
