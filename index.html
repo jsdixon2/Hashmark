@@ -8038,6 +8038,15 @@ vHuddle=(function(prev){return function(){let h=prev();try{if(S.mode!=="live"||t
   let add=o.h;if(HX167.wire.test(h))add=add.replace(HX167.wire,"");
   const m=h.match(/<section class="pan hdm">[\s\S]*?<\/section>/);return m?h.replace(m[0],m[0]+add):h+add;}catch(e){return h;}};})(vHuddle);
 /* /v167 */
+/* ===== v168 (owner: "make all the page headers orange, eg 'waiver'"). Page titles (.pgtitle h1) in the Pylon accent;
+   name headings (.hnm: league/team/player names) and the Huddle greeting keep the text colour. Light mode #BF4706
+   (v133 contrast rule). ===== */
+document.head.insertAdjacentHTML("beforeend",`<style>
+#view .pgtitle h1:not(.hnm):not(.hdh){color:var(--acc)}
+:root[data-theme="light"] #view .pgtitle h1:not(.hnm):not(.hdh){color:#BF4706}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) #view .pgtitle h1:not(.hnm):not(.hdh){color:#BF4706}}
+</style>`);
+/* /v168 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);

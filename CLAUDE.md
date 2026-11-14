@@ -546,6 +546,9 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   HX is ready; history read now starts 6 s after launch once 2 s pass without a touch (v149 had 15 s / 4 s). Fake-Sleeper
   test: cached cards visible from 2 s, history ready at ~8 s.
 
+- v168 (owner: "make all the page headers orange"): page titles (`#view .pgtitle h1`, incl. the Huddle greeting) in the
+  accent, light mode #BF4706; name headings (.hnm) keep the text colour.
+
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
 experience and not have started in a lineup that season; no keeper pick cost. Co-manages one team with another owner.
