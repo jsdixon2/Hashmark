@@ -570,6 +570,14 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   score; "All N awards" sheet = each league's full list with its own Share buttons (`data-awlg` -> S._awLg, which awLS
   now honours, set on pointerdown, cleared after 8 s). One league keeps the old card. Huddle cards get 14px between them.
   Tested on the fake 5-league Sleeper (scratchpad qa/mk172.py -> v172.js, MOCK_DIR).
+- x25 (backtest/x25_handcuff.py, owner: do values account for handcuffs, e.g. Kaelon Black behind McCaffrey? The app has
+  NO handcuff logic). RB1/RB2 by snaps before week 4/10, snaps 2016-25, PPR 2021-25, dynasty ranks Nov 2021-24.
+  (1) Starter out: a clear backup (1.5x RB3's snaps) scores 11.8 vs 7.6 pts (12+ in 44% of games vs 22%); crowded
+  backfield 7.1 vs 4.1. (2) Who misses time is NOT predictable: missed 3+ of the remaining games 27% at <=25, 29% 25-28,
+  25% 28-30, 32% 30+ (n 28); missed 25%+ of the last 2 seasons 28% vs 24% under 10%; model AUC .57 held out 2022-25 (age
+  alone .52), top third said 40% happened 25%; only "already missing games" carries signal. (3) Market: current RB2s beat
+  rank-matched peers on later points (+.15 log, CI just above 0) but NOT more behind fragile or 28+ starters (n 8-10,
+  -.01..-.11); dynasty value a year later: no group differs (CIs span 0). NOT shipped: no handcuff bump.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
