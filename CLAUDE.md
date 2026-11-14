@@ -526,6 +526,16 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   Kittle in FLEX): `dp163` drops finder / bigDeals / tradeOpts ideas whose most valuable incoming player wouldn't start
   at his own position after the trade (dedicated slots; + SUPER_FLEX for QB; + FLEX-type slots for RB/WR only), ranked by
   rosPPG among your remaining players there. A rule, not backtested.
+- Startup measurement (owner: "startup still slow and laggy"; backtest/perf/mockgen.py builds a fake 5-league Sleeper
+  from public data, backtest/perf/bootperf.js times a live launch with CPU 4x, service worker blocked, taps every 2 s).
+  Before: one main-thread freeze right after leagues load, 17.1 s on reopen / 20.5 s first launch (taps dropped).
+  p164: nrm() memoised (players x news headlines x 4 regex passes in release checks) + injClass's no-injury exit moved
+  before its news scan. v164: drasticCause() cached per player until news/injury/team change. p165: selectLeague's
+  transactions and the history load call bgRender. v165: before a live Huddle redraw, leagueSummary + leagueDigest are
+  warmed for all leagues in one pass (withLeague rebuilt the selected league after EVERY other league: 2 rebuilds per
+  league per redraw); computeAll calls during launch 10 -> 3, Huddle redraw 1.0 s -> 0.6 s (1x). After: first freeze
+  7.4 s reopen / 4.4 s first launch (4x); later work (history load ~15 s in, live refresh) now shows as separate 1-6 s
+  freezes. Remaining per-league cost: rebuildLive + buildHistory + computeAll (~0.3-0.4 s per league at 1x).
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

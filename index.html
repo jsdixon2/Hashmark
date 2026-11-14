@@ -1308,7 +1308,7 @@ function histPanel(p){const win=`${S.trendFrom}–${S.season}`;
     <div class="mt">${p.hist.map(h=>`<div style="display:grid;grid-template-columns:44px 1fr 118px;gap:8px;align-items:center;font-size:13px;margin:5px 0"><span class="num">${h.yr}</span><span class="bar" style="height:12px"><i style="width:${(h.ppg/mx*100).toFixed(0)}%"></i></span><span class="num">${f1(h.ppg)}/g, ${p.pos}${h.rank??"–"}</span></div>`).join("")}</div>
     <p class="sub mt">Season ranks are by total points. Only seasons from ${S.trendFrom} on feed trends and age curves (${esc(S.ageSrc)}).</p></section>`;}
   return `<section class="pan mt"><h2>History, ${win}</h2>${p.fin?p.fin.map(([y,r])=>`<div class="lrow"><span>${y}</span><b>${r}</b></div>`).join(""):""}<p class="sub">${S.mode==="live"?"No seasons on file in this window.":`Season-by-season history back to ${S.trendFrom} loads from Sleeper’s archive once your account is linked. This snapshot carries ${p.fin?"recent finishes":"the current season"} only.`}</p></section>`;}
-function selectLeague(id){const L=S.leagues.find(l=>l.id===id)||S.leagues[0];S.L=L;S.fmt.type=L.type===2?"dynasty":L.type===1?"keeper":"redraft";if(S.mode==="live"&&!L.tx)loadTxns(L).then(()=>render());S.fmt.qb=L.qb;
+function selectLeague(id){const L=S.leagues.find(l=>l.id===id)||S.leagues[0];S.L=L;S.fmt.type=L.type===2?"dynasty":L.type===1?"keeper":"redraft";if(S.mode==="live"&&!L.tx)loadTxns(L).then(()=>typeof bgRender==="function"?bgRender():render());S.fmt.qb=L.qb;
   if(S.mode==="live")rebuildLive(L);computeAll();const mine=L.teams.findIndex(t=>t.mine);S.trade={a:[],b:[],ta:mine>=0?mine:0,tb:null};updBadge();}
 
 /* ===== UI primitives ===== */
@@ -1953,7 +1953,7 @@ vHome=function(){const r=route();if(r.startsWith("nfl-"))return _vH3();const L=S
 /* ===== v9: news feed + engine, Home rebuild ===== */
 const NW={items:[],built:0,src:[],ixFor:null,ix:null};
 const NK={injury:"Injury",return:"Return",trade:"Trade",release:"Release",signing:"Signing",suspension:"Suspension",depth:"Role",coaching:"Coaching",status:"Status"};
-const nrm=x=>(x||"").toLowerCase().replace(/[.'’`]/g,"").replace(/\s+(jr|sr|ii|iii|iv|v)\b/g,"").replace(/[^a-z0-9 \-]/g," ").replace(/\s+/g," ").trim();
+const NRM_C=new Map(),nrm=x=>{x=x||"";let v=NRM_C.get(x);if(v===undefined){v=x.toLowerCase().replace(/[.'’`]/g,"").replace(/\s+(jr|sr|ii|iii|iv|v)\b/g,"").replace(/[^a-z0-9 \-]/g," ").replace(/\s+/g," ").trim();if(NRM_C.size>60000)NRM_C.clear();NRM_C.set(x,v);}return v;};
 function ago(ts){if(!ts)return "";const m=Math.max(0,Math.round((Date.now()-ts)/60000));return m<1?"just now":m<60?m+"m ago":m<1440?Math.round(m/60)+"h ago":Math.round(m/1440)+"d ago";}
 async function loadNews(){try{const r=await fetch("data/news.json",{cache:"no-cache"});if(!r.ok)return;const j=await r.json();NW.items=Array.isArray(j.items)?j.items:[];NW.built=j.built||0;NW.src=j.sources||[];NW.ixFor=null;
   computeAll();for(const l of S.leagues)l._sum=null;const r2=route();if(r2==="home"||r2==="news"||r2.startsWith("player-"))render();}catch(e){}}
@@ -3263,8 +3263,7 @@ function blendFor(p,set,modelRank){const parts=[];for(const [k,w] of set){let r=
   return {v,parts,cv,n:ext.length};}
 const INJ_UNC=/blood clot|\bdvt\b|thrombo|heart|cardiac|\bneck\b|spinal|spine|undisclosed|mental health|retire/i;
 const INJ_MAJ=/\bacl\b|achilles|\btorn\b|rupture|season-ending|fracture|broken|lisfranc|surgery|out for (?:the )?season/i;
-function injClass(p){const txt=[p.inj||"",...(NW.items||[]).filter(it=>it.ts&&Date.now()-it.ts<21*864e5&&it.t.includes(p.name)).map(it=>it.t+" "+(it.s||""))].join(" | ");
-  if(!p.inj&&!(p.news&&p.news.rep))return null;
+function injClass(p){if(!p.inj&&!(p.news&&p.news.rep))return null;const txt=[p.inj||"",...(NW.items||[]).filter(it=>it.ts&&Date.now()-it.ts<21*864e5&&it.t.includes(p.name)).map(it=>it.t+" "+(it.s||""))].join(" | ");
   if(INJ_UNC.test(txt))return {c:"unc",lab:"Uncertain injury",lo:.45,hi:1,long:.72,why:(txt.match(INJ_UNC)||[""])[0]};
   if(INJ_MAJ.test(txt)||/\bIR\b/.test(p.inj||"")&&/knee|achilles|foot/i.test(p.inj||"")){const w=(txt.match(INJ_MAJ)||[""])[0].toLowerCase();const f=/achilles/.test(w)?.75:/acl|torn|rupture/.test(w)?.85:/fracture|broken/.test(w)?.93:.88;return {c:"maj",lab:"Major injury, known path back",long:f*((p.age||25)>=28?.93:1),why:w||"IR"};}
   return {c:"min",lab:"Minor injury, full recovery expected",long:1,why:((p.inj||"").match(/\(([^)]+)\)/)||[])[1]||"day-to-day"};}
@@ -6222,7 +6221,7 @@ function pvLines(){const G=HX.data;if(!G||!G.me)return [];const me=G.me,all=me.s
   return out;}
 function pvCard(){const ls=pvLines();if(!ls.length)return "";return `<section class="pan pvcard"><div class="row sp"><h2>Last week</h2><span class="tag">Wk ${ls[0].wk}</span></div>${ls.map(l=>`<div class="pvl"><div class="pvlg">${esc(l.lg)}</div><div>${l.text}${l.fx?` <span class="pvfx">${esc(l.fx)}</span>`:""}</div></div>`).join("")}</section>`;}
 vHuddle=(function(prev){return function(){let h=prev();try{if(HX.st==="ready")h+=pvCard();else if(S.mode==="live"&&HX.st==="idle"&&!S._pvBoot){S._pvBoot=1;setTimeout(()=>{hxLoad();},2500);}}catch(e){console.error(e);}return h;};})(vHuddle);
-rerenderStats=(function(prev){return function(){prev();if(route()==="home"&&HX.st==="ready")render();};})(rerenderStats);
+rerenderStats=(function(prev){return function(){prev();if(route()==="home"&&HX.st==="ready")(typeof bgRender==="function"?bgRender():render());};})(rerenderStats);
 /* settings: Voice */
 openDrawer=(function(prev){return function(){prev();try{const B=$("#sheetB"),host=B&&B.querySelector(".pfl");if(B)B.querySelectorAll(".pfl button span").forEach(x=>{if(x.textContent==="My stats")x.textContent="Locker";});if(!host||B.querySelector(".pfvoice"))return;const cur=voiceGet();
   host.insertAdjacentHTML("beforeend",`<div class="pfs pfvoice"><div class="eyebrow">Voice</div>${VOICES.map(([k,n,d])=>`<button class="pfvo${k===cur?" on":""}" data-voice="${k}"><span class="pfr"></span><span><b>${n}</b><em>${d}</em></span></button>`).join("")}<p class="sub" style="margin:6px 0 0">Every voice goes straight on injuries, deadlines and money.</p></div>`);}catch(e){console.error(e);}};})(openDrawer);
@@ -7987,6 +7986,28 @@ finder=(function(prev){return function(){const v=prev();try{const L=S.L;return A
 bigDeals=(function(prev){return function(L){const v=prev.apply(this,arguments);try{return Array.isArray(v)?v.filter(x=>!dp163(L,x)):v;}catch(e){return v;}};})(bigDeals);
 tradeOpts=(function(prev){return function(L,p,dir){const v=prev.apply(this,arguments);try{return Array.isArray(v)?v.filter(x=>!dp163(L,x)):v;}catch(e){return v;}};})(tradeOpts);
 /* /v163 */
+/* ===== v164 (owner: startup still slow; measured with a fake 5-league Sleeper + CPU 4x, scratchpad bootperf.js):
+   p164 memoised nrm() and moved injClass's no-injury exit before its news scan; drasticCause() (value engine, every
+   player, every league) scanned all news each call: cached per player until the news set, injury, team or news
+   report changes (same idea as v147). Recent (10-day) items are also kept once per news build. ===== */
+const DC164=new Map();let DC164k="",DC164r=[];
+drasticCause=(function(prev){return function(p){if(!p)return null;const nk=(NW.built||0)+"|"+((NW.items||[]).length);
+  if(nk!==DC164k){DC164k=nk;DC164.clear();}
+  const k=p.id+"|"+(p.inj||"")+"|"+(p.team||"")+"|"+((p.news&&p.news.rep)||"");if(DC164.has(k))return DC164.get(k);
+  const v=prev(p);DC164.set(k,v);return v;};})(drasticCause);
+/* /v164 */
+/* ===== v165 (startup measurement, scratchpad bootperf.js): every Huddle redraw summarised each league (leagueSummary,
+   leagueDigest) through withLeague(), which rebuilds the player set for that league AND rebuilds it back for the
+   selected league after each one: 2 full rebuilds per extra league per redraw. Before a live Huddle redraw, both are now
+   warmed in one pass (selected league first, then each other league that needs it, one switch back at the end), so the
+   redraw itself only hits caches. Same results; fewer rebuilds. ===== */
+function wl165Need(L){return !L._sum||(L._sum.at&&Date.now()-L._sum.at>1500);}
+function wl165Warm(){if(S.mode!=="live"||!S.leagues||S.leagues.length<2||!S.L)return;const others=S.leagues.filter(L=>L!==S.L&&!L.rip&&wl165Need(L));if(!others.length)return;
+  const orig=S.L,pf=S.fmt;try{try{leagueSummary(orig);leagueDigest(orig);}catch(e){}
+    for(const L of others){S.L=L;S.fmt={...pf,type:L.type===2?"dynasty":L.type===1?"keeper":"redraft",qb:L.qb};rebuildLive(L);computeAll();try{leagueSummary(L);}catch(e){}try{leagueDigest(L);}catch(e){}}}
+  finally{S.L=orig;S.fmt=pf;rebuildLive(orig);computeAll();}}
+render=(function(prev){return function(){try{if(route()==="home")wl165Warm();}catch(e){}return prev.apply(this,arguments);};})(render);
+/* /v165 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
