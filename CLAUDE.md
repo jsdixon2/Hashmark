@@ -583,6 +583,19 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   x25 numbers (clear 11.8 vs 7.6 pts, 12+ 44%; crowded 7.1 vs 4.1; lead backs miss 3+ about 1 in 4, age/history barely
   matter; age sentence only when the starter is 28+), "<starter> is listed Out: X is next in line" when he is
   Out/Doubtful/IR. No value change. Demo players have no depth chart (tested on the fake Sleeper, qa/v173m.js).
+- Audit 2026-11-14 (owner: "check for other discrepancies"; scratchpad qa/scan.js demo|mock scans every route for
+  NaN/undefined/null/"+-"/"0 of 0", overflow, empty boxes; qa/cons.js + qa/mcons.js compare numbers across pages).
+  v174: playoff odds differed by page (Team hub 56% vs Standings/Roster 60%): oddsFor's 1,500 random seasons were redrawn
+  after league rebuilds; simLeague now runs on a seeded RNG (league id + week + rosters/records) -> identical everywhere
+  (checked 5 mock leagues: Huddle/Team/Matchup/Roster/Standings agree on win% and playoff%). Buy/sell cards drop the old
+  unvetted "Offer" line when the Trade options block shows (it said "Offer X" next to "No realistic trade").
+  p174: League rules hides empty Lineup/Settings boxes; Wire waiver stories drop "Started since 0 of 0 weeks". p175:
+  players already broken out (p.broke) no longer show breakout odds in the Waivers Stash pick, Trends breakout list, GM
+  hub tile or War Room board ("Arrived"); "Value to you" within 3% says "Within 3% of market" (was "Same as market").
+  p176: Locker "0 of 0 seasons in the playoffs" -> "First season in progress". p177: empty Free agent guide box hidden.
+  Checked and consistent: value breakdown sums (60/20/20), card vs Players list values and weekly projections, waiver
+  gains Moves vs Waivers, calculator grade vs Moves/Trade Lab cards. Demo-only quirks (not bugs): demo week 8 vs data
+  week 10 in streamers; demo players have no depth chart; Lamar Jackson has no 2026 stats in the snapshot.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
