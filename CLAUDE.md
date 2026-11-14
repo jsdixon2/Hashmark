@@ -517,6 +517,8 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 - v159 (owner: roster page "bland on load up", add a touch of Pylon orange): first glance box (this week) gets the
   soft orange corner glow (as .c141hero) and an orange number; To do "info" bullets in the accent with a soft ring; To do
   count pill `.tag.t159` orange. Light mode uses #BF4706 for the orange text (v133 contrast rule).
+- v160 (owner approved after a preview): Roster tab section headings (h2 inside `.r160`, vRoster wrapper) get a small
+  rounded orange tick before the text (4px x .9em, soft glow). Roster tab only.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
