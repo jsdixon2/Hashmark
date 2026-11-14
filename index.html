@@ -5694,7 +5694,7 @@ function rosTodo(L,t){const T=[],mi=mineIdx(L);
     startIds(L,t).map(id=>PL[id]).filter(p=>p&&WV_OFF.has(p.pos)&&!st.has(p.id)&&!prot(p.id)).map(p=>({p,v:wvVec(p,L).reduce((a,b)=>a+b,0)})).filter(x=>x.v<4).sort((a,b)=>a.v-b.v).slice(0,2)
       .forEach(x=>T.push({lvl:"info",t:`Cut candidate: ${x.p.name}`,s:`${f1(x.v)} pts projected over the next 4 weeks; that roster spot could hold a waiver add`,go:"waivers",b:"Waivers",id:x.p.id}));},0);
   rosSafe(()=>{const G=tradeSignals(L);(G.sells||[]).slice(0,2).forEach(x=>T.push({lvl:"info",t:`Sell high: ${x.p.name}`,s:(x.why&&x.why[0])||"His price is above what he’ll produce for you",go:"trade-sell",b:"Trade Lab",id:x.p.id}));},0);
-  rosSafe(()=>{rosHoles(L,t,4).slice(1).filter(h=>h.empty.length).slice(0,2).forEach(h=>T.push({lvl:"warn",t:`Week ${h.w}: no ${h.empty.join(", ")} starter`,s:h.outS.length?`Out: ${h.outS.slice(0,3).join(", ")}`:"Not enough healthy players at the position",go:"waivers",b:"Waivers"}));},0);
+  rosSafe(()=>{rosHoles(L,t,4).slice(1).filter(h=>h.empty.length).slice(0,2).forEach(h=>T.push({lvl:"warn",t:`Week ${h.w}${h.w>S.week?` (in ${h.w-S.week} week${h.w-S.week>1?"s":""})`:""}: no ${h.empty.join(", ")} starter`,s:h.outS.length?`Out: ${h.outS.slice(0,3).join(", ")}`:"Not enough healthy players at the position",go:"waivers",b:"Waivers"}));},0);
   return T;}
 function rosRow(L,t,p,slot,sig){const ir=(t.ir||[]).includes(p.id),tx=(t.taxi||[]).includes(p.id),wk=rosSafe(()=>wkProj(p),0),ros=rosSafe(()=>rosPPG(p),0);
   const chip=slot?`<span class="chip rsl">${esc(slotLabel(slot))}</span>`:`<span class="chip rsl mute">${ir?"IR":tx?"TX":"BN"}</span>`;
@@ -8008,6 +8008,21 @@ function wl165Warm(){if(S.mode!=="live"||!S.leagues||S.leagues.length<2||!S.L)re
   finally{S.L=orig;S.fmt=pf;rebuildLive(orig);computeAll();}}
 render=(function(prev){return function(){try{if(route()==="home")wl165Warm();}catch(e){}return prev.apply(this,arguments);};})(render);
 /* /v165 */
+/* ===== v166 (owner, Huddle): "this week" heading is "Week N"; each score shows what it is: a red LIVE tag once that
+   matchup has live points, otherwise "proj" under the projected scores; The Wire card on the Huddle gets a real section
+   heading (orange tick like the others) and space above it instead of touching the matchups card. ===== */
+hdMatchups=function(P){const SM=sums().filter(x=>x.d&&x.d.ok);if(!SM.length)return "";
+  const rows=SM.map(({L,d})=>`<button class="hdrow" data-go="mymatch" data-golg="${esc(L.id)}"><span class="hdl"><span class="ell">${esc(lgS(L))}</span><em class="ell">vs ${esc(d.b||"")}</em></span><span class="hdsc num"><span class="hd166s">${f1(d.as)}<i>vs</i>${f1(d.bs)}</span>${d.live?`<b class="hd166l">LIVE</b>`:`<b class="hd166p">proj</b>`}</span><span class="hdwp num ${d.wp>=.5?"good":"bad"}">${pc(d.wp)}</span></button>`).join("");
+  return `<section class="pan hdm"><div class="row sp"><h2>Week ${S.week}</h2><span class="tag">${P.live?"Live":"Projected"} · win chance</span></div>${rows}</section>`;};
+vHuddle=(function(prev){return function(){const h=prev();return typeof h==="string"?h.replace('<span class="wmn sm">THE WIRE</span>','<h2 class="w166h">The Wire</h2>'):h;};})(vHuddle);
+document.head.insertAdjacentHTML("beforeend",`<style>
+.hdm .hdsc{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15}.hd166s{white-space:nowrap}
+.hd166p,.hd166l{display:block;font:600 10.5px var(--fb);letter-spacing:.06em;margin-top:2px;text-transform:uppercase;color:var(--muted)}
+.hd166l{color:var(--bad);display:inline-flex;align-items:center;gap:4px}.hd166l::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--bad);animation:hd166 1.4s ease-in-out infinite}
+@keyframes hd166{50%{opacity:.3}}
+.wtop{margin-top:14px!important}.wtop h2.w166h{margin:0 0 6px;font-size:inherit}
+</style>`);
+/* /v166 */
 /* ===== boot ===== */
 function boot(){Object.keys(AGE).forEach(k=>delete AGE[k]);Object.assign(AGE,JSON.parse(JSON.stringify(AGE0)));S.ageSrc="standard age-curve priors";S.mode="snapshot";S.week=8;S.season=2026;buildSnapshot();buildOpp();S.fmt={type:"dynasty",qb:"sf"};S.leagues=[buildDemo()];selectLeague("demo");}
 setInterval(()=>{if(route()!=="home"||!$("#newsH")||!$("#sheet").hidden||!$("#pal").hidden)return;S.newsI=(S.newsI+1)%NEWS.length;const n=NEWS[S.newsI];const h=$("#newsH");h.classList.remove("fadein");void h.offsetWidth;h.classList.add("fadein");h.textContent=n.h;$("#newsS").textContent=n.src;$("#newsD").textContent=n.d;$("#newsDots").innerHTML=NEWS.map((_,i)=>`<i class="${i===S.newsI?"on":""}"></i>`).join("");},6500);
