@@ -1,8 +1,14 @@
 name: inactives-log
 # Data test 1 (timing): Sunday snapshots of Sleeper injury statuses (one player-list call each; Sleeper asks for
 # sparing use of that call). Results: backtest/x18_timing.py.
-# Manual only for now (owner to decide on a Sunday schedule: 16:00, 17:20, 19:55 UTC Sunday + 00:15 UTC Monday).
-on: {workflow_dispatch: {}}
+# Owner approved 2026-11-14: Sundays Nov 15 and 22 (16:00, 17:20, 19:55 UTC) + Monday 00:15 UTC. Remove after 2026-11-23.
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 16 15,22 11 *"
+    - cron: "20 17 15,22 11 *"
+    - cron: "55 19 15,22 11 *"
+    - cron: "15 0 16,23 11 *"
 permissions: {contents: write}
 concurrency: {group: inactives-log, cancel-in-progress: false}
 jobs:
