@@ -622,6 +622,19 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   team switch (S.lg176T), rows = one-line summary + fantasy points from box-score totals (lg176Pts, the league where he's
   in your matchup, else S.L scoring), yours / opponent / your bench first; <details> expands every category as stat
   tiles + Player card button. Fixture box score added to .build/v175_test.js.
+- v177 (owner "go"): Time Machine Draft (own name/look; genre like Sleeper's 17-0, not a copy), route tm (Scout tab +
+  Scout hub tile with your best record). Data data/tm.json (scripts/build_tm.py; .github/workflows/build-tm.yml, manual:
+  run after each season to add it): nflverse weekly stats 1999-2025 summed per player x team x season (traded players
+  count for each team), QB/RB(+FB)/WR/TE with PPR > 0: 861 team-seasons, 14,495 player-seasons, 3,473 players; college +
+  draft year (nflverse players), Sleeper id (DynastyProcess). 780 KB / 242 KB gz, loaded only on the tm route. No K/DST.
+  Rules: 7 slots QB RB RB WR WR TE FLEX, random team-season rolls every game (never a dead roll), 3 re-rolls, a player
+  once; score = PPR pts / max(games, 6) + chemistry per pair: same team-season +2 > former teammates +1 (shared any
+  team-season) > same franchise +1, plus same college +2, same draft class +1; +1 per pick on your Sleeper rosters.
+  Season: 17 computer lineups (random rolls, one of the top 2 available each round, no re-rolls), weekly scores +-13%;
+  calibrated (.build/v177_test.js, 60 games of a simple chemistry-aware strategy): median 13-4, 17-0 about 5%. Result:
+  record (+ typical record when luck moved it 3+ games), lineup, chemistry links, best lineup from the same 7 rolls (local
+  search) + biggest miss, share image (1080x1350). Pick rows show college + draft year (owner) and +chem total; tiles
+  show college. State LS hm_tm177 (game), hm_tm177h (history). Page wrapped in data-nolink (no auto player-team tags).
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

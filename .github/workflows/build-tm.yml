@@ -1,0 +1,16 @@
+name: build-tm
+# Time Machine Draft data (scripts/build_tm.py): nflverse player stats 1999 -> last completed season, split by team,
+# with college / draft year / Sleeper id -> data/tm.json. Manual only: run it after each season to add the new year.
+on: {workflow_dispatch: {}}
+permissions: {contents: write}
+concurrency: {group: build-tm, cancel-in-progress: false}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 scripts/build_tm.py
+      - run: |
+          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
+          git add data/tm.json; git diff --staged --quiet || (git commit -m "Time Machine Draft data" && (git pull --rebase -q origin main; git push))
