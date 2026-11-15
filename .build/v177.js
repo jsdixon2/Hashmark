@@ -103,8 +103,9 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
   else if(t.dataset.tm177f){S.tm177F=t.dataset.tm177f;}
   else if(t.dataset.tm177new!=null){tm177New();}
   else if(t.dataset.tm177share!=null){tm177Share(G);return;}
-  else if(t.dataset.tm177p!=null){const x=tm177Row(G.cur,+t.dataset.tm177p);const s=x&&tm177Fit(x.pos,G.slots);if(!s)return;G.slots[s]={k:G.cur,i:x.i};G.cur=null;S.tm177F="all";if(Object.keys(G.slots).length>=7)tm177Finish(G);tm177Save();window.scrollTo({top:0,behavior:"smooth"});}
-  render();},true);
+  else if(t.dataset.tm177p!=null){const x=tm177Row(G.cur,+t.dataset.tm177p);const s=x&&tm177Fit(x.pos,G.slots);if(!s)return;G.slots[s]={k:G.cur,i:x.i};G.cur=null;S.tm177F="all";if(Object.keys(G.slots).length>=7)tm177Finish(G);tm177Save();}
+  render();const top=t.dataset.tm177p!=null||t.dataset.tm177new!=null,sh=t.dataset.tm177roll!=null||t.dataset.tm177re!=null;
+  setTimeout(()=>{if(top)window.scrollTo(0,0);else if(sh){const e=document.querySelector(".tm177sh");if(e)e.scrollIntoView({block:"start"});window.scrollBy(0,-120);}},30);},true);
 async function tm177Share(G){try{const R=G.res,ps=tm177Picks(G),W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;const g=c.getContext("2d");try{await document.fonts.ready;}catch(e){}
   const F1='"Space Grotesk",system-ui,sans-serif',F2='Inter,system-ui,sans-serif';g.fillStyle="#0B0C0E";g.fillRect(0,0,W,H);const gr=g.createRadialGradient(0,0,0,0,0,900);gr.addColorStop(0,"rgba(255,107,26,.28)");gr.addColorStop(1,"rgba(255,107,26,0)");g.fillStyle=gr;g.fillRect(0,0,W,H);
   g.fillStyle="#F2F1EC";g.font=`700 40px ${F1}`;g.fillText("hashmark",70,110);g.fillStyle="#FF6B1A";g.font=`700 30px ${F2}`;g.fillText("TIME MACHINE DRAFT",70,170);
@@ -114,6 +115,7 @@ async function tm177Share(G){try{const R=G.res,ps=tm177Picks(G),W=1080,H=1350,c=
   const blob=await new Promise(r=>c.toBlob(r,"image/png"));const file=new File([blob],"time-machine.png",{type:"image/png"});
   if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file],title:"Time Machine Draft"});else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="time-machine.png";a.click();}}catch(e){console.error(e);}}
 vHome=(function(prev){return function(){if(route()==="tm")return `<div data-nolink>${vTM()}</div>`;return prev();};})(vHome);
+addEventListener("hashchange",()=>{if(route()==="tm")setTimeout(()=>window.scrollTo(0,0),40);});
 pageTitle=(function(prev){return function(r){if(r==="tm")return {eb:["Scout"],h:"Time Machine Draft"};return prev(r);};})(pageTitle);
 LABEL=(function(prev){return function(r){return r==="tm"?"Time Machine":prev(r);};})(LABEL);
 tabOf=(function(prev){return function(r){return r==="tm"?"tm":prev(r);};})(tabOf);
@@ -139,7 +141,7 @@ document.head.insertAdjacentHTML("beforeend",`<style>
 .tm177rf{text-align:right;display:flex;flex-direction:column;align-items:flex-end}.tm177rf b{font-size:16px}.tm177rf small{font-size:10px;color:var(--muted)}.tm177rf i{font-style:normal;font-weight:700;font-size:12px;color:var(--acc)}
 .tm177c{display:inline-block;font-size:10px;font-weight:700;border-radius:6px;padding:1px 6px;margin:4px 4px 0 0;background:color-mix(in srgb,var(--c) 22%,transparent);color:var(--ink);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 55%,transparent)}
 .tm177res{position:relative;overflow:hidden}.tm177res:before{content:"";position:absolute;inset:0;background:radial-gradient(120% 80% at 0% 0%,color-mix(in srgb,var(--acc) 22%,transparent),transparent 60%);pointer-events:none}
-.tm177rec{position:relative;font-size:64px;font-weight:900;line-height:1;letter-spacing:-.03em;margin:6px 0}.tm177rec span{color:var(--acc)}
+.tm177rec{position:relative;font-size:60px;font-weight:900;line-height:1.05;letter-spacing:.01em;margin:10px 0 8px;font-variant-numeric:tabular-nums}.tm177rec span{color:var(--acc);margin:0 .12em}
 .tm177res .bar{position:relative;height:8px;border-radius:4px;background:var(--panel2);overflow:hidden;margin-top:10px}.tm177res .bar i{display:block;height:100%;background:linear-gradient(90deg,#FF6B1A,#FF9A57)}
 .tm177rl{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-size:13.5px}.tm177rl:first-of-type{border-top:0}
 .tm177cr{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:6px 0;border-top:1px solid var(--line)}.tm177cr:first-of-type{border-top:0}.tm177cr b{color:var(--acc)}

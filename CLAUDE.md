@@ -634,7 +634,7 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   calibrated (.build/v177_test.js, 60 games of a simple chemistry-aware strategy): median 13-4, 17-0 about 5%. Result:
   record (+ typical record when luck moved it 3+ games), lineup, chemistry links, best lineup from the same 7 rolls (local
   search) + biggest miss, share image (1080x1350). Pick rows show college + draft year (owner) and +chem total; tiles
-  show college. State LS hm_tm177 (game), hm_tm177h (history). Page wrapped in data-nolink (no auto player-team tags).
+  show college. State LS hm_tm177 (game), hm_tm177h (history). Page wrapped in data-nolink (no auto player-team tags). Scrolls to top on open, pick and new game; roll scrolls the pick list into view (v105 keeps scrollY on same-route redraws, which had opened new games cut off). Record "11 – 6" spaced.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
