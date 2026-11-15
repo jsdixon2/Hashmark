@@ -9,7 +9,7 @@ function aw172All(){const G=HX.data;if(!G)return [];const out=[];
   return out;}
 function aw172With(id,fn){const sv=S._awLg;S._awLg=id;try{return fn();}finally{S._awLg=sv;}}
 awCard=(function(prev){return function(){const all=aw172All();if(all.length<2)return prev();const w=Math.max(...all.map(z=>z.A.w));
-  const row=(a,you)=>`<div class="awr${you?" mine":""}"><div><div class="awk">${esc(a.k)}${you?` <span class="aw172y">you</span>`:""}</div><div class="aww">${esc(a.who)}</div><div class="aws">${esc(a.sub||"")}</div></div><b class="num">${esc(a.val)}</b></div>`;
+  const row=(a,you)=>`<div class="awr${you?" mine":""}"><div><div class="awk">${esc(a.k)}</div><div class="aww">${esc(a.who)}</div><div class="aws">${esc(a.sub||"")}</div></div><b class="num">${esc(a.val)}</b></div>`;
   const lines=all.map(({L,A})=>{const mine=A.team.concat(A.player).filter(a=>+a.rid===+A.myRid);const a=mine[0]||A.team[0];if(!a)return "";
     return `<div class="aw172l"><div class="pvlg">${esc(L.name)}${A.w!==w?` · week ${A.w}`:""}</div>${row(a,!!mine[0])}${mine.length>1?`<div class="aws aw172m">+${mine.length-1} more award${mine.length>2?"s":""} for you</div>`:""}</div>`;}).join("");
   const n=all.reduce((s,z)=>s+z.A.team.length+z.A.player.length,0);

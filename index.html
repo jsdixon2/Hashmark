@@ -6605,11 +6605,16 @@ wireStories=function(){const C=wxCtx();if(!C)return [];const {x,tn,w,rec,teams,r
     push({tag:"Trade",cls:"good",head:`${tn(a)} and ${tn(b)} make a deal`,lead:`${tn(a)} sends ${[...gb.map(C.pn),...pk(b)].join(", ")||"nothing"} to ${tn(b)} for ${[...ga.map(C.pn),...pk(a)].join(", ")||"nothing"}.`,facts,det,when:`Week ${t.wk}`,pr:82});}
   /* waiver bids */
   const allBids=(x.tx||[]).filter(t=>t.type==="waiver"&&t.bid>0).map(t=>t.bid).sort((a,b)=>a-b),med=allBids.length?allBids[Math.floor(allBids.length/2)]:0;
-  for(const t of recent.filter(t=>t.type==="waiver"&&t.bid>0).sort((a,b)=>b.bid-a.bid).slice(0,2)){const [p,r]=Object.entries(t.adds||{})[0]||[];if(!p)continue;let pts=0,starts=0,wks=0;
+  /* p178: one roundup story for the recent paid claims instead of one story per bid */
+  {const cl=recent.filter(t=>t.type==="waiver"&&t.bid>0&&Object.keys(t.adds||{}).length).sort((a,b)=>b.bid-a.bid);
+  if(cl.length){const t=cl[0],[p,r]=Object.entries(t.adds||{})[0];let pts=0,starts=0,wks=0;
     x.weeks.forEach((wk,i)=>{if(i+1<t.wk||i+1>=C.pws)return;const m=wk.find(q=>+q.rid===+r);if(!m)return;wks++;if((m.st||[]).includes(p)){starts++;pts+=+((m.pp||{})[p])||0;}});const q=PL[p]||{};
-    push({tag:"Waivers",cls:"",head:`${tn(r)} spend${tn(r)==="You"?"":"s"} $${t.bid} on ${hxName(p)}`,lead:`${tn(r)} won ${C.pn(p)}${q.team?` (${q.team})`:""} for $${t.bid}, ${med?`${(t.bid/med).toFixed(1)}× the league's typical winning bid of $${med}`:"the biggest bid of the week"}.`,
-      facts:[["Bid",`$${t.bid}`],med?["League's median winning bid",`$${med}`]:null,wks?["Started since",`${starts} of ${wks} week${wks===1?"":"s"} · ${f1(pts)} pts`]:null,q.ros?["Projection",`${f1(q.ros)} pts a week rest of season`]:null].filter(Boolean),
-      det:[q.inj?`Injury status: ${q.inj}.`:null,C.ppg(p)?`Season average: ${f1(C.ppg(p))} points a game when he plays.`:null].filter(Boolean),when:`Week ${t.wk}`,pr:50+Math.min(20,t.bid/2)});}
+    const wk0=Math.min(...cl.map(c=>c.wk)),wk1=Math.max(...cl.map(c=>c.wk)),tot=cl.reduce((a,c)=>a+c.bid,0),mx=b=>med?` (${(b/med).toFixed(1)}×)`:"";
+    const rows=cl.slice(1,6).map(c=>{const [pp,rr]=Object.entries(c.adds)[0];return [`${tn(rr)}`,`${hxName(pp)} · $${c.bid}${mx(c.bid)}`];});
+    push({tag:"Waivers",cls:"",head:cl.length>1?`Waiver wire: ${tn(r)} lead${tn(r)==="You"?"":"s"} the spending with $${t.bid} on ${hxName(p)}`:`${tn(r)} spend${tn(r)==="You"?"":"s"} $${t.bid} on ${hxName(p)}`,
+      lead:`${cl.length>1?`${cl.length} paid claims ${wk0===wk1?`in week ${wk1}`:`in weeks ${wk0}–${wk1}`}, $${tot} spent in all. `:""}The biggest: ${tn(r)} won ${C.pn(p)} for $${t.bid}, ${med?`${(t.bid/med).toFixed(1)}× the league's typical winning bid of $${med}`:"the top bid"}.`,
+      facts:[med?["League's median winning bid",`$${med}`]:null,wks?[`${hxName(p)} started since`,`${starts} of ${wks} week${wks===1?"":"s"} · ${f1(pts)} pts`]:null,q.ros?[`${hxName(p)} projection`,`${f1(q.ros)} pts a week rest of season`]:null,...rows].filter(Boolean),
+      det:[q.inj?`${hxName(p)} injury status: ${q.inj}.`:null,C.ppg(p)?`${hxName(p)} averages ${f1(C.ppg(p))} points a game when he plays.`:null].filter(Boolean),when:wk0===wk1?`Week ${wk1}`:`Weeks ${wk0}–${wk1}`,pr:50+Math.min(20,t.bid/2)});}}
   /* standings stories */
   for(const T of teams){const g=T.w+T.l+T.t;if(g<3)continue;const s=T.g,last=s[s.length-1];let n=0;for(let i=s.length-1;i>=0&&s[i].won===last.won&&!s[i].tie;i--)n++;
     const u=uOf(T.rid),mm=G.M[u]||{},sk=mm.sk||{},ap=allPlay(T.rid),po=odds(T.rid),no=nextOpp(T.rid),pfRank=C.pfR.findIndex(q=>q.rid===T.rid)+1,rank=ranked.findIndex(q=>q.rid===T.rid)+1;
@@ -6627,7 +6632,7 @@ wireStories=function(){const C=wxCtx();if(!C)return [];const {x,tn,w,rec,teams,r
     if(rows.length){const bub=rows.filter(q=>q.po>=.2&&q.po<=.8),cl=rows.filter(q=>q.po>.995),el=rows.filter(q=>q.po<.005),rem=C.L.remWeeks||0;
       if(bub.length>=2)push({tag:"Playoff race",cls:"",head:`${bub.length} teams fighting for the last spots`,lead:`With ${rem||"a few"} week${rem===1?"":"s"} left, ${bub.length} teams sit between 20% and 80% to make the playoffs.`,
         facts:rows.map(q=>[`${q.n} (${wRec(q.r)})`,pc(q.po)]),det:[cl.length?`Clinched: ${cl.map(q=>q.n).join(", ")}.`:"Nobody has clinched yet.",el.length?`Eliminated: ${el.map(q=>q.n).join(", ")}.`:"Nobody is eliminated yet.",
-          ...bub.slice(0,4).map(q=>{const no=nextOpp(q.rid);return no?`${q.n} plays ${no.name} next.`:null;}).filter(Boolean)],when:"Today",pr:74});
+          ...(sn=>bub.slice(0,4).map(q=>{const no=nextOpp(q.rid);if(!no||sn.has(no.name))return null;sn.add(q.n);return `${q.n} plays ${no.name} next.`;}).filter(Boolean))(new Set())],when:"Today",pr:74});
       else if(cl.length)push({tag:"Playoff race",cls:"good",head:`${cl.map(q=>q.n).join(", ")} ${cl.length===1?"has":"have"} clinched`,lead:`Playoff spots are locked in with ${rem||"a few"} weeks left.`,facts:rows.map(q=>[`${q.n} (${wRec(q.r)})`,pc(q.po)]),det:[],when:"Today",pr:72});}}catch(e){}
   /* injury report: starters from the latest week who are listed out, doubtful or on IR */
   if(w){const wk=x.weeks[w-1]||[],hurt=[];for(const m of wk)for(const p of (m.st||[])){const q=PL[p];if(q&&q.inj&&/out|doubt|\bir\b|pup|susp/i.test(q.inj))hurt.push({rid:m.rid,p,inj:q.inj});}
@@ -7800,7 +7805,9 @@ function w150Rewrite(s){try{s=Object.assign({},s);const F=s.facts||[];const yv=t
     if(!bub.length&&cl.length){s.head=cl.length+near.length>=rows.length/2?`The playoff field is all but set${left?` with ${left} weeks left`:""}`:`${w150List(cl.map(r=>r.n))} ${cl.length>1?"have":"has"} clinched`;
       s.lead=`${w150List(cl.map(r=>r.n))} ${cl.length>1?"have":"has"} clinched a playoff spot${near.length?`, and ${w150List(near.map(r=>`${r.n} (${r.v})`))} ${near.length>1?"are":"is"} a formality away from joining ${cl.length>1?"them":"it"}`:""}.`;
       const b=[];if(long.length)b.push(`${w150List(long.map(r=>r.n))} ${long.length>1?"need":"needs"} a miracle (${w150List(long.map(r=>r.v))}).`);if(out.length)b.push(`${w150List(out.map(r=>r.n))} ${out.length>1?"are":"is"} mathematically out.`);s.det=b;}
-    else if(bub.length){s.lead=(s.lead||"")+` ${w150List(bub.map(r=>`${r.n} (${r.v})`))} ${bub.length>1?"are":"is"} on the bubble.`;}}
+    else if(bub.length){const b2=rows.filter(r=>pct(r.v)>=.2&&pct(r.v)<=.8),gd=rows.filter(r=>pct(r.v)>.8&&pct(r.v)<.95),ls=rows.filter(r=>pct(r.v)>.05&&pct(r.v)<.2),z=[];
+      if(b2.length)z.push(`${w150List(b2.map(r=>`${r.n} (${r.v})`))} ${b2.length>1?"are":"is"} on the bubble.`);if(gd.length)z.push(`${w150List(gd.map(r=>`${r.n} (${r.v})`))} ${gd.length>1?"are":"is"} in good shape.`);if(ls.length)z.push(`${w150List(ls.map(r=>`${r.n} (${r.v})`))} ${ls.length>1?"are long shots":"is a long shot"}.`);
+      s.lead=(s.lead||"")+" "+z.join(" ");}}
   if(s.tag==="Injury report"&&F.length){s.lead=`${s.head.replace(/ on the injury report$/,"")} on this week's injury report: ${w150List(F.slice(0,4).map(([t,v])=>{const [p,st]=String(v).split(" · ");return `${t==="You"?"your":t+"'s"} ${p} (${(st||"").toLowerCase()})`;}))}${F.length>4?`, among others`:""}. ${s.lead}`;}
   if(s.tag==="Who's hot"&&F.length){const [k0,v0]=F[0],[p0,t0]=String(k0).split(" · ");s.lead=`${p0} has been the league's hottest starter, averaging ${String(v0).replace(/\/g.*/,"")} points a game for ${t0==="You"?"you":t0} over the last three weeks.${F.length>1?` Close behind: ${w150List(F.slice(1,4).map(([k,v])=>`${String(k).split(" · ")[0]} (${String(v).replace(/\/g.*/,"")})`))}.`:""}`;}
   s.body=(s.det||[]).map(w150Sent).filter(Boolean).join(" ");return s;}catch(e){return s;}}
@@ -8203,7 +8210,7 @@ function aw172All(){const G=HX.data;if(!G)return [];const out=[];
   return out;}
 function aw172With(id,fn){const sv=S._awLg;S._awLg=id;try{return fn();}finally{S._awLg=sv;}}
 awCard=(function(prev){return function(){const all=aw172All();if(all.length<2)return prev();const w=Math.max(...all.map(z=>z.A.w));
-  const row=(a,you)=>`<div class="awr${you?" mine":""}"><div><div class="awk">${esc(a.k)}${you?` <span class="aw172y">you</span>`:""}</div><div class="aww">${esc(a.who)}</div><div class="aws">${esc(a.sub||"")}</div></div><b class="num">${esc(a.val)}</b></div>`;
+  const row=(a,you)=>`<div class="awr${you?" mine":""}"><div><div class="awk">${esc(a.k)}</div><div class="aww">${esc(a.who)}</div><div class="aws">${esc(a.sub||"")}</div></div><b class="num">${esc(a.val)}</b></div>`;
   const lines=all.map(({L,A})=>{const mine=A.team.concat(A.player).filter(a=>+a.rid===+A.myRid);const a=mine[0]||A.team[0];if(!a)return "";
     return `<div class="aw172l"><div class="pvlg">${esc(L.name)}${A.w!==w?` · week ${A.w}`:""}</div>${row(a,!!mine[0])}${mine.length>1?`<div class="aws aw172m">+${mine.length-1} more award${mine.length>2?"s":""} for you</div>`:""}</div>`;}).join("");
   const n=all.reduce((s,z)=>s+z.A.team.length+z.A.player.length,0);
