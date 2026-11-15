@@ -3646,14 +3646,14 @@ vScoutLand=function(){if(!CFB&&CFBst==="idle")setTimeout(loadCfb,50);const ny=+S
   const ris=Object.values(PL).filter(p=>p.adv&&p.adv.ts3!=null&&p.adv.ts!=null&&p.pos!=="QB"&&!lostSeason(p)).map(p=>({p,d:p.adv.ts3-p.adv.ts})).sort((a,b)=>b.d-a.d).slice(0,4);
   const plRows=ris.map(({p})=>mrow(`${pos(p.pos)} ${esc(p.name)}`,`${pc(p.adv.ts)}→${pc(p.adv.ts3)}`,null,{go:"player-"+p.id})).join("");
   let dv="",dp="",top=null,cls=[];if(CFB){const all=Object.values(CFB.p).filter(p=>!p.drafted&&p.active!==false);
-    const dvy=all.filter(p=>p.dclass>ny).sort((a,b)=>b.score-a.score).slice(0,4);top=dvy[0];dv=dvy.map(p=>mrow(`${p.pos} ${esc(p.n)}`,String(p.score),p.score,{go:"cfb-"+Object.keys(CFB.p).find(k=>CFB.p[k]===p)})).join("");
+    const dcl=ny+1,dvy=all.filter(p=>p.dclass===dcl&&p.proj).sort((a,b)=>a.proj.pick-b.proj.pick).slice(0,4);top=dvy[0];dv=dvy.map(p=>mrow(`${p.pos} ${esc(p.n)}`,p.proj.rd?`Rd ${p.proj.rd}`:"Day 3",null,{go:"cfb-"+Object.keys(CFB.p).find(k=>CFB.p[k]===p)})).join("");
     cls=all.filter(p=>p.dclass===ny&&p.proj).sort((a,b)=>a.proj.pick-b.proj.pick).slice(0,4);dp=cls.map(p=>mrow(`${p.pos} ${esc(p.n)}`,p.proj.rd?`Rd ${p.proj.rd}`:"Day 3",null,{go:"cfb-"+Object.keys(CFB.p).find(k=>CFB.p[k]===p)})).join("");}
   let firsts=0;if(S.fmt.type!=="redraft")for(const L of liveLgs()){try{const pk=picksOf(L,mineIdx(L));if(pk)firsts+=pk.own.filter(o=>o.y===ny&&o.r===1).length;}catch(e){}}
   const T=ADV.teams||{},off=Object.entries(T).filter(([,v])=>v.epa!=null).sort((a,b)=>b[1].epa-a[1].epa),mxe=off.length?Math.max(...off.slice(0,5).map(x=>Math.abs(x[1].epa)),.01):1;
   const nfRows=off.slice(0,5).map(([t,v])=>mrow(`<span class="tb3" style="background:${(TEAMS[t]||["",""])[1]}">${t}</span>`,(v.epa>=0?"+":"")+v.epa.toFixed(2),Math.abs(v.epa)/mxe*100,{go:"nfl-"+t})).join("");
   return `<div class="tiles big">
    ${rtile("players","pl","Players",ris[0]?esc(ris[0].p.name):"Search",ris[0]?"biggest target-share jump (last 3 games)":"every NFL skill player",`<div class="mcap">Target share, season → last 3</div>${plRows}`)}
-   ${rtile("devy","devy","Devy Lab",top?esc(top.n):"College",top?`${top.pos} · ${esc(top.school)} · top devy score`:"loading prospects…",dv?`<div class="mcap">Devy score 0–100</div>${dv}`:"")}
+   ${rtile("devy","devy","Devy Lab",top?esc(top.n):"College",top?`${top.pos} · ${esc(top.school)} · #1 in the ${ny+1} class`:"loading prospects…",dv?`<div class="mcap">${ny+1} class · projected draft round</div>${dv}`:"")}
    ${rtile("prep","prep","Draft prep",cls[0]?esc(cls[0].n):"Board",S.fmt.type==="redraft"?"redraft board":`${ny} class${firsts?` · you own ${firsts} first${firsts===1?"":"s"}`:""}`,dp?`<div class="mcap">Projected draft round</div>${dp}`:"")}
    ${rtile("nfl","lg","NFL teams",off[0]?off[0][0]:"32",off[0]?"best offense by EPA per play":"team pages",nfRows?`<div class="mcap">Offensive EPA per play</div>${nfRows}`:"")}</div>`;};
 /* landings show every league: no league bar there */
