@@ -638,6 +638,8 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
 - p180 (owner: Scout hub quick view didn't show the top-ranked prospects): the Devy Lab tile mixed every class after the
   War Room's by devy score; it now shows the next class (ny+1) by projected NFL pick ("#1 in the 2028 class", rows
   Rd N), matching that class's Devy Lab tab. War Room tile = ny class by projected pick (unchanged).
+- p181 (owner: War Room big board ▲▼ did nothing): prospect ids are "c:<cfb id>", and the handler split data-wmv
+  "c:5189530:-1" on every colon (looked for player "c"); now splits on the last colon. Star/tier/off were unaffected.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
