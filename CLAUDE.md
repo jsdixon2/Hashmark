@@ -601,6 +601,22 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   team tag ("Audric Estime NO (NO)") removed. v172 edit: the Huddle awards card no longer adds its own "you" pill (the
   existing .awr.mine "· you" label already shows). p179: Playoff race prose used 5-95% as "bubble" while the lead counted
   20-80% ("4 teams" then 10 named): now bubble 20-80%, "in good shape" 80-95%, "long shots" 5-20%; each matchup once.
+- v175 (owner "go" on live mockups A + C): live NFL game page, route gameday-<AWAY>-<HOME> (Gameday cards open it once
+  the game has started; pregame keeps gameSheet), and a "Lineups | Live feed" toggle on the matchup page (S.mxTab).
+  Data: ESPN public scoreboard (lg175Parse keeps event id, records, situation) + per-game summary (drives/plays,
+  winprobability), fetched only while those views are open, <= every 25 s per game, refreshed by an lv130Refresh wrapper.
+  Page: game chips, symmetric score bar (pill / score / clock / score / pill, record under pill, possession ball by the
+  record), down & distance + 4 down markers, broadcast-angle SVG field (away end zone left, home right; blue LOS, yellow
+  1st-down or goal line, straight drive line with a dot per play, last-play label), red zone (glow, shaded 20->goal,
+  & Goal, RED ZONE, "If X scores here": best-projected starter of yours/theirs on the offense, TD + yards in that
+  league's scoring, win chance before -> after via lg175Wp = the v123 live formula), ESPN win-probability chart, play
+  feed with per-play fantasy points (lg175Parse1 parses ESPN play text: rush/pass/rec/INT/sack/fumble lost/2-pt/FG/XP;
+  lg175Pts uses L.scoring; orange you / grey bench / red opponent). Matchup Live feed: plays by either lineup's
+  starters across all started games, points + change in win chance. ESPN unreachable from the cloud sessions: tested
+  with an ESPN-shaped fixture built around demo starters (.build/v175_test.js, routes espn.com). Needs a real-game check;
+  ESPN field names used: competitions[0].situation {down,distance,possession,possessionText,isRedZone}, drives.previous/
+  current {team.id,offensivePlays,yards,timeElapsed.displayValue,start.text,plays[{text,type.text,statYardage,period.number,
+  clock.displayValue,start/end{team.id,yardsToEndzone},wallclock}]}, winprobability[{homeWinPercentage}].
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
