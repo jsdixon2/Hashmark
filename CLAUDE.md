@@ -596,6 +596,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   Checked and consistent: value breakdown sums (60/20/20), card vs Players list values and weekly projections, waiver
   gains Moves vs Waivers, calculator grade vs Moves/Trade Lab cards. Demo-only quirks (not bugs): demo week 8 vs data
   week 10 in streamers; demo players have no depth chart; Lamar Jackson has no 2026 stats in the snapshot.
+- p178 (owner: The Wire waiver stories repetitive): one Waivers roundup story per league (biggest claim = headline with
+  started-since/projection/ppg; other paid claims as rows "team: player $bid (x median)"; Week or Weeks a-b); the doubled
+  team tag ("Audric Estime NO (NO)") removed. v172 edit: the Huddle awards card no longer adds its own "you" pill (the
+  existing .awr.mine "· you" label already shows). p179: Playoff race prose used 5-95% as "bubble" while the lead counted
+  20-80% ("4 teams" then 10 named): now bubble 20-80%, "in good shape" 80-95%, "long shots" 5-20%; each matchup once.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
