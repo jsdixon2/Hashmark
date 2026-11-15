@@ -617,6 +617,11 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   ESPN field names used: competitions[0].situation {down,distance,possession,possessionText,isRedZone}, drives.previous/
   current {team.id,offensivePlays,yards,timeElapsed.displayValue,start.text,plays[{text,type.text,statYardage,period.number,
   clock.displayValue,start/end{team.id,yardsToEndzone},wallclock}]}, winprobability[{homeWinPercentage}].
+- v176 (owner: expandable player stats on the live game view): "Player stats" card above Plays from the same ESPN summary
+  (boxscore.players[{team,statistics[{name passing|rushing|receiving|fumbles|kicking, labels, athletes[{athlete,stats}]}]}]):
+  team switch (S.lg176T), rows = one-line summary + fantasy points from box-score totals (lg176Pts, the league where he's
+  in your matchup, else S.L scoring), yours / opponent / your bench first; <details> expands every category as stat
+  tiles + Player card button. Fixture box score added to .build/v175_test.js.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
