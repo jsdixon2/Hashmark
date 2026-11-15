@@ -623,7 +623,7 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   in your matchup, else S.L scoring), yours / opponent / your bench first; <details> expands every category as stat
   tiles + Player card button. Fixture box score added to .build/v175_test.js.
 - v177 (owner "go"): Time Machine Draft (own name/look; genre like Sleeper's 17-0, not a copy), route tm (Scout tab +
-  Scout hub tile with your best record). Data data/tm.json (scripts/build_tm.py; .github/workflows/build-tm.yml, manual:
+  Scout hub tile with your best record). Data data/tm.json (scripts/build_tm.py; .github/workflows/build-tm.yml, yearly Feb 20 14:17 UTC (owner "schedule it") + manual:
   run after each season to add it): nflverse weekly stats 1999-2025 summed per player x team x season (traded players
   count for each team), QB/RB(+FB)/WR/TE with PPR > 0: 861 team-seasons, 14,495 player-seasons, 3,473 players; college +
   draft year (nflverse players), Sleeper id (DynastyProcess). 780 KB / 242 KB gz, loaded only on the tm route. No K/DST.

@@ -1,7 +1,10 @@
 name: build-tm
 # Time Machine Draft data (scripts/build_tm.py): nflverse player stats 1999 -> last completed season, split by team,
-# with college / draft year / Sleeper id -> data/tm.json. Manual only: run it after each season to add the new year.
-on: {workflow_dispatch: {}}
+# with college / draft year / Sleeper id -> data/tm.json. Runs once a year after the season (Feb 20, owner approved
+# 2026-11-15) to add the new season, or by hand.
+on:
+  workflow_dispatch: {}
+  schedule: [{cron: "17 14 20 2 *"}]
 permissions: {contents: write}
 concurrency: {group: build-tm, cancel-in-progress: false}
 jobs:
