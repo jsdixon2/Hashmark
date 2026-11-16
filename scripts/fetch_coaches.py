@@ -73,6 +73,24 @@ todo = [(y, tm, f"{y} {tname(tm, y)} season") for y in range(first, last + 1) fo
 texts = {}
 for i in range(0, len(todo), 40):
     texts.update(fetch_batch([x[2] for x in todo[i:i + 40]])); print("fetched", min(i + 40, len(todo)), "of", len(todo), flush=True); time.sleep(1)
+# staff templates the pages transclude (e.g. {{2023 Chicago Bears staff}}), fetched as Template: pages
+tpl = {}
+for y, tm, title in todo:
+    for t in re.findall(r"\{\{\s*([^{}|]*?staff)\s*[|}]", texts.get(title, ""), flags=re.I):
+        tpl.setdefault("Template:" + t.strip(), None)
+tl = list(tpl)
+for i in range(0, len(tl), 40):
+    texts.update(fetch_batch(tl[i:i + 40])); time.sleep(1)
+print("staff templates:", len(tl), "fetched", sum(1 for t in tl if texts.get(t)), flush=True)
+CO = re.compile(r"(Offensive|Defensive)\s+[Cc]oordinator[^\[\n]{0,40}?[–—-]\s*\[\[(?:[^\]|]*\|)?([^\]]+)\]\]")
+def staff_lines(title):
+    wt = texts.get(title, "")
+    blobs = [wt] + [texts.get("Template:" + t.strip(), "") for t in re.findall(r"\{\{\s*([^{}|]*?staff)\s*[|}]", wt, flags=re.I)]
+    o, d = [], []
+    for bl in blobs:
+        for side, name in CO.findall(bl):
+            (o if side.lower() == "offensive" else d).append(clean(name))
+    return o, d
 for y, tm, title in todo:
     if True:
         wt = texts.get(title, "")
@@ -84,6 +102,10 @@ for y, tm, title in todo:
         pick = lambda *ks: next((raw[k] for k in ks if raw.get(k)), "")
         rec = {"hc": names(pick("head_coach", "coach")), "oc": names(pick("off_coach", "offensive_coordinator", "oc")),
                "dc": names(pick("def_coach", "defensive_coordinator", "dc")), "raw": raw}
+        if not rec["oc"] or not rec["dc"]:
+            so, sd = staff_lines(title)
+            if not rec["oc"]: rec["oc"] = names(", ".join(so)); rec["src_oc"] = "staff"
+            if not rec["dc"]: rec["dc"] = names(", ".join(sd)); rec["src_dc"] = "staff"
         out[f"{y}|{tm}"] = rec
         print(f"{y} {tm}: HC {rec['hc']} | OC {rec['oc']} | DC {rec['dc']}{'' if wt else '  (no page)'}", flush=True)
 print("infobox fields seen:", sorted(seen))
