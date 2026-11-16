@@ -3,11 +3,17 @@
 "hc": [
 "Bruce Arians"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Harold Goodwin"
+],
+"dc": [
+"James Bettcher"
+],
 "raw": {
 "coach": "Bruce Arians"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|ATL": {
 "hc": [
@@ -47,81 +53,125 @@
 "Anthony Lynn (interim"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Dennis Thurman"
+],
 "raw": {
 "coach": "Rex Ryan (fired December 27, 7–8 record),Anthony Lynn (interim, 0–1 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|CAR": {
 "hc": [
 "Ron Rivera"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Mike Shula"
+],
+"dc": [
+"Sean McDermott"
+],
 "raw": {
 "coach": "Ron Rivera"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|CHI": {
 "hc": [
 "John Fox"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Dowell Loggains"
+],
+"dc": [
+"Vic Fangio"
+],
 "raw": {
 "coach": "John Fox"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|CIN": {
 "hc": [
 "Marvin Lewis"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Ken Zampese"
+],
+"dc": [
+"Paul Guenther"
+],
 "raw": {
 "coach": "Marvin Lewis"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|CLE": {
 "hc": [
 "Hue Jackson"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Ray Horton"
+],
 "raw": {
 "coach": "Hue Jackson"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|DAL": {
 "hc": [
 "Jason Garrett"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Scott Linehan"
+],
+"dc": [
+"Rod Marinelli"
+],
 "raw": {
 "coach": "Jason Garrett"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|DEN": {
 "hc": [
 "Gary Kubiak",
 "Joe DeCamillis (interim"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Rick Dennison"
+],
+"dc": [
+"Wade Phillips"
+],
 "raw": {
 "coach": "Gary Kubiak,Joe DeCamillis (interim, Week 6)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|DET": {
 "hc": [
 "Jim Caldwell"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Jim Bob Cooter"
+],
+"dc": [
+"Teryl Austin"
+],
 "raw": {
 "coach": "Jim Caldwell"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|GB": {
 "hc": [
@@ -159,11 +209,17 @@
 "hc": [
 "Chuck Pagano"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Rob Chudzinski"
+],
+"dc": [
+"Ted Monachino"
+],
 "raw": {
 "coach": "Chuck Pagano"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|JAX": {
 "hc": [
@@ -202,21 +258,34 @@
 "hc": [
 "Adam Gase"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Clyde Christensen"
+],
+"dc": [
+"Vance Joseph"
+],
 "raw": {
 "coach": "Adam Gase"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|MIN": {
 "hc": [
 "Mike Priefer (interim"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Norv Turner",
+"Pat Shurmur"
+],
+"dc": [
+"George Edwards"
+],
 "raw": {
 "coach": "Mike Zimmer (games 1–12, 14–16),Mike Priefer (interim, game 13)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|NE": {
 "hc": [
@@ -258,28 +327,44 @@
 "hc": [
 "Ben McAdoo"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Mike Sullivan"
+],
+"dc": [
+"Steve Spagnuolo"
+],
 "raw": {
 "coach": "Ben McAdoo"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|NYJ": {
 "hc": [
 "Todd Bowles"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Chan Gailey"
+],
+"dc": [
+"Kacy Rodgers"
+],
 "raw": {
 "coach": "Todd Bowles"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|PHI": {
 "hc": [
 "Doug Pederson"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Frank Reich"
+],
+"dc": [
+"Jim Schwartz"
+],
 "raw": {
 "coach": "Doug Pederson",
 "head coaches": "* Head coach – Doug Pederson",
@@ -287,7 +372,9 @@
 "defensive coaches": "* Defensive coordinator – Jim Schwartz,* Defensive line – Chris Wilson,* Linebackers – Ken Flajole,* Secondary – Cory Undlin,* Safeties – Tim Hauck,* Defensive quality control,assistant defensive line – Phillip Daniels,* Defensive quality control,assistant secondary – Dino Vasso",
 "special teams coaches": "* Special teams coordinator – Dave Fipp,* Assistant special teams – Matthew Harper",
 "coaching support staff": "* Coaching assistant,assistant to the head coach – Spencer Phillips"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|PIT": {
 "hc": [
@@ -309,11 +396,17 @@
 "hc": [
 "Pete Carroll"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Darrell Bevell"
+],
+"dc": [
+"Kris Richard"
+],
 "raw": {
 "coach": "Pete Carroll"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|SF": {
 "hc": [
@@ -335,51 +428,77 @@
 "hc": [
 "Dirk Koetter"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Todd Monken"
+],
+"dc": [
+"Mike Smith"
+],
 "raw": {
 "coach": "Dirk Koetter"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|TEN": {
 "hc": [
 "Mike Mularkey"
 ],
-"oc": [],
+"oc": [
+"Terry Robiskie"
+],
 "dc": [],
 "raw": {
 "coach": "Mike Mularkey"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|LA": {
 "hc": [
 "John Fassel (interim"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Gregg Williams"
+],
 "raw": {
 "coach": "Jeff Fisher (fired on December 12, 4–9 record) ,John Fassel (interim, 0–3 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|LV": {
 "hc": [
 "Jack Del Rio"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Bill Musgrave"
+],
+"dc": [
+"Ken Norton Jr"
+],
 "raw": {
 "coach": "Jack Del Rio"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|LAC": {
 "hc": [
 "Mike McCoy"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Ken Whisenhunt"
+],
+"dc": [
+"John Pagano"
+],
 "raw": {
 "coach": "Mike McCoy"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2016|WAS": {
 "hc": [
@@ -401,11 +520,17 @@
 "hc": [
 "Bruce Arians"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Harold Goodwin"
+],
+"dc": [
+"James Bettcher"
+],
 "raw": {
 "coach": "Bruce Arians"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|ATL": {
 "hc": [
@@ -475,71 +600,111 @@
 "hc": [
 "John Fox"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Dowell Loggains"
+],
+"dc": [
+"Vic Fangio"
+],
 "raw": {
 "coach": "John Fox"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|CIN": {
 "hc": [
 "Marvin Lewis"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Ken Zampese"
+],
+"dc": [
+"Paul Guenther"
+],
 "raw": {
 "coach": "Marvin Lewis"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|CLE": {
 "hc": [
 "Hue Jackson"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Gregg Williams"
+],
 "raw": {
 "coach": "Hue Jackson"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|DAL": {
 "hc": [
 "Jason Garrett"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Scott Linehan"
+],
+"dc": [
+"Rod Marinelli"
+],
 "raw": {
 "coach": "Jason Garrett"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|DEN": {
 "hc": [
 "Vance Joseph"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Mike McCoy"
+],
+"dc": [
+"Joe Woods"
+],
 "raw": {
 "coach": "Vance Joseph"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|DET": {
 "hc": [
 "Jim Caldwell"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Jim Bob Cooter"
+],
+"dc": [
+"Teryl Austin"
+],
 "raw": {
 "coach": "Jim Caldwell"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|GB": {
 "hc": [
 "Mike McCarthy"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Edgar Bennett"
+],
+"dc": [
+"Dom Capers"
+],
 "raw": {
 "coach": "Mike McCarthy"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|HOU": {
 "hc": [
@@ -552,17 +717,24 @@
 "raw": {
 "coach": "Bill O'Brien",
 "def_coach": "Mike Vrabel"
-}
+},
+"src_oc": "staff"
 },
 "2017|IND": {
 "hc": [
 "Chuck Pagano"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Rob Chudzinski"
+],
+"dc": [
+"Ted Monachino"
+],
 "raw": {
 "coach": "Chuck Pagano"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|JAX": {
 "hc": [
@@ -600,11 +772,17 @@
 "hc": [
 "Adam Gase"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Clyde Christensen"
+],
+"dc": [
+"Matt Burke"
+],
 "raw": {
 "coach": "Adam Gase"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|MIN": {
 "hc": [
@@ -658,21 +836,31 @@
 "hc": [
 "Steve Spagnuolo (interim"
 ],
-"oc": [],
+"oc": [
+"Mike Sullivan"
+],
 "dc": [],
 "raw": {
 "coach": "Ben McAdoo (fired December 4, 2–10 record),Steve Spagnuolo (interim, 1–3 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|NYJ": {
 "hc": [
 "Todd Bowles"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"John Morton"
+],
+"dc": [
+"Kacy Rodgers"
+],
 "raw": {
 "coach": "Todd Bowles"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|PHI": {
 "hc": [
@@ -715,11 +903,17 @@
 "hc": [
 "Pete Carroll"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Darrell Bevell"
+],
+"dc": [
+"Kris Richard"
+],
 "raw": {
 "coach": "Pete Carroll"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|SF": {
 "hc": [
@@ -741,11 +935,17 @@
 "hc": [
 "Dirk Koetter"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Todd Monken"
+],
+"dc": [
+"Mike Smith"
+],
 "raw": {
 "coach": "Dirk Koetter"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|TEN": {
 "hc": [
@@ -783,21 +983,34 @@
 "hc": [
 "Jack Del Rio"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Todd Downing"
+],
+"dc": [
+"John Pagano",
+"Ken Norton Jr"
+],
 "raw": {
 "coach": "Jack Del Rio"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|LAC": {
 "hc": [
 "Anthony Lynn"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Ken Whisenhunt"
+],
+"dc": [
+"Gus Bradley"
+],
 "raw": {
 "coach": "Anthony Lynn"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2017|WAS": {
 "hc": [
@@ -823,21 +1036,33 @@
 "hc": [
 "Steve Wilks"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Mike McCoy"
+],
+"dc": [
+"Al Holcomb"
+],
 "raw": {
 "coach": "Steve Wilks"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|ATL": {
 "hc": [
 "Dan Quinn"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Steve Sarkisian"
+],
+"dc": [
+"Marquand Manuel"
+],
 "raw": {
 "coach": "Dan Quinn"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|BAL": {
 "hc": [
@@ -859,33 +1084,53 @@
 "hc": [
 "Sean McDermott"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Brian Daboll"
+],
+"dc": [
+"Leslie Frazier"
+],
 "raw": {
 "coach": "Sean McDermott"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|CAR": {
 "hc": [
 "Ron Rivera"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Norv Turner"
+],
+"dc": [
+"Eric Washington"
+],
 "raw": {
 "coach": "Ron Rivera"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|CHI": {
 "hc": [],
-"oc": [],
-"dc": [],
-"raw": {}
+"oc": [
+"Mark Helfrich"
+],
+"dc": [
+"Vic Fangio"
+],
+"raw": {},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|CIN": {
 "hc": [
 "Marvin Lewis"
 ],
-"oc": [],
+"oc": [
+"Bill Lazor"
+],
 "dc": [],
 "raw": {
 "coach": "Marvin Lewis",
@@ -893,17 +1138,23 @@
 "offensive coaches": "* Offensive coordinator – Bill Lazor,* Quarterbacks – Alex Van Pelt,* Running backs – Kyle Caskey,* Wide receivers – Bob Bicknell,* Tight ends – Jonathan Hayes,* Offensive line – Frank Pollack,* Offensive assistant,wide receivers – Dan Pitcher,* Offensive quality control,offensive line – Robert Couch",
 "defensive coaches": "* Defensive line – Jacob Burney,* Linebackers – Jim Haslett,* Cornerbacks – Daronte Jones,* Safeties – Robert Livingston,* Defensive assistant – Matt Raich,* Defensive quality control,defensive line – Marcus Lewis",
 "special teams coaches": "* Special teams coordinator – Darrin Simmons,* Assistant special teams,defensive quality control – Brayden Coombs"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|CLE": {
 "hc": [
 "Gregg Williams (interim"
 ],
-"oc": [],
+"oc": [
+"Todd Haley"
+],
 "dc": [],
 "raw": {
 "coach": "Hue Jackson (fired October 29, 2–5–1 record),Gregg Williams (interim, 5–3 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|DAL": {
 "hc": [
@@ -925,31 +1176,47 @@
 "hc": [
 "Vance Joseph"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Bill Musgrave"
+],
+"dc": [
+"Joe Woods"
+],
 "raw": {
 "coach": "Vance Joseph"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|DET": {
 "hc": [
 "Matt Patricia"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Jim Bob Cooter"
+],
+"dc": [
+"Paul Pasqualoni"
+],
 "raw": {
 "coach": "Matt Patricia"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|GB": {
 "hc": [
 "Joe Philbin (interim"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Mike Pettine"
+],
 "raw": {
 "coach": "Mike McCarthy (fired December 2, 4–7–1 record),Joe Philbin (interim, 2–2 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|HOU": {
 "hc": [
@@ -962,7 +1229,8 @@
 "raw": {
 "coach": "Bill O'Brien",
 "def_coach": "Romeo Crennel"
-}
+},
+"src_oc": "staff"
 },
 "2018|IND": {
 "hc": [
@@ -1016,21 +1284,31 @@
 "hc": [
 "Adam Gase"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Dowell Loggains"
+],
+"dc": [
+"Matt Burke"
+],
 "raw": {
 "coach": "Adam Gase"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|MIN": {
 "hc": [
 "Mike Zimmer"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"George Edwards"
+],
 "raw": {
 "coach": "Mike Zimmer"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|NE": {
 "hc": [
@@ -1043,7 +1321,8 @@
 "raw": {
 "coach": "Bill Belichick",
 "off_coach": "Josh McDaniels"
-}
+},
+"src_dc": "staff"
 },
 "2018|NO": {
 "hc": [
@@ -1065,21 +1344,33 @@
 "hc": [
 "Pat Shurmur"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Mike Shula"
+],
+"dc": [
+"James Bettcher"
+],
 "raw": {
 "coach": "Pat Shurmur"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|NYJ": {
 "hc": [
 "Todd Bowles"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Jeremy Bates"
+],
+"dc": [
+"Kacy Rodgers"
+],
 "raw": {
 "coach": "Todd Bowles"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|PHI": {
 "hc": [
@@ -1149,21 +1440,31 @@
 "hc": [
 "Dirk Koetter"
 ],
-"oc": [],
+"oc": [
+"Todd Monken"
+],
 "dc": [],
 "raw": {
 "coach": "Dirk Koetter"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|TEN": {
 "hc": [
 "Mike Vrabel"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Matt LaFleur"
+],
+"dc": [
+"Dean Pees"
+],
 "raw": {
 "coach": "Mike Vrabel"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|LA": {
 "hc": [
@@ -1185,11 +1486,17 @@
 "hc": [
 "Jon Gruden"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Greg Olson"
+],
+"dc": [
+"Paul Guenther"
+],
 "raw": {
 "coach": "Jon Gruden"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2018|LAC": {
 "hc": [
@@ -1228,16 +1535,22 @@
 "Kliff Kingsbury"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Vance Joseph"
+],
 "raw": {
 "coach": "Kliff Kingsbury"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|ATL": {
 "hc": [
 "Dan Quinn"
 ],
-"oc": [],
+"oc": [
+"Dirk Koetter"
+],
 "dc": [],
 "raw": {
 "coach": "Dan Quinn",
@@ -1245,7 +1558,9 @@
 "offensive coaches": "*Offensive coordinator – Dirk Koetter,*Quarterbacks – Greg Knapp,*Running backs – Dave Brock,*Tight ends – Mike Mularkey,*Offensive line – Chris Morgan,*Offensive line assistant – Bob Kronenberg,*Offensive assistant – Will Harriger,*Offensive assistant – Ben Steele",
 "defensive coaches": "*Defensive line – Jess Simpson,*Assistant defensive line – Travis Jones,*Linebackers – Jeff Ulbrich,*Defensive passing game coordinator,secondary – Jerome Henderson,*Defensive backs – Doug Mallory,*Senior assistant - Bob Sutton,*Defensive assistant - Aden Durde,*Defensive assistant - Chad Walker",
 "special teams coaches": "*Special teams coordinator – Ben Kotwica,*Assistant special teams – Mayur Chaudhari,*Assistant special teams,offensive assistant – Bernie Parmalee"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|BAL": {
 "hc": [
@@ -1284,74 +1599,114 @@
 "Perry Fewell (interim"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Eric Washington"
+],
 "raw": {
 "coach": "Ron Rivera (fired on December 3, 5–7 record),Perry Fewell (interim, 0–4 record)",
 "head coaches": "* Head coach - Ron Rivera",
 "offensive coaches": "* Special assistant to the head coach,offensive coordinator – Norv Turner,* Interim offensive coordinator,quarterbacks – Scott Turner,* Running backs – Jake Peetz,* Wide receivers – Jim Hostler,* Assistant wide receivers – Jerricho Cotchery,* Tight ends – Pete Hoener,* Running game coordinator – John Matsko,* Assistant offensive line – Travelle Wharton,* Offensive quality control – Drew Terrell",
 "defensive coaches": "* Defensive coordinator – Eric Washington,* Defensive line,game management – Sam Mills III,* Linebackers – Steve Russ,* Assistant linebackers – Everette Brown,* Interim head coach,secondary – Perry Fewell,* Safeties –  Richard Rodgers,* Defensive quality control – Vincent Rivera",
 "special teams coaches": "* Special teams coordinator – Chase Blackburn,* Assistant special teams – Ben Jacobs"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|CHI": {
 "hc": [
 "Matt Nagy"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Mark Helfrich"
+],
+"dc": [
+"Chuck Pagano"
+],
 "raw": {
 "coach": "Matt Nagy"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|CIN": {
 "hc": [
 "Zac Taylor"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Brian Callahan"
+],
+"dc": [
+"Lou Anarumo"
+],
 "raw": {
 "coach": "Zac Taylor"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|CLE": {
 "hc": [
 "Freddie Kitchens"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Todd Monken"
+],
+"dc": [
+"Steve Wilks"
+],
 "raw": {
 "coach": "Freddie Kitchens"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|DAL": {
 "hc": [
 "Jason Garrett"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Kellen Moore"
+],
+"dc": [
+"Rod Marinelli"
+],
 "raw": {
 "coach": "Jason Garrett"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|DEN": {
 "hc": [
 "Vic Fangio"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Rich Scangarello"
+],
+"dc": [
+"Ed Donatell"
+],
 "raw": {
 "coach": "Vic Fangio"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|DET": {
 "hc": [
 "Matt Patricia"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Darrell Bevell"
+],
+"dc": [
+"Paul Pasqualoni"
+],
 "raw": {
 "coach": "Matt Patricia"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|GB": {
 "hc": [
@@ -1389,11 +1744,17 @@
 "hc": [
 "Frank Reich"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Nick Sirianni"
+],
+"dc": [
+"Matt Eberflus"
+],
 "raw": {
 "coach": "Frank Reich"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|JAX": {
 "hc": [
@@ -1431,11 +1792,17 @@
 "hc": [
 "Brian Flores"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Chad O'Shea"
+],
+"dc": [
+"Patrick Graham"
+],
 "raw": {
 "coach": "Brian Flores"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|MIN": {
 "hc": [
@@ -1489,21 +1856,33 @@
 "hc": [
 "Pat Shurmur"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Mike Shula"
+],
+"dc": [
+"James Bettcher"
+],
 "raw": {
 "coach": "Pat Shurmur"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|NYJ": {
 "hc": [
 "Adam Gase"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Dowell Loggains"
+],
+"dc": [
+"Gregg Williams"
+],
 "raw": {
 "coach": "Adam Gase"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|PHI": {
 "hc": [
@@ -1573,15 +1952,21 @@
 "hc": [
 "Bruce Arians"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Byron Leftwich"
+],
+"dc": [
+"Todd Bowles"
+],
 "raw": {
 "coach": "Bruce Arians",
 "head coaches": "* Head coach – Bruce Arians,* Assistant head coach,Run game coordinator – Harold Goodwin,* Assistant to the head coach – Mike Chiurco",
 "offensive coaches": "* Offensive coordinator – Byron Leftwich,* Quarterbacks – Clyde Christensen,* Running backs – Todd McNair,* Wide receivers – Kevin Garver,* Tight ends – Rick Christophel,* Offensive line – Joe Gilbert,* Offensive assistant – Antwaan Randle El,* Offensive quality control – John Van Dam,* Offensive Consultant – Tom Moore",
 "defensive coaches": "* Defensive coordinator – Todd Bowles,* Defensive line – Kacy Rodgers,* Assistant defensive line – Lori Locust,* Outside linebackers – Larry Foote,* Inside linebackers – Mike Caldwell,* Cornerbacks – Kevin Ross,* Safeties – Nick Rapone,* Defensive,special teams assistant – Cody Grimm,* Defensive quality control – Tim Atkins",
 "special teams coaches": "* Special teams coordinator – Keith Armstrong,* Assistant special teams – Amos Jones,* Specialists – Chris Boniol"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|TEN": {
 "hc": [
@@ -1619,21 +2004,31 @@
 "hc": [
 "Jon Gruden"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Greg Olson"
+],
+"dc": [
+"Paul Guenther"
+],
 "raw": {
 "coach": "Jon Gruden"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|LAC": {
 "hc": [
 "Anthony Lynn"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Gus Bradley"
+],
 "raw": {
 "coach": "Anthony Lynn"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2019|WAS": {
 "hc": [
@@ -1656,20 +2051,28 @@
 "Kliff Kingsbury"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Vance Joseph"
+],
 "raw": {
 "coach": "Kliff Kingsbury"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|ATL": {
 "hc": [
 "Raheem Morris (interim"
 ],
-"oc": [],
+"oc": [
+"Dirk Koetter"
+],
 "dc": [],
 "raw": {
 "coach": "Dan Quinn (fired Oct. 11, 0–5 record),Raheem Morris (interim, 4–7 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|BAL": {
 "hc": [
@@ -1707,11 +2110,17 @@
 "hc": [
 "Matt Rhule"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Joe Brady"
+],
+"dc": [
+"Phil Snow"
+],
 "raw": {
 "coach": "Matt Rhule"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|CHI": {
 "hc": [
@@ -1733,11 +2142,17 @@
 "hc": [
 "Zac Taylor"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Brian Callahan"
+],
+"dc": [
+"Lou Anarumo"
+],
 "raw": {
 "coach": "Zac Taylor"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|CLE": {
 "hc": [
@@ -1776,21 +2191,31 @@
 "hc": [
 "Vic Fangio"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Pat Shurmur"
+],
+"dc": [
+"Ed Donatell"
+],
 "raw": {
 "coach": "Vic Fangio"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|DET": {
 "hc": [
 "Darrell Bevell (interim"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Cory Undlin"
+],
 "raw": {
 "coach": "Matt Patricia (fired Nov. 28, 4–7 record),Darrell Bevell (interim, 1–4 record, COVID-19 Week 16),Robert Prince (interim Week 16, 0–1 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|GB": {
 "hc": [
@@ -1876,11 +2301,17 @@
 "hc": [
 "Brian Flores"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Chan Gailey"
+],
+"dc": [
+"Josh Boyer"
+],
 "raw": {
 "coach": "Brian Flores"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|MIN": {
 "hc": [
@@ -1890,17 +2321,23 @@
 "dc": [],
 "raw": {
 "coach": "Mike Zimmer"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|NE": {
 "hc": [
 "Bill Belichick"
 ],
-"oc": [],
+"oc": [
+"Josh McDaniels"
+],
 "dc": [],
 "raw": {
 "coach": "Bill Belichick"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|NO": {
 "hc": [
@@ -1922,7 +2359,9 @@
 "hc": [
 "Joe Judge"
 ],
-"oc": [],
+"oc": [
+"Jason Garrett"
+],
 "dc": [],
 "raw": {
 "coach": "Joe Judge",
@@ -1930,31 +2369,41 @@
 "offensive coaches": "* Offensive coordinator – Jason Garrett,* Quarterbacks – Jerry Schuplinski,* Running backs – Burton Burns,* Wide receivers – Tyke Tolbert,* Tight ends – Freddie Kitchens,* Offensive line -– Marc Colombo (fired after week 10),* Offensive line – Dave DeGuglielmo (took over for Colombo),* Assistant offensive line – Ben Wilkerson,* Senior offensive assistant – Derek Dooley,* Offensive assistant – Stephen Brown,* Offensive quality control – Bobby Blick and Nick Williams",
 "defensive coaches": "* Defensive line – Sean Spencer,* Outside linebacker,Senior Defensive assistant – Bret Bielema (left before week 15 to become Illinois head coach),* Inside linebackers – Kevin Sherrer,* Defensive backs – Jerome Henderson,* Assistant defensive backs – Anthony Blevins,* Defensive assistant – Jody Wright,* Defensive quality control – Mike Treier",
 "special teams coaches": "* Special teams coordinator – Thomas McGaughey,* Assistant special teams – Tom Quinn,Coaching Assistants,* Special projects and situations – Amos Jones,* Chief of staff – Ryan Hollern"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|NYJ": {
 "hc": [
 "Adam Gase"
 ],
-"oc": [],
+"oc": [
+"Dowell Loggains"
+],
 "dc": [],
 "raw": {
 "coach": "Adam Gase"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|PHI": {
 "hc": [
 "Doug Pederson"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Jim Schwartz"
+],
 "raw": {
 "coach": "Doug Pederson",
 "head coaches": "* Head coach – Doug Pederson,* Assistant head coach,running backs – Duce Staley",
 "offensive coaches": "* Passing game coordinator,quarterbacks – Press Taylor,* Assistant run game coordinator,assistant running backs – T. J. Paganetti,* Wide receivers – Aaron Moorehead,* Assistant wide receivers – Matthew Harper,* Tight ends – Justin Peelle,* Assistant tight ends – Mike Bartrum,* Run game coordinator,offensive line – Jeff Stoutland,* Assistant offensive line – Roy Istvan,* Senior offensive assistant – Rich Scangarello,* Pass game analyst – Andrew Breiner,* Senior offensive consultant – Marty Mornhinweg",
 "defensive coaches": "* Defensive coordinator – Jim Schwartz,* Assistant coordinator,defense – Dino Vasso,* Run game coordinator,defensive line – Matt Burke,* Assistant defensive line – Nate Ollie,* Linebackers – Ken Flajole,* Assistant linebackers,game management – Ryan Paganetti,* Defensive backs – Marquand Manuel,* Safeties – Tim Hauck",
 "special teams coaches": "* Special teams coordinator – Dave Fipp,* Assistant special teams – Luke Thompson,,,Strength and conditioning,* Director of player performance – Ted Rath,* Head strength coach – Josh Hingst,* Assistant strength coach – Keith Gray,}},,==Final roster==,{{NFL final roster"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|PIT": {
 "hc": [
@@ -2056,21 +2505,31 @@
 "hc": [
 "Jon Gruden"
 ],
-"oc": [],
+"oc": [
+"Greg Olson"
+],
 "dc": [],
 "raw": {
 "coach": "Jon Gruden"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|LAC": {
 "hc": [
 "Anthony Lynn"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Shane Steichen"
+],
+"dc": [
+"Gus Bradley"
+],
 "raw": {
 "coach": "Anthony Lynn"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2020|WAS": {
 "hc": [
@@ -2095,21 +2554,30 @@
 "oc": [
 "| def_coach       = Vance Joseph"
 ],
-"dc": [],
+"dc": [
+"Vance Joseph"
+],
 "raw": {
 "coach": "Kliff Kingsbury",
 "off_coach": "| def_coach       = Vance Joseph"
-}
+},
+"src_dc": "staff"
 },
 "2021|ATL": {
 "hc": [
 "Arthur Smith"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Dave Ragone"
+],
+"dc": [
+"Dean Pees"
+],
 "raw": {
 "coach": "Arthur Smith"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2021|BAL": {
 "hc": [
@@ -2151,22 +2619,34 @@
 "hc": [
 "Matt Rhule"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Joe Brady"
+],
+"dc": [
+"Phil Snow"
+],
 "raw": {
 "coach": "Matt Rhule"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2021|CHI": {
 "hc": [
 "Matt Nagy",
 "Chris Tabor"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Bill Lazor"
+],
+"dc": [
+"Sean Desai"
+],
 "raw": {
 "coach": "Matt Nagy,Chris Tabor (Acting HC for Week 8 after Nagy tested positive for COVID-19)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2021|CIN": {
 "hc": [
@@ -2188,11 +2668,17 @@
 "hc": [
 "Kevin Stefanski"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Alex Van Pelt"
+],
+"dc": [
+"Joe Woods"
+],
 "raw": {
 "coach": "Kevin Stefanski"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2021|DAL": {
 "hc": [
@@ -2214,11 +2700,17 @@
 "hc": [
 "Vic Fangio"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Pat Shurmur"
+],
+"dc": [
+"Ed Donatell"
+],
 "raw": {
 "coach": "Vic Fangio"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2021|DET": {
 "hc": [
@@ -2245,7 +2737,9 @@
 "Seth Ryan as assistant wide receivers coach",
 "{| class=\"wikitable\""
 ],
-"dc": [],
+"dc": [
+"Aaron Glenn"
+],
 "raw": {
 "coach": "Dan Campbell",
 "off_coach": "Anthony Lynn|def_coach=Aaron Glenn}},,The 2021 season was the Detroit Lions' 92nd season in the National Football League (NFL), the 20th playing their home games at Ford Field and their first under the head coach,general manager tandem of Dan Campbell and Brad Holmes. The Lions finished 3–13–1, failing to improve upon their 5–11 record from the previous season. The Lions began their season 0–8 before tying with the Pittsburgh Steelers in Week 10, in which they nearly beat the Steelers in Pittsburgh for the first time since 1955. However, the Lions would not win a game until Week 13 against the division rival Minnesota Vikings, ending a 15-game, 364-day winless streak. In Week 14, the Lions were eliminated from playoff contention for the fifth consecutive year. They finished the season at the bottom of the NFC North for the fourth consecutive season. However they ended the season on a high note, upsetting two playoff bound teams, the Arizona Cardinals in Week 15 and the top-seeded Green Bay Packers in Week 18. Their .206 winning percentage was their worst since 2009.,,This was the Lions' first season since 2008 without longtime quarterback Matthew Stafford, as he was traded to the Los Angeles Rams in exchange for quarterback Jared Goff and three draft picks on January 31, 2021.,Stafford would go onto win his first Super Bowl in Super Bowl LVI with the Rams later that postseason. For first time since 2003, Don Muhlbach was not on the opening day roster, as he was released and subsequently retired in the offseason.,,With the Cincinnati Bengals defeating the Las Vegas Raiders in the postseason, the Lions officially held the longest playoff victory drought in the NFL, having not won a playoff game since the 1991 season. As of the 2025 season, this is the most recent season the Lions have finished with a losing record. This would also be the last season the Lions finished last place in the NFC North until then.,,,==Offseason==,,===Coaching changes===,,,From  January 19 to February 9, the Lions hired 13 coaches,*January 19: Aaron Glenn as defensive coordinator.,*January 20: Dan Campbell as head coach.,*January 23: Anthony Lynn as offensive coordinator.,*January 25: Aubrey Pleasant as defensive back coach and Duce Staley as running backs and assistant head coach.,*January 26: Dave Fipp as special teams coordinator.,*January 28: Mark Brunell as quarterbacks coach.,*January 29: Dom Capers as a senior defensive assistant.,*February 3: Todd Wash as defensive line coach, Kelvin Sheppard and Brian Duker as defensive assistants, and Seth Ryan as assistant wide receivers coach.,*February 9: Antwaan Randle El as wide receivers coach.,,===Additions===,,{| class=\"wikitable\"",
@@ -2253,7 +2747,8 @@
 "offensive coaches": "*Offensive coordinator – Anthony Lynn,*Quarterbacks – Mark Brunell,*Wide receivers – Antwaan Randle El,*Assistant wide receivers – Seth Ryan,*Tight ends – Ben Johnson,*Offensive line – Hank Fraley,*Offensive quality control – Tanner Engstrand,*Offensive quality control – Steve Oliver ,*WCF minority fellowship – Deon'tae Pannell",
 "defensive coaches": "*Defensive coordinator – Aaron Glenn,*Defensive line – Todd Wash,*Inside linebackers – Mark DeLeone,*Outside linebackers – Kelvin Sheppard,*Pass game coordinator,defensive backs – Aubrey Pleasant,*Senior defensive assistant – Dom Capers,*Defensive assistant – Brian Duker,*Defensive quality control – Stephen Thomas",
 "special teams coaches": "*Special teams coordinator – Dave Fipp,*Assistant special teams – Jett Modkins"
-}
+},
+"src_dc": "staff"
 },
 "2021|GB": {
 "hc": [
@@ -2291,11 +2786,17 @@
 "hc": [
 "Frank Reich"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Marcus Brady"
+],
+"dc": [
+"Matt Eberflus"
+],
 "raw": {
 "coach": "Frank Reich"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2021|JAX": {
 "hc": [
@@ -2334,20 +2835,28 @@
 "Brian Flores"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Josh Boyer"
+],
 "raw": {
 "coach": "Brian Flores"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2021|MIN": {
 "hc": [
 "Mike Zimmer"
 ],
-"oc": [],
+"oc": [
+"Klint Kubiak"
+],
 "dc": [],
 "raw": {
 "coach": "Mike Zimmer"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2021|NE": {
 "hc": [
@@ -2385,21 +2894,32 @@
 "hc": [
 "Joe Judge"
 ],
-"oc": [],
+"oc": [
+"Jason Garrett",
+"Freddie Kitchens"
+],
 "dc": [],
 "raw": {
 "coach": "Joe Judge"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2021|NYJ": {
 "hc": [
 "Robert Saleh"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Mike LaFleur"
+],
+"dc": [
+"Jeff Ulbrich"
+],
 "raw": {
 "coach": "Robert Saleh"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2021|PHI": {
 "hc": [
@@ -2437,15 +2957,21 @@
 "hc": [
 "Pete Carroll"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Shane Waldron"
+],
+"dc": [
+"Ken Norton Jr"
+],
 "raw": {
 "coach": "Pete Carroll",
 "head coaches": "*Head coach,executive vice president of football operations – Pete Carroll,*Associate head coach – Carl Smith,*Assistant head coach,defensive line – Clint Hurtt",
 "offensive coaches": "*Offensive coordinator – Shane Waldron,*Run game coordinator – Andy Dickerson,*Passing game coordinator – Dave Canales,*Quarterbacks – Austin Davis,*Assistant quarterbacks – Brad Idzik,*Running backs – Chad Morton,*Wide receivers – Nate Carroll,*Assistant wide receivers – Kerry Joseph,*Tight ends – Pat McPherson,*Offensive line – Mike Solari,* Assistant offensive line – Keli'i Kekuewa",
 "defensive coaches": "*Defensive coordinator – Ken Norton Jr.,*Linebackers – John Glenn,*Passing game coordinator – Andre Curtis,*Defensive assistant,linebackers – Aaron Curry,*Defensive assistant,defensive line – Damione Lewis,*Defensive quality coach – DeShawn Shead",
 "special teams coaches": "*Special teams coordinator – Larry Izzo,*Assistant special teams coach – Tracy Smith"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2021|SF": {
 "hc": [
@@ -2470,7 +2996,9 @@
 "oc": [
 "| def_coach       ="
 ],
-"dc": [],
+"dc": [
+"Todd Bowles"
+],
 "raw": {
 "coach": "Bruce Arians",
 "off_coach": "| def_coach       =",
@@ -2478,7 +3006,8 @@
 "offensive coaches": "*Offensive coordinator – Byron Leftwich,*Quarterbacks – Clyde Christensen,*Running backs – Todd McNair,*Wide receivers – Kevin Garver,*Tight ends – Rick Christophel,*Offensive line – Joe Gilbert,*Offensive assistant – Thad Lewis,*Offensive assistant – A.Q. Shipley,*Offensive quality control – John Van Dam,*Offensive consultant – Tom Moore",
 "defensive coaches": "*Defensive coordinator – Todd Bowles,*Defensive line – Kacy Rodgers,*Assistant defensive line – Lori Locust,*Outside linebackers – Larry Foote,*Inside linebackers – Mike Caldwell,*Cornerbacks – Kevin Ross,*Safeties – Nick Rapone,*Defensive,special teams assistant – Cody Grimm,*Defensive quality control – Tim Atkins",
 "special teams coaches": "*Special teams coordinator – [[Keith Armstrong (Ameri"
-}
+},
+"src_dc": "staff"
 },
 "2021|TEN": {
 "hc": [
@@ -2532,11 +3061,17 @@
 "hc": [
 "Brandon Staley"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Joe Lombardi"
+],
+"dc": [
+"Renaldo Hill"
+],
 "raw": {
 "coach": "Brandon Staley"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2021|WAS": {
 "hc": [
@@ -2559,20 +3094,30 @@
 "Kliff Kingsbury"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Vance Joseph"
+],
 "raw": {
 "coach": "Kliff Kingsbury"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|ATL": {
 "hc": [
 "Arthur Smith"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Dave Ragone"
+],
+"dc": [
+"Dean Pees"
+],
 "raw": {
 "coach": "Arthur Smith"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|BAL": {
 "hc": [
@@ -2610,7 +3155,9 @@
 "hc": [
 "Steve Wilks (interim"
 ],
-"oc": [],
+"oc": [
+"Ben McAdoo"
+],
 "dc": [],
 "raw": {
 "coach": "Matt Rhule (fired October 10, 1–4 record),Steve Wilks (interim, 6–6 record)",
@@ -2618,17 +3165,25 @@
 "offensive coaches": "*Offensive coordinator – Ben McAdoo,*Quarterbacks – Sean Ryan,*Wide receivers – Joe Dailey,*Tight ends – Kevin M. Gilbride,*Offensive line – James Campen,*Assistant offensive line – Robert Kugler,*Pass game specialist – Matt Lombardi,*Offensive assistant – Garret McGuire,*Offensive assistant – Jody Owens",
 "defensive coaches": "*Interim defensive coordinator – Al Holcomb,*Defensive run game coordinator – Mike Siravo,*Defensive line – Terrance Knighton,*Assistant defensive line – Don Johnson ,*Defensive backs – Bobby Mafei,*Defensive assistant – Rob Dvoracek",
 "special teams coaches": "*Special teams coordinator – Chris Tabor,*Special teams assistant – Cedric Whitaker"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|CHI": {
 "hc": [
 "Matt Eberflus"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Luke Getsy"
+],
+"dc": [
+"Alan Williams"
+],
 "raw": {
 "coach": "Matt Eberflus"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|CIN": {
 "hc": [
@@ -2650,11 +3205,17 @@
 "hc": [
 "Kevin Stefanski"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Alex Van Pelt"
+],
+"dc": [
+"Joe Woods"
+],
 "raw": {
 "coach": "Kevin Stefanski"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|DAL": {
 "hc": [
@@ -2676,55 +3237,81 @@
 "hc": [
 "Jerry Rosburg (interim"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Justin Outten"
+],
+"dc": [
+"Ejiro Evero"
+],
 "raw": {
 "coach": "Nathaniel Hackett (fired on December 26, 4–11 record),Jerry Rosburg (interim, 1–1 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|DET": {
 "hc": [
 "Dan Campbell"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Ben Johnson"
+],
+"dc": [
+"Aaron Glenn"
+],
 "raw": {
 "coach": "Dan Campbell"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|GB": {
 "hc": [
 "Matt LaFleur"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Adam Stenavich"
+],
+"dc": [
+"Joe Barry"
+],
 "raw": {
 "coach": "Matt LaFleur"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|HOU": {
 "hc": [
 "Lovie Smith"
 ],
-"oc": [],
+"oc": [
+"Pep Hamilton"
+],
 "dc": [],
 "raw": {
 "coach": "Lovie Smith"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|IND": {
 "hc": [
 "Jeff Saturday (interim"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Gus Bradley"
+],
 "raw": {
 "coach": "Frank Reich (fired November 7,  record),Jeff Saturday (interim,  record)",
 "head coaches": "*Interim Head coach – Jeff Saturday",
 "offensive coaches": "*Interim offensive coordinator – Parks Frazier,*Quarterbacks – Scott Milanovich,*Running backs – Scottie Montgomery,*Wide receivers – Reggie Wayne,*Tight ends – Kevin Mawae,*Offensive line – Chris Strausser,*Offensive quality control,assistant to the head coach – Tyler Boyles,*Offensive quality control – Brian Bratton",
 "defensive coaches": "*Defensive coordinator – Gus Bradley,*Defensive line – Nate Ollie,*Special defensive assistant,assistant defensive line – Matt Raich,*Linebackers – Richard Smith,*Assistant linebackers – Cato June,*Defensive backs – Ron Milus,*Assistant defensive backs – Mike Mitchell,*Senior defensive assistant – John Fox",
 "special teams coaches": "*Special teams coordinator – Raymond Ventrone,*Assistant special teams – Joe Hastings"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|JAX": {
 "hc": [
@@ -2802,7 +3389,9 @@
 "dc": [],
 "raw": {
 "coach": "Bill Belichick"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|NO": {
 "hc": [
@@ -2841,11 +3430,17 @@
 "hc": [
 "Robert Saleh"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Mike LaFleur"
+],
+"dc": [
+"Jeff Ulbrich"
+],
 "raw": {
 "coach": "Robert Saleh"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|PHI": {
 "hc": [
@@ -2935,11 +3530,17 @@
 "hc": [
 "Mike Vrabel"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Todd Downing"
+],
+"dc": [
+"Shane Bowen"
+],
 "raw": {
 "coach": "Mike Vrabel"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|LA": {
 "hc": [
@@ -2961,15 +3562,21 @@
 "hc": [
 "Josh McDaniels"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Mick Lombardi"
+],
+"dc": [
+"Patrick Graham"
+],
 "raw": {
 "coach": "Josh McDaniels",
 "head coaches": "*Head coach – Josh McDaniels",
 "offensive coaches": "*Offensive coordinator – Mick Lombardi,*Senior offensive assistant – Jerry Schuplinski,*Quarterbacks – Bo Hardegree,*Running backs – Kennedy Polamalu,*Wide receivers – Edgar Bennett,*Offensive line – Carmen Bricillo,*Assistant offensive line – Cameron Clemmons,*Offensive quality control – Mitch Singler,*Offensive assistant – Fred Walker",
 "defensive coaches": "*Defensive coordinator – Patrick Graham,*Senior defensive assistant – Rob Ryan,*Defensive line – Frank Okam,*Linebackers – Antonio Pierce,*Defensive backs,pass game coordinator – Jason Simmons,*Defensive backs – Chris Ash,*Defensive quality control – Matt Feeney,*Defensive assistant,pass rush specialist – Matt Edwards",
 "special teams coaches": "*Special teams coordinator – Tom McMahon,*Assistant special teams – Maurice Drayton"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2022|LAC": {
 "hc": [
@@ -3007,21 +3614,33 @@
 "hc": [
 "Jonathan Gannon"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Drew Petzing"
+],
+"dc": [
+"Nick Rallis"
+],
 "raw": {
 "coach": "Jonathan Gannon"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|ATL": {
 "hc": [
 "Arthur Smith"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Dave Ragone"
+],
+"dc": [
+"Ryan Nielsen"
+],
 "raw": {
 "coach": "Arthur Smith"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|BAL": {
 "hc": [
@@ -3060,33 +3679,51 @@
 "hc": [
 "Chris Tabor (interim"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Thomas Brown"
+],
+"dc": [
+"Ejiro Evero"
+],
 "raw": {
 "coach": "Frank Reich (fired November 27, 1–10 record),Chris Tabor (interim, 1–5 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|CHI": {
 "hc": [
 "Matt Eberflus"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Luke Getsy"
+],
+"dc": [
+"Alan Williams"
+],
 "raw": {
 "coach": "Matt Eberflus"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|CIN": {
 "hc": [
 "Zac Taylor"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Brian Callahan"
+],
+"dc": [
+"Lou Anarumo"
+],
 "raw": {
 "coach": "Zac Taylor",
 "head coaches": "*Head coach – Zac Taylor,*Assistant head coach,special teams coordinator – Darrin Simmons",
 "offensive coaches": "*Offensive coordinator – Brian Callahan,*Quarterbacks – Dan Pitcher,*Assistant quarterbacks – Brad Kragthorpe,*Running backs – Justin Hill,*Wide receivers – Troy Walters,*Tight ends – [[J"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|CLE": {
 "hc": [
@@ -3188,11 +3825,17 @@
 "hc": [
 "Shane Steichen"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Jim Bob Cooter"
+],
+"dc": [
+"Gus Bradley"
+],
 "raw": {
 "coach": "Shane Steichen"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|JAX": {
 "hc": [
@@ -3230,61 +3873,95 @@
 "hc": [
 "Mike McDaniel"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Frank Smith"
+],
+"dc": [
+"Vic Fangio"
+],
 "raw": {
 "coach": "Mike McDaniel"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|MIN": {
 "hc": [
 "Kevin O'Connell"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Wes Phillips"
+],
+"dc": [
+"Brian Flores"
+],
 "raw": {
 "coach": "Kevin O'Connell"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|NE": {
 "hc": [
 "Bill Belichick"
 ],
-"oc": [],
+"oc": [
+"Bill O'Brien"
+],
 "dc": [],
 "raw": {
 "coach": "Bill Belichick"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|NO": {
 "hc": [
 "Dennis Allen"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Pete Carmichael"
+],
+"dc": [
+"Joe Woods"
+],
 "raw": {
 "coach": "Dennis Allen"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|NYG": {
 "hc": [
 "Brian Daboll"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Mike Kafka"
+],
+"dc": [
+"Don Martindale"
+],
 "raw": {
 "coach": "Brian Daboll"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|NYJ": {
 "hc": [
 "Robert Saleh"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Nathaniel Hackett"
+],
+"dc": [
+"Jeff Ulbrich"
+],
 "raw": {
 "coach": "Robert Saleh"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|PHI": {
 "hc": [
@@ -3322,11 +3999,17 @@
 "hc": [
 "Pete Carroll"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Shane Waldron"
+],
+"dc": [
+"Clint Hurtt"
+],
 "raw": {
 "coach": "Pete Carroll"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|SF": {
 "hc": [
@@ -3364,11 +4047,17 @@
 "hc": [
 "Mike Vrabel"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Tim Kelly"
+],
+"dc": [
+"Shane Bowen"
+],
 "raw": {
 "coach": "Mike Vrabel"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|LA": {
 "hc": [
@@ -3390,21 +4079,33 @@
 "hc": [
 "Antonio Pierce (interim"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Mick Lombardi"
+],
+"dc": [
+"Patrick Graham"
+],
 "raw": {
 "coach": "Josh McDaniels (fired October 31, 3–5 record),Antonio Pierce (interim, 5–4 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|LAC": {
 "hc": [
 "Giff Smith (interim"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Kellen Moore"
+],
+"dc": [
+"Derrick Ansley"
+],
 "raw": {
 "coach": "Brandon Staley (fired December 15, 5–9 record),Giff Smith (interim, 0–3 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2023|WAS": {
 "hc": [
@@ -3418,27 +4119,40 @@
 "coach": "Ron Rivera",
 "off_coach": "Eric Bieniemy",
 "def_coach": ""
-}
+},
+"src_dc": "staff"
 },
 "2024|ARI": {
 "hc": [
 "Jonathan Gannon"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Drew Petzing"
+],
+"dc": [
+"Nick Rallis"
+],
 "raw": {
 "coach": "Jonathan Gannon"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|ATL": {
 "hc": [
 "Raheem Morris"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Zac Robinson"
+],
+"dc": [
+"Jimmy Lake"
+],
 "raw": {
 "coach": "Raheem Morris"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|BAL": {
 "hc": [
@@ -3476,55 +4190,85 @@
 "hc": [
 "Dave Canales"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Brad Idzik"
+],
+"dc": [
+"Ejiro Evero"
+],
 "raw": {
 "coach": "Dave Canales",
 "head coaches": "*Head coach – Dave Canales,*Assistant head coach,run game coordinator – Harold Goodwin",
 "offensive coaches": "*Offensive coordinator – Brad Idzik,*Passing game coordinator – Nate Carroll,*Quarterbacks – Will Harriger,*Running backs – Bernie Parmalee,*Wide receivers – Rob Moore,*Tight ends – Pat McPherson,*Offensive line – Joe Gilbert,*Assistant offensive line – Keli'i Kekuewa,*Offensive assistant – Mike Bercovici,*Offensive quality control – Dean Petzing",
 "defensive coaches": "*Defensive coordinator – Ejiro Evero,*Defensive passing game coordinator – Jonathan Cooley,*Defensive line – Todd Wash,*Linebackers – Peter Hansen,*Outside linebackers – Tem Lukabu,*Secondary – Bert Watts,*Assistant defensive backs – DeAngelo Hall,*Senior defensive assistant – Dom Capers,*Defensive assistant – Mayur Chaudhari,*Defensive quality control – Bobby Maffei",
 "special teams coaches": "*Special teams coordinator – Tracy Smith,*Assistant special teams coordinator – Daren Bates"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|CHI": {
 "hc": [
 "Thomas Brown (interim"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Shane Waldron"
+],
+"dc": [
+"Eric Washington"
+],
 "raw": {
 "coach": "Matt Eberflus (fired November 29, 4–8 record),Thomas Brown (interim, 1–4 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|CIN": {
 "hc": [
 "Zac Taylor"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Dan Pitcher"
+],
+"dc": [
+"Lou Anarumo"
+],
 "raw": {
 "coach": "Zac Taylor"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|CLE": {
 "hc": [
 "Kevin Stefanski"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Ken Dorsey"
+],
+"dc": [
+"Jim Schwartz"
+],
 "raw": {
 "coach": "Kevin Stefanski"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|DAL": {
 "hc": [
 "Mike McCarthy"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Brian Schottenheimer"
+],
+"dc": [
+"Mike Zimmer"
+],
 "raw": {
 "coach": "Mike McCarthy"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|DEN": {
 "hc": [
@@ -3546,11 +4290,17 @@
 "hc": [
 "Dan Campbell"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Ben Johnson"
+],
+"dc": [
+"Aaron Glenn"
+],
 "raw": {
 "coach": "Dan Campbell"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|GB": {
 "hc": [
@@ -3588,15 +4338,21 @@
 "hc": [
 "Shane Steichen"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Jim Bob Cooter"
+],
+"dc": [
+"Gus Bradley"
+],
 "raw": {
 "coach": "Shane Steichen",
 "head coaches": "*Head coach – Shane Steichen",
 "offensive coaches": "*Offensive coordinator – Jim Bob Cooter,*Passing game coordinator – Alex Tanney,*Quarterbacks – Cameron Turner,*Running backs – DeAndre Smith,*Wide receivers – Reggie Wayne,*Tight ends – Tom Manning,*Offensive line – Tony Sparano Jr.,*Assistant offensive line – Chris Watt,*Offensive quality control,wide receivers – Brian Bratton",
 "defensive coaches": "*Defensive coordinator – Gus Bradley,*Defensive line – Charlie Partridge,*Senior assistant defensive line – Matt Raich,*Linebackers,run game coordinator – Richard Smith,*Assistant linebackers – Cato June,*Defensive backs – Ron Milus,*Assistant defensive backs – Justin Hamilton,*Defensive quality control – Brent Jackson",
 "special teams coaches": "*Special teams coordinator – Brian Mason,*Assistant special teams – Joe Hastings"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|JAX": {
 "hc": [
@@ -3634,11 +4390,17 @@
 "hc": [
 "Mike McDaniel"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Frank Smith"
+],
+"dc": [
+"Anthony Weaver"
+],
 "raw": {
 "coach": "Mike McDaniel"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|MIN": {
 "hc": [
@@ -3660,11 +4422,17 @@
 "hc": [
 "Jerod Mayo"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Alex Van Pelt"
+],
+"dc": [
+"DeMarcus Covington"
+],
 "raw": {
 "coach": "Jerod Mayo"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|NO": {
 "hc": [
@@ -3687,20 +4455,28 @@
 "Brian Daboll"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Shane Bowen"
+],
 "raw": {
 "coach": "Brian Daboll"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|NYJ": {
 "hc": [
 "Jeff Ulbrich (interim"
 ],
-"oc": [],
+"oc": [
+"Nathaniel Hackett"
+],
 "dc": [],
 "raw": {
 "coach": "Robert Saleh (fired October 8, 2–3 record),Jeff Ulbrich (interim, 3–9 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|PHI": {
 "hc": [
@@ -3738,11 +4514,17 @@
 "hc": [
 "Mike Macdonald"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Ryan Grubb"
+],
+"dc": [
+"Aden Durde"
+],
 "raw": {
 "coach": "Mike Macdonald"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|SF": {
 "hc": [
@@ -3780,11 +4562,17 @@
 "hc": [
 "Brian Callahan"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Nick Holz"
+],
+"dc": [
+"Dennard Wilson"
+],
 "raw": {
 "coach": "Brian Callahan"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|LA": {
 "hc": [
@@ -3806,11 +4594,17 @@
 "hc": [
 "Antonio Pierce"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Luke Getsy"
+],
+"dc": [
+"Patrick Graham"
+],
 "raw": {
 "coach": "Antonio Pierce"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2024|LAC": {
 "hc": [
@@ -3848,21 +4642,33 @@
 "hc": [
 "Jonathan Gannon"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Drew Petzing"
+],
+"dc": [
+"Nick Rallis"
+],
 "raw": {
 "coach": "Jonathan Gannon"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|ATL": {
 "hc": [
 "Raheem Morris"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Zac Robinson"
+],
+"dc": [
+"Jeff Ulbrich"
+],
 "raw": {
 "coach": "Raheem Morris"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|BAL": {
 "hc": [
@@ -3916,41 +4722,65 @@
 "hc": [
 "Ben Johnson"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Declan Doyle"
+],
+"dc": [
+"Dennis Allen"
+],
 "raw": {
 "coach": "Ben Johnson"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|CIN": {
 "hc": [
 "Zac Taylor"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Dan Pitcher"
+],
+"dc": [
+"Al Golden"
+],
 "raw": {
 "coach": "Zac Taylor"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|CLE": {
 "hc": [
 "Kevin Stefanski"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Tommy Rees"
+],
+"dc": [
+"Jim Schwartz"
+],
 "raw": {
 "coach": "Kevin Stefanski"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|DAL": {
 "hc": [
 "Brian Schottenheimer"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Klayton Adams"
+],
+"dc": [
+"Matt Eberflus"
+],
 "raw": {
 "coach": "Brian Schottenheimer"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|DEN": {
 "hc": [
@@ -3972,21 +4802,33 @@
 "hc": [
 "Dan Campbell"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"John Morton"
+],
+"dc": [
+"Kelvin Sheppard"
+],
 "raw": {
 "coach": "Dan Campbell"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|GB": {
 "hc": [
 "Matt LaFleur"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Adam Stenavich"
+],
+"dc": [
+"Jeff Hafley"
+],
 "raw": {
 "coach": "Matt LaFleur"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|HOU": {
 "hc": [
@@ -4008,15 +4850,21 @@
 "hc": [
 "Shane Steichen"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Jim Bob Cooter"
+],
+"dc": [
+"Lou Anarumo"
+],
 "raw": {
 "coach": "Shane Steichen",
 "head coaches": "*Head coach – Shane Steichen",
 "offensive coaches": "*Offensive coordinator – Jim Bob Cooter,*Passing game coordinator – Alex Tanney,*Quarterbacks – Cameron Turner,*Running backs – DeAndre Smith,*Wide receivers – Reggie Wayne,*Tight ends – Tom Manning,*Offensive line – Tony Sparano Jr.,*Assistant offensive line – Chris Watt,*Offensive quality control,wide receivers – Brian Bratton,*Tony Dungy diversity coaching fellow – Diego Ortiz",
 "defensive coaches": "*Defensive coordinator – Lou Anarumo,*Defensive line – Charlie Partridge,*Senior assistant,defensive line – Matt Raich,*Linebackers – James Bettcher,*Assistant linebackers – Cato June,*Pass game coordinator,Secondary –  Chris Hewitt,*Defensive backs – Jerome Henderson,*Defensive assistant – Brent Stocksill,*Defensive quality control – Brent Jackson,*Tony Dungy diversity coaching fellow – Kalon Humphries",
 "special teams coaches": "*Special teams coordinator – Brian Mason,*Senior assistant special teams – Joe Hastings,*Assistant to the head coach – T. J. Ingels,*Game manager – Charlie Gelman,*Harriet P. Irsay fellow – Isabel Diaz"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|JAX": {
 "hc": [
@@ -4042,35 +4890,53 @@
 "hc": [
 "Andy Reid"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Matt Nagy"
+],
+"dc": [
+"Steve Spagnuolo"
+],
 "raw": {
 "coach": "Andy Reid"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|MIA": {
 "hc": [
 "Mike McDaniel"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Frank Smith"
+],
+"dc": [
+"Anthony Weaver"
+],
 "raw": {
 "coach": "Mike McDaniel",
 "head coaches": "*Head coach – Mike McDaniel,*Associate head coach,running backs – Eric Studesville,*Assistant head coach,tight ends – Jon Embree",
 "offensive coaches": "*Offensive coordinator – Frank Smith,*Senior passing game coordinator – Bobby Slowik,*Quarterbacks,pass game coordinator – Darrell Bevell,*Wide receivers – Robert Prince,*Assistant wide receivers – Jonathan Krause,*Offensive line – Butch Barry,*Assistant offensive line – Lemuel Jeanpierre,*Run game specialist – Chandler Henley,*Offensive assistant – Rob Everett,*Offensive assistant – Max McCaffrey,*Offensive assistant – Roman Sapolu",
 "defensive coaches": "*Defensive coordinator – Anthony Weaver,*Defensive line – Austin Clark,*Assistant defensive line – Kynjee Cotton,*Linebackers,run game coordinator – Joe Barry,*Assistant linebackers – Matthew O'Donnell,*Pass game coordinator,secondary – Brian Duker,*Cornerbacks – Mathieu Araujo,*Defensive backs,pass game specialist – Ryan Slowik,*Assistant defensive backs – DeShawn Shead,*Defensive assistant – Sean Ryan",
 "special teams coaches": "*Special teams coordinator – Craig Aukerman,*Senior special teams assistant – Ronnie Bradford"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|MIN": {
 "hc": [
 "Kevin O'Connell"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Wes Phillips"
+],
+"dc": [
+"Brian Flores"
+],
 "raw": {
 "coach": "Kevin O'Connell"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|NE": {
 "hc": [
@@ -4108,21 +4974,29 @@
 "hc": [
 "Mike Kafka (interim"
 ],
-"oc": [],
+"oc": [
+"Tim Kelly"
+],
 "dc": [],
 "raw": {
 "coach": "Brian Daboll (fired November 10, 2–8 record),Mike Kafka (interim, 2–5 record)"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|NYJ": {
 "hc": [
 "Aaron Glenn"
 ],
-"oc": [],
+"oc": [
+"Tanner Engstrand"
+],
 "dc": [],
 "raw": {
 "coach": "Aaron Glenn"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|PHI": {
 "hc": [
@@ -4192,25 +5066,35 @@
 "hc": [
 "Todd Bowles"
 ],
-"oc": [],
+"oc": [
+"Josh Grizzard"
+],
 "dc": [],
 "raw": {
 "coach": "Todd Bowles"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|TEN": {
 "hc": [
 "Mike McCoy (interim"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Nick Holz"
+],
+"dc": [
+"Dennard Wilson"
+],
 "raw": {
 "coach": "Brian Callahan (fired October 13, 1–5 record),Mike McCoy (interim, 2–9 record)",
 "head coaches": "*Head coach – Brian Callahan (fired October 13, 1–5 record),*Interim head coach – Mike McCoy",
 "offensive coaches": "*Offensive coordinator – Nick Holz,*Quarterbacks – Bo Hardegree,*Assistant quarterbacks – Payton McCollum,*Running backs – Randy Jordan,*Wide receivers – Tyke Tolbert,*Tight ends – Luke Stocker,*Interim offensive line – Scott Fuchs ,*Offensive assistant – Trevor Browder,*Offensive assistant – Kylan Butler,*Offensive assistant – Matt Jones",
 "defensive coaches": "*Defensive coordinator – Dennard Wilson,*Defensive run game coordinator – Travis Smith,*Defensive line – Tracy Rocker,*Linebackers – Frank Bush,*Outside linebackers – Ben Bloom,*Passing game coordinator,cornerbacks – Tony Oden,*Secondary,safeties − Steve Jackson,*Assistant defensive backs – Steve Donatell,*Defensive assistant – Lori Locust,*Defensive quality control – Dylan Autenrieth",
 "special teams coaches": "*Special teams coordinator – John Fassel,*Assistant special teams – Rayna Stewart,*Assistant to the head coach – Tom Jones"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|LA": {
 "hc": [
@@ -4233,20 +5117,30 @@
 "Pete Carroll"
 ],
 "oc": [],
-"dc": [],
+"dc": [
+"Patrick Graham"
+],
 "raw": {
 "coach": "Pete Carroll"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|LAC": {
 "hc": [
 "Jim Harbaugh"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Greg Roman"
+],
+"dc": [
+"Jesse Minter"
+],
 "raw": {
 "coach": "Jim Harbaugh"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2025|WAS": {
 "hc": [
@@ -4449,11 +5343,17 @@
 "hc": [
 "Matt LaFleur"
 ],
-"oc": [],
-"dc": [],
+"oc": [
+"Adam Stenavich"
+],
+"dc": [
+"Jonathan Gannon"
+],
 "raw": {
 "coach": "Matt LaFleur"
-}
+},
+"src_oc": "staff",
+"src_dc": "staff"
 },
 "2026|HOU": {
 "hc": [
