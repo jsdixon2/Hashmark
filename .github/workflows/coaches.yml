@@ -1,0 +1,19 @@
+name: coaches
+# One-off, manual only (owner 2026-11-16, x26 test): NFL head coaches + coordinators 2016-2026 from Wikipedia.
+on:
+  workflow_dispatch: {}
+permissions: {contents: write}
+concurrency: {group: coaches, cancel-in-progress: false}
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 scripts/fetch_coaches.py 2016 2026
+      - run: |
+          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
+          git add bt/nfl/coaches.json
+          git diff --staged --quiet && exit 0
+          git commit -m "x26 data: NFL coaches and coordinators 2016-2026 (Wikipedia)"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep 5; done
