@@ -640,6 +640,13 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   Rd N), matching that class's Devy Lab tab. War Room tile = ny class by projected pick (unchanged).
 - p181 (owner: War Room big board ▲▼ did nothing): prospect ids are "c:<cfb id>", and the handler split data-wmv
   "c:5189530:-1" on every colon (looked for player "c"); now splits on the last colon. Star/tier/off were unaffected.
+- v178 + p178b (owner: projection bars on League › Matchups, tap to see rosters and scoring): the cards used each
+  lineup's REST-OF-SEASON strength (lineup().pts) with their own win formula, so a final 145-123 game still read "proj
+  117.4, 75% win". Now `lm178Cards` uses myMatchup pointed at any team (`MX178`/`mx178(L,a)`, patched into the base
+  myMatchup so all live/WP wrappers apply): this week's projection, live points, live win chance, Live/Final tag; one
+  bar per team (solid = points scored, faded = projected rest; scale = league max; favourite orange); your game first.
+  Tap -> your game: matchup-<li>; others: read-only view route matchup-vs-<li>-<team> (`vLMx178`: both heads + win bar,
+  lineups via mxCell + kdMatchRows, edge by position, both benches, roster buttons; no advice). Tested demo + fake Sleeper.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
