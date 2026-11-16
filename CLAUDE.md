@@ -647,6 +647,12 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   bar per team (solid = points scored, faded = projected rest; scale = league max; favourite orange); your game first.
   Tap -> your game: matchup-<li>; others: read-only view route matchup-vs-<li>-<team> (`vLMx178`: both heads + win bar,
   lineups via mxCell + kdMatchRows, edge by position, both benches, roster buttons; no advice). Tested demo + fake Sleeper.
+- Sleeper backfill 2018-20 (owner "try the backfill"; scripts/fetch_bt_old.py + manual .github/workflows/bt-backfill.yml,
+  run 43795161679): bt/sleeper_proj_old.json.gz + bt/sleeper_stats_old.json.gz (SEPARATE files so the report and old
+  backtests are unchanged; merge the dicts in new tests). Weeks 1-17 each season (no week 18 then); projected players per
+  week 2018 ~360, 2019 ~460, 2020 ~490 (2021+ ~490); 99% have a stat line. Sleeper MAE (proj >= 5) 2018 5.62, 2019 5.63,
+  2020 5.38 vs 2021 5.54, 2022-26 5.19-5.28: older numbers are no better than recent ones (no sign of after-the-fact
+  revision). Fits can now run 2018-24 and hold out 2025-26.
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
