@@ -7,7 +7,7 @@ concurrency: {group: coaches, cancel-in-progress: false}
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       - run: python3 scripts/fetch_coaches.py 2016 2026

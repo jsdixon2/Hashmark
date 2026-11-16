@@ -8,7 +8,7 @@ import json, re, sys, time, urllib.parse, urllib.request
 
 first = int(sys.argv[1]) if len(sys.argv) > 1 else 2016
 last = int(sys.argv[2]) if len(sys.argv) > 2 else 2026
-UA = {"User-Agent": "hashmark-research/1.0 (fantasy football analytics; contact via GitHub repo)"}
+UA = {"User-Agent": "HashmarkResearch/1.0 (sports analytics research; python-urllib)", "Api-User-Agent": "HashmarkResearch/1.0"}
 NAMES = {"ARI": "Arizona Cardinals", "ATL": "Atlanta Falcons", "BAL": "Baltimore Ravens", "BUF": "Buffalo Bills",
          "CAR": "Carolina Panthers", "CHI": "Chicago Bears", "CIN": "Cincinnati Bengals", "CLE": "Cleveland Browns",
          "DAL": "Dallas Cowboys", "DEN": "Denver Broncos", "DET": "Detroit Lions", "GB": "Green Bay Packers",
@@ -26,17 +26,27 @@ def tname(tm, y):
     return NAMES[tm]
 
 
-def wikitext(title):
+def fetch_batch(titles):
+    """up to 40 pages per request (query + revisions); returns {requested title: wikitext}"""
     u = "https://en.wikipedia.org/w/api.php?" + urllib.parse.urlencode(
-        {"action": "parse", "page": title, "prop": "wikitext", "format": "json", "redirects": 1, "formatversion": 2})
-    for k in range(4):
+        {"action": "query", "prop": "revisions", "rvprop": "content", "rvslots": "main", "titles": "|".join(titles),
+         "format": "json", "redirects": 1, "formatversion": 2})
+    for k in range(3):
         try:
-            with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=60) as r:
+            with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=30) as r:
                 j = json.loads(r.read().decode())
-            return (j.get("parse") or {}).get("wikitext") or ""
+            q = j.get("query") or {}; back = {}
+            for m in (q.get("normalized") or []) + (q.get("redirects") or []): back[m["to"]] = back.get(m["from"], m["from"])
+            out = {}
+            for pg in q.get("pages") or []:
+                t = pg.get("title"); orig = back.get(t, t)
+                while orig in back and back[orig] != orig: orig = back[orig]
+                revs = pg.get("revisions") or []
+                out[orig] = revs[0]["slots"]["main"]["content"] if revs else ""
+            return out
         except Exception as e:
-            print("  retry", title, e); time.sleep(2 + 3 * k)
-    return ""
+            print("  error", getattr(e, "code", ""), str(e)[:200], flush=True); time.sleep(3 + 5 * k)
+    return {}
 
 
 def clean(v):
@@ -59,10 +69,13 @@ def names(v):
 
 
 out, seen = {}, set()
-for y in range(first, last + 1):
-    for tm in list(NAMES) + ["LV", "LAC", "WAS"]:
-        title = f"{y} {tname(tm, y)} season"
-        wt = wikitext(title)
+todo = [(y, tm, f"{y} {tname(tm, y)} season") for y in range(first, last + 1) for tm in list(NAMES) + ["LV", "LAC", "WAS"]]
+texts = {}
+for i in range(0, len(todo), 40):
+    texts.update(fetch_batch([x[2] for x in todo[i:i + 40]])); print("fetched", min(i + 40, len(todo)), "of", len(todo), flush=True); time.sleep(1)
+for y, tm, title in todo:
+    if True:
+        wt = texts.get(title, "")
         m = re.search(r"\{\{\s*Infobox NFL (?:team )?season(.*?)\n\}\}", wt, flags=re.S | re.I)
         box = m.group(1) if m else wt[:20000]
         raw = {}
@@ -72,8 +85,7 @@ for y in range(first, last + 1):
         rec = {"hc": names(pick("head_coach", "coach")), "oc": names(pick("off_coach", "offensive_coordinator", "oc")),
                "dc": names(pick("def_coach", "defensive_coordinator", "dc")), "raw": raw}
         out[f"{y}|{tm}"] = rec
-        print(f"{y} {tm}: HC {rec['hc']} | OC {rec['oc']} | DC {rec['dc']}", flush=True)
-        time.sleep(0.25)
+        print(f"{y} {tm}: HC {rec['hc']} | OC {rec['oc']} | DC {rec['dc']}{'' if wt else '  (no page)'}", flush=True)
 print("infobox fields seen:", sorted(seen))
 miss = [k for k, v in out.items() if not v["oc"] or not v["dc"]]
 print(f"{len(out)} team-seasons, missing OC or DC: {len(miss)}", miss[:40])
