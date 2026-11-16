@@ -653,6 +653,18 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   week 2018 ~360, 2019 ~460, 2020 ~490 (2021+ ~490); 99% have a stat line. Sleeper MAE (proj >= 5) 2018 5.62, 2019 5.63,
   2020 5.38 vs 2021 5.54, 2022-26 5.19-5.28: older numbers are no better than recent ones (no sign of after-the-fact
   revision). Fits can now run 2018-24 and hold out 2025-26.
+- x26 (owner: cross-check head coaches / coordinators for scheme trends; "test and tell me results before you do anything"):
+  bt/nfl/coaches.json (scripts/fetch_coaches.py + manual coaches.yml; Wikipedia infobox + staff lists, 2016-26, 309 of
+  352 team-seasons with OC and DC); backtest/x26_profiles.py (participation man/zone + shell + pressure + rushers from
+  2018 only, box, pbp_team PROE/pace/EPA, top RB carry and target share, FTN motion/PA 2022+) -> x26_fit.py.
+  A: a new DC from elsewhere brings his coverage shell (single-high r .62 with his old team vs -.18 with the team's own
+  last season, n 16) and pass-rusher count (.56 vs -.01); man rate weaker (.27 vs .06). Offense: new OCs do NOT carry
+  pass rate over expected (.25 vs team .34), neutral pass rate, pace or target concentration; motion carries (.55-.63
+  vs .30, n 15). Held-out 2023-25 checks on 10-19 changes each: mixed. Samples tiny.
+  B: weeks 1-4 PPR residual vs Sleeper (2018-26 incl. backfill), fit 2018-23, test 2024-26: all features 5.015 ->
+  5.046 (worse; WR CI +.019..+.093); defense-only shell/rushers/man, heavy shrink: 5.015 -> 5.021 (CIs span 0, mixed
+  by year). NOT shipped: coaching schemes are real and follow coordinators, but Sleeper's projection already prices
+  what matters for fantasy points. Possible context-only use (untested for value): "new DC runs X-high shells".
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of

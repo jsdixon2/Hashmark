@@ -89,10 +89,11 @@ for side, mets in (("D", METS_D), ("O", METS_O)):
 print("\nB. Weeks 1-4 fantasy residuals vs Sleeper")
 load = lambda f: json.load(gzip.open(f"{R}/bt/{f}.json.gz", "rt"))["w"] if os.path.exists(f"{R}/bt/{f}.json.gz") else {}
 SP = {**load("sleeper_proj_old"), **load("sleeper_proj")}; ST = {**load("sleeper_stats_old"), **load("sleeper_stats")}
-s2g = {}
+s2g = {}; s2p = {}
 for r in csv.DictReader(open(f"{R}/backtest/dl/ids.csv")):
     s = str(r["sleeper_id"]).split(".")[0]
     if s not in ("", "NA") and r["gsis_id"] not in ("", "NA"): s2g[s] = r["gsis_id"]
+    if s not in ("", "NA"): s2p[s] = r["position"]
 team = {}
 for y in range(2018, 2027):
     f = f"{R}/bt/nfl/pbp_player/{y}.csv.gz"
@@ -109,14 +110,14 @@ def shift(y, t, side, m):
     if not ch or ch[0] != "travel": return 0.0
     cp, tp = Z.get((ch[2][0], ch[2][1], "full", m)), Z.get((y - 1, t, "full", m))
     return (cp - tp) if cp is not None and tp is not None else 0.0
-FO = ["proe", "plays", "rb1_share", "tgt1_share"]; FD = ["man", "single_high", "pressure", "def_pass_epa", "def_rush_epa"]
+FO = json.loads(os.environ.get("X26_FO", '["proe", "plays", "rb1_share", "tgt1_share"]')); FD = json.loads(os.environ.get("X26_FD", '["man", "single_high", "pressure", "def_pass_epa", "def_rush_epa"]'))
 rows = collections.defaultdict(list)
 for key, pw in SP.items():
     y, w = map(int, key.split("-"))
     if w > 4: continue
     stw = ST.get(key, {})
     for sid, v in pw.items():
-        pos = v.get("pos"); p = v.get("pts_ppr")
+        pos = v.get("pos") or s2p.get(sid); p = v.get("pts_ppr")
         if pos not in ("QB", "RB", "WR", "TE") or p is None or p < 3 or sid not in stw: continue
         g = s2g.get(sid); t = team.get((y, w, g)) if g else None
         if not t: continue
@@ -124,7 +125,7 @@ for key, pw in SP.items():
         if not o: continue
         x = [shift(y, t, "O", m) for m in FO] + [shift(y, o, "D", m) for m in FD]
         rows[pos].append((y, stw[sid].get("pts_ppr", 0) - p, x, any(abs(z) > 0 for z in x)))
-def ols(X, yv, lam=5.0):
+def ols(X, yv, lam=float(os.environ.get("X26_LAM", "5"))):
     k = len(X[0]); A_ = [[sum(r[i] * r[j] for r in X) + (lam if i == j else 0) for j in range(k)] for i in range(k)]
     b = [sum(r[i] * v for r, v in zip(X, yv)) for i in range(k)]
     for i in range(k):  # gauss
