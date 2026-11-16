@@ -1,0 +1,22 @@
+name: bt-backfill
+# One-off, manual only (owner 2026-11-16): Sleeper projections + stat lines for older seasons -> bt/*_old.json.gz.
+on:
+  workflow_dispatch:
+    inputs:
+      first: {description: "first season", default: "2018"}
+      last: {description: "last season", default: "2020"}
+permissions: {contents: write}
+concurrency: {group: bt-backfill, cancel-in-progress: false}
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 scripts/fetch_bt_old.py "${{ inputs.first }}" "${{ inputs.last }}"
+      - run: |
+          git config user.name hashmark-bot; git config user.email bot@users.noreply.github.com
+          git add bt/sleeper_proj_old.json.gz bt/sleeper_stats_old.json.gz 2>/dev/null || true
+          git diff --staged --quiet && exit 0
+          git commit -m "backtest archive: Sleeper ${{ inputs.first }}-${{ inputs.last }} backfill"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep 5; done
