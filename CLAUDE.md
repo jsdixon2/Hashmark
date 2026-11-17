@@ -665,6 +665,13 @@ Data files in `data/` and backtest archives in `bt/` are rebuilt by GitHub Actio
   5.046 (worse; WR CI +.019..+.093); defense-only shell/rushers/man, heavy shrink: 5.015 -> 5.021 (CIs span 0, mixed
   by year). NOT shipped: coaching schemes are real and follow coordinators, but Sleeper's projection already prices
   what matters for fantasy points. Possible context-only use (untested for value): "new DC runs X-high shells".
+- v179 (owner: every starter final, matchup said "Proj 191.1" for 178.2 live and "8 of 8 starters finished · 154.2 pts"):
+  (1) the league scoring adjustment (lgCal x share of starters left) only treated a game as done via the schedule
+  file's final flag, so it stayed at full size after ESPN said final (fake-Sleeper repro: proj 135 vs 92 live, cal
+  +13.1); now gameState "post" counts too -> 0 when all games end; (2) livePtsMap (max of a player's points across ALL
+  your leagues) fed live projections; the league being viewed (S.L, set by withLeague) now uses its own matchup points;
+  (3) "N of M starters finished" now includes K and D/ST with their points (24 pts were missing). Test qa/v179.js
+  (PORT=8766 serves the previous build from scratchpad/old).
 
 ## Owner's leagues
 Sleeper username `jackdixon`. One keeper league: 8 keepers (6 regular + 2 taxi); taxi keepers must have 0-1 years of
